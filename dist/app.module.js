@@ -10,6 +10,7 @@ exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const schedule_1 = require("@nestjs/schedule");
+const analytics_module_1 = require("./modules/analytics/analytics.module");
 const auth_module_1 = require("./modules/auth/auth.module");
 const invitations_module_1 = require("./modules/invitations/invitations.module");
 const invoices_module_1 = require("./modules/invoices/invoices.module");
@@ -28,6 +29,7 @@ exports.AppModule = AppModule = __decorate([
             config_1.ConfigModule.forRoot({ isGlobal: true }),
             schedule_1.ScheduleModule.forRoot(),
             prisma_module_1.PrismaModule,
+            analytics_module_1.AnalyticsModule,
             users_module_1.UsersModule,
             auth_module_1.AuthModule,
             properties_module_1.PropertiesModule,

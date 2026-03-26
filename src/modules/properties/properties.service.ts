@@ -1,4 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { RoleName } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
@@ -7,7 +8,26 @@ import { CreateUnitDto } from './dto/create-unit.dto';
 export class PropertiesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createProperty(landlordId: string, dto: CreatePropertyDto) {
+  async createProperty(actorUserId: string, actorRole: RoleName, dto: CreatePropertyDto) {
+    let landlordId = actorUserId;
+
+    if (actorRole === RoleName.ADMIN) {
+      if (!dto.landlordId) {
+        throw new ForbiddenException('Admin must provide landlordId when creating a property');
+      }
+
+      const landlord = await this.prisma.user.findUnique({
+        where: { id: dto.landlordId },
+        include: { role: true },
+      });
+
+      if (!landlord || landlord.role.name !== RoleName.LANDLORD) {
+        throw new NotFoundException('Valid landlord user was not found for landlordId');
+      }
+
+      landlordId = dto.landlordId;
+    }
+
     const property = await this.prisma.property.create({
       data: {
         landlordId,
@@ -26,7 +46,7 @@ export class PropertiesService {
     return property;
   }
 
-  async addUnit(landlordId: string, propertyId: string, dto: CreateUnitDto) {
+  async addUnit(actorUserId: string, actorRole: RoleName, propertyId: string, dto: CreateUnitDto) {
     const property = await this.prisma.property.findUnique({
       where: { id: propertyId },
     });
@@ -35,7 +55,7 @@ export class PropertiesService {
       throw new NotFoundException('Property not found');
     }
 
-    if (property.landlordId !== landlordId) {
+    if (actorRole !== RoleName.ADMIN && property.landlordId !== actorUserId) {
       throw new ForbiddenException('You can only add units to your own properties');
     }
 
@@ -49,10 +69,15 @@ export class PropertiesService {
     });
   }
 
-  async listLandlordProperties(landlordId: string) {
+  async listProperties(actorUserId: string, actorRole: RoleName) {
     return this.prisma.property.findMany({
-      where: { landlordId },
+      where: actorRole === RoleName.ADMIN ? {} : { landlordId: actorUserId },
       include: {
+        landlord: {
+          include: {
+            role: true,
+          },
+        },
         units: {
           orderBy: { unitNumber: 'asc' },
         },

@@ -18,26 +18,28 @@ type AuthenticatedRequest = {
 
 @Controller('properties')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(RoleName.LANDLORD)
 export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
   @Post()
+  @Roles(RoleName.LANDLORD, RoleName.ADMIN)
   createProperty(@Req() req: AuthenticatedRequest, @Body() dto: CreatePropertyDto) {
-    return this.propertiesService.createProperty(req.user.userId, dto);
+    return this.propertiesService.createProperty(req.user.userId, req.user.role, dto);
   }
 
   @Post(':propertyId/units')
+  @Roles(RoleName.LANDLORD, RoleName.ADMIN)
   addUnit(
     @Req() req: AuthenticatedRequest,
     @Param() params: PropertyIdParamDto,
     @Body() dto: CreateUnitDto,
   ) {
-    return this.propertiesService.addUnit(req.user.userId, params.propertyId, dto);
+    return this.propertiesService.addUnit(req.user.userId, req.user.role, params.propertyId, dto);
   }
 
-  @Get('my')
-  listMyProperties(@Req() req: AuthenticatedRequest) {
-    return this.propertiesService.listLandlordProperties(req.user.userId);
+  @Get()
+  @Roles(RoleName.LANDLORD, RoleName.ADMIN)
+  listProperties(@Req() req: AuthenticatedRequest) {
+    return this.propertiesService.listProperties(req.user.userId, req.user.role);
   }
 }

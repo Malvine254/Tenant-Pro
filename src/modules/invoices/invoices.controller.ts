@@ -22,6 +22,12 @@ type AuthenticatedRequest = {
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
+  @Get()
+  @Roles(RoleName.LANDLORD, RoleName.TENANT, RoleName.ADMIN)
+  listInvoices(@Req() req: AuthenticatedRequest) {
+    return this.invoicesService.listInvoices(req.user.userId, req.user.role);
+  }
+
   @Post('generate-monthly-rent')
   @Roles(RoleName.LANDLORD, RoleName.ADMIN)
   generateMonthlyRent(

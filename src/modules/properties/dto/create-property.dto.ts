@@ -1,6 +1,10 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreatePropertyDto {
+  @IsOptional()
+  @IsUUID()
+  landlordId?: string;
+
   @IsString()
   name!: string;
 

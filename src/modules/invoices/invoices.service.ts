@@ -229,4 +229,38 @@ export class InvoicesService {
       orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }, { createdAt: 'desc' }],
     });
   }
+
+  async listInvoices(actorUserId: string, actorRole: RoleName) {
+    const where =
+      actorRole === RoleName.ADMIN
+        ? {}
+        : actorRole === RoleName.LANDLORD
+          ? {
+              unit: {
+                property: {
+                  landlordId: actorUserId,
+                },
+              },
+            }
+          : {
+              userId: actorUserId,
+            };
+
+    return this.prisma.invoice.findMany({
+      where,
+      include: {
+        unit: {
+          include: {
+            property: true,
+          },
+        },
+        tenant: {
+          include: {
+            user: true,
+          },
+        },
+      },
+      orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }, { createdAt: 'desc' }],
+    });
+  }
 }
