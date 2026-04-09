@@ -7,9 +7,6 @@ RewriteRule ^ http://starmaxltd.com%{REQUEST_URI} [L,R=301]
 # Keep Let's Encrypt validation working if enabled
 RewriteRule ^\.well-known/ - [L]
 
-# Avoid Apache content negotiation conflicts with extensionless routes
-Options -MultiViews
-
 # Serve existing files and directories directly
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
@@ -18,9 +15,6 @@ RewriteRule ^ - [L]
 # If /path exists as /path.html, serve it
 RewriteCond %{REQUEST_FILENAME}.html -f
 RewriteRule ^(.+?)/?$ $1.html [L]
-
-# Friendly error pages for static export
-ErrorDocument 404 /404.html
 
 # Shared-host fallback entry order
 DirectoryIndex index.html index.php
