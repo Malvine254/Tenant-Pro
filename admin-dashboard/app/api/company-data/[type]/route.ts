@@ -4,6 +4,17 @@ import { NextResponse } from 'next/server';
 
 type DataType = 'services' | 'projects' | 'testimonials';
 
+export const dynamic = 'force-static';
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return [
+    { type: 'services' },
+    { type: 'projects' },
+    { type: 'testimonials' },
+  ];
+}
+
 const ROOT_DIR = path.basename(process.cwd()) === 'admin-dashboard'
   ? path.resolve(process.cwd(), '..')
   : process.cwd();

@@ -3,6 +3,8 @@ import path from 'path';
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-static';
+
 type ContactSubmission = {
   id: string;
   name: string;

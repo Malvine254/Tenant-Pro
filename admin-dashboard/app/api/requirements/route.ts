@@ -3,6 +3,8 @@ import path from 'path';
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-static';
+
 type CompanyInquiry = {
   id: string;
   name: string;
