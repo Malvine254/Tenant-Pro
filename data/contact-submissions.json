@@ -1,0 +1,16 @@
+[
+  {
+    "id": "165c67c3-ddad-4e46-9454-31ca00a5fd1b",
+    "name": "Melo O",
+    "email": "melo@gmail.com",
+    "message": "Hey buddy",
+    "createdAt": "2026-04-09T09:55:00.249Z"
+  },
+  {
+    "id": "014a0857-75b1-4516-b8ac-989f52dba061",
+    "name": "Website Visitor",
+    "email": "visitor@example.com",
+    "message": "Checking contact form storage.",
+    "createdAt": "2026-04-09T09:16:04.414Z"
+  }
+]

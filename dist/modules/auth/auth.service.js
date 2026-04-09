@@ -46,6 +46,7 @@ exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const jwt_1 = require("@nestjs/jwt");
+const client_1 = require("@prisma/client");
 const bcrypt = __importStar(require("bcryptjs"));
 const users_service_1 = require("../users/users.service");
 const email_service_1 = require("../email/email.service");
@@ -57,12 +58,25 @@ let AuthService = class AuthService {
         this.emailService = emailService;
         this.jwtService = jwtService;
         this.configService = configService;
+        this.demoAccessStore = new Map();
     }
     normalizeEmail(email) {
         return email.trim().toLowerCase();
     }
     getResetOtpKey(email) {
         return `reset:${this.normalizeEmail(email)}`;
+    }
+    isDemoEmail(email) {
+        return !!email && this.normalizeEmail(email).endsWith('@starmax.preview');
+    }
+    generateDemoPassword() {
+        const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+        const randomChunk = Array.from({ length: 8 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+        return `Starmax!${randomChunk}`;
+    }
+    generateDemoLoginEmail() {
+        const token = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+        return `demo+${token}@starmax.preview`;
     }
     verifyOtpWithFallback(identifiers, code) {
         let lastError;
@@ -77,13 +91,42 @@ let AuthService = class AuthService {
         }
         throw lastError;
     }
+    async registerWithEmailVerification(dto) {
+        const normalizedEmail = this.normalizeEmail(dto.email);
+        const user = await this.usersService.register({
+            ...dto,
+            email: normalizedEmail,
+            role: dto.role ?? client_1.RoleName.LANDLORD,
+        });
+        await this.requestEmailOtp(normalizedEmail);
+        return {
+            message: 'Account created. A verification code has been sent to your email.',
+            email: normalizedEmail,
+            user,
+        };
+    }
     async loginWithEmailPassword(email, password) {
-        const user = await this.usersService.findByEmail(email);
+        const normalizedEmail = this.normalizeEmail(email);
+        const user = await this.usersService.findByEmail(normalizedEmail);
+        const metadata = user;
         if (!user || !user.passwordHash || !user.isActive) {
             throw new common_1.UnauthorizedException('Invalid email or password');
         }
+        if (metadata.emailVerified === false) {
+            throw new common_1.UnauthorizedException('Please verify your email before signing in');
+        }
         if (!this.usersService.isAllowedAppRole(user.role.name)) {
             throw new common_1.BadRequestException('Role is not allowed for this app login flow');
+        }
+        if (this.isDemoEmail(user.email)) {
+            const expiresAt = this.demoAccessStore.get(normalizedEmail) ??
+                (await this.usersService.getDemoAccessExpiry(normalizedEmail));
+            if (expiresAt) {
+                this.demoAccessStore.set(normalizedEmail, expiresAt);
+            }
+            if (!expiresAt || expiresAt < Date.now()) {
+                throw new common_1.UnauthorizedException('Demo credentials expired. Please request a new demo login.');
+            }
         }
         const passwordMatches = await bcrypt.compare(password, user.passwordHash);
         if (!passwordMatches) {
@@ -164,14 +207,11 @@ let AuthService = class AuthService {
         if (!user) {
             throw new common_1.UnauthorizedException('User not found. Please register first.');
         }
-        if (!user.isActive) {
-            throw new common_1.UnauthorizedException('Account is inactive');
-        }
         if (!this.usersService.isAllowedAppRole(user.role.name)) {
             throw new common_1.BadRequestException('Role is not allowed for this app login flow');
         }
         const otp = this.otpService.generateOtpForIdentifier(normalizedEmail);
-        await this.emailService.sendOtpEmail(normalizedEmail, otp.code, user.firstName || undefined);
+        await this.emailService.sendVerificationEmail(normalizedEmail, otp.code, user.firstName || undefined);
         return {
             message: 'OTP sent to your email',
             email: normalizedEmail,
@@ -182,12 +222,13 @@ let AuthService = class AuthService {
         const normalizedEmail = this.normalizeEmail(email);
         this.verifyOtpWithFallback([normalizedEmail, email.trim(), email], code);
         const user = await this.usersService.findByEmail(normalizedEmail);
-        if (!user || !user.isActive) {
-            throw new common_1.UnauthorizedException('User is inactive or not found');
+        if (!user) {
+            throw new common_1.UnauthorizedException('User not found');
         }
         if (!this.usersService.isAllowedAppRole(user.role.name)) {
             throw new common_1.BadRequestException('Role is not allowed for this app login flow');
         }
+        await this.usersService.activateAndVerifyUser(user.id);
         const payload = {
             sub: user.id,
             phoneNumber: user.phoneNumber,
@@ -208,6 +249,33 @@ let AuthService = class AuthService {
                 lastName: user.lastName,
                 role: user.role.name,
             },
+        };
+    }
+    async requestDemoAccess(email, name) {
+        const recipientEmail = this.normalizeEmail(email);
+        const loginEmail = this.generateDemoLoginEmail();
+        const temporaryPassword = this.generateDemoPassword();
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+        const demoUser = await this.usersService.create({
+            email: loginEmail,
+            password: temporaryPassword,
+            firstName: name?.trim() || 'Demo',
+            lastName: 'Guest',
+            role: client_1.RoleName.ADMIN,
+        });
+        await this.usersService.activateAndVerifyUser(demoUser.id);
+        this.demoAccessStore.set(loginEmail, expiresAt.getTime());
+        await this.usersService.storeDemoAccessRequest({
+            recipientEmail,
+            loginEmail,
+            expiresAt,
+            name: name?.trim(),
+            userId: demoUser.id,
+        });
+        await this.emailService.sendDemoAccessEmail(recipientEmail, loginEmail, temporaryPassword, expiresAt, name?.trim() || 'there');
+        return {
+            message: 'Demo credentials sent to your email. They are valid for 1 hour.',
+            expiresAt: expiresAt.toISOString(),
         };
     }
     async forgotPassword(email) {

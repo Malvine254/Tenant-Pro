@@ -1,8 +1,8 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { clearSession, getSession } from '../lib/auth';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { clearDemoSession, clearSession, getDemoSession, getSession, withDashboardMode } from '../lib/auth';
 
 const navSections = [
   {
@@ -37,27 +37,35 @@ type SidebarProps = {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const session = typeof window !== 'undefined' ? getSession() : null;
+  const searchParams = useSearchParams();
+  const isDemoMode = searchParams.get('mode') === 'demo';
+  const session = typeof window !== 'undefined'
+    ? (isDemoMode ? getDemoSession() : getSession())
+    : null;
+
+  const sections = navSections;
 
   const navContent = (
     <>
       <div className="mb-8 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-900 p-4 text-white shadow-lg">
-        <h1 className="text-lg font-semibold">Tenant Pro Admin</h1>
-        <p className="mt-2 text-sm text-slate-200">{session?.user.phoneNumber}</p>
-        <p className="text-xs text-slate-300">Role: {session?.user.role}</p>
+        <h1 className="text-lg font-semibold">{isDemoMode ? 'Tenant Pro Demo Sandbox' : 'Tenant Pro Admin'}</h1>
+        <p className="mt-2 text-sm text-slate-200">{session?.user.email ?? session?.user.phoneNumber ?? 'demo@starmax.preview'}</p>
+        <p className="text-xs text-slate-300">Role: {session?.user.role ?? 'ADMIN'}</p>
+        {isDemoMode ? <p className="mt-2 text-xs text-emerald-200">Full tenant-testing session enabled</p> : null}
       </div>
 
       <nav className="space-y-6">
-        {navSections.map((section) => (
+        {sections.map((section) => (
           <div key={section.title} className="space-y-2">
             <p className="px-2 text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">{section.title}</p>
             <div className="space-y-1">
               {section.items.map((item) => {
-                const active = pathname === item.href;
+                const href = withDashboardMode(item.href, isDemoMode);
+                const active = pathname === item.href || (item.href === '/dashboard' && pathname === '/dashboard');
                 return (
                   <Link
-                    key={item.href}
-                    href={item.href}
+                    key={href}
+                    href={href}
                     onClick={onClose}
                     className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
                       active
@@ -78,13 +86,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       <button
         type="button"
         onClick={() => {
-          clearSession();
-          router.push('/login');
+          if (isDemoMode) {
+            clearDemoSession();
+            router.push('/');
+          } else {
+            clearSession();
+            router.push('/login');
+          }
           onClose();
         }}
         className="mt-8 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
       >
-        Logout
+        {isDemoMode ? 'Exit Demo' : 'Logout'}
       </button>
     </>
   );

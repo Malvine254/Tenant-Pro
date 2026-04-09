@@ -1,0 +1,68 @@
+{
+  "dashboards": [
+    {
+      "id": "tenant",
+      "label": "Tenant Management Dashboard",
+      "subtitle": "Track occupancy, rent collection, and tenant support in a single operating view.",
+      "sidebar": ["Overview", "Tenants", "Payments", "Maintenance", "Messages", "Reports"],
+      "stats": [
+        { "label": "Occupied Units", "value": "482", "trend": "+8.2%", "hint": "vs last month", "tone": "indigo" },
+        { "label": "Rent Collected", "value": "KES 4.8M", "trend": "+12.4%", "hint": "this month", "tone": "emerald" },
+        { "label": "Open Tickets", "value": "24", "trend": "-18%", "hint": "pending requests", "tone": "amber" },
+        { "label": "Lease Renewals", "value": "37", "trend": "+6", "hint": "due this quarter", "tone": "violet" }
+      ],
+      "chartTitle": "Occupancy & collection trend",
+      "chartSeries": [
+        { "label": "Jan", "value": 58 },
+        { "label": "Feb", "value": 66 },
+        { "label": "Mar", "value": 72 },
+        { "label": "Apr", "value": 78 },
+        { "label": "May", "value": 84 },
+        { "label": "Jun", "value": 88 }
+      ],
+      "breakdownTitle": "Service performance",
+      "kpis": [
+        { "label": "Avg. response time", "value": "2.1 hrs" },
+        { "label": "Payment success rate", "value": "96%" },
+        { "label": "Tenant satisfaction", "value": "4.8 / 5" }
+      ],
+      "activity": [
+        { "title": "Maintenance request closed", "meta": "Unit B-14 • 12 mins ago", "status": "Resolved" },
+        { "title": "Rent reminder sent", "meta": "43 tenants • 45 mins ago", "status": "Sent" },
+        { "title": "New tenant onboarded", "meta": "Westlands Heights • 1 hr ago", "status": "Completed" }
+      ]
+    },
+    {
+      "id": "elearning",
+      "label": "E-learning Platform Dashboard",
+      "subtitle": "Monitor learner progress, enrollments, and content engagement with a modern training view.",
+      "sidebar": ["Overview", "Courses", "Learners", "Assessments", "Certificates", "Analytics"],
+      "stats": [
+        { "label": "Active Learners", "value": "3,240", "trend": "+15.1%", "hint": "30-day growth", "tone": "indigo" },
+        { "label": "Course Completion", "value": "78%", "trend": "+5.4%", "hint": "average rate", "tone": "emerald" },
+        { "label": "Live Sessions", "value": "12", "trend": "+3", "hint": "this week", "tone": "amber" },
+        { "label": "Certificates Issued", "value": "1,184", "trend": "+9.7%", "hint": "quarter to date", "tone": "violet" }
+      ],
+      "chartTitle": "Learner engagement trend",
+      "chartSeries": [
+        { "label": "Jan", "value": 46 },
+        { "label": "Feb", "value": 55 },
+        { "label": "Mar", "value": 63 },
+        { "label": "Apr", "value": 71 },
+        { "label": "May", "value": 82 },
+        { "label": "Jun", "value": 90 }
+      ],
+      "breakdownTitle": "Learning health",
+      "kpis": [
+        { "label": "Average watch time", "value": "34 mins" },
+        { "label": "Assessment pass rate", "value": "89%" },
+        { "label": "Returning learners", "value": "67%" }
+      ],
+      "activity": [
+        { "title": "New cohort enrolled", "meta": "Product Skills Bootcamp • 20 mins ago", "status": "Live" },
+        { "title": "Assessment report generated", "meta": "Data Literacy Track • 1 hr ago", "status": "Ready" },
+        { "title": "Certificate batch released", "meta": "Leadership Lab • 2 hrs ago", "status": "Published" }
+      ]
+    }
+  ]
+}

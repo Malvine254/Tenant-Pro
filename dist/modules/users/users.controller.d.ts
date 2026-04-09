@@ -51,6 +51,7 @@ export declare class UsersController {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -90,6 +91,7 @@ export declare class UsersController {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -106,6 +108,7 @@ export declare class UsersController {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -122,6 +125,7 @@ export declare class UsersController {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
@@ -138,6 +142,7 @@ export declare class UsersController {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -154,6 +159,7 @@ export declare class UsersController {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -170,6 +176,7 @@ export declare class UsersController {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;

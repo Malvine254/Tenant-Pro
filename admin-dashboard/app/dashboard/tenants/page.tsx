@@ -1,9 +1,11 @@
 "use client";
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { getSession } from '../../../lib/auth';
+import { getSession, withDashboardMode } from '../../../lib/auth';
 import { apiRequest } from '../../../lib/api';
+import { getDemoDataset } from '../../../lib/demo-tenant-ops';
 
 type UserRow = {
   id: string;
@@ -16,15 +18,22 @@ type UserRow = {
 };
 
 export default function TenantsPage() {
+  const searchParams = useSearchParams();
+  const isDemoMode = searchParams.get('mode') === 'demo';
   const [rows, setRows] = useState<UserRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const run = async () => {
-      const session = getSession();
-      if (!session) return;
-
       try {
+        if (isDemoMode) {
+          setRows(getDemoDataset().users as UserRow[]);
+          return;
+        }
+
+        const session = getSession();
+        if (!session) return;
+
         const users = await apiRequest<UserRow[]>('/users', session.accessToken);
         setRows(users);
       } catch (requestError) {
@@ -33,7 +42,7 @@ export default function TenantsPage() {
     };
 
     void run();
-  }, []);
+  }, [isDemoMode]);
 
   const tenants = useMemo(() => rows.filter((row) => row.role === 'TENANT'), [rows]);
 
@@ -88,10 +97,10 @@ export default function TenantsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Link
-                        href={`/dashboard/messages?tenantId=${tenant.id}&tenantName=${encodeURIComponent([
+                        href={withDashboardMode(`/dashboard/messages?tenantId=${tenant.id}&tenantName=${encodeURIComponent([
                           tenant.firstName,
                           tenant.lastName,
-                        ].filter(Boolean).join(' ') || tenant.phoneNumber)}`}
+                        ].filter(Boolean).join(' ') || tenant.phoneNumber)}`, isDemoMode)}
                         className="inline-flex rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
                       >
                         Message tenant

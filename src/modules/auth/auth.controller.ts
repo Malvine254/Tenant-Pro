@@ -9,6 +9,7 @@ import { LoginWithEmailDto } from './dto/login-with-email.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { RequestEmailOtpDto } from './dto/request-email-otp.dto';
+import { RequestDemoAccessDto } from './dto/request-demo-access.dto';
 import { VerifyEmailOtpDto } from './dto/verify-email-otp.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -23,7 +24,12 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() dto: RegisterUserDto) {
-    return this.usersService.register(dto);
+    return this.authService.registerWithEmailVerification(dto);
+  }
+
+  @Post('demo/request')
+  async requestDemoAccess(@Body() dto: RequestDemoAccessDto) {
+    return this.authService.requestDemoAccess(dto.email, dto.name);
   }
 
   @Post('login')

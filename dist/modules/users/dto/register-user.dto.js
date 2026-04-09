@@ -16,17 +16,16 @@ class RegisterUserDto {
 }
 exports.RegisterUserDto = RegisterUserDto;
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.Matches)(/^\+?[1-9]\d{7,14}$/),
     __metadata("design:type", String)
 ], RegisterUserDto.prototype, "phoneNumber", void 0);
 __decorate([
-    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], RegisterUserDto.prototype, "email", void 0);
 __decorate([
-    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(6),
     __metadata("design:type", String)
@@ -42,6 +41,7 @@ __decorate([
     __metadata("design:type", String)
 ], RegisterUserDto.prototype, "lastName", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(client_1.RoleName),
     __metadata("design:type", String)
 ], RegisterUserDto.prototype, "role", void 0);

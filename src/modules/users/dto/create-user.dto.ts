@@ -2,9 +2,10 @@ import { RoleName } from '@prisma/client';
 import { IsEmail, IsEnum, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 
 export class CreateUserDto {
+  @IsOptional()
   @IsString()
   @Matches(/^\+?[1-9]\d{7,14}$/)
-  phoneNumber!: string;
+  phoneNumber?: string;
 
   @IsOptional()
   @IsEmail()
@@ -23,6 +24,7 @@ export class CreateUserDto {
   @IsString()
   lastName?: string;
 
+  @IsOptional()
   @IsEnum(RoleName)
-  role!: RoleName;
+  role?: RoleName;
 }

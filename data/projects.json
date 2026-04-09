@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Starmax Tenant Hub",
+    "description": "A streamlined tenant and landlord operations portal with invoices, maintenance requests, and occupancy insights.",
+    "image": "/assets/projects/tenant-system.svg",
+    "category": "Property Tech"
+  },
+  {
+    "title": "BrightPath Academy",
+    "description": "An e-learning platform concept with modular courses, dashboards, resource sharing, and progress tracking.",
+    "image": "/assets/projects/learning-platform.svg",
+    "category": "EdTech"
+  },
+  {
+    "title": "OpsFlow Business Suite",
+    "description": "A custom business system unifying workflows, reports, approvals, and client service operations for scaling teams.",
+    "image": "/assets/projects/business-suite.svg",
+    "category": "Business Systems"
+  },
+  {
+    "title": "Rental Analytics View",
+    "description": "A reporting-focused dashboard for rental income trends, occupancy performance, and outstanding balances.",
+    "image": "/assets/projects/tenant-system.svg",
+    "category": "Property Tech"
+  }
+]

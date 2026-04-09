@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Naomi W.",
+    "role": "Property Operations Lead",
+    "company": "UrbanNest Homes",
+    "quote": "Starmax helped us organize tenant communication and maintenance tracking in a way our team could actually sustain.",
+    "rating": 5,
+    "avatar": "/assets/avatars/avatar-naomi.svg"
+  },
+  {
+    "name": "Brian K.",
+    "role": "Founder",
+    "company": "LearnSphere Africa",
+    "quote": "Their product thinking and delivery structure gave us a clear, scalable path for our e-learning rollout.",
+    "rating": 5,
+    "avatar": "/assets/avatars/avatar-brian.svg"
+  },
+  {
+    "name": "Aisha M.",
+    "role": "Operations Manager",
+    "company": "Summit Business Group",
+    "quote": "The team translated messy manual processes into a clean, professional digital workflow with strong visibility.",
+    "rating": 5,
+    "avatar": "/assets/avatars/avatar-aisha.svg"
+  }
+]

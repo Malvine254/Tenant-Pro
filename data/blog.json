@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "future-ready-tenant-operations",
+    "title": "Building Future-Ready Tenant Operations",
+    "excerpt": "Learn how connected portals, automated reminders, and maintenance workflows help property teams deliver a smoother tenant experience.",
+    "image": "/assets/projects/tenant-system.svg",
+    "category": "Property Tech",
+    "publishedAt": "2026-04-04",
+    "author": "Starmax Editorial",
+    "content": [
+      "Property teams often struggle with fragmented communication, manual rent follow-up, and limited visibility into support requests. A modern tenant platform removes that friction by bringing interactions into one shared system.",
+      "With self-service portals, tenants can report issues, track requests, and receive updates without long back-and-forth conversations. At the same time, managers gain cleaner reporting and more predictable operations.",
+      "The result is better occupancy support, faster response times, and a more scalable way to manage growing portfolios without increasing administrative pressure."
+    ]
+  },
+  {
+    "slug": "designing-engaging-digital-learning-platforms",
+    "title": "Designing Engaging Digital Learning Platforms",
+    "excerpt": "A practical look at how course structure, progress tracking, and mobile-first design improve adoption across training programs.",
+    "image": "/assets/projects/learning-platform.svg",
+    "category": "E-learning",
+    "publishedAt": "2026-03-26",
+    "author": "Product Team",
+    "content": [
+      "Great e-learning products are not only about content—they are about clarity, consistency, and measurable learner progress. Structure matters just as much as the lessons themselves.",
+      "Organizations see stronger completion rates when dashboards, reminders, and milestone tracking are built into the learning experience from the beginning.",
+      "A mobile-friendly interface, simple navigation, and meaningful analytics help both learners and administrators stay aligned on outcomes."
+    ]
+  },
+  {
+    "slug": "turning-manual-workflows-into-digital-systems",
+    "title": "Turning Manual Workflows into Digital Systems",
+    "excerpt": "From spreadsheets to smarter operations: how businesses can map messy processes into streamlined internal platforms.",
+    "image": "/assets/projects/business-suite.svg",
+    "category": "Digital Strategy",
+    "publishedAt": "2026-02-18",
+    "author": "Operations Lab",
+    "content": [
+      "Many growing businesses reach a point where spreadsheets, chat threads, and manual approvals begin to slow down execution. The real challenge is not just digitizing tasks, but organizing them around repeatable workflows.",
+      "By defining roles, triggers, and reporting views, teams can transform reactive work into a more deliberate operating model. This reduces missed steps and creates stronger accountability.",
+      "Custom business systems do not need to be oversized or complex. The best platforms start by solving the few repetitive pain points that create the biggest drag on delivery."
+    ]
+  }
+]

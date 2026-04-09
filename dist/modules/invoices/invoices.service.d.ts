@@ -24,22 +24,22 @@ export declare class InvoicesService {
     runMonthlyRentGenerationCron(): Promise<void>;
     createUtilityBill(actorUserId: string, actorRole: RoleName, dto: CreateBillDto): Promise<{
         id: string;
+        status: import(".prisma/client").$Enums.InvoiceStatus;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
-        unitId: string;
-        status: import(".prisma/client").$Enums.InvoiceStatus;
         tenantId: string;
+        userId: string;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        paidAt: Date | null;
+        unitId: string;
         billingType: import(".prisma/client").$Enums.BillingType;
         periodMonth: number;
         periodYear: number;
         issueDate: Date;
         dueDate: Date;
-        amount: import("@prisma/client/runtime/library").Decimal;
         penaltyAmount: import("@prisma/client/runtime/library").Decimal;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
         paidAmount: import("@prisma/client/runtime/library").Decimal;
-        paidAt: Date | null;
     }>;
     applyOverduePenalties(actorUserId: string, actorRole: RoleName, dto: ApplyPenaltiesDto): Promise<{
         message: string;
@@ -48,27 +48,29 @@ export declare class InvoicesService {
     }>;
     listInvoicesPerTenant(actorUserId: string, actorRole: RoleName, tenantId: string): Promise<{
         id: string;
+        status: import(".prisma/client").$Enums.InvoiceStatus;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
-        unitId: string;
-        status: import(".prisma/client").$Enums.InvoiceStatus;
         tenantId: string;
+        userId: string;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        paidAt: Date | null;
+        unitId: string;
         billingType: import(".prisma/client").$Enums.BillingType;
         periodMonth: number;
         periodYear: number;
         issueDate: Date;
         dueDate: Date;
-        amount: import("@prisma/client/runtime/library").Decimal;
         penaltyAmount: import("@prisma/client/runtime/library").Decimal;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
         paidAmount: import("@prisma/client/runtime/library").Decimal;
-        paidAt: Date | null;
     }[]>;
     listInvoices(actorUserId: string, actorRole: RoleName): Promise<({
         tenant: {
             user: {
                 id: string;
+                createdAt: Date;
+                updatedAt: Date;
                 phoneNumber: string;
                 email: string | null;
                 passwordHash: string | null;
@@ -79,15 +81,13 @@ export declare class InvoicesService {
                 emergencyContactPhone: string | null;
                 bio: string | null;
                 isActive: boolean;
-                createdAt: Date;
-                updatedAt: Date;
                 roleId: string;
             };
         } & {
             id: string;
-            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
+            isActive: boolean;
             userId: string;
             unitId: string;
             moveInDate: Date;
@@ -100,41 +100,41 @@ export declare class InvoicesService {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                landlordId: string;
                 coverImageUrl: string | null;
                 addressLine: string;
                 city: string;
                 state: string | null;
                 country: string;
+                landlordId: string;
             };
         } & {
             id: string;
+            status: import(".prisma/client").$Enums.UnitStatus;
             createdAt: Date;
             updatedAt: Date;
             propertyId: string;
             unitNumber: string;
             floor: string | null;
             rentAmount: import("@prisma/client/runtime/library").Decimal;
-            status: import(".prisma/client").$Enums.UnitStatus;
             imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         };
     } & {
         id: string;
+        status: import(".prisma/client").$Enums.InvoiceStatus;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
-        unitId: string;
-        status: import(".prisma/client").$Enums.InvoiceStatus;
         tenantId: string;
+        userId: string;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        paidAt: Date | null;
+        unitId: string;
         billingType: import(".prisma/client").$Enums.BillingType;
         periodMonth: number;
         periodYear: number;
         issueDate: Date;
         dueDate: Date;
-        amount: import("@prisma/client/runtime/library").Decimal;
         penaltyAmount: import("@prisma/client/runtime/library").Decimal;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
         paidAmount: import("@prisma/client/runtime/library").Decimal;
-        paidAt: Date | null;
     })[]>;
 }

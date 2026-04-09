@@ -1,8 +1,10 @@
 "use client";
 
+import { useSearchParams } from 'next/navigation';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { apiRequest } from '../../../lib/api';
 import { getSession } from '../../../lib/auth';
+import { getDemoDataset, saveDemoDataset } from '../../../lib/demo-tenant-ops';
 
 type RoleName = 'LANDLORD' | 'TENANT' | 'ADMIN' | 'CARETAKER';
 
@@ -20,6 +22,8 @@ type UserRow = {
 const roleOptions: RoleName[] = ['ADMIN', 'LANDLORD', 'TENANT', 'CARETAKER'];
 
 export default function UsersPage() {
+  const searchParams = useSearchParams();
+  const isDemoMode = searchParams.get('mode') === 'demo';
   const [rows, setRows] = useState<UserRow[]>([]);
   const [roleFilter, setRoleFilter] = useState<'ALL' | RoleName>('ALL');
   const [loading, setLoading] = useState(false);
@@ -34,11 +38,18 @@ export default function UsersPage() {
   });
 
   const loadUsers = async () => {
-    const session = getSession();
-    if (!session) return;
-
     try {
       setLoading(true);
+      setError(null);
+
+      if (isDemoMode) {
+        setRows(getDemoDataset().users as UserRow[]);
+        return;
+      }
+
+      const session = getSession();
+      if (!session) return;
+
       const users = await apiRequest<UserRow[]>('/users', session.accessToken);
       setRows(users);
     } catch (requestError) {
@@ -50,7 +61,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     void loadUsers();
-  }, []);
+  }, [isDemoMode]);
 
   const filteredRows = useMemo(() => {
     return roleFilter === 'ALL' ? rows : rows.filter((row) => row.role === roleFilter);
@@ -67,11 +78,38 @@ export default function UsersPage() {
 
   const createUser = async (event: FormEvent) => {
     event.preventDefault();
-    const session = getSession();
-    if (!session) return;
 
     try {
       setError(null);
+
+      if (isDemoMode) {
+        const dataset = getDemoDataset();
+        dataset.users.unshift({
+          id: `demo-user-${Date.now()}`,
+          phoneNumber: createForm.phoneNumber,
+          email: createForm.email || null,
+          firstName: createForm.firstName || null,
+          lastName: createForm.lastName || null,
+          role: createForm.role,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+        });
+        saveDemoDataset(dataset);
+        setRows(dataset.users as UserRow[]);
+        setCreateForm({
+          phoneNumber: '',
+          email: '',
+          firstName: '',
+          lastName: '',
+          password: '',
+          role: 'TENANT',
+        });
+        return;
+      }
+
+      const session = getSession();
+      if (!session) return;
+
       await apiRequest('/users', session.accessToken, {
         method: 'POST',
         body: JSON.stringify({
@@ -97,10 +135,18 @@ export default function UsersPage() {
   };
 
   const updateRole = async (userId: string, role: RoleName) => {
-    const session = getSession();
-    if (!session) return;
-
     try {
+      if (isDemoMode) {
+        const dataset = getDemoDataset();
+        dataset.users = dataset.users.map((user) => (user.id === userId ? { ...user, role } : user));
+        saveDemoDataset(dataset);
+        setRows(dataset.users as UserRow[]);
+        return;
+      }
+
+      const session = getSession();
+      if (!session) return;
+
       await apiRequest(`/users/${userId}/role`, session.accessToken, {
         method: 'PATCH',
         body: JSON.stringify({ role }),
@@ -112,10 +158,20 @@ export default function UsersPage() {
   };
 
   const toggleActive = async (user: UserRow) => {
-    const session = getSession();
-    if (!session) return;
-
     try {
+      if (isDemoMode) {
+        const dataset = getDemoDataset();
+        dataset.users = dataset.users.map((item) =>
+          item.id === user.id ? { ...item, isActive: !item.isActive } : item,
+        );
+        saveDemoDataset(dataset);
+        setRows(dataset.users as UserRow[]);
+        return;
+      }
+
+      const session = getSession();
+      if (!session) return;
+
       await apiRequest(`/users/${user.id}`, session.accessToken, {
         method: 'PATCH',
         body: JSON.stringify({ isActive: !user.isActive }),

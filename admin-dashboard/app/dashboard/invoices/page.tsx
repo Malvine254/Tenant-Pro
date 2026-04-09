@@ -1,8 +1,10 @@
 "use client";
 
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { apiRequest } from '../../../lib/api';
 import { getSession } from '../../../lib/auth';
+import { getDemoDataset } from '../../../lib/demo-tenant-ops';
 
 type InvoiceRow = {
   id: string;
@@ -29,15 +31,22 @@ type InvoiceRow = {
 };
 
 export default function InvoicesPage() {
+  const searchParams = useSearchParams();
+  const isDemoMode = searchParams.get('mode') === 'demo';
   const [rows, setRows] = useState<InvoiceRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const run = async () => {
-      const session = getSession();
-      if (!session) return;
-
       try {
+        if (isDemoMode) {
+          setRows(getDemoDataset().invoices as InvoiceRow[]);
+          return;
+        }
+
+        const session = getSession();
+        if (!session) return;
+
         const data = await apiRequest<InvoiceRow[]>('/invoices', session.accessToken);
         setRows(data);
       } catch (requestError) {
@@ -46,7 +55,7 @@ export default function InvoicesPage() {
     };
 
     void run();
-  }, []);
+  }, [isDemoMode]);
 
   const totals = rows.reduce(
     (acc, invoice) => {

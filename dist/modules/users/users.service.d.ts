@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { RoleName } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AssignRoleDto } from './dto/assign-role.dto';
@@ -7,10 +8,18 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 export declare class UsersService {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    private readonly configService;
+    constructor(prisma: PrismaService, configService: ConfigService);
     private toUserResponse;
-    private getRoleIdByName;
+    private isJsonDbMode;
+    private getJsonDbPath;
     private normalizeEmail;
+    private generateJsonPhoneNumber;
+    private ensureJsonDb;
+    private readJsonDb;
+    private writeJsonDb;
+    private mapJsonUser;
+    private getRoleIdByName;
     private rethrowUniqueConstraint;
     create(dto: CreateUserDto): Promise<{
         id: string;
@@ -25,6 +34,7 @@ export declare class UsersService {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -41,6 +51,7 @@ export declare class UsersService {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -57,6 +68,7 @@ export declare class UsersService {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
@@ -73,6 +85,7 @@ export declare class UsersService {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -89,6 +102,7 @@ export declare class UsersService {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -108,6 +122,7 @@ export declare class UsersService {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -147,6 +162,7 @@ export declare class UsersService {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -186,10 +202,29 @@ export declare class UsersService {
         bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
+        emailVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
-    findByPhoneNumber(phoneNumber: string): Promise<({
+    findByPhoneNumber(phoneNumber: string): Promise<{
+        id: string;
+        phoneNumber: string;
+        email: string | null;
+        firstName: string | null;
+        lastName: string | null;
+        passwordHash: string | null;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
+        isActive: boolean;
+        emailVerified: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        role: {
+            name: import(".prisma/client").$Enums.RoleName;
+        };
+    } | ({
         role: {
             id: string;
             createdAt: Date;
@@ -213,7 +248,25 @@ export declare class UsersService {
         updatedAt: Date;
         roleId: string;
     }) | null>;
-    findByEmail(email: string): Promise<({
+    findByEmail(email: string): Promise<{
+        id: string;
+        phoneNumber: string;
+        email: string | null;
+        firstName: string | null;
+        lastName: string | null;
+        passwordHash: string | null;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
+        isActive: boolean;
+        emailVerified: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        role: {
+            name: import(".prisma/client").$Enums.RoleName;
+        };
+    } | ({
         role: {
             id: string;
             createdAt: Date;
@@ -237,7 +290,25 @@ export declare class UsersService {
         updatedAt: Date;
         roleId: string;
     }) | null>;
-    findById(userId: string): Promise<({
+    findById(userId: string): Promise<{
+        id: string;
+        phoneNumber: string;
+        email: string | null;
+        firstName: string | null;
+        lastName: string | null;
+        passwordHash: string | null;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
+        isActive: boolean;
+        emailVerified: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        role: {
+            name: import(".prisma/client").$Enums.RoleName;
+        };
+    } | ({
         role: {
             id: string;
             createdAt: Date;
@@ -262,7 +333,67 @@ export declare class UsersService {
         roleId: string;
     }) | null>;
     isAllowedAppRole(role: RoleName): role is "LANDLORD" | "TENANT" | "ADMIN" | "CARETAKER";
+    activateAndVerifyUser(userId: string): Promise<{
+        id: string;
+        phoneNumber: string;
+        email: string | null;
+        firstName: string | null;
+        lastName: string | null;
+        passwordHash: string | null;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
+        isActive: boolean;
+        emailVerified: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        role: {
+            name: import(".prisma/client").$Enums.RoleName;
+        };
+    } | {
+        id: string;
+        phoneNumber: string;
+        email: string | null;
+        passwordHash: string | null;
+        firstName: string | null;
+        lastName: string | null;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        roleId: string;
+    }>;
+    getDemoAccessExpiry(loginEmail: string): Promise<number | null>;
+    storeDemoAccessRequest(entry: {
+        recipientEmail: string;
+        loginEmail: string;
+        expiresAt: Date;
+        name?: string;
+        userId?: string;
+    }): Promise<void>;
     updatePassword(userId: string, hashedPassword: string): Promise<{
+        id: string;
+        phoneNumber: string;
+        email: string | null;
+        firstName: string | null;
+        lastName: string | null;
+        passwordHash: string | null;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
+        isActive: boolean;
+        emailVerified: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        role: {
+            name: import(".prisma/client").$Enums.RoleName;
+        };
+    } | {
         id: string;
         phoneNumber: string;
         email: string | null;

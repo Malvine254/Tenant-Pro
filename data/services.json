@@ -1,0 +1,38 @@
+[
+  {
+    "title": "Tenant Management System",
+    "description": "A feature-rich rental management platform for landlords and property teams with billing, occupancy, and tenant communication workflows.",
+    "icon": "building",
+    "link": "/products"
+  },
+  {
+    "title": "E-learning Platform",
+    "description": "Modern online learning experiences with course delivery, student dashboards, progress tracking, and content management.",
+    "icon": "learning",
+    "link": "/products"
+  },
+  {
+    "title": "Web Development",
+    "description": "Responsive websites, company portfolios, SaaS dashboards, and business portals built with modern frontend and backend stacks.",
+    "icon": "code",
+    "link": "/services"
+  },
+  {
+    "title": "Android App Development",
+    "description": "Android applications tailored for tenant services, field teams, customer engagement, and business operations on the go.",
+    "icon": "android",
+    "link": "/services"
+  },
+  {
+    "title": "Custom Business Systems",
+    "description": "Operational systems that digitize approvals, reporting, support workflows, and internal service delivery.",
+    "icon": "grid",
+    "link": "/products"
+  },
+  {
+    "title": "IT Consulting",
+    "description": "Product planning, systems architecture, workflow design, and advisory support for digital transformation initiatives.",
+    "icon": "consulting",
+    "link": "/contact"
+  }
+]

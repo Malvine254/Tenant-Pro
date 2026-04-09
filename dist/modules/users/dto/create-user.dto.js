@@ -16,6 +16,7 @@ class CreateUserDto {
 }
 exports.CreateUserDto = CreateUserDto;
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.Matches)(/^\+?[1-9]\d{7,14}$/),
     __metadata("design:type", String)
@@ -42,6 +43,7 @@ __decorate([
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "lastName", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(client_1.RoleName),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "role", void 0);

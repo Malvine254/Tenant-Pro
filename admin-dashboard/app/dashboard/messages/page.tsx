@@ -4,6 +4,7 @@ import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 're
 import { useSearchParams } from 'next/navigation';
 import { API_BASE_URL, apiRequest, uploadFile } from '../../../lib/api';
 import { getSession } from '../../../lib/auth';
+import { getDemoDataset, saveDemoDataset } from '../../../lib/demo-tenant-ops';
 
 type ConversationSummary = {
   id: string;
@@ -47,6 +48,7 @@ type UploadResponse = {
 
 export default function MessagesPage() {
   const searchParams = useSearchParams();
+  const isDemoMode = searchParams.get('mode') === 'demo';
   const requestedTenantId = searchParams.get('tenantId') ?? '';
   const requestedTenantName = searchParams.get('tenantName') ?? '';
 
@@ -68,16 +70,23 @@ export default function MessagesPage() {
   );
 
   const loadConversations = async (silent = false) => {
-    const session = getSession();
-    if (!session) return;
-
     try {
       if (!silent) {
         setLoadingList(true);
         setError(null);
       }
 
-      const data = await apiRequest<ConversationSummary[]>('/support/conversations', session.accessToken);
+      let data: ConversationSummary[] = [];
+
+      if (isDemoMode) {
+        const dataset = getDemoDataset();
+        data = dataset.conversations as ConversationSummary[];
+      } else {
+        const session = getSession();
+        if (!session) return;
+        data = await apiRequest<ConversationSummary[]>('/support/conversations', session.accessToken);
+      }
+
       setConversations((current) => {
         const same =
           current.length === data.length &&
@@ -109,16 +118,32 @@ export default function MessagesPage() {
   };
 
   const loadMessages = async (conversationId: string, silent = false) => {
-    const session = getSession();
-    if (!session) return;
-
     try {
       if (!silent) {
         setLoadingThread(true);
         setError(null);
       }
 
-      const payload = await apiRequest<ConversationPayload>(`/support/conversations/${conversationId}/messages`, session.accessToken);
+      let payload: ConversationPayload;
+
+      if (isDemoMode) {
+        const dataset = getDemoDataset();
+        const conversation = (dataset.conversations as ConversationSummary[]).find((item) => item.id === conversationId);
+        if (!conversation) {
+          setSelectedConversation(null);
+          setMessages([]);
+          return;
+        }
+        payload = {
+          conversation,
+          messages: (dataset.messagesByConversation[conversationId] ?? []) as SupportMessage[],
+        };
+      } else {
+        const session = getSession();
+        if (!session) return;
+        payload = await apiRequest<ConversationPayload>(`/support/conversations/${conversationId}/messages`, session.accessToken);
+      }
+
       setSelectedConversation(payload.conversation);
       setMessages((current) => {
         const same =
@@ -142,7 +167,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     void loadConversations();
-  }, []);
+  }, [isDemoMode]);
 
   useEffect(() => {
     if (selectedConversationId) {
@@ -154,6 +179,10 @@ export default function MessagesPage() {
   }, [selectedConversationId]);
 
   useEffect(() => {
+    if (isDemoMode) {
+      return undefined;
+    }
+
     const interval = window.setInterval(async () => {
       if (pollInFlightRef.current) return;
       pollInFlightRef.current = true;
@@ -169,7 +198,7 @@ export default function MessagesPage() {
     }, 3000);
 
     return () => window.clearInterval(interval);
-  }, [selectedConversationId]);
+  }, [isDemoMode, selectedConversationId]);
 
   const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
@@ -178,8 +207,6 @@ export default function MessagesPage() {
 
   const sendMessage = async (event: FormEvent) => {
     event.preventDefault();
-    const session = getSession();
-    if (!session) return;
 
     const trimmed = messageText.trim();
     if (!trimmed && !selectedFile) {
@@ -190,6 +217,83 @@ export default function MessagesPage() {
     try {
       setSending(true);
       setError(null);
+
+      if (isDemoMode) {
+        const dataset = getDemoDataset();
+        const existingConversation = selectedConversationId
+          ? (dataset.conversations as ConversationSummary[]).find((item) => item.id === selectedConversationId) ?? null
+          : null;
+
+        let conversation = existingConversation;
+        if (!conversation) {
+          if (!requestedTenantId) {
+            setError('Choose a tenant conversation first.');
+            return;
+          }
+
+          const tenant = dataset.users.find((item) => item.id === requestedTenantId);
+          conversation = {
+            id: `demo-convo-${Date.now()}`,
+            tenantUserId: requestedTenantId,
+            tenantName: requestedTenantName || (tenant ? `${tenant.firstName} ${tenant.lastName}` : 'Tenant'),
+            phoneNumber: tenant?.phoneNumber ?? 'N/A',
+            email: tenant?.email ?? null,
+            isTenantActive: tenant?.isActive ?? true,
+            topic: 'General',
+            subject: requestedTenantName ? `${requestedTenantName} chat` : 'Tenant chat',
+            isOpen: true,
+            lastMessage: '',
+            lastMessageAt: new Date().toISOString(),
+            lastSender: 'staff',
+          };
+          dataset.conversations.unshift(conversation);
+          setSelectedConversationId(conversation.id);
+        }
+
+        const newMessage: SupportMessage = {
+          id: `demo-msg-${Date.now()}`,
+          senderId: 'demo-manager',
+          topic: conversation.topic,
+          message: trimmed || `Shared attachment: ${selectedFile?.name ?? 'file'}`,
+          attachmentUri: selectedFile ? '#' : null,
+          attachmentName: selectedFile?.name ?? null,
+          isFromTenant: false,
+          status: 'SENT',
+          timestamp: Date.now(),
+        };
+
+        const updatedMessages = [
+          ...(((dataset.messagesByConversation[conversation.id] ?? []) as SupportMessage[])),
+          newMessage,
+        ];
+
+        dataset.messagesByConversation[conversation.id] = updatedMessages;
+        dataset.conversations = (dataset.conversations as ConversationSummary[])
+          .map((item) =>
+            item.id === conversation!.id
+              ? {
+                  ...item,
+                  lastMessage: newMessage.message,
+                  lastMessageAt: new Date(newMessage.timestamp).toISOString(),
+                  lastSender: 'staff' as const,
+                  isOpen: true,
+                }
+              : item,
+          )
+          .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+
+        saveDemoDataset(dataset);
+        const refreshedConversation = (dataset.conversations as ConversationSummary[]).find((item) => item.id === conversation.id) ?? conversation;
+        setConversations(dataset.conversations as ConversationSummary[]);
+        setSelectedConversation(refreshedConversation);
+        setMessages(updatedMessages);
+        setMessageText('');
+        setSelectedFile(null);
+        return;
+      }
+
+      const session = getSession();
+      if (!session) return;
 
       let uploaded: UploadResponse | null = null;
       if (selectedFile) {

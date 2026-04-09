@@ -65,7 +65,7 @@ let EmailService = EmailService_1 = class EmailService {
         const fromName = this.configService.get('MAIL_FROM_NAME');
         const fromEmail = this.configService.get('MAIL_FROM_EMAIL');
         const expiryMinutes = this.configService.get('OTP_EXPIRY_MINUTES', '10');
-        const subject = `Your OTP Code - ${otp}`;
+        const subject = 'Your Starmax verification code';
         const html = this.getOtpEmailTemplate(otp, firstName, expiryMinutes);
         try {
             await this.transporter.sendMail({
@@ -80,6 +80,29 @@ let EmailService = EmailService_1 = class EmailService {
         catch (error) {
             this.logger.error(`Failed to send OTP email to ${email}:`, error);
             throw new Error('Failed to send OTP email');
+        }
+    }
+    async sendVerificationEmail(email, otp, firstName) {
+        return this.sendOtpEmail(email, otp, firstName);
+    }
+    async sendDemoAccessEmail(email, loginEmail, password, expiresAt, firstName) {
+        const fromName = this.configService.get('MAIL_FROM_NAME');
+        const fromEmail = this.configService.get('MAIL_FROM_EMAIL');
+        const subject = 'Your Starmax demo credentials';
+        const html = this.getDemoAccessTemplate(loginEmail, password, expiresAt, firstName);
+        try {
+            await this.transporter.sendMail({
+                from: `"${fromName}" <${fromEmail}>`,
+                to: email,
+                subject,
+                html,
+            });
+            this.logger.log(`Demo access email sent to ${email}`);
+            return { success: true, message: 'Demo access email sent' };
+        }
+        catch (error) {
+            this.logger.error(`Failed to send demo access email to ${email}:`, error);
+            throw new Error('Failed to send demo access email');
         }
     }
     async sendPasswordResetEmail(email, resetToken, firstName) {
@@ -187,27 +210,102 @@ let EmailService = EmailService_1 = class EmailService {
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .otp-box { background: #f4f4f4; border: 2px dashed #007bff; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px; }
-    .otp-code { font-size: 32px; font-weight: bold; color: #007bff; letter-spacing: 5px; }
-    .footer { margin-top: 30px; font-size: 12px; color: #666; text-align: center; }
+    body { margin: 0; padding: 0; background: #f4f7fb; font-family: Arial, Helvetica, sans-serif; color: #1f2937; }
+    .shell { padding: 24px 12px; }
+    .card { max-width: 620px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08); }
+    .hero { background: linear-gradient(135deg, #0f172a, #312e81); color: #ffffff; padding: 28px 32px; }
+    .hero h1 { margin: 0; font-size: 24px; }
+    .hero p { margin: 8px 0 0; color: #dbeafe; font-size: 14px; }
+    .content { padding: 28px 32px; }
+    .otp-box { margin: 22px 0; border-radius: 16px; background: linear-gradient(135deg, #eef2ff, #eff6ff); border: 1px solid #c7d2fe; text-align: center; padding: 18px; }
+    .otp-code { font-size: 32px; letter-spacing: 8px; font-weight: 700; color: #312e81; }
+    .note { margin-top: 14px; font-size: 14px; color: #475569; }
+    .footer { border-top: 1px solid #e5e7eb; padding: 18px 32px 24px; font-size: 12px; color: #64748b; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Verification Code</h2>
-    <p>${greeting}</p>
-    <p>Your One-Time Password (OTP) for authentication is:</p>
-    <div class="otp-box">
-      <div class="otp-code">${otp}</div>
+  <div class="shell">
+    <div class="card">
+      <div class="hero">
+        <h1>Email verification</h1>
+        <p>Secure access for your Starmax account</p>
+      </div>
+      <div class="content">
+        <p>${greeting}</p>
+        <p>Use the verification code below to complete your sign-in or confirm your email address.</p>
+        <div class="otp-box">
+          <div class="otp-code">${otp}</div>
+        </div>
+        <p class="note"><strong>This code expires in ${expiryMinutes} minutes.</strong></p>
+        <p class="note">If you did not request this code, you can safely ignore this message.</p>
+      </div>
+      <div class="footer">
+        <p>This is an automated email from Starmax Ltd. Please do not reply directly.</p>
+        <p>&copy; ${new Date().getFullYear()} Starmax Ltd. All rights reserved.</p>
+      </div>
     </div>
-    <p><strong>This code will expire in ${expiryMinutes} minutes.</strong></p>
-    <p>If you didn't request this code, please ignore this email.</p>
-    <div class="footer">
-      <p>This is an automated message, please do not reply.</p>
-      <p>&copy; ${new Date().getFullYear()} Starmax Ltd. All rights reserved.</p>
+  </div>
+</body>
+</html>
+    `;
+    }
+    getDemoAccessTemplate(loginEmail, password, expiresAt, firstName) {
+        const greeting = firstName ? `Hi ${firstName},` : 'Hi,';
+        const loginUrl = `${this.configService.get('FRONTEND_URL', 'http://localhost:3001')}/login?mode=demo`;
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { margin: 0; padding: 0; background: #f4f7fb; font-family: Arial, Helvetica, sans-serif; color: #1f2937; }
+    .shell { padding: 24px 12px; }
+    .card { max-width: 640px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08); }
+    .hero { background: linear-gradient(135deg, #111827, #4f46e5); color: #ffffff; padding: 30px 32px; }
+    .hero h1 { margin: 0; font-size: 24px; }
+    .hero p { margin: 8px 0 0; color: #dbeafe; font-size: 14px; }
+    .content { padding: 28px 32px; }
+    .cred-box { margin: 20px 0; border-radius: 16px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px 18px; }
+    .label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; }
+    .value { font-size: 16px; font-weight: 700; color: #111827; margin-top: 4px; word-break: break-word; }
+    .cta { display: inline-block; margin-top: 20px; padding: 12px 18px; background: #111827; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 600; }
+    .meta { margin-top: 16px; font-size: 14px; color: #475569; }
+    .footer { border-top: 1px solid #e5e7eb; padding: 18px 32px 24px; font-size: 12px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="card">
+      <div class="hero">
+        <h1>Your Starmax demo is ready</h1>
+        <p>Use these temporary credentials to explore the product safely</p>
+      </div>
+      <div class="content">
+        <p>${greeting}</p>
+        <p>Below are your limited demo credentials. They are isolated from real accounts and will remain valid for <strong>1 hour</strong>.</p>
+
+        <div class="cred-box">
+          <div class="label">Login email</div>
+          <div class="value">${loginEmail}</div>
+        </div>
+
+        <div class="cred-box">
+          <div class="label">Temporary password</div>
+          <div class="value">${password}</div>
+        </div>
+
+        <div class="meta">Expires at: <strong>${expiresAt.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</strong></div>
+
+        <a href="${loginUrl}" class="cta">Open Demo Login</a>
+      </div>
+      <div class="footer">
+        <p>This demo environment is isolated for safe exploration and temporary testing.</p>
+        <p>&copy; ${new Date().getFullYear()} Starmax Ltd. All rights reserved.</p>
+      </div>
     </div>
   </div>
 </body>

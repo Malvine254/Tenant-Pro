@@ -1,8 +1,10 @@
 "use client";
 
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { apiRequest } from '../../../lib/api';
 import { getSession } from '../../../lib/auth';
+import { getDemoDataset, saveDemoDataset } from '../../../lib/demo-tenant-ops';
 
 type MaintenanceStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
 type MaintenancePriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
@@ -31,14 +33,21 @@ type RequestRow = {
 const statusOptions: MaintenanceStatus[] = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'];
 
 export default function MaintenancePage() {
+  const searchParams = useSearchParams();
+  const isDemoMode = searchParams.get('mode') === 'demo';
   const [rows, setRows] = useState<RequestRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const loadRequests = async () => {
-    const session = getSession();
-    if (!session) return;
-
     try {
+      if (isDemoMode) {
+        setRows(getDemoDataset().maintenance as RequestRow[]);
+        return;
+      }
+
+      const session = getSession();
+      if (!session) return;
+
       const data = await apiRequest<RequestRow[]>('/maintenance', session.accessToken);
       setRows(data);
     } catch (requestError) {
@@ -48,13 +57,23 @@ export default function MaintenancePage() {
 
   useEffect(() => {
     void loadRequests();
-  }, []);
+  }, [isDemoMode]);
 
   const updateStatus = async (requestId: string, status: MaintenanceStatus) => {
-    const session = getSession();
-    if (!session) return;
-
     try {
+      if (isDemoMode) {
+        const dataset = getDemoDataset();
+        dataset.maintenance = dataset.maintenance.map((item) =>
+          item.id === requestId ? { ...item, status } : item,
+        );
+        saveDemoDataset(dataset);
+        setRows(dataset.maintenance as RequestRow[]);
+        return;
+      }
+
+      const session = getSession();
+      if (!session) return;
+
       await apiRequest(`/maintenance/${requestId}/status`, session.accessToken, {
         method: 'PATCH',
         body: JSON.stringify({ status }),

@@ -24,6 +24,7 @@ const login_with_email_dto_1 = require("./dto/login-with-email.dto");
 const request_otp_dto_1 = require("./dto/request-otp.dto");
 const verify_otp_dto_1 = require("./dto/verify-otp.dto");
 const request_email_otp_dto_1 = require("./dto/request-email-otp.dto");
+const request_demo_access_dto_1 = require("./dto/request-demo-access.dto");
 const verify_email_otp_dto_1 = require("./dto/verify-email-otp.dto");
 const forgot_password_dto_1 = require("./dto/forgot-password.dto");
 const reset_password_dto_1 = require("./dto/reset-password.dto");
@@ -34,7 +35,10 @@ let AuthController = class AuthController {
         this.usersService = usersService;
     }
     async register(dto) {
-        return this.usersService.register(dto);
+        return this.authService.registerWithEmailVerification(dto);
+    }
+    async requestDemoAccess(dto) {
+        return this.authService.requestDemoAccess(dto.email, dto.name);
     }
     async loginWithEmail(dto) {
         return this.authService.loginWithEmailPassword(dto.email, dto.password);
@@ -72,6 +76,13 @@ __decorate([
     __metadata("design:paramtypes", [register_user_dto_1.RegisterUserDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
+__decorate([
+    (0, common_1.Post)('demo/request'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [request_demo_access_dto_1.RequestDemoAccessDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "requestDemoAccess", null);
 __decorate([
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),

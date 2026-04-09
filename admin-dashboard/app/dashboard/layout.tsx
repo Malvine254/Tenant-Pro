@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Sidebar } from '../../components/sidebar';
-import { getSession } from '../../lib/auth';
+import { clearDemoSession, getDemoSession, getSession } from '../../lib/auth';
 
 export default function DashboardLayout({
   children,
@@ -12,10 +12,25 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const isDemoMode = searchParams.get('mode') === 'demo';
   const [ready, setReady] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    if (isDemoMode) {
+      const demoSession = getDemoSession();
+      if (!demoSession) {
+        router.replace('/login?mode=demo');
+        return;
+      }
+
+      setReady(true);
+      return;
+    }
+
+    clearDemoSession();
+
     const session = getSession();
     if (!session) {
       router.replace('/login');
@@ -23,11 +38,11 @@ export default function DashboardLayout({
     }
 
     setReady(true);
-  }, [pathname, router]);
+  }, [isDemoMode, pathname, router]);
 
   useEffect(() => {
     setSidebarOpen(false);
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   if (!ready) {
     return <div className="p-6 text-sm text-gray-600">Loading dashboard...</div>;
@@ -44,7 +59,7 @@ export default function DashboardLayout({
           >
             Menu
           </button>
-          <h1 className="text-sm font-semibold text-gray-900">Tenant Pro Admin</h1>
+          <h1 className="text-sm font-semibold text-gray-900">{isDemoMode ? 'Tenant Pro Demo' : 'Tenant Pro Admin'}</h1>
           <div className="w-14" />
         </div>
       </header>

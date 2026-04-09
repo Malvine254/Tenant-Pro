@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tenant Pro Admin Dashboard",
-  description: "Admin dashboard for property, tenant, invoice and payment tracking",
+  title: "Starmax | Tenant & Property Services",
+  description: "Starmax company portfolio for tenant services, property operations, and support workflows.",
 };
 
 export default function RootLayout({

@@ -4,6 +4,7 @@ import { LoginWithEmailDto } from './dto/login-with-email.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { RequestEmailOtpDto } from './dto/request-email-otp.dto';
+import { RequestDemoAccessDto } from './dto/request-demo-access.dto';
 import { VerifyEmailOtpDto } from './dto/verify-email-otp.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -13,20 +14,29 @@ export declare class AuthController {
     private readonly usersService;
     constructor(authService: AuthService, usersService: UsersService);
     register(dto: RegisterUserDto): Promise<{
-        id: string;
-        phoneNumber: string;
-        email: string | null;
-        firstName: string | null;
-        lastName: string | null;
-        fullName: string;
-        profileImageUrl: string | null;
-        emergencyContactName: string | null;
-        emergencyContactPhone: string | null;
-        bio: string | null;
-        role: import(".prisma/client").$Enums.RoleName;
-        isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
+        message: string;
+        email: string;
+        user: {
+            id: string;
+            phoneNumber: string;
+            email: string | null;
+            firstName: string | null;
+            lastName: string | null;
+            fullName: string;
+            profileImageUrl: string | null;
+            emergencyContactName: string | null;
+            emergencyContactPhone: string | null;
+            bio: string | null;
+            role: import(".prisma/client").$Enums.RoleName;
+            isActive: boolean;
+            emailVerified: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }>;
+    requestDemoAccess(dto: RequestDemoAccessDto): Promise<{
+        message: string;
+        expiresAt: string;
     }>;
     loginWithEmail(dto: LoginWithEmailDto): Promise<{
         accessToken: string;

@@ -1,0 +1,109 @@
+{
+  "users": [
+    {
+      "id": "dac260de-5404-4939-b5d8-6583cd37346d",
+      "phoneNumber": "+254791951323",
+      "email": "demo+mnrdcnrvnvg2i@starmax.preview",
+      "firstName": "Malvine Owuor",
+      "lastName": "Guest",
+      "passwordHash": "$2a$10$EjeccUjOf8u1WWatl725LeGKQEmiPFTxRJCkmvkzwMfyyxiLw07Ja",
+      "role": "ADMIN",
+      "isActive": true,
+      "emailVerified": true,
+      "profileImageUrl": null,
+      "emergencyContactName": null,
+      "emergencyContactPhone": null,
+      "bio": null,
+      "createdAt": "2026-04-09T11:03:36.292Z",
+      "updatedAt": "2026-04-09T11:03:36.482Z"
+    },
+    {
+      "id": "user-landlord-001",
+      "phoneNumber": "+254700000001",
+      "email": "landlord@example.com",
+      "firstName": "Starmax",
+      "lastName": "Landlord",
+      "passwordHash": null,
+      "role": "LANDLORD",
+      "isActive": true,
+      "profileImageUrl": null,
+      "emergencyContactName": null,
+      "emergencyContactPhone": null,
+      "bio": "Landlord demo account for Starmax.",
+      "createdAt": "2026-04-09T00:00:00.000Z",
+      "updatedAt": "2026-04-09T00:00:00.000Z"
+    },
+    {
+      "id": "user-admin-001",
+      "phoneNumber": "+254700000099",
+      "email": "admin@example.com",
+      "firstName": "Starmax",
+      "lastName": "Admin",
+      "passwordHash": null,
+      "role": "ADMIN",
+      "isActive": true,
+      "profileImageUrl": null,
+      "emergencyContactName": null,
+      "emergencyContactPhone": null,
+      "bio": "Admin demo account for Starmax.",
+      "createdAt": "2026-04-09T00:00:00.000Z",
+      "updatedAt": "2026-04-09T00:00:00.000Z"
+    },
+    {
+      "id": "user-tenant-001",
+      "phoneNumber": "+254700000010",
+      "email": "tenant@example.com",
+      "firstName": "Starmax",
+      "lastName": "Tenant",
+      "passwordHash": null,
+      "role": "TENANT",
+      "isActive": true,
+      "profileImageUrl": null,
+      "emergencyContactName": null,
+      "emergencyContactPhone": null,
+      "bio": "Tenant demo account for Starmax.",
+      "createdAt": "2026-04-09T00:00:00.000Z",
+      "updatedAt": "2026-04-09T00:00:00.000Z"
+    },
+    {
+      "id": "user-caretaker-001",
+      "phoneNumber": "+254700000020",
+      "email": "caretaker@example.com",
+      "firstName": "Starmax",
+      "lastName": "Caretaker",
+      "passwordHash": null,
+      "role": "CARETAKER",
+      "isActive": true,
+      "profileImageUrl": null,
+      "emergencyContactName": null,
+      "emergencyContactPhone": null,
+      "bio": "Caretaker demo account for Starmax.",
+      "createdAt": "2026-04-09T00:00:00.000Z",
+      "updatedAt": "2026-04-09T00:00:00.000Z"
+    }
+  ],
+  "companyInquiries": [
+    {
+      "id": "5e8d09cc-1a7e-4dfb-af4e-6cc1c859c1fd",
+      "name": "Demo Lead",
+      "companyName": "Starmax Prospect",
+      "email": "lead@example.com",
+      "phone": "",
+      "serviceInterest": "Tenant services",
+      "propertyCount": "",
+      "timeline": "",
+      "projectGoals": "Need tenant onboarding and maintenance workflow support.",
+      "createdAt": "2026-04-09T09:00:05.465Z"
+    }
+  ],
+  "demoAccessRequests": [
+    {
+      "recipientEmail": "owuormalvine75@gmail.com",
+      "loginEmail": "demo+mnrdcnrvnvg2i@starmax.preview",
+      "expiresAt": "2026-04-09T12:03:36.283Z",
+      "createdAt": "2026-04-09T11:03:36.491Z",
+      "name": "Malvine Owuor",
+      "userId": "dac260de-5404-4939-b5d8-6583cd37346d"
+    }
+  ]
+}

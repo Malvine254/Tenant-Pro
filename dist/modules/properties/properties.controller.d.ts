@@ -19,13 +19,13 @@ export declare class PropertiesController {
     createProperty(req: AuthenticatedRequest, dto: CreatePropertyDto): Promise<{
         units: {
             id: string;
+            status: import(".prisma/client").$Enums.UnitStatus;
             createdAt: Date;
             updatedAt: Date;
             propertyId: string;
             unitNumber: string;
             floor: string | null;
             rentAmount: import("@prisma/client/runtime/library").Decimal;
-            status: import(".prisma/client").$Enums.UnitStatus;
             imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         }[];
     } & {
@@ -34,22 +34,22 @@ export declare class PropertiesController {
         updatedAt: Date;
         name: string;
         description: string | null;
-        landlordId: string;
         coverImageUrl: string | null;
         addressLine: string;
         city: string;
         state: string | null;
         country: string;
+        landlordId: string;
     }>;
     addUnit(req: AuthenticatedRequest, params: PropertyIdParamDto, dto: CreateUnitDto): Promise<{
         id: string;
+        status: import(".prisma/client").$Enums.UnitStatus;
         createdAt: Date;
         updatedAt: Date;
         propertyId: string;
         unitNumber: string;
         floor: string | null;
         rentAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import(".prisma/client").$Enums.UnitStatus;
         imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     listProperties(req: AuthenticatedRequest): Promise<({
@@ -63,6 +63,8 @@ export declare class PropertiesController {
             };
         } & {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             phoneNumber: string;
             email: string | null;
             passwordHash: string | null;
@@ -73,19 +75,17 @@ export declare class PropertiesController {
             emergencyContactPhone: string | null;
             bio: string | null;
             isActive: boolean;
-            createdAt: Date;
-            updatedAt: Date;
             roleId: string;
         };
         units: {
             id: string;
+            status: import(".prisma/client").$Enums.UnitStatus;
             createdAt: Date;
             updatedAt: Date;
             propertyId: string;
             unitNumber: string;
             floor: string | null;
             rentAmount: import("@prisma/client/runtime/library").Decimal;
-            status: import(".prisma/client").$Enums.UnitStatus;
             imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         }[];
     } & {
@@ -94,12 +94,12 @@ export declare class PropertiesController {
         updatedAt: Date;
         name: string;
         description: string | null;
-        landlordId: string;
         coverImageUrl: string | null;
         addressLine: string;
         city: string;
         state: string | null;
         country: string;
+        landlordId: string;
     })[]>;
     updateProperty(req: AuthenticatedRequest, params: PropertyIdParamDto, dto: UpdatePropertyDto): Promise<{
         landlord: {
@@ -112,6 +112,8 @@ export declare class PropertiesController {
             };
         } & {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             phoneNumber: string;
             email: string | null;
             passwordHash: string | null;
@@ -122,19 +124,17 @@ export declare class PropertiesController {
             emergencyContactPhone: string | null;
             bio: string | null;
             isActive: boolean;
-            createdAt: Date;
-            updatedAt: Date;
             roleId: string;
         };
         units: {
             id: string;
+            status: import(".prisma/client").$Enums.UnitStatus;
             createdAt: Date;
             updatedAt: Date;
             propertyId: string;
             unitNumber: string;
             floor: string | null;
             rentAmount: import("@prisma/client/runtime/library").Decimal;
-            status: import(".prisma/client").$Enums.UnitStatus;
             imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         }[];
     } & {
@@ -143,22 +143,22 @@ export declare class PropertiesController {
         updatedAt: Date;
         name: string;
         description: string | null;
-        landlordId: string;
         coverImageUrl: string | null;
         addressLine: string;
         city: string;
         state: string | null;
         country: string;
+        landlordId: string;
     }>;
     updateUnit(req: AuthenticatedRequest, params: UnitIdParamDto, dto: UpdateUnitDto): Promise<{
         id: string;
+        status: import(".prisma/client").$Enums.UnitStatus;
         createdAt: Date;
         updatedAt: Date;
         propertyId: string;
         unitNumber: string;
         floor: string | null;
         rentAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import(".prisma/client").$Enums.UnitStatus;
         imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
 }

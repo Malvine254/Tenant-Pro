@@ -8,6 +8,14 @@ export declare class EmailService {
         success: boolean;
         message: string;
     }>;
+    sendVerificationEmail(email: string, otp: string, firstName?: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    sendDemoAccessEmail(email: string, loginEmail: string, password: string, expiresAt: Date, firstName?: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
     sendPasswordResetEmail(email: string, resetToken: string, firstName?: string): Promise<{
         success: boolean;
         message: string;
@@ -23,6 +31,7 @@ export declare class EmailService {
         success: boolean;
     }>;
     private getOtpEmailTemplate;
+    private getDemoAccessTemplate;
     private getPasswordResetTemplate;
     private getWelcomeEmailTemplate;
     private getRentReminderTemplate;

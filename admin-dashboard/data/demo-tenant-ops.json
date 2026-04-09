@@ -1,0 +1,360 @@
+{
+  "users": [
+    {
+      "id": "demo-admin-001",
+      "phoneNumber": "+254700000099",
+      "email": "demo.admin@starmax.test",
+      "firstName": "Starmax",
+      "lastName": "Admin",
+      "role": "ADMIN",
+      "isActive": true,
+      "createdAt": "2026-04-09T08:00:00.000Z"
+    },
+    {
+      "id": "demo-landlord-001",
+      "phoneNumber": "+254700100001",
+      "email": "landlord@starmax.test",
+      "firstName": "Naomi",
+      "lastName": "Wanjiru",
+      "role": "LANDLORD",
+      "isActive": true,
+      "createdAt": "2026-04-09T08:10:00.000Z"
+    },
+    {
+      "id": "demo-tenant-001",
+      "phoneNumber": "+254700200001",
+      "email": "amina@tenantmail.test",
+      "firstName": "Amina",
+      "lastName": "Hassan",
+      "role": "TENANT",
+      "isActive": true,
+      "createdAt": "2026-04-09T08:20:00.000Z"
+    },
+    {
+      "id": "demo-tenant-002",
+      "phoneNumber": "+254700200002",
+      "email": "brian@tenantmail.test",
+      "firstName": "Brian",
+      "lastName": "Otieno",
+      "role": "TENANT",
+      "isActive": true,
+      "createdAt": "2026-04-09T08:25:00.000Z"
+    },
+    {
+      "id": "demo-caretaker-001",
+      "phoneNumber": "+254700300001",
+      "email": "caretaker@starmax.test",
+      "firstName": "Faith",
+      "lastName": "Njeri",
+      "role": "CARETAKER",
+      "isActive": true,
+      "createdAt": "2026-04-09T08:30:00.000Z"
+    }
+  ],
+  "properties": [
+    {
+      "id": "property-westlands",
+      "name": "Westlands Heights",
+      "description": "Modern apartment block with smart access and fast maintenance turnaround.",
+      "coverImageUrl": "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80",
+      "addressLine": "14 Westlands Road",
+      "city": "Nairobi",
+      "state": "Nairobi County",
+      "country": "Kenya",
+      "landlordId": "demo-landlord-001",
+      "landlord": {
+        "firstName": "Naomi",
+        "lastName": "Wanjiru",
+        "phoneNumber": "+254700100001"
+      },
+      "units": [
+        {
+          "id": "unit-wh-a1",
+          "unitNumber": "A1",
+          "floor": "1",
+          "rentAmount": 45000,
+          "status": "OCCUPIED",
+          "imageUrls": [
+            "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80"
+          ]
+        },
+        {
+          "id": "unit-wh-b2",
+          "unitNumber": "B2",
+          "floor": "2",
+          "rentAmount": 52000,
+          "status": "VACANT",
+          "imageUrls": [
+            "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "property-kilimani",
+      "name": "Kilimani Suites",
+      "description": "Family-friendly rental property with concierge and digital tenant support.",
+      "coverImageUrl": "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80",
+      "addressLine": "88 Lenana Road",
+      "city": "Nairobi",
+      "state": "Nairobi County",
+      "country": "Kenya",
+      "landlordId": "demo-landlord-001",
+      "landlord": {
+        "firstName": "Naomi",
+        "lastName": "Wanjiru",
+        "phoneNumber": "+254700100001"
+      },
+      "units": [
+        {
+          "id": "unit-ks-c3",
+          "unitNumber": "C3",
+          "floor": "3",
+          "rentAmount": 61000,
+          "status": "VACANT",
+          "imageUrls": [
+            "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80"
+          ]
+        },
+        {
+          "id": "unit-ks-d4",
+          "unitNumber": "D4",
+          "floor": "4",
+          "rentAmount": 68000,
+          "status": "MAINTENANCE",
+          "imageUrls": [
+            "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80"
+          ]
+        }
+      ]
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv-001",
+      "billingType": "RENT",
+      "periodMonth": 4,
+      "periodYear": 2026,
+      "dueDate": "2026-04-05T00:00:00.000Z",
+      "totalAmount": 45000,
+      "paidAmount": 45000,
+      "status": "PAID",
+      "tenant": {
+        "user": {
+          "firstName": "Amina",
+          "lastName": "Hassan",
+          "phoneNumber": "+254700200001"
+        }
+      },
+      "unit": {
+        "unitNumber": "A1",
+        "property": {
+          "name": "Westlands Heights"
+        }
+      }
+    },
+    {
+      "id": "inv-002",
+      "billingType": "RENT",
+      "periodMonth": 4,
+      "periodYear": 2026,
+      "dueDate": "2026-04-05T00:00:00.000Z",
+      "totalAmount": 61000,
+      "paidAmount": 30000,
+      "status": "PARTIAL",
+      "tenant": {
+        "user": {
+          "firstName": "Brian",
+          "lastName": "Otieno",
+          "phoneNumber": "+254700200002"
+        }
+      },
+      "unit": {
+        "unitNumber": "C3",
+        "property": {
+          "name": "Kilimani Suites"
+        }
+      }
+    },
+    {
+      "id": "inv-003",
+      "billingType": "SERVICE_CHARGE",
+      "periodMonth": 4,
+      "periodYear": 2026,
+      "dueDate": "2026-04-08T00:00:00.000Z",
+      "totalAmount": 8000,
+      "paidAmount": 0,
+      "status": "PENDING",
+      "tenant": {
+        "user": {
+          "firstName": "Amina",
+          "lastName": "Hassan",
+          "phoneNumber": "+254700200001"
+        }
+      },
+      "unit": {
+        "unitNumber": "A1",
+        "property": {
+          "name": "Westlands Heights"
+        }
+      }
+    }
+  ],
+  "maintenance": [
+    {
+      "id": "mnt-001",
+      "title": "Leaking kitchen sink",
+      "description": "Water is dripping under the sink cabinet and needs sealing.",
+      "priority": "HIGH",
+      "status": "OPEN",
+      "createdAt": "2026-04-09T06:30:00.000Z",
+      "unit": {
+        "unitNumber": "A1",
+        "property": { "name": "Westlands Heights" }
+      },
+      "tenant": {
+        "user": {
+          "firstName": "Amina",
+          "lastName": "Hassan",
+          "phoneNumber": "+254700200001"
+        }
+      },
+      "assignedTo": {
+        "firstName": "Faith",
+        "lastName": "Njeri",
+        "phoneNumber": "+254700300001"
+      }
+    },
+    {
+      "id": "mnt-002",
+      "title": "Corridor light replacement",
+      "description": "The fourth-floor hallway light has gone off and needs replacing.",
+      "priority": "MEDIUM",
+      "status": "IN_PROGRESS",
+      "createdAt": "2026-04-08T14:10:00.000Z",
+      "unit": {
+        "unitNumber": "D4",
+        "property": { "name": "Kilimani Suites" }
+      },
+      "tenant": {
+        "user": {
+          "firstName": "Brian",
+          "lastName": "Otieno",
+          "phoneNumber": "+254700200002"
+        }
+      },
+      "assignedTo": {
+        "firstName": "Faith",
+        "lastName": "Njeri",
+        "phoneNumber": "+254700300001"
+      }
+    },
+    {
+      "id": "mnt-003",
+      "title": "Water pressure check",
+      "description": "Bathroom shower pressure dropped after the weekend maintenance work.",
+      "priority": "URGENT",
+      "status": "OPEN",
+      "createdAt": "2026-04-09T07:15:00.000Z",
+      "unit": {
+        "unitNumber": "C3",
+        "property": { "name": "Kilimani Suites" }
+      },
+      "tenant": {
+        "user": {
+          "firstName": "Brian",
+          "lastName": "Otieno",
+          "phoneNumber": "+254700200002"
+        }
+      },
+      "assignedTo": {
+        "firstName": "Faith",
+        "lastName": "Njeri",
+        "phoneNumber": "+254700300001"
+      }
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv-001",
+      "tenantUserId": "demo-tenant-001",
+      "tenantName": "Amina Hassan",
+      "phoneNumber": "+254700200001",
+      "email": "amina@tenantmail.test",
+      "isTenantActive": true,
+      "topic": "Rent",
+      "subject": "Rent payment confirmation",
+      "isOpen": true,
+      "lastMessage": "Thanks, I have shared the proof of payment.",
+      "lastMessageAt": "2026-04-09T08:40:00.000Z",
+      "lastSender": "tenant"
+    },
+    {
+      "id": "conv-002",
+      "tenantUserId": "demo-tenant-002",
+      "tenantName": "Brian Otieno",
+      "phoneNumber": "+254700200002",
+      "email": "brian@tenantmail.test",
+      "isTenantActive": true,
+      "topic": "Maintenance",
+      "subject": "Water pressure issue",
+      "isOpen": true,
+      "lastMessage": "A technician is scheduled for 2 PM today.",
+      "lastMessageAt": "2026-04-09T09:15:00.000Z",
+      "lastSender": "staff"
+    }
+  ],
+  "messagesByConversation": {
+    "conv-001": [
+      {
+        "id": "msg-001",
+        "senderId": "demo-tenant-001",
+        "topic": "Rent",
+        "message": "Hi, I have completed my April rent payment and wanted to confirm receipt.",
+        "isFromTenant": true,
+        "status": "DELIVERED",
+        "timestamp": 1775718600000
+      },
+      {
+        "id": "msg-002",
+        "senderId": "demo-admin-001",
+        "topic": "Rent",
+        "message": "Thank you, Amina. We can see the payment and your receipt has been logged.",
+        "isFromTenant": false,
+        "status": "SENT",
+        "timestamp": 1775719200000
+      },
+      {
+        "id": "msg-003",
+        "senderId": "demo-tenant-001",
+        "topic": "Rent",
+        "message": "Thanks, I have shared the proof of payment.",
+        "attachmentUri": "#",
+        "attachmentName": "payment-proof.pdf",
+        "isFromTenant": true,
+        "status": "DELIVERED",
+        "timestamp": 1775719800000
+      }
+    ],
+    "conv-002": [
+      {
+        "id": "msg-004",
+        "senderId": "demo-tenant-002",
+        "topic": "Maintenance",
+        "message": "The shower pressure in unit C3 is still low this morning.",
+        "isFromTenant": true,
+        "status": "DELIVERED",
+        "timestamp": 1775721000000
+      },
+      {
+        "id": "msg-005",
+        "senderId": "demo-admin-001",
+        "topic": "Maintenance",
+        "message": "A technician is scheduled for 2 PM today.",
+        "isFromTenant": false,
+        "status": "SENT",
+        "timestamp": 1775722500000
+      }
+    ]
+  }
+}

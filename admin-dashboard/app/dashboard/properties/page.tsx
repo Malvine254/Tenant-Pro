@@ -1,8 +1,10 @@
 "use client";
 
+import { useSearchParams } from 'next/navigation';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { apiRequest } from '../../../lib/api';
 import { getSession } from '../../../lib/auth';
+import { getDemoDataset, saveDemoDataset } from '../../../lib/demo-tenant-ops';
 
 const DEFAULT_ROOM_IMAGE = 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80';
 
@@ -40,6 +42,8 @@ type LandlordRow = {
 };
 
 export default function PropertiesPage() {
+  const searchParams = useSearchParams();
+  const isDemoMode = searchParams.get('mode') === 'demo';
   const [rows, setRows] = useState<PropertyRow[]>([]);
   const [landlords, setLandlords] = useState<LandlordRow[]>([]);
   const [tenants, setTenants] = useState<LandlordRow[]>([]);
@@ -102,33 +106,44 @@ export default function PropertiesPage() {
       .map((item) => item.trim())
       .filter(Boolean);
 
-  const load = async () => {
-    const session = getSession();
-    if (!session) return;
+  const hydrateWorkspace = (properties: PropertyRow[], users: LandlordRow[]) => {
+    setRows(properties);
+    const landlordRows = users.filter((user) => user.role === 'LANDLORD');
+    const tenantRows = users.filter((user) => user.role === 'TENANT');
+    setLandlords(landlordRows);
+    setTenants(tenantRows);
 
+    if (!selectedPropertyId && properties[0]) {
+      setSelectedPropertyId(properties[0].id);
+    }
+    if (!propertyForm.landlordId && landlordRows[0]) {
+      setPropertyForm((prev) => ({ ...prev, landlordId: landlordRows[0].id }));
+    }
+    if (!assignmentForm.tenantId && tenantRows[0]) {
+      setAssignmentForm((prev) => ({ ...prev, tenantId: tenantRows[0].id, phoneNumber: tenantRows[0].phoneNumber }));
+    }
+    if (!assignmentForm.propertyId && properties[0]) {
+      const firstUnit = properties[0].units.find((unit) => unit.status !== 'OCCUPIED') ?? properties[0].units[0];
+      setAssignmentForm((prev) => ({ ...prev, propertyId: properties[0].id, unitId: firstUnit?.id ?? prev.unitId }));
+    }
+  };
+
+  const load = async () => {
     try {
+      if (isDemoMode) {
+        const dataset = getDemoDataset();
+        hydrateWorkspace(dataset.properties as PropertyRow[], dataset.users as LandlordRow[]);
+        return;
+      }
+
+      const session = getSession();
+      if (!session) return;
+
       const [properties, users] = await Promise.all([
         apiRequest<PropertyRow[]>('/properties', session.accessToken),
         apiRequest<LandlordRow[]>('/users', session.accessToken),
       ]);
-      setRows(properties);
-      const landlordRows = users.filter((user) => user.role === 'LANDLORD');
-      const tenantRows = users.filter((user) => user.role === 'TENANT');
-      setLandlords(landlordRows);
-      setTenants(tenantRows);
-      if (!selectedPropertyId && properties[0]) {
-        setSelectedPropertyId(properties[0].id);
-      }
-      if (!propertyForm.landlordId && landlordRows[0]) {
-        setPropertyForm((prev) => ({ ...prev, landlordId: landlordRows[0].id }));
-      }
-      if (!assignmentForm.tenantId && tenantRows[0]) {
-        setAssignmentForm((prev) => ({ ...prev, tenantId: tenantRows[0].id, phoneNumber: tenantRows[0].phoneNumber }));
-      }
-      if (!assignmentForm.propertyId && properties[0]) {
-        const firstUnit = properties[0].units.find((unit) => unit.status !== 'OCCUPIED') ?? properties[0].units[0];
-        setAssignmentForm((prev) => ({ ...prev, propertyId: properties[0].id, unitId: firstUnit?.id ?? prev.unitId }));
-      }
+      hydrateWorkspace(properties, users);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Failed to load properties');
     }
@@ -137,14 +152,53 @@ export default function PropertiesPage() {
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isDemoMode]);
 
   const submitProperty = async (event: FormEvent) => {
     event.preventDefault();
-    const session = getSession();
-    if (!session) return;
 
     try {
+      setError(null);
+
+      if (isDemoMode) {
+        const dataset = getDemoDataset();
+        const landlord = landlords.find((item) => item.id === propertyForm.landlordId);
+        const newProperty: PropertyRow = {
+          id: `demo-property-${Date.now()}`,
+          name: propertyForm.name,
+          description: propertyForm.description || null,
+          coverImageUrl: propertyForm.coverImageUrl || null,
+          addressLine: propertyForm.addressLine,
+          city: propertyForm.city,
+          state: propertyForm.state || null,
+          country: propertyForm.country,
+          landlordId: propertyForm.landlordId,
+          landlord: {
+            firstName: landlord?.firstName,
+            lastName: landlord?.lastName,
+            phoneNumber: landlord?.phoneNumber,
+          },
+          units: [],
+        };
+        dataset.properties.unshift(newProperty);
+        saveDemoDataset(dataset);
+        setPropertyForm((prev) => ({
+          ...prev,
+          name: '',
+          description: '',
+          coverImageUrl: '',
+          addressLine: '',
+          city: '',
+          state: '',
+        }));
+        setSelectedPropertyId(newProperty.id);
+        hydrateWorkspace(dataset.properties as PropertyRow[], dataset.users as LandlordRow[]);
+        return;
+      }
+
+      const session = getSession();
+      if (!session) return;
+
       await apiRequest('/properties', session.accessToken, {
         method: 'POST',
         body: JSON.stringify(propertyForm),
@@ -166,10 +220,38 @@ export default function PropertiesPage() {
 
   const submitUnit = async (event: FormEvent) => {
     event.preventDefault();
-    const session = getSession();
-    if (!session || !selectedPropertyId) return;
+    if (!selectedPropertyId) return;
 
     try {
+      if (isDemoMode) {
+        const dataset = getDemoDataset();
+        dataset.properties = dataset.properties.map((property) =>
+          property.id === selectedPropertyId
+            ? {
+                ...property,
+                units: [
+                  ...property.units,
+                  {
+                    id: `demo-unit-${Date.now()}`,
+                    unitNumber: unitForm.unitNumber,
+                    floor: unitForm.floor || null,
+                    rentAmount: Number(unitForm.rentAmount),
+                    status: unitForm.status,
+                    imageUrls: parseImageUrls(unitForm.imageUrls),
+                  },
+                ],
+              }
+            : property,
+        );
+        saveDemoDataset(dataset);
+        setUnitForm({ unitNumber: '', floor: '', rentAmount: '', status: 'VACANT', imageUrls: '' });
+        hydrateWorkspace(dataset.properties as PropertyRow[], dataset.users as LandlordRow[]);
+        return;
+      }
+
+      const session = getSession();
+      if (!session) return;
+
       await apiRequest(`/properties/${selectedPropertyId}/units`, session.accessToken, {
         method: 'POST',
         body: JSON.stringify({
@@ -203,10 +285,37 @@ export default function PropertiesPage() {
 
   const submitEditProperty = async (event: FormEvent) => {
     event.preventDefault();
-    const session = getSession();
-    if (!session || !editingPropertyId) return;
+    if (!editingPropertyId) return;
 
     try {
+      if (isDemoMode) {
+        const dataset = getDemoDataset();
+        const landlord = landlords.find((item) => item.id === propertyEditForm.landlordId);
+        dataset.properties = dataset.properties.map((property) =>
+          property.id === editingPropertyId
+            ? {
+                ...property,
+                ...propertyEditForm,
+                description: propertyEditForm.description || null,
+                coverImageUrl: propertyEditForm.coverImageUrl || null,
+                state: propertyEditForm.state || null,
+                landlord: {
+                  firstName: landlord?.firstName,
+                  lastName: landlord?.lastName,
+                  phoneNumber: landlord?.phoneNumber,
+                },
+              }
+            : property,
+        );
+        saveDemoDataset(dataset);
+        setEditingPropertyId(null);
+        hydrateWorkspace(dataset.properties as PropertyRow[], dataset.users as LandlordRow[]);
+        return;
+      }
+
+      const session = getSession();
+      if (!session) return;
+
       await apiRequest(`/properties/${editingPropertyId}`, session.accessToken, {
         method: 'PATCH',
         body: JSON.stringify({
@@ -236,10 +345,35 @@ export default function PropertiesPage() {
 
   const submitEditUnit = async (event: FormEvent) => {
     event.preventDefault();
-    const session = getSession();
-    if (!session || !editingUnitId) return;
+    if (!editingUnitId) return;
 
     try {
+      if (isDemoMode) {
+        const dataset = getDemoDataset();
+        dataset.properties = dataset.properties.map((property) => ({
+          ...property,
+          units: property.units.map((unit) =>
+            unit.id === editingUnitId
+              ? {
+                  ...unit,
+                  unitNumber: unitEditForm.unitNumber,
+                  floor: unitEditForm.floor || null,
+                  rentAmount: Number(unitEditForm.rentAmount),
+                  status: unitEditForm.status,
+                  imageUrls: parseImageUrls(unitEditForm.imageUrls),
+                }
+              : unit,
+          ),
+        }));
+        saveDemoDataset(dataset);
+        setEditingUnitId(null);
+        hydrateWorkspace(dataset.properties as PropertyRow[], dataset.users as LandlordRow[]);
+        return;
+      }
+
+      const session = getSession();
+      if (!session) return;
+
       await apiRequest(`/properties/units/${editingUnitId}`, session.accessToken, {
         method: 'PATCH',
         body: JSON.stringify({
@@ -264,11 +398,34 @@ export default function PropertiesPage() {
 
   const submitAssignment = async (event: FormEvent) => {
     event.preventDefault();
-    const session = getSession();
-    if (!session) return;
 
     try {
       setAssignmentMessage(null);
+
+      if (isDemoMode) {
+        const dataset = getDemoDataset();
+        const invitationCode = `DMO-${Math.floor(100000 + Math.random() * 900000)}`;
+        dataset.properties = dataset.properties.map((property) =>
+          property.id === assignmentForm.propertyId
+            ? {
+                ...property,
+                units: property.units.map((unit) =>
+                  unit.id === assignmentForm.unitId ? { ...unit, status: 'OCCUPIED' } : unit,
+                ),
+              }
+            : property,
+        );
+        saveDemoDataset(dataset);
+        setAssignmentMessage(
+          `Assignment code ${invitationCode} created for this demo session. The selected unit is now marked as occupied for testing.`,
+        );
+        hydrateWorkspace(dataset.properties as PropertyRow[], dataset.users as LandlordRow[]);
+        return;
+      }
+
+      const session = getSession();
+      if (!session) return;
+
       const invitation = await apiRequest<{ code: string; expiresAt: string }>(
         '/invitations',
         session.accessToken,

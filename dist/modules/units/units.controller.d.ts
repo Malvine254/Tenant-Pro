@@ -14,13 +14,13 @@ export declare class UnitsController {
     constructor(propertiesService: PropertiesService);
     createUnitForProperty(req: AuthenticatedRequest, params: PropertyIdParamDto, dto: CreateUnitDto): Promise<{
         id: string;
+        status: import(".prisma/client").$Enums.UnitStatus;
         createdAt: Date;
         updatedAt: Date;
         propertyId: string;
         unitNumber: string;
         floor: string | null;
         rentAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import(".prisma/client").$Enums.UnitStatus;
         imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
 }
