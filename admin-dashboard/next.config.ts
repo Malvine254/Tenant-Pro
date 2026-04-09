@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: currentDirectory,
   },
+  output: "export",
+  images: {
+    unoptimized: true,
+  },
+  trailingSlash: true,
 };
 
 export default nextConfig;

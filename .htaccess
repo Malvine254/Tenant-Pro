@@ -7,16 +7,20 @@ RewriteRule ^ http://starmaxltd.com%{REQUEST_URI} [L,R=301]
 # Keep Let's Encrypt validation working if enabled
 RewriteRule ^\.well-known/ - [L]
 
-# Proxy API traffic to NestJS backend (port 3000)
-RewriteRule ^api/(.*)$ http://127.0.0.1:3000/api/$1 [P,L,QSA]
+# Avoid Apache content negotiation conflicts with extensionless routes
+Options -MultiViews
 
-# Proxy all other traffic to Next.js app (port 3001)
-RewriteRule ^(.*)$ http://127.0.0.1:3001/$1 [P,L,QSA]
+# Serve existing files and directories directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
 
-# Forward protocol information to upstream apps
-RewriteCond %{HTTPS} on
-RewriteRule ^ - [E=FORWARDED_PROTO:https,E=FORWARDED_PORT:443]
-RewriteCond %{HTTPS} !=on
-RewriteRule ^ - [E=FORWARDED_PROTO:http,E=FORWARDED_PORT:80]
-RequestHeader set X-Forwarded-Proto %{FORWARDED_PROTO}e env=FORWARDED_PROTO
-RequestHeader set X-Forwarded-Port %{FORWARDED_PORT}e env=FORWARDED_PORT
+# If /path exists as /path.html, serve it
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+?)/?$ $1.html [L]
+
+# Friendly error pages for static export
+ErrorDocument 404 /404.html
+
+# Shared-host fallback entry order
+DirectoryIndex index.html index.php
