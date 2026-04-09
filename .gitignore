@@ -1,1 +1,10 @@
 node_modules
+
+# local dependency archives
+node_modules.zip
+admin-dashboard/node_modules.zip
+
+# environment files
+.env
+.env.*
+!.env.example
