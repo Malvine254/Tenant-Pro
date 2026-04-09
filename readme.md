@@ -1,5 +1,20 @@
 🚀 PROJECT INSTRUCTIONS FOR COPILOT
 
+## LOCAL DEVELOPMENT (AUTO-SYNC)
+
+Use these commands from the project root:
+
+- `npm install`
+- `npm run dev`
+
+What `npm run dev` does:
+
+- Starts backend in watch mode (Nest + ts-node-dev) on `http://localhost:3000`
+- Starts admin dashboard in Next.js dev mode on `http://localhost:3001`
+- Auto-reloads when you save code changes (no manual restart needed)
+
+Production-mode commands (`npm start`, `npm --prefix admin-dashboard run start`) do **not** auto-sync changes.
+
 You are building a full-stack Tenant Payment & Property Management System with:
 
 📱 Mobile App (Android)

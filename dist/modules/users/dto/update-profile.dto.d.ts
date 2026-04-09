@@ -4,4 +4,8 @@ export declare class UpdateProfileDto {
     password?: string;
     firstName?: string;
     lastName?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    bio?: string;
+    profileImageUrl?: string;
 }

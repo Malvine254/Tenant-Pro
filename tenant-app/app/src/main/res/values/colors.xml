@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Admin dashboard aligned light theme -->
+    <color name="primary">#0F172A</color>
+    <color name="primary_variant">#E2E8F0</color>
+    <color name="on_primary">#FFFFFF</color>
+
+    <color name="secondary">#4338CA</color>
+    <color name="on_secondary">#FFFFFF</color>
+
+    <color name="background">#F9FAFB</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F1F5F9</color>
+    <color name="on_surface">#111827</color>
+    <color name="on_surface_variant">#475569</color>
+    <color name="outline_variant">#CBD5E1</color>
+
+    <!-- Semantic -->
+    <color name="success">#16A34A</color>
+    <color name="error">#DC2626</color>
+    <color name="warning">#D97706</color>
+
+    <!-- Status badge text colours (defined in Java too — kept here for themes) -->
+    <color name="badge_green_text">#166534</color>
+    <color name="badge_red_text">#991B1B</color>
+    <color name="badge_yellow_text">#92400E</color>
+    <color name="badge_gray_text">#475569</color>
+
+    <color name="bottom_nav_item_active">#111827</color>
+    <color name="bottom_nav_item_inactive">#64748B</color>
+
+    <!-- TextInputLayout states -->
+    <color name="text_input_box_stroke_focus">#4338CA</color>
+    <color name="text_input_box_stroke_normal">#94A3B8</color>
+    <color name="text_input_box_stroke_error">#DC2626</color>
+</resources>

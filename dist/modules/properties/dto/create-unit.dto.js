@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateUnitDto = void 0;
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
+const client_1 = require("@prisma/client");
 class CreateUnitDto {
 }
 exports.CreateUnitDto = CreateUnitDto;
@@ -30,4 +31,16 @@ __decorate([
     (0, class_validator_1.IsPositive)(),
     __metadata("design:type", Number)
 ], CreateUnitDto.prototype, "rentAmount", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(client_1.UnitStatus),
+    __metadata("design:type", String)
+], CreateUnitDto.prototype, "status", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ArrayMaxSize)(10),
+    (0, class_validator_1.IsUrl)({ require_tld: false }, { each: true }),
+    __metadata("design:type", Array)
+], CreateUnitDto.prototype, "imageUrls", void 0);
 //# sourceMappingURL=create-unit.dto.js.map

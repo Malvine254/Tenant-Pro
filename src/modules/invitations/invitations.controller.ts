@@ -21,9 +21,9 @@ export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 
   @Post()
-  @Roles(RoleName.LANDLORD)
+  @Roles(RoleName.LANDLORD, RoleName.ADMIN)
   create(@Req() req: AuthenticatedRequest, @Body() dto: CreateInvitationDto) {
-    return this.invitationsService.createInvitation(req.user.userId, dto);
+    return this.invitationsService.createInvitation(req.user.userId, req.user.role, dto);
   }
 
   @Post('accept')

@@ -26,7 +26,7 @@ let UnitsController = class UnitsController {
         this.propertiesService = propertiesService;
     }
     createUnitForProperty(req, params, dto) {
-        return this.propertiesService.addUnit(req.user.userId, params.propertyId, dto);
+        return this.propertiesService.addUnit(req.user.userId, req.user.role, params.propertyId, dto);
     }
 };
 exports.UnitsController = UnitsController;
@@ -43,7 +43,7 @@ __decorate([
 exports.UnitsController = UnitsController = __decorate([
     (0, common_1.Controller)('units'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.RoleName.LANDLORD),
+    (0, roles_decorator_1.Roles)(client_1.RoleName.LANDLORD, client_1.RoleName.ADMIN),
     __metadata("design:paramtypes", [properties_service_1.PropertiesService])
 ], UnitsController);
 //# sourceMappingURL=units.controller.js.map

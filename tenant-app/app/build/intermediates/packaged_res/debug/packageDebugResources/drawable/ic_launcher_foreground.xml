@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple "T" monogram as launcher foreground -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- White background circle -->
+    <path
+        android:fillColor="#1B5E20"
+        android:pathData="M0,0 H108 V108 H0 Z" />
+    <!-- Letter T -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,28 H78 V40 H60 V80 H48 V40 H30 Z" />
+</vector>

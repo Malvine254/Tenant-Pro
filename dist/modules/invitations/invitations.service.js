@@ -28,14 +28,14 @@ let InvitationsService = class InvitationsService {
         }
         throw new common_1.BadRequestException('Unable to generate a unique invitation code');
     }
-    async createInvitation(landlordId, dto) {
+    async createInvitation(actorUserId, actorRole, dto) {
         const property = await this.prisma.property.findUnique({
             where: { id: dto.propertyId },
         });
         if (!property) {
             throw new common_1.NotFoundException('Property not found');
         }
-        if (property.landlordId !== landlordId) {
+        if (actorRole !== client_1.RoleName.ADMIN && property.landlordId !== actorUserId) {
             throw new common_1.ForbiddenException('You can only invite tenants to your own properties');
         }
         const unit = await this.prisma.unit.findUnique({
@@ -52,7 +52,7 @@ let InvitationsService = class InvitationsService {
                 code,
                 propertyId: dto.propertyId,
                 unitId: dto.unitId,
-                sentById: landlordId,
+                sentById: actorUserId,
                 phoneNumber: dto.phoneNumber,
                 sentVia: dto.sentVia,
                 expiresAt,

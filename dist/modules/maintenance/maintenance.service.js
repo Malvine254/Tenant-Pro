@@ -13,6 +13,7 @@ exports.MaintenanceService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../../prisma/prisma.service");
+const notifications_service_1 = require("../notifications/notifications.service");
 const ALLOWED_TRANSITIONS = {
     [client_1.MaintenanceStatus.OPEN]: [client_1.MaintenanceStatus.IN_PROGRESS, client_1.MaintenanceStatus.CLOSED],
     [client_1.MaintenanceStatus.IN_PROGRESS]: [client_1.MaintenanceStatus.RESOLVED, client_1.MaintenanceStatus.CLOSED],
@@ -31,8 +32,9 @@ const REQUEST_INCLUDE = {
     reportedBy: { select: { id: true, firstName: true, lastName: true } },
 };
 let MaintenanceService = class MaintenanceService {
-    constructor(prisma) {
+    constructor(prisma, notificationsService) {
         this.prisma = prisma;
+        this.notificationsService = notificationsService;
     }
     async createRequest(actorUserId, dto) {
         const tenant = await this.prisma.tenant.findFirst({
@@ -41,7 +43,7 @@ let MaintenanceService = class MaintenanceService {
         if (!tenant) {
             throw new common_1.ForbiddenException('Only tenants with an active tenancy can submit maintenance requests');
         }
-        return this.prisma.maintenanceRequest.create({
+        const created = await this.prisma.maintenanceRequest.create({
             data: {
                 tenantId: tenant.id,
                 unitId: tenant.unitId,
@@ -53,6 +55,8 @@ let MaintenanceService = class MaintenanceService {
             },
             include: REQUEST_INCLUDE,
         });
+        await this.notificationsService.createNotification(actorUserId, client_1.NotificationType.MAINTENANCE, 'Maintenance request submitted', `${dto.title} has been submitted successfully and is now open.`, { requestId: created.id, status: created.status });
+        return created;
     }
     async listRequests(actorUserId, actorRole) {
         if (actorRole === client_1.RoleName.TENANT) {
@@ -144,7 +148,7 @@ let MaintenanceService = class MaintenanceService {
         if (allowedRoles && !allowedRoles.includes(actorRole)) {
             throw new common_1.ForbiddenException(`Role ${actorRole} cannot set status to ${dto.status}`);
         }
-        return this.prisma.maintenanceRequest.update({
+        const updated = await this.prisma.maintenanceRequest.update({
             where: { id: requestId },
             data: {
                 status: dto.status,
@@ -152,6 +156,8 @@ let MaintenanceService = class MaintenanceService {
             },
             include: REQUEST_INCLUDE,
         });
+        await this.notificationsService.createNotification(updated.reportedById, client_1.NotificationType.MAINTENANCE, 'Maintenance status updated', `${updated.title} is now ${dto.status.replace('_', ' ').toLowerCase()}.`, { requestId: updated.id, status: updated.status });
+        return updated;
     }
     async getRequest(actorUserId, actorRole, requestId) {
         const request = await this.prisma.maintenanceRequest.findUnique({
@@ -177,6 +183,7 @@ let MaintenanceService = class MaintenanceService {
 exports.MaintenanceService = MaintenanceService;
 exports.MaintenanceService = MaintenanceService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        notifications_service_1.NotificationsService])
 ], MaintenanceService);
 //# sourceMappingURL=maintenance.service.js.map

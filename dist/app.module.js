@@ -17,9 +17,12 @@ const invoices_module_1 = require("./modules/invoices/invoices.module");
 const maintenance_module_1 = require("./modules/maintenance/maintenance.module");
 const payments_module_1 = require("./modules/payments/payments.module");
 const properties_module_1 = require("./modules/properties/properties.module");
+const reminders_module_1 = require("./modules/reminders/reminders.module");
 const units_module_1 = require("./modules/units/units.module");
 const prisma_module_1 = require("./prisma/prisma.module");
 const users_module_1 = require("./modules/users/users.module");
+const notifications_module_1 = require("./modules/notifications/notifications.module");
+const support_module_1 = require("./modules/support/support.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -38,6 +41,9 @@ exports.AppModule = AppModule = __decorate([
             invoices_module_1.InvoicesModule,
             payments_module_1.PaymentsModule,
             maintenance_module_1.MaintenanceModule,
+            notifications_module_1.NotificationsModule,
+            support_module_1.SupportModule,
+            reminders_module_1.RemindersModule,
         ],
     })
 ], AppModule);

@@ -17,7 +17,7 @@ type AuthenticatedRequest = {
 
 @Controller('units')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(RoleName.LANDLORD)
+@Roles(RoleName.LANDLORD, RoleName.ADMIN)
 export class UnitsController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
@@ -27,6 +27,11 @@ export class UnitsController {
     @Param() params: PropertyIdParamDto,
     @Body() dto: CreateUnitDto,
   ) {
-    return this.propertiesService.addUnit(req.user.userId, params.propertyId, dto);
+    return this.propertiesService.addUnit(
+      req.user.userId,
+      req.user.role,
+      params.propertyId,
+      dto,
+    );
   }
 }

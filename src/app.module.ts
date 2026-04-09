@@ -8,9 +8,12 @@ import { InvoicesModule } from './modules/invoices/invoices.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PropertiesModule } from './modules/properties/properties.module';
+import { RemindersModule } from './modules/reminders/reminders.module';
 import { UnitsModule } from './modules/units/units.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './modules/users/users.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { SupportModule } from './modules/support/support.module';
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import { UsersModule } from './modules/users/users.module';
     InvoicesModule,
     PaymentsModule,
     MaintenanceModule,
+    NotificationsModule,
+    SupportModule,
+    RemindersModule,
   ],
 })
 export class AppModule {}

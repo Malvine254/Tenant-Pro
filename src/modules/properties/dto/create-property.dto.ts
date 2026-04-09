@@ -1,9 +1,13 @@
-import { IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsOptional, IsString, IsUUID, IsUrl } from 'class-validator';
 
 export class CreatePropertyDto {
   @IsOptional()
   @IsUUID()
   landlordId?: string;
+
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  coverImageUrl?: string;
 
   @IsString()
   name!: string;

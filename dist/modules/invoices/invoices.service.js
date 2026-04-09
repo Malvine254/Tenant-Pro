@@ -192,6 +192,37 @@ let InvoicesService = class InvoicesService {
             orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }, { createdAt: 'desc' }],
         });
     }
+    async listInvoices(actorUserId, actorRole) {
+        const where = actorRole === client_1.RoleName.ADMIN
+            ? {}
+            : actorRole === client_1.RoleName.LANDLORD
+                ? {
+                    unit: {
+                        property: {
+                            landlordId: actorUserId,
+                        },
+                    },
+                }
+                : {
+                    userId: actorUserId,
+                };
+        return this.prisma.invoice.findMany({
+            where,
+            include: {
+                unit: {
+                    include: {
+                        property: true,
+                    },
+                },
+                tenant: {
+                    include: {
+                        user: true,
+                    },
+                },
+            },
+            orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }, { createdAt: 'desc' }],
+        });
+    }
 };
 exports.InvoicesService = InvoicesService;
 __decorate([

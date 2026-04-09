@@ -1,11 +1,13 @@
 import { RoleName } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { AssignCaretakerDto } from './dto/assign-caretaker.dto';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 export declare class MaintenanceService {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    private readonly notificationsService;
+    constructor(prisma: PrismaService, notificationsService: NotificationsService);
     createRequest(actorUserId: string, dto: CreateRequestDto): Promise<{
         tenant: {
             user: {
@@ -18,8 +20,8 @@ export declare class MaintenanceService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            unitId: string;
             userId: string;
+            unitId: string;
             moveInDate: Date;
             moveOutDate: Date | null;
             isActive: boolean;
@@ -32,13 +34,14 @@ export declare class MaintenanceService {
             };
         } & {
             id: string;
-            status: import(".prisma/client").$Enums.UnitStatus;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.UnitStatus;
             propertyId: string;
             unitNumber: string;
             floor: string | null;
             rentAmount: import("@prisma/client/runtime/library").Decimal;
+            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         };
         reportedBy: {
             id: string;
@@ -54,12 +57,12 @@ export declare class MaintenanceService {
     } & {
         id: string;
         title: string;
-        description: string;
-        priority: import(".prisma/client").$Enums.MaintenancePriority;
-        status: import(".prisma/client").$Enums.MaintenanceStatus;
-        resolvedAt: Date | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.MaintenanceStatus;
+        description: string;
+        priority: import(".prisma/client").$Enums.MaintenancePriority;
+        resolvedAt: Date | null;
         tenantId: string;
         unitId: string;
         reportedById: string;
@@ -77,8 +80,8 @@ export declare class MaintenanceService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            unitId: string;
             userId: string;
+            unitId: string;
             moveInDate: Date;
             moveOutDate: Date | null;
             isActive: boolean;
@@ -91,13 +94,14 @@ export declare class MaintenanceService {
             };
         } & {
             id: string;
-            status: import(".prisma/client").$Enums.UnitStatus;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.UnitStatus;
             propertyId: string;
             unitNumber: string;
             floor: string | null;
             rentAmount: import("@prisma/client/runtime/library").Decimal;
+            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         };
         reportedBy: {
             id: string;
@@ -113,12 +117,12 @@ export declare class MaintenanceService {
     } & {
         id: string;
         title: string;
-        description: string;
-        priority: import(".prisma/client").$Enums.MaintenancePriority;
-        status: import(".prisma/client").$Enums.MaintenanceStatus;
-        resolvedAt: Date | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.MaintenanceStatus;
+        description: string;
+        priority: import(".prisma/client").$Enums.MaintenancePriority;
+        resolvedAt: Date | null;
         tenantId: string;
         unitId: string;
         reportedById: string;
@@ -136,8 +140,8 @@ export declare class MaintenanceService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            unitId: string;
             userId: string;
+            unitId: string;
             moveInDate: Date;
             moveOutDate: Date | null;
             isActive: boolean;
@@ -150,13 +154,14 @@ export declare class MaintenanceService {
             };
         } & {
             id: string;
-            status: import(".prisma/client").$Enums.UnitStatus;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.UnitStatus;
             propertyId: string;
             unitNumber: string;
             floor: string | null;
             rentAmount: import("@prisma/client/runtime/library").Decimal;
+            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         };
         reportedBy: {
             id: string;
@@ -172,12 +177,12 @@ export declare class MaintenanceService {
     } & {
         id: string;
         title: string;
-        description: string;
-        priority: import(".prisma/client").$Enums.MaintenancePriority;
-        status: import(".prisma/client").$Enums.MaintenanceStatus;
-        resolvedAt: Date | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.MaintenanceStatus;
+        description: string;
+        priority: import(".prisma/client").$Enums.MaintenancePriority;
+        resolvedAt: Date | null;
         tenantId: string;
         unitId: string;
         reportedById: string;
@@ -195,8 +200,8 @@ export declare class MaintenanceService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            unitId: string;
             userId: string;
+            unitId: string;
             moveInDate: Date;
             moveOutDate: Date | null;
             isActive: boolean;
@@ -209,13 +214,14 @@ export declare class MaintenanceService {
             };
         } & {
             id: string;
-            status: import(".prisma/client").$Enums.UnitStatus;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.UnitStatus;
             propertyId: string;
             unitNumber: string;
             floor: string | null;
             rentAmount: import("@prisma/client/runtime/library").Decimal;
+            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         };
         reportedBy: {
             id: string;
@@ -231,12 +237,12 @@ export declare class MaintenanceService {
     } & {
         id: string;
         title: string;
-        description: string;
-        priority: import(".prisma/client").$Enums.MaintenancePriority;
-        status: import(".prisma/client").$Enums.MaintenanceStatus;
-        resolvedAt: Date | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.MaintenanceStatus;
+        description: string;
+        priority: import(".prisma/client").$Enums.MaintenancePriority;
+        resolvedAt: Date | null;
         tenantId: string;
         unitId: string;
         reportedById: string;
@@ -254,8 +260,8 @@ export declare class MaintenanceService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            unitId: string;
             userId: string;
+            unitId: string;
             moveInDate: Date;
             moveOutDate: Date | null;
             isActive: boolean;
@@ -268,13 +274,14 @@ export declare class MaintenanceService {
             };
         } & {
             id: string;
-            status: import(".prisma/client").$Enums.UnitStatus;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.UnitStatus;
             propertyId: string;
             unitNumber: string;
             floor: string | null;
             rentAmount: import("@prisma/client/runtime/library").Decimal;
+            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         };
         reportedBy: {
             id: string;
@@ -290,12 +297,12 @@ export declare class MaintenanceService {
     } & {
         id: string;
         title: string;
-        description: string;
-        priority: import(".prisma/client").$Enums.MaintenancePriority;
-        status: import(".prisma/client").$Enums.MaintenanceStatus;
-        resolvedAt: Date | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.MaintenanceStatus;
+        description: string;
+        priority: import(".prisma/client").$Enums.MaintenancePriority;
+        resolvedAt: Date | null;
         tenantId: string;
         unitId: string;
         reportedById: string;

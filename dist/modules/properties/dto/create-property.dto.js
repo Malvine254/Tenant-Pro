@@ -15,6 +15,16 @@ class CreatePropertyDto {
 }
 exports.CreatePropertyDto = CreatePropertyDto;
 __decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], CreatePropertyDto.prototype, "landlordId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUrl)({ require_tld: false }),
+    __metadata("design:type", String)
+], CreatePropertyDto.prototype, "coverImageUrl", void 0);
+__decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreatePropertyDto.prototype, "name", void 0);

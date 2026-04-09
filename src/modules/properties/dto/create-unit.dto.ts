@@ -1,5 +1,15 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  IsUrl,
+} from 'class-validator';
+import { UnitStatus } from '@prisma/client';
 
 export class CreateUnitDto {
   @IsString()
@@ -13,4 +23,14 @@ export class CreateUnitDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   rentAmount!: number;
+
+  @IsOptional()
+  @IsEnum(UnitStatus)
+  status?: UnitStatus;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsUrl({ require_tld: false }, { each: true })
+  imageUrls?: string[];
 }

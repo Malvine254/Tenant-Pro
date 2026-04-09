@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tenant Pro</string>
+
+    <!-- Login -->
+    <string name="login_subtitle">Manage your invoices and payments</string>
+    <string name="hint_email">Email address</string>
+    <string name="hint_password">Password</string>
+    <string name="btn_login">Login</string>
+
+    <!-- OTP -->
+    <string name="verify_otp_title">Verify OTP</string>
+    <string name="hint_otp">Enter OTP code</string>
+    <string name="btn_verify_otp">Verify &amp; Login</string>
+    <string name="otp_sent_hint">We sent a code to %1$s</string>
+
+    <!-- Navigation labels -->
+    <string name="label_login">Login</string>
+    <string name="label_verify_otp">Verify OTP</string>
+    <string name="label_invoices">My Invoices</string>
+    <string name="label_my_rental">My Rental</string>
+    <string name="label_notifications">Notifications</string>
+    <string name="label_maintenance">Maintenance</string>
+    <string name="label_queries">Support Queries</string>
+    <string name="label_account_settings">Account Settings</string>
+    <string name="label_pay">Pay with M-Pesa</string>
+    <string name="label_payment_history">Payment History</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_notifications">Notifications</string>
+    <string name="nav_queries">Queries</string>
+    <string name="nav_account">Account</string>
+
+    <!-- Invoices screen -->
+    <string name="no_invoices">No invoices found.</string>
+    <string name="btn_logout">Logout</string>
+    <string name="btn_pay_mpesa">Pay M-Pesa</string>
+    <string name="btn_history">History</string>
+    <string name="label_total">Total</string>
+    <string name="label_paid">Paid</string>
+    <string name="label_due_date">Due date</string>
+
+    <!-- Payment screen -->
+    <string name="label_paying_for">Paying for</string>
+    <string name="label_remaining_balance">Remaining balance</string>
+    <string name="hint_mpesa_phone">M-Pesa phone number</string>
+    <string name="hint_amount_optional">Amount (optional — leave empty for full balance)</string>
+    <string name="btn_pay_now">Pay via M-Pesa</string>
+    <string name="mpesa_stk_disclaimer">After confirming, you will receive an M-Pesa prompt on your phone. Enter your M-Pesa PIN to complete the payment.</string>
+    <string name="mpesa_simulation_toggle">Use simulation mode (no real STK push)</string>
+    <string name="mpesa_simulation_hint">Simulation mode generates a fake successful payment for testing and demos.</string>
+    <string name="mpesa_live_hint">Live mode sends a real STK request to your configured backend integration.</string>
+    <string name="mpesa_full_balance_hint">Leave empty to pay full balance: %1$s</string>
+    <string name="error_phone_required">Phone number is required</string>
+    <string name="mpesa_sim_success">Simulation complete. A fake payment was recorded successfully.</string>
+    <string name="mpesa_live_success">STK Push sent! Check your phone for the M-Pesa prompt.</string>
+
+    <!-- Payment History screen -->
+    <string name="no_payments">No payment records found.</string>
+    <string name="label_receipt">Receipt #</string>
+    <string name="label_phone">Phone</string>
+    <string name="label_date">Date</string>
+
+    <!-- Notifications -->
+    <string name="notifications_intro">Stay updated with billing, payment and maintenance alerts.</string>
+    <string name="notifications_empty">No new notifications right now.</string>
+    <string name="notifications_mark_all_read">Mark all read</string>
+
+    <!-- Maintenance -->
+    <string name="maintenance_intro">Report repairs, leaks, or faults and track progress in one place.</string>
+    <string name="maintenance_new_request">New maintenance request</string>
+    <string name="maintenance_title">Issue title</string>
+    <string name="maintenance_priority">Priority</string>
+    <string name="maintenance_description">Describe the issue</string>
+    <string name="maintenance_submit">Submit request</string>
+    <string name="maintenance_history">Request history</string>
+    <string name="maintenance_empty">You have not submitted any maintenance requests yet.</string>
+
+    <!-- Queries -->
+    <string name="queries_intro">Raise a question for your landlord or property manager.</string>
+    <string name="hint_query_subject">Subject</string>
+    <string name="hint_query_message">Type your question</string>
+    <string name="btn_submit_query">Submit Query</string>
+    <string name="query_submit_success">Query submitted. Support will contact you shortly.</string>
+    <string name="queries_empty_chat">No messages yet. Start the conversation below.</string>
+    <string name="query_topic_label">Topic</string>
+    <string name="query_message_hint_chat">Type your message</string>
+    <string name="query_send_message">Send Message</string>
+    <string name="query_sending">Sending...</string>
+    <string name="query_message_required">Message is required</string>
+
+    <!-- Account -->
+    <string name="account_intro">Manage your profile and session.</string>
+    <string name="rental_intro">View your rental name, room number, move-in date, and linked apartment details in one place.</string>
+    <string name="rental_link_help">Have a room assignment code? Enter it here to link your rental directly from this menu.</string>
+    <string name="label_name">Name</string>
+    <string name="label_phone_value">Phone</string>
+    <string name="profile_header">Profile Information</string>
+    <string name="profile_photo_hint">Add a photo so caretakers can identify you quickly.</string>
+    <string name="profile_change_photo">Change photo</string>
+    <string name="profile_email">Email</string>
+    <string name="profile_emergency_contact">Emergency contact</string>
+    <string name="profile_bio">About you</string>
+    <string name="profile_save">Save profile</string>
+    <string name="profile_saving">Saving...</string>
+    <string name="profile_refresh">Refresh</string>
+    <string name="current_apartment">Current Apartment</string>
+    <string name="profile_property">Rental / Property</string>
+    <string name="profile_unit">Room / Unit Number</string>
+    <string name="profile_next_due">Next due date</string>
+    <string name="profile_move_in">Move-in date</string>
+    <string name="profile_address">Property address</string>
+    <string name="profile_invitation_code">Invitation code</string>
+    <string name="profile_accept_invitation">Link apartment</string>
+    <string name="profile_invitation_hint">Have an invite code from your landlord? Enter it here to link your unit.</string>
+    <string name="profile_outstanding">Outstanding</string>
+    <string name="profile_pending">Pending</string>
+    <string name="profile_overdue">Overdue</string>
+    <string name="profile_completion">Profile completion</string>
+    <string name="profile_no_contact">No contact info</string>
+    <string name="remove_photo_title">Remove Profile Photo</string>
+    <string name="remove_photo_message">Are you sure you want to remove your profile photo?</string>
+    <string name="remove">Remove</string>
+    <string name="cancel">Cancel</string>
+    <string name="photo_removed">Profile photo removed</string>
+
+    <!-- Registration -->
+    <string name="create_account">Create Account</string>
+    <string name="register_subtitle">Join Tenant Pro to manage your properties</string>
+    <string name="hint_full_name">Full name</string>
+    <string name="hint_phone">Phone number</string>
+    <string name="hint_confirm_password">Confirm password</string>
+    <string name="btn_register">Create Account</string>
+    <string name="btn_back">Back</string>
+    <string name="dont_have_account">Don\'t have an account?</string>
+    <string name="register_here">Register here</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="login_here">Login here</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="password_helper">At least 8 characters with uppercase, lowercase, and numbers</string>
+    <string name="terms_conditions">I agree to Terms &amp; Conditions</string>
+    <string name="user_profile">User Profile</string>
+
+    <!-- Home / Dashboard -->
+    <string name="label_home">Home</string>
+    <string name="home_outstanding">Outstanding</string>
+    <string name="home_pending">Pending</string>
+    <string name="home_overdue">Overdue</string>
+    <string name="home_paid">Paid Total</string>
+    <string name="home_recent_invoices">Recent Invoices</string>
+    <string name="home_quick_actions">Quick actions</string>
+    <string name="home_action_rental">My Rental</string>
+    <string name="home_action_support">Support</string>
+    <string name="home_action_maintenance">Maintenance</string>
+    <string name="home_mini_dashboard">Mini Dashboard</string>
+    <string name="home_collection_rate_placeholder">Collection rate: 0%</string>
+    <string name="home_outstanding_rate_placeholder">Outstanding pressure: 0%</string>
+    <string name="home_overdue_rate_placeholder">Overdue risk: 0%</string>
+    <string name="home_view_all">View all</string>
+
+    <!-- Invoice table / filters -->
+    <string name="invoice_table_header_invoice">Invoice</string>
+    <string name="invoice_table_header_invoice_desc">Invoice ↓</string>
+    <string name="invoice_table_header_invoice_asc">Invoice ↑</string>
+    <string name="invoice_table_header_no">#</string>
+    <string name="invoice_table_header_amount">Amount</string>
+    <string name="invoice_table_header_status">Status</string>
+    <string name="invoice_table_header_actions">Actions</string>
+    <string name="invoice_action_pay">Pay</string>
+    <string name="invoice_action_save">Save</string>
+    <string name="filter_all">All</string>
+    <string name="filter_pending">Pending</string>
+    <string name="filter_overdue">Overdue</string>
+    <string name="filter_paid">Paid</string>
+    <string name="filter_cancelled">Cancelled</string>
+    <string name="invoice_search_hint">Search by property, unit, period, type, or status</string>
+    <string name="invoice_filter_status">Status</string>
+    <string name="invoice_filter_type">Type</string>
+    <string name="invoice_filter_sort">Sort</string>
+    <string name="invoice_type_all">All types</string>
+    <string name="invoice_type_rent">Rent</string>
+    <string name="invoice_type_water">Water</string>
+    <string name="invoice_type_garbage">Garbage</string>
+    <string name="invoice_type_other">Other</string>
+    <string name="invoice_sort_newest">Newest first</string>
+    <string name="invoice_sort_oldest">Oldest first</string>
+    <string name="invoice_sort_amount_high">Amount: high to low</string>
+    <string name="invoice_sort_amount_low">Amount: low to high</string>
+    <string name="invoice_sort_due_soon">Due date: soonest</string>
+    <string name="invoice_prev">Previous</string>
+    <string name="invoice_next">Next</string>
+    <string name="invoice_page_indicator">Page %1$d of %2$d</string>
+    <string name="invoice_page_empty">No pages</string>
+
+    <!-- Invoice details/share -->
+    <string name="invoice_detail_title">Invoice Details</string>
+    <string name="invoice_detail_type">Type</string>
+    <string name="invoice_detail_period">Period</string>
+    <string name="invoice_detail_property">Property</string>
+    <string name="invoice_detail_unit">Unit</string>
+    <string name="invoice_detail_total">Total</string>
+    <string name="invoice_detail_paid">Paid</string>
+    <string name="invoice_detail_balance">Balance</string>
+    <string name="invoice_detail_due_date">Due Date</string>
+    <string name="invoice_detail_status">Status</string>
+    <string name="invoice_close">Close</string>
+    <string name="invoice_share">Share</string>
+    <string name="invoice_share_subject">Invoice - %1$s</string>
+    <string name="invoice_share_chooser">Share Invoice</string>
+    <string name="invoice_share_header">===== TenantPro Invoice =====</string>
+
+</resources>

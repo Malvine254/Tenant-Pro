@@ -10,12 +10,19 @@ export declare class UsersService {
     constructor(prisma: PrismaService);
     private toUserResponse;
     private getRoleIdByName;
+    private normalizeEmail;
+    private rethrowUniqueConstraint;
     create(dto: CreateUserDto): Promise<{
         id: string;
         phoneNumber: string;
         email: string | null;
         firstName: string | null;
         lastName: string | null;
+        fullName: string;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
         createdAt: Date;
@@ -27,6 +34,11 @@ export declare class UsersService {
         email: string | null;
         firstName: string | null;
         lastName: string | null;
+        fullName: string;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
         createdAt: Date;
@@ -38,6 +50,11 @@ export declare class UsersService {
         email: string | null;
         firstName: string | null;
         lastName: string | null;
+        fullName: string;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
         createdAt: Date;
@@ -49,6 +66,11 @@ export declare class UsersService {
         email: string | null;
         firstName: string | null;
         lastName: string | null;
+        fullName: string;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
         createdAt: Date;
@@ -60,6 +82,11 @@ export declare class UsersService {
         email: string | null;
         firstName: string | null;
         lastName: string | null;
+        fullName: string;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
         createdAt: Date;
@@ -74,28 +101,89 @@ export declare class UsersService {
         email: string | null;
         firstName: string | null;
         lastName: string | null;
+        fullName: string;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
     getProfile(userId: string): Promise<{
+        tenantProfile: {
+            id: string;
+            moveInDate: Date;
+            moveOutDate: Date | null;
+            isActive: boolean;
+            unit: {
+                id: string;
+                unitNumber: string;
+                floor: string | null;
+                rentAmount: number;
+                imageUrls: string[];
+                property: {
+                    id: string;
+                    name: string;
+                    description: string | null;
+                    coverImageUrl: string | null;
+                    addressLine: string;
+                    city: string;
+                    state: string | null;
+                    country: string;
+                };
+            };
+        } | null;
         id: string;
         phoneNumber: string;
         email: string | null;
         firstName: string | null;
         lastName: string | null;
+        fullName: string;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
     updateProfile(userId: string, dto: UpdateProfileDto): Promise<{
+        tenantProfile: {
+            id: string;
+            moveInDate: Date;
+            moveOutDate: Date | null;
+            isActive: boolean;
+            unit: {
+                id: string;
+                unitNumber: string;
+                floor: string | null;
+                rentAmount: number;
+                imageUrls: string[];
+                property: {
+                    id: string;
+                    name: string;
+                    description: string | null;
+                    coverImageUrl: string | null;
+                    addressLine: string;
+                    city: string;
+                    state: string | null;
+                    country: string;
+                };
+            };
+        } | null;
         id: string;
         phoneNumber: string;
         email: string | null;
         firstName: string | null;
         lastName: string | null;
+        fullName: string;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
         role: import(".prisma/client").$Enums.RoleName;
         isActive: boolean;
         createdAt: Date;
@@ -112,13 +200,41 @@ export declare class UsersService {
     } & {
         id: string;
         phoneNumber: string;
-        createdAt: Date;
-        updatedAt: Date;
         email: string | null;
+        passwordHash: string | null;
         firstName: string | null;
         lastName: string | null;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        roleId: string;
+    }) | null>;
+    findByEmail(email: string): Promise<({
+        role: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: import(".prisma/client").$Enums.RoleName;
+            description: string | null;
+        };
+    } & {
+        id: string;
+        phoneNumber: string;
+        email: string | null;
         passwordHash: string | null;
+        firstName: string | null;
+        lastName: string | null;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         roleId: string;
     }) | null>;
     findById(userId: string): Promise<({
@@ -132,14 +248,34 @@ export declare class UsersService {
     } & {
         id: string;
         phoneNumber: string;
-        createdAt: Date;
-        updatedAt: Date;
         email: string | null;
+        passwordHash: string | null;
         firstName: string | null;
         lastName: string | null;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
         isActive: boolean;
-        passwordHash: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         roleId: string;
     }) | null>;
-    isAllowedAppRole(role: RoleName): role is "LANDLORD" | "TENANT" | "ADMIN";
+    isAllowedAppRole(role: RoleName): role is "LANDLORD" | "TENANT" | "ADMIN" | "CARETAKER";
+    updatePassword(userId: string, hashedPassword: string): Promise<{
+        id: string;
+        phoneNumber: string;
+        email: string | null;
+        passwordHash: string | null;
+        firstName: string | null;
+        lastName: string | null;
+        profileImageUrl: string | null;
+        emergencyContactName: string | null;
+        emergencyContactPhone: string | null;
+        bio: string | null;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        roleId: string;
+    }>;
 }

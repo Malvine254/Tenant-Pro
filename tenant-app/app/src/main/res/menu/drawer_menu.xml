@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:id="@+id/main_group">
+        <item
+            android:id="@+id/homeFragment"
+            android:icon="@drawable/ic_home"
+            android:title="@string/label_home" />
+
+        <item
+            android:id="@+id/invoicesFragment"
+            android:icon="@drawable/ic_receipt"
+            android:title="@string/label_invoices" />
+
+        <item
+            android:id="@+id/rentalInfoFragment"
+            android:icon="@drawable/ic_account_settings"
+            android:title="@string/label_my_rental" />
+
+        <item
+            android:id="@+id/notificationsFragment"
+            android:icon="@drawable/ic_notifications"
+            android:title="@string/label_notifications" />
+
+        <item
+            android:id="@+id/maintenanceFragment"
+            android:icon="@drawable/ic_info"
+            android:title="@string/label_maintenance" />
+
+        <item
+            android:id="@+id/queriesFragment"
+            android:icon="@drawable/ic_help"
+            android:title="@string/label_queries" />
+
+        <item
+            android:id="@+id/accountSettingsFragment"
+            android:icon="@drawable/ic_settings"
+            android:title="@string/label_account_settings" />
+    </group>
+
+    <divider android:id="@+id/divider1" />
+
+    <group android:id="@+id/secondary_group">
+        <item
+            android:id="@+id/logoutItem"
+            android:icon="@drawable/ic_logout"
+            android:title="@string/btn_logout" />
+    </group>
+
+</menu>

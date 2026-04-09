@@ -26,7 +26,7 @@ let InvitationsController = class InvitationsController {
         this.invitationsService = invitationsService;
     }
     create(req, dto) {
-        return this.invitationsService.createInvitation(req.user.userId, dto);
+        return this.invitationsService.createInvitation(req.user.userId, req.user.role, dto);
     }
     accept(req, dto) {
         return this.invitationsService.acceptInvitation(req.user.userId, dto);
@@ -38,7 +38,7 @@ let InvitationsController = class InvitationsController {
 exports.InvitationsController = InvitationsController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)(client_1.RoleName.LANDLORD),
+    (0, roles_decorator_1.Roles)(client_1.RoleName.LANDLORD, client_1.RoleName.ADMIN),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),

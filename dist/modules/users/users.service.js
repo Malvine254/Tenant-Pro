@@ -58,6 +58,11 @@ let UsersService = class UsersService {
             email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,
+            fullName: [user.firstName, user.lastName].filter(Boolean).join(' ').trim(),
+            profileImageUrl: user.profileImageUrl ?? null,
+            emergencyContactName: user.emergencyContactName ?? null,
+            emergencyContactPhone: user.emergencyContactPhone ?? null,
+            bio: user.bio ?? null,
             role: user.role.name,
             isActive: user.isActive,
             createdAt: user.createdAt,
@@ -73,29 +78,63 @@ let UsersService = class UsersService {
         }
         return role.id;
     }
+    normalizeEmail(email) {
+        const normalized = email?.trim().toLowerCase();
+        return normalized ? normalized : null;
+    }
+    rethrowUniqueConstraint(error) {
+        if (error instanceof client_1.Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2002') {
+            const target = Array.isArray(error.meta?.target)
+                ? error.meta.target.join(',')
+                : String(error.meta?.target ?? '');
+            if (target.includes('email')) {
+                throw new common_1.ConflictException('An account with this email already exists');
+            }
+            if (target.includes('phoneNumber')) {
+                throw new common_1.ConflictException('A user with this phone number already exists');
+            }
+            throw new common_1.ConflictException('A user with these details already exists');
+        }
+        throw error;
+    }
     async create(dto) {
         const existingUser = await this.prisma.user.findUnique({
             where: { phoneNumber: dto.phoneNumber },
         });
         if (existingUser) {
-            throw new common_1.BadRequestException('User with this phone number already exists');
+            throw new common_1.ConflictException('A user with this phone number already exists');
+        }
+        const normalizedEmail = this.normalizeEmail(dto.email);
+        if (normalizedEmail) {
+            const existingEmailUser = await this.prisma.user.findUnique({
+                where: { email: normalizedEmail },
+            });
+            if (existingEmailUser) {
+                throw new common_1.ConflictException('An account with this email already exists');
+            }
         }
         const roleId = await this.getRoleIdByName(dto.role);
         const passwordHash = dto.password ? await bcrypt.hash(dto.password, 10) : null;
-        const user = await this.prisma.user.create({
-            data: {
-                phoneNumber: dto.phoneNumber,
-                email: dto.email,
-                firstName: dto.firstName,
-                lastName: dto.lastName,
-                roleId,
-                passwordHash,
-            },
-            include: {
-                role: true,
-            },
-        });
-        return this.toUserResponse(user);
+        try {
+            const user = await this.prisma.user.create({
+                data: {
+                    phoneNumber: dto.phoneNumber,
+                    email: normalizedEmail,
+                    firstName: dto.firstName,
+                    lastName: dto.lastName,
+                    roleId,
+                    passwordHash,
+                },
+                include: {
+                    role: true,
+                },
+            });
+            return this.toUserResponse(user);
+        }
+        catch (error) {
+            this.rethrowUniqueConstraint(error);
+        }
     }
     async register(dto) {
         return this.create(dto);
@@ -129,7 +168,7 @@ let UsersService = class UsersService {
         if (dto.phoneNumber !== undefined)
             data.phoneNumber = dto.phoneNumber;
         if (dto.email !== undefined)
-            data.email = dto.email;
+            data.email = this.normalizeEmail(dto.email);
         if (dto.firstName !== undefined)
             data.firstName = dto.firstName;
         if (dto.lastName !== undefined)
@@ -153,7 +192,8 @@ let UsersService = class UsersService {
             return this.toUserResponse(user);
         }
         catch (error) {
-            throw new common_1.BadRequestException('Unable to update user. Check unique constraints.');
+            this.rethrowUniqueConstraint(error);
+            throw new common_1.BadRequestException('Unable to update user. Check the submitted values.');
         }
     }
     async remove(userId) {
@@ -176,21 +216,89 @@ let UsersService = class UsersService {
         return this.toUserResponse(user);
     }
     async getProfile(userId) {
-        return this.findOne(userId);
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                role: true,
+                tenantProfile: {
+                    include: {
+                        unit: {
+                            include: {
+                                property: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('User not found');
+        }
+        return {
+            ...this.toUserResponse(user),
+            tenantProfile: user.tenantProfile
+                ? {
+                    id: user.tenantProfile.id,
+                    moveInDate: user.tenantProfile.moveInDate,
+                    moveOutDate: user.tenantProfile.moveOutDate,
+                    isActive: user.tenantProfile.isActive,
+                    unit: {
+                        id: user.tenantProfile.unit.id,
+                        unitNumber: user.tenantProfile.unit.unitNumber,
+                        floor: user.tenantProfile.unit.floor,
+                        rentAmount: Number(user.tenantProfile.unit.rentAmount),
+                        imageUrls: user.tenantProfile.unit.imageUrls ?? [],
+                        property: {
+                            id: user.tenantProfile.unit.property.id,
+                            name: user.tenantProfile.unit.property.name,
+                            description: user.tenantProfile.unit.property.description,
+                            coverImageUrl: user.tenantProfile.unit.property.coverImageUrl,
+                            addressLine: user.tenantProfile.unit.property.addressLine,
+                            city: user.tenantProfile.unit.property.city,
+                            state: user.tenantProfile.unit.property.state,
+                            country: user.tenantProfile.unit.property.country,
+                        },
+                    },
+                }
+                : null,
+        };
     }
     async updateProfile(userId, dto) {
-        const updateDto = {
+        await this.findOne(userId);
+        const data = {
             phoneNumber: dto.phoneNumber,
-            email: dto.email,
+            email: dto.email !== undefined ? this.normalizeEmail(dto.email) : undefined,
             firstName: dto.firstName,
             lastName: dto.lastName,
-            password: dto.password,
+            emergencyContactName: dto.emergencyContactName,
+            emergencyContactPhone: dto.emergencyContactPhone,
+            bio: dto.bio,
+            profileImageUrl: dto.profileImageUrl,
         };
-        return this.update(userId, updateDto);
+        if (dto.password !== undefined) {
+            data.passwordHash = dto.password ? await bcrypt.hash(dto.password, 10) : null;
+        }
+        try {
+            await this.prisma.user.update({
+                where: { id: userId },
+                data,
+            });
+            return this.getProfile(userId);
+        }
+        catch (error) {
+            this.rethrowUniqueConstraint(error);
+            throw new common_1.BadRequestException('Unable to update profile. Check the submitted values.');
+        }
     }
     async findByPhoneNumber(phoneNumber) {
         return this.prisma.user.findUnique({
             where: { phoneNumber },
+            include: { role: true },
+        });
+    }
+    async findByEmail(email) {
+        return this.prisma.user.findUnique({
+            where: { email: email.trim().toLowerCase() },
             include: { role: true },
         });
     }
@@ -201,7 +309,16 @@ let UsersService = class UsersService {
         });
     }
     isAllowedAppRole(role) {
-        return (role === client_1.RoleName.LANDLORD || role === client_1.RoleName.TENANT || role === client_1.RoleName.ADMIN);
+        return (role === client_1.RoleName.LANDLORD ||
+            role === client_1.RoleName.TENANT ||
+            role === client_1.RoleName.ADMIN ||
+            role === client_1.RoleName.CARETAKER);
+    }
+    async updatePassword(userId, hashedPassword) {
+        return this.prisma.user.update({
+            where: { id: userId },
+            data: { passwordHash: hashedPassword },
+        });
     }
 };
 exports.UsersService = UsersService;

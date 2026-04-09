@@ -27,6 +27,9 @@ let InvoicesController = class InvoicesController {
     constructor(invoicesService) {
         this.invoicesService = invoicesService;
     }
+    listInvoices(req) {
+        return this.invoicesService.listInvoices(req.user.userId, req.user.role);
+    }
     generateMonthlyRent(req, dto) {
         return this.invoicesService.generateMonthlyRentInvoices(req.user.userId, req.user.role, dto);
     }
@@ -41,6 +44,14 @@ let InvoicesController = class InvoicesController {
     }
 };
 exports.InvoicesController = InvoicesController;
+__decorate([
+    (0, common_1.Get)(),
+    (0, roles_decorator_1.Roles)(client_1.RoleName.LANDLORD, client_1.RoleName.TENANT, client_1.RoleName.ADMIN),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], InvoicesController.prototype, "listInvoices", null);
 __decorate([
     (0, common_1.Post)('generate-monthly-rent'),
     (0, roles_decorator_1.Roles)(client_1.RoleName.LANDLORD, client_1.RoleName.ADMIN),

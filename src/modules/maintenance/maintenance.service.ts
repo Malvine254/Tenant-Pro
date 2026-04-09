@@ -4,8 +4,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { MaintenancePriority, MaintenanceStatus, RoleName } from '@prisma/client';
+import { MaintenancePriority, MaintenanceStatus, NotificationType, RoleName } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { AssignCaretakerDto } from './dto/assign-caretaker.dto';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
@@ -34,7 +35,10 @@ const REQUEST_INCLUDE = {
 
 @Injectable()
 export class MaintenanceService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   // ---------------------------------------------------------------------------
   // Tenant: create a new request
@@ -49,7 +53,7 @@ export class MaintenanceService {
       throw new ForbiddenException('Only tenants with an active tenancy can submit maintenance requests');
     }
 
-    return this.prisma.maintenanceRequest.create({
+    const created = await this.prisma.maintenanceRequest.create({
       data: {
         tenantId:    tenant.id,
         unitId:      tenant.unitId,
@@ -61,6 +65,16 @@ export class MaintenanceService {
       },
       include: REQUEST_INCLUDE,
     });
+
+    await this.notificationsService.createNotification(
+      actorUserId,
+      NotificationType.MAINTENANCE,
+      'Maintenance request submitted',
+      `${dto.title} has been submitted successfully and is now open.`,
+      { requestId: created.id, status: created.status },
+    );
+
+    return created;
   }
 
   // ---------------------------------------------------------------------------
@@ -191,7 +205,7 @@ export class MaintenanceService {
       );
     }
 
-    return this.prisma.maintenanceRequest.update({
+    const updated = await this.prisma.maintenanceRequest.update({
       where: { id: requestId },
       data: {
         status:     dto.status,
@@ -199,6 +213,16 @@ export class MaintenanceService {
       },
       include: REQUEST_INCLUDE,
     });
+
+    await this.notificationsService.createNotification(
+      updated.reportedById,
+      NotificationType.MAINTENANCE,
+      'Maintenance status updated',
+      `${updated.title} is now ${dto.status.replace('_', ' ').toLowerCase()}.`,
+      { requestId: updated.id, status: updated.status },
+    );
+
+    return updated;
   }
 
   // ---------------------------------------------------------------------------
