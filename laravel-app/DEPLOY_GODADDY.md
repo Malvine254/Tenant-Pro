@@ -1,5 +1,19 @@
 # Deploy Laravel TenantPro on GoDaddy Shared Hosting
 
+## 0. If You Have No Terminal Access
+Use the built-in admin page:
+- `https://starmaxltd.com/admin/deployment-tools`
+
+From there, you can run:
+- Clear all caches
+- Rebuild config/routes/views cache
+- Create storage symlink
+- Run migrations and seeders
+- Generate APP_KEY
+- Validate vendor folder presence
+
+Set `DEPLOYMENT_TOOL_TOKEN` in `.env` to protect this page.
+
 ## 1. Prepare Local Build
 1. In `laravel-app`, copy `.env.godaddy.example` to `.env` and set database credentials.
 2. Generate key:
@@ -16,6 +30,10 @@
    php artisan config:cache
    php artisan route:cache
    php artisan view:cache
+   ```
+5. Build dependencies locally and upload with project:
+   ```bash
+   composer install --no-dev --optimize-autoloader
    ```
 
 ## 2. Upload to GoDaddy (cPanel)
@@ -35,6 +53,8 @@ cd ~/laravel
 php artisan migrate --force
 php artisan db:seed --force
 ```
+
+If terminal is unavailable, run these from `/admin/deployment-tools`.
 
 ## 4. Default Admin Login
 - Email: `admin@starmaxltd.com`
