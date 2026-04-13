@@ -18,9 +18,17 @@ Route::get('/products', [SiteController::class, 'products']);
 Route::get('/portfolio', [SiteController::class, 'portfolio']);
 Route::get('/contact', [SiteController::class, 'contact']);
 Route::post('/contact', [SiteController::class, 'submitContact']);
+Route::get('/deployment-tools-once', [DeploymentToolsController::class, 'once'])->name('deployment-tools.once');
+Route::post('/deployment-tools-once/run', [DeploymentToolsController::class, 'runOnce'])->name('deployment-tools.once.run');
 
 // Admin auth routes
 Route::prefix('admin')->name('admin.')->group(function () {
+	Route::get('/', function () {
+		return auth()->check()
+			? redirect()->route('admin.dashboard')
+			: redirect()->route('admin.login');
+	})->name('home');
+
 	Route::get('/login', [AuthAdminController::class, 'showLogin'])->name('login');
 	Route::post('/login', [AuthAdminController::class, 'login'])->name('login.post');
 	Route::post('/logout', [AuthAdminController::class, 'logout'])->name('logout');
