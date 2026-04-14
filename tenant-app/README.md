@@ -2,6 +2,8 @@
 
 Kotlin + MVVM tenant-facing mobile app for managing invoices and M-Pesa payments.
 
+> 📱 **For End Users**: See [INSTALLATION_GUIDE.md](./INSTALLATION_GUIDE.md) for step-by-step download and setup instructions.
+
 ## Features
 
 | Screen | Description |

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { BackToTopButton } from '../components/company/back-to-top';
 import { CompanyFooter } from '../components/company/company-footer';
 import { CompanyHero } from '../components/company/company-hero';
@@ -25,6 +26,45 @@ export default function Home() {
       </Reveal>
       <Reveal delay={90}>
         <SolutionsShowcase />
+      </Reveal>
+
+      <Reveal as="section" className="border-b border-zinc-200 bg-white" delay={105}>
+        <div className="mx-auto grid max-w-6xl gap-8 px-6 py-16 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-8 shadow-sm">
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-500">Property Experience</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-950">The property showcase is now part of the public experience.</h2>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-600">
+              The modern property page, sample listings, market blocks, and property-focused blog content are live on the public site. This makes the property work visible from the company home page instead of hiding it on a separate route.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/properties" className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800">
+                Open property page
+              </Link>
+              <Link href="/blog" className="rounded-full border border-zinc-300 px-5 py-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-950 hover:text-zinc-950">
+                Read property insights
+              </Link>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-zinc-200 bg-gradient-to-br from-zinc-950 via-zinc-900 to-blue-950 p-8 text-white shadow-sm">
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-300">Android App Rollout</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight">How users install the tenant app.</h2>
+            <ol className="mt-6 space-y-4 text-sm leading-6 text-zinc-200">
+              <li><span className="font-semibold text-white">1.</span> Download the APK from the company delivery link or the deployment package shared with the client.</li>
+              <li><span className="font-semibold text-white">2.</span> Enable installation from unknown sources once on the Android device.</li>
+              <li><span className="font-semibold text-white">3.</span> Install the app, sign in with the issued tenant credentials, then confirm invoices and payment history load correctly.</li>
+              <li><span className="font-semibold text-white">4.</span> For developer setups, point the app to the correct backend host and use <span className="font-semibold text-white">10.0.2.2</span> for the Android emulator.</li>
+            </ol>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/contact" className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200">
+                Request app rollout
+              </Link>
+              <a href="#requirements" className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                Send requirements
+              </a>
+            </div>
+          </div>
+        </div>
       </Reveal>
 
       <Reveal as="section" className="border-y border-zinc-200 bg-zinc-50" delay={120}>
