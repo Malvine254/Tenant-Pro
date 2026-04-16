@@ -14,6 +14,34 @@
     ]
   },
   {
+    "slug": "how-modern-property-pages-convert-better-leads",
+    "title": "How Modern Property Pages Convert Better Leads",
+    "excerpt": "A strong property page does more than list features. It frames the lifestyle, location fit, and service quality that prospects compare before booking a viewing.",
+    "image": "/assets/projects/tenant-system.svg",
+    "category": "Property Marketing",
+    "publishedAt": "2026-04-11",
+    "author": "Starmax Editorial",
+    "content": [
+      "Prospective tenants make fast decisions based on clarity. If the property page feels generic, omits pricing cues, or hides service standards, conversion drops before the inquiry form is even opened.",
+      "High-performing property pages combine polished visuals, neighborhood context, amenity summaries, and operational confidence signals such as occupancy trends, response times, or maintenance readiness.",
+      "For landlords and property managers, that means fewer low-intent inquiries and a better match between the property offer and the resident profile it is designed to serve."
+    ]
+  },
+  {
+    "slug": "maintenance-signals-every-growing-portfolio-should-track",
+    "title": "Maintenance Signals Every Growing Portfolio Should Track",
+    "excerpt": "As portfolios expand, maintenance stops being a reactive checklist and becomes an operational signal that affects occupancy, reviews, and retention.",
+    "image": "/assets/projects/business-suite.svg",
+    "category": "Property Tech",
+    "publishedAt": "2026-04-08",
+    "author": "Operations Lab",
+    "content": [
+      "A growing portfolio can hide service strain if teams only look at closed tickets. What matters more is how quickly issues are acknowledged, how many repeat faults return, and how long units stay in a not-ready state.",
+      "Tracking maintenance by turnaround band gives managers a clearer view of risk. Small delays often signal vendor bottlenecks, approval friction, or poor issue triage before vacancy losses become visible in finance reports.",
+      "When property data, resident communication, and maintenance workflows are connected, teams can prioritize work with more confidence and explain delays more transparently to tenants."
+    ]
+  },
+  {
     "slug": "designing-engaging-digital-learning-platforms",
     "title": "Designing Engaging Digital Learning Platforms",
     "excerpt": "A practical look at how course structure, progress tracking, and mobile-first design improve adoption across training programs.",

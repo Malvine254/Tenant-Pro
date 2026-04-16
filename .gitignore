@@ -8,3 +8,5 @@ admin-dashboard/node_modules.zip
 .env
 .env.*
 !.env.example
+!.env.sample
+*.pem

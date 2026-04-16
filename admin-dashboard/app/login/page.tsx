@@ -252,6 +252,7 @@ export default function LoginPage() {
                   type="email"
                   className="tp-input"
                   autoComplete="email"
+                  suppressHydrationWarning
                   value={loginForm.email}
                   onChange={(event) => setLoginForm((current) => ({ ...current, email: event.target.value }))}
                   placeholder={isDemoRequest ? 'Enter emailed demo login' : 'you@example.com'}
@@ -264,6 +265,7 @@ export default function LoginPage() {
                   type="password"
                   className="tp-input"
                   autoComplete="current-password"
+                  suppressHydrationWarning
                   value={loginForm.password}
                   onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
                   placeholder="Enter your password"
@@ -281,25 +283,25 @@ export default function LoginPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-sm font-medium text-zinc-800">First name</label>
-                  <input className="tp-input" value={registerForm.firstName} onChange={(event) => setRegisterForm((current) => ({ ...current, firstName: event.target.value }))} required />
+                  <input className="tp-input" suppressHydrationWarning value={registerForm.firstName} onChange={(event) => setRegisterForm((current) => ({ ...current, firstName: event.target.value }))} required />
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-zinc-800">Last name</label>
-                  <input className="tp-input" value={registerForm.lastName} onChange={(event) => setRegisterForm((current) => ({ ...current, lastName: event.target.value }))} required />
+                  <input className="tp-input" suppressHydrationWarning value={registerForm.lastName} onChange={(event) => setRegisterForm((current) => ({ ...current, lastName: event.target.value }))} required />
                 </div>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-zinc-800">Email</label>
-                <input type="email" className="tp-input" value={registerForm.email} onChange={(event) => setRegisterForm((current) => ({ ...current, email: event.target.value }))} required />
+                <input type="email" className="tp-input" suppressHydrationWarning value={registerForm.email} onChange={(event) => setRegisterForm((current) => ({ ...current, email: event.target.value }))} required />
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-sm font-medium text-zinc-800">Phone (optional)</label>
-                  <input className="tp-input" value={registerForm.phoneNumber} onChange={(event) => setRegisterForm((current) => ({ ...current, phoneNumber: event.target.value }))} placeholder="+2547..." />
+                  <input className="tp-input" suppressHydrationWarning value={registerForm.phoneNumber} onChange={(event) => setRegisterForm((current) => ({ ...current, phoneNumber: event.target.value }))} placeholder="+2547..." />
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-zinc-800">Role</label>
-                  <select className="tp-select" value={registerForm.role} onChange={(event) => setRegisterForm((current) => ({ ...current, role: event.target.value }))}>
+                  <select className="tp-select" suppressHydrationWarning value={registerForm.role} onChange={(event) => setRegisterForm((current) => ({ ...current, role: event.target.value }))}>
                     <option value="LANDLORD">Landlord</option>
                     <option value="TENANT">Tenant</option>
                     <option value="CARETAKER">Caretaker</option>
@@ -308,7 +310,7 @@ export default function LoginPage() {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-zinc-800">Password</label>
-                <input type="password" className="tp-input" value={registerForm.password} onChange={(event) => setRegisterForm((current) => ({ ...current, password: event.target.value }))} minLength={6} required />
+                <input type="password" className="tp-input" suppressHydrationWarning value={registerForm.password} onChange={(event) => setRegisterForm((current) => ({ ...current, password: event.target.value }))} minLength={6} required />
               </div>
               <button type="submit" disabled={loading} className="tp-primary-btn disabled:opacity-60">
                 {loading ? 'Creating account...' : 'Create account & send verification'}
@@ -325,6 +327,7 @@ export default function LoginPage() {
                 <label className="mb-1 block text-sm font-medium text-zinc-800">Email verification code</label>
                 <input
                   className="tp-input"
+                  suppressHydrationWarning
                   value={verificationCode}
                   onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
                   inputMode="numeric"
@@ -351,11 +354,11 @@ export default function LoginPage() {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-zinc-800">Your name</label>
-                <input className="tp-input" value={demoForm.name} onChange={(event) => setDemoForm((current) => ({ ...current, name: event.target.value }))} required />
+                <input className="tp-input" suppressHydrationWarning value={demoForm.name} onChange={(event) => setDemoForm((current) => ({ ...current, name: event.target.value }))} required />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-zinc-800">Your email</label>
-                <input type="email" className="tp-input" value={demoForm.email} onChange={(event) => setDemoForm((current) => ({ ...current, email: event.target.value }))} required />
+                <input type="email" className="tp-input" suppressHydrationWarning value={demoForm.email} onChange={(event) => setDemoForm((current) => ({ ...current, email: event.target.value }))} required />
               </div>
               <button type="submit" disabled={loading} className="tp-primary-btn disabled:opacity-60">
                 {loading ? 'Sending demo credentials...' : 'Email my 1-hour demo access'}

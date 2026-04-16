@@ -3,6 +3,7 @@ import Link from 'next/link';
 const quickLinks = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About Us' },
+  { href: '/properties', label: 'Properties' },
   { href: '/portfolio', label: 'Portfolio' },
   { href: '/blog', label: 'Insights' },
   { href: '/dashboard?mode=demo', label: 'Dashboard Demo', newTab: true },
@@ -10,9 +11,9 @@ const quickLinks = [
 ];
 
 const serviceLinks = [
+  { href: '/properties', label: 'Property Showcase' },
   { href: '/services', label: 'Tenant Management' },
   { href: '/services', label: 'E-learning Platform' },
-  { href: '/services', label: 'Web Development' },
   { href: '/services', label: 'IT Consulting' },
 ];
 

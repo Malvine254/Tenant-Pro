@@ -1,20 +1,13 @@
 RewriteEngine On
 
-# Canonical host
-RewriteCond %{HTTP_HOST} ^www\.starmaxltd\.com$ [NC]
-RewriteRule ^ http://starmaxltd.com%{REQUEST_URI} [L,R=301]
-
-# Keep Let's Encrypt validation working if enabled
+# Keep Let's Encrypt validation working
 RewriteRule ^\.well-known/ - [L]
 
-# Serve existing files and directories directly
+# Serve existing files/folders directly
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# If /path exists as /path.html, serve it
-RewriteCond %{REQUEST_FILENAME}.html -f
-RewriteRule ^(.+?)/?$ $1.html [L]
-
-# Shared-host fallback entry order
-DirectoryIndex index.html index.php
+# Route all app requests to Laravel public directory
+RewriteCond %{REQUEST_URI} !^/laravel-app/public/
+RewriteRule ^(.*)$ laravel-app/public/$1 [L]
