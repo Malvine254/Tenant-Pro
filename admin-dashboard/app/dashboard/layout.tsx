@@ -1,11 +1,12 @@
 "use client";
 
+import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Sidebar } from '../../components/sidebar';
 import { clearDemoSession, getDemoSession, getSession } from '../../lib/auth';
 
-export default function DashboardLayout({
+function DashboardLayoutContent({
   children,
 }: {
   children: React.ReactNode;
@@ -69,5 +70,17 @@ export default function DashboardLayout({
         <section className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">{children}</section>
       </div>
     </div>
+  );
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense fallback={<div className="p-6 text-sm text-gray-600">Loading dashboard...</div>}>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </Suspense>
   );
 }

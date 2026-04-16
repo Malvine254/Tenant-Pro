@@ -13,8 +13,8 @@ export declare class UnitsController {
     private readonly propertiesService;
     constructor(propertiesService: PropertiesService);
     createUnitForProperty(req: AuthenticatedRequest, params: PropertyIdParamDto, dto: CreateUnitDto): Promise<{
-        id: string;
         status: import(".prisma/client").$Enums.UnitStatus;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         propertyId: string;

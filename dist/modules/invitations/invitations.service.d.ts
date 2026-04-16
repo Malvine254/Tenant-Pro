@@ -7,44 +7,44 @@ export declare class InvitationsService {
     constructor(prisma: PrismaService);
     private generateUniqueCode;
     createInvitation(actorUserId: string, actorRole: RoleName, dto: CreateInvitationDto): Promise<{
-        id: string;
         status: import(".prisma/client").$Enums.InvitationStatus;
+        id: string;
+        phoneNumber: string;
         createdAt: Date;
         updatedAt: Date;
-        phoneNumber: string;
-        propertyId: string;
         unitId: string;
-        metadata: import("@prisma/client/runtime/library").JsonValue | null;
+        propertyId: string;
         code: string;
+        sentVia: string | null;
         expiresAt: Date;
         acceptedAt: Date | null;
-        sentVia: string | null;
+        metadata: import("@prisma/client/runtime/library").JsonValue | null;
         sentById: string;
     }>;
     acceptInvitation(userId: string, dto: AcceptInvitationDto): Promise<{
         tenant: {
             id: string;
+            userId: string;
             createdAt: Date;
             updatedAt: Date;
             isActive: boolean;
-            userId: string;
             unitId: string;
             moveInDate: Date;
             moveOutDate: Date | null;
         };
         invitation: {
-            id: string;
             status: import(".prisma/client").$Enums.InvitationStatus;
+            id: string;
+            phoneNumber: string;
             createdAt: Date;
             updatedAt: Date;
-            phoneNumber: string;
-            propertyId: string;
             unitId: string;
-            metadata: import("@prisma/client/runtime/library").JsonValue | null;
+            propertyId: string;
             code: string;
+            sentVia: string | null;
             expiresAt: Date;
             acceptedAt: Date | null;
-            sentVia: string | null;
+            metadata: import("@prisma/client/runtime/library").JsonValue | null;
             sentById: string;
         };
     }>;

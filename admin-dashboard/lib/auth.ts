@@ -82,3 +82,27 @@ export function clearDemoSession() {
   sessionStorage.removeItem(DEMO_SESSION_KEY);
   resetDemoDataset();
 }
+
+// ── Starmax Website Admin session (separate from Tenant Pro) ──────────────
+const STARMAX_ADMIN_SESSION_KEY = 'starmax_website_admin_session';
+
+export function saveStarmaxAdminSession(session: Session) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STARMAX_ADMIN_SESSION_KEY, JSON.stringify(session));
+}
+
+export function getStarmaxAdminSession(): Session | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem(STARMAX_ADMIN_SESSION_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as Session;
+  } catch {
+    return null;
+  }
+}
+
+export function clearStarmaxAdminSession() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(STARMAX_ADMIN_SESSION_KEY);
+}

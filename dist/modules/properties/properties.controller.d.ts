@@ -18,8 +18,8 @@ export declare class PropertiesController {
     constructor(propertiesService: PropertiesService);
     createProperty(req: AuthenticatedRequest, dto: CreatePropertyDto): Promise<{
         units: {
-            id: string;
             status: import(".prisma/client").$Enums.UnitStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             propertyId: string;
@@ -34,16 +34,16 @@ export declare class PropertiesController {
         updatedAt: Date;
         name: string;
         description: string | null;
+        landlordId: string;
         coverImageUrl: string | null;
         addressLine: string;
         city: string;
         state: string | null;
         country: string;
-        landlordId: string;
     }>;
     addUnit(req: AuthenticatedRequest, params: PropertyIdParamDto, dto: CreateUnitDto): Promise<{
-        id: string;
         status: import(".prisma/client").$Enums.UnitStatus;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         propertyId: string;
@@ -63,23 +63,23 @@ export declare class PropertiesController {
             };
         } & {
             id: string;
+            phoneNumber: string;
             createdAt: Date;
             updatedAt: Date;
-            phoneNumber: string;
             email: string | null;
-            passwordHash: string | null;
             firstName: string | null;
             lastName: string | null;
-            profileImageUrl: string | null;
             emergencyContactName: string | null;
             emergencyContactPhone: string | null;
             bio: string | null;
+            profileImageUrl: string | null;
             isActive: boolean;
+            passwordHash: string | null;
             roleId: string;
         };
         units: {
-            id: string;
             status: import(".prisma/client").$Enums.UnitStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             propertyId: string;
@@ -94,12 +94,12 @@ export declare class PropertiesController {
         updatedAt: Date;
         name: string;
         description: string | null;
+        landlordId: string;
         coverImageUrl: string | null;
         addressLine: string;
         city: string;
         state: string | null;
         country: string;
-        landlordId: string;
     })[]>;
     updateProperty(req: AuthenticatedRequest, params: PropertyIdParamDto, dto: UpdatePropertyDto): Promise<{
         landlord: {
@@ -112,23 +112,23 @@ export declare class PropertiesController {
             };
         } & {
             id: string;
+            phoneNumber: string;
             createdAt: Date;
             updatedAt: Date;
-            phoneNumber: string;
             email: string | null;
-            passwordHash: string | null;
             firstName: string | null;
             lastName: string | null;
-            profileImageUrl: string | null;
             emergencyContactName: string | null;
             emergencyContactPhone: string | null;
             bio: string | null;
+            profileImageUrl: string | null;
             isActive: boolean;
+            passwordHash: string | null;
             roleId: string;
         };
         units: {
-            id: string;
             status: import(".prisma/client").$Enums.UnitStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             propertyId: string;
@@ -143,16 +143,16 @@ export declare class PropertiesController {
         updatedAt: Date;
         name: string;
         description: string | null;
+        landlordId: string;
         coverImageUrl: string | null;
         addressLine: string;
         city: string;
         state: string | null;
         country: string;
-        landlordId: string;
     }>;
     updateUnit(req: AuthenticatedRequest, params: UnitIdParamDto, dto: UpdateUnitDto): Promise<{
-        id: string;
         status: import(".prisma/client").$Enums.UnitStatus;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         propertyId: string;

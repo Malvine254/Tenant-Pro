@@ -27,6 +27,12 @@ const navSections = [
       { href: '/dashboard/users', label: 'Users & Roles', icon: '☰' },
     ],
   },
+  {
+    title: 'Website',
+    items: [
+      { href: '/dashboard/content', label: 'Content Manager', icon: '✎' },
+    ],
+  },
 ];
 
 type SidebarProps = {

@@ -9,8 +9,8 @@ export declare class PropertiesService {
     constructor(prisma: PrismaService);
     createProperty(actorUserId: string, actorRole: RoleName, dto: CreatePropertyDto): Promise<{
         units: {
-            id: string;
             status: import(".prisma/client").$Enums.UnitStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             propertyId: string;
@@ -25,16 +25,16 @@ export declare class PropertiesService {
         updatedAt: Date;
         name: string;
         description: string | null;
+        landlordId: string;
         coverImageUrl: string | null;
         addressLine: string;
         city: string;
         state: string | null;
         country: string;
-        landlordId: string;
     }>;
     addUnit(actorUserId: string, actorRole: RoleName, propertyId: string, dto: CreateUnitDto): Promise<{
-        id: string;
         status: import(".prisma/client").$Enums.UnitStatus;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         propertyId: string;
@@ -54,23 +54,23 @@ export declare class PropertiesService {
             };
         } & {
             id: string;
+            phoneNumber: string;
             createdAt: Date;
             updatedAt: Date;
-            phoneNumber: string;
             email: string | null;
-            passwordHash: string | null;
             firstName: string | null;
             lastName: string | null;
-            profileImageUrl: string | null;
             emergencyContactName: string | null;
             emergencyContactPhone: string | null;
             bio: string | null;
+            profileImageUrl: string | null;
             isActive: boolean;
+            passwordHash: string | null;
             roleId: string;
         };
         units: {
-            id: string;
             status: import(".prisma/client").$Enums.UnitStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             propertyId: string;
@@ -85,16 +85,16 @@ export declare class PropertiesService {
         updatedAt: Date;
         name: string;
         description: string | null;
+        landlordId: string;
         coverImageUrl: string | null;
         addressLine: string;
         city: string;
         state: string | null;
         country: string;
-        landlordId: string;
     }>;
     updateUnit(actorUserId: string, actorRole: RoleName, unitId: string, dto: UpdateUnitDto): Promise<{
-        id: string;
         status: import(".prisma/client").$Enums.UnitStatus;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         propertyId: string;
@@ -114,23 +114,23 @@ export declare class PropertiesService {
             };
         } & {
             id: string;
+            phoneNumber: string;
             createdAt: Date;
             updatedAt: Date;
-            phoneNumber: string;
             email: string | null;
-            passwordHash: string | null;
             firstName: string | null;
             lastName: string | null;
-            profileImageUrl: string | null;
             emergencyContactName: string | null;
             emergencyContactPhone: string | null;
             bio: string | null;
+            profileImageUrl: string | null;
             isActive: boolean;
+            passwordHash: string | null;
             roleId: string;
         };
         units: {
-            id: string;
             status: import(".prisma/client").$Enums.UnitStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             propertyId: string;
@@ -145,11 +145,11 @@ export declare class PropertiesService {
         updatedAt: Date;
         name: string;
         description: string | null;
+        landlordId: string;
         coverImageUrl: string | null;
         addressLine: string;
         city: string;
         state: string | null;
         country: string;
-        landlordId: string;
     })[]>;
 }

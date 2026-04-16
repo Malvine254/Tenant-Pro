@@ -49,43 +49,52 @@ const solutions = [
 
 export function SolutionsShowcase() {
   return (
-    <section className="mx-auto max-w-6xl px-6 py-16">
-      <div className="max-w-2xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-500">Products / Solutions</p>
-        <h2 className="mt-2 text-3xl font-semibold text-zinc-900">Designed around real operational needs</h2>
-        <p className="mt-3 text-zinc-600">
-          Starmax blends practical UX with maintainable architecture to deliver digital tools teams can use confidently.
-        </p>
-      </div>
+    <section className="bg-white px-6 py-16">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid gap-5 md:grid-cols-3">
+          {solutions.map((solution, i) => (
+            <article
+              id={solution.id}
+              key={solution.id}
+              className="group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-indigo-100 hover:shadow-xl"
+            >
+              {/* Gradient header */}
+              <div className={`relative bg-gradient-to-br ${solution.accentClass} p-6`}>
+                <div
+                  className="absolute inset-0 opacity-10"
+                  style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '18px 18px' }}
+                />
+                <div className="relative flex items-start justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-white ring-1 ring-white/30 shadow">
+                    {solution.icon}
+                  </div>
+                  <span className="text-4xl font-black text-white/20 select-none">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                </div>
+              </div>
 
-      <div className="mt-8 grid gap-5 md:grid-cols-3">
-        {solutions.map((solution) => (
-          <article
-            id={solution.id}
-            key={solution.id}
-            className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-zinc-300 hover:shadow-xl"
-          >
-            {/* Gradient top bar on hover */}
-            <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${solution.accentClass} opacity-0 transition duration-300 group-hover:opacity-100`} />
+              {/* Body */}
+              <div className="flex flex-1 flex-col p-6">
+                <h3 className="text-lg font-bold text-zinc-900 group-hover:text-indigo-700 transition-colors">{solution.title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-6 text-zinc-600">{solution.description}</p>
 
-            {/* Icon */}
-            <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${solution.iconBg} ${solution.iconColor} ring-1 ring-zinc-100`}>
-              {solution.icon}
-            </div>
-
-            <h3 className="text-lg font-semibold text-zinc-900">{solution.title}</h3>
-            <p className="mt-2 text-sm leading-6 text-zinc-600">{solution.description}</p>
-
-            <ul className="mt-4 space-y-2">
-              {solution.bullets.map((bullet) => (
-                <li key={bullet} className="flex items-center gap-2 text-sm text-zinc-700">
-                  <span className={`h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-r ${solution.accentClass}`} />
-                  {bullet}
-                </li>
-              ))}
-            </ul>
-          </article>
-        ))}
+                <ul className="mt-4 space-y-2">
+                  {solution.bullets.map((bullet) => (
+                    <li key={bullet} className="flex items-center gap-2.5 text-sm text-zinc-700">
+                      <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${solution.accentClass}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.5} className="h-3 w-3">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      </span>
+                      {bullet}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );

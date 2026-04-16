@@ -235,17 +235,17 @@ export declare class UsersService {
     } & {
         id: string;
         phoneNumber: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string | null;
-        passwordHash: string | null;
         firstName: string | null;
         lastName: string | null;
-        profileImageUrl: string | null;
         emergencyContactName: string | null;
         emergencyContactPhone: string | null;
         bio: string | null;
+        profileImageUrl: string | null;
         isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
+        passwordHash: string | null;
         roleId: string;
     }) | null>;
     findByEmail(email: string): Promise<{
@@ -277,17 +277,17 @@ export declare class UsersService {
     } & {
         id: string;
         phoneNumber: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string | null;
-        passwordHash: string | null;
         firstName: string | null;
         lastName: string | null;
-        profileImageUrl: string | null;
         emergencyContactName: string | null;
         emergencyContactPhone: string | null;
         bio: string | null;
+        profileImageUrl: string | null;
         isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
+        passwordHash: string | null;
         roleId: string;
     }) | null>;
     findById(userId: string): Promise<{
@@ -319,17 +319,17 @@ export declare class UsersService {
     } & {
         id: string;
         phoneNumber: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string | null;
-        passwordHash: string | null;
         firstName: string | null;
         lastName: string | null;
-        profileImageUrl: string | null;
         emergencyContactName: string | null;
         emergencyContactPhone: string | null;
         bio: string | null;
+        profileImageUrl: string | null;
         isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
+        passwordHash: string | null;
         roleId: string;
     }) | null>;
     isAllowedAppRole(role: RoleName): role is "LANDLORD" | "TENANT" | "ADMIN" | "CARETAKER";
@@ -354,17 +354,17 @@ export declare class UsersService {
     } | {
         id: string;
         phoneNumber: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string | null;
-        passwordHash: string | null;
         firstName: string | null;
         lastName: string | null;
-        profileImageUrl: string | null;
         emergencyContactName: string | null;
         emergencyContactPhone: string | null;
         bio: string | null;
+        profileImageUrl: string | null;
         isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
+        passwordHash: string | null;
         roleId: string;
     }>;
     getDemoAccessExpiry(loginEmail: string): Promise<number | null>;
@@ -396,17 +396,17 @@ export declare class UsersService {
     } | {
         id: string;
         phoneNumber: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string | null;
-        passwordHash: string | null;
         firstName: string | null;
         lastName: string | null;
-        profileImageUrl: string | null;
         emergencyContactName: string | null;
         emergencyContactPhone: string | null;
         bio: string | null;
+        profileImageUrl: string | null;
         isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
+        passwordHash: string | null;
         roleId: string;
     }>;
 }

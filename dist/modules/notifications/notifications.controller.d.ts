@@ -12,27 +12,27 @@ export declare class NotificationsController {
     constructor(notificationsService: NotificationsService);
     list(req: AuthenticatedRequest): Promise<{
         id: string;
+        userId: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
+        metadata: import("@prisma/client/runtime/library").JsonValue | null;
         type: import(".prisma/client").$Enums.NotificationType;
         title: string;
         message: string;
         isRead: boolean;
         readAt: Date | null;
-        metadata: import("@prisma/client/runtime/library").JsonValue | null;
     }[]>;
     markRead(req: AuthenticatedRequest, id: string): Promise<{
         id: string;
+        userId: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
+        metadata: import("@prisma/client/runtime/library").JsonValue | null;
         type: import(".prisma/client").$Enums.NotificationType;
         title: string;
         message: string;
         isRead: boolean;
         readAt: Date | null;
-        metadata: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     markAllRead(req: AuthenticatedRequest): Promise<{
         message: string;

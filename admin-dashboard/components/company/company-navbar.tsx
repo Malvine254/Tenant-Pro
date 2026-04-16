@@ -17,14 +17,13 @@ const productLinks = [
   { href: '/products#rental-system', label: 'Rental / Tenant System' },
   { href: '/products#elearning-resources', label: 'E-learning Resources' },
   { href: '/products#custom-business-systems', label: 'Custom Business Systems' },
-  { href: '/dashboard?mode=demo', label: 'Dashboard Demo', newTab: true },
 ];
 
 const topLinks = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About Us' },
-  { href: '/properties', label: 'Properties' },
   { href: '/portfolio', label: 'Portfolio' },
+  { href: '/events', label: 'Events' },
   { href: '/blog', label: 'Insights' },
   { href: '/contact', label: 'Contact' },
 ];
@@ -90,8 +89,6 @@ export function CompanyNavbar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    target={item.newTab ? '_blank' : undefined}
-                    rel={item.newTab ? 'noopener noreferrer' : undefined}
                     className="block rounded-xl px-3 py-2 text-sm text-zinc-100 transition hover:bg-zinc-900 hover:text-white"
                   >
                     {item.label}

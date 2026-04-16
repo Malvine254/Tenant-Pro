@@ -52,43 +52,53 @@ export function TestimonialsSlider() {
   const active = useMemo(() => items[activeIndex], [items, activeIndex]);
 
   if (!active) {
-    return <div className="tp-skeleton h-56 rounded-3xl border border-zinc-200" />;
+    return <div className="h-56 animate-pulse rounded-2xl border border-zinc-200 bg-zinc-100" />;
   }
 
   return (
-    <section className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.35)] md:p-8">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-500">Testimonials</p>
-          <h3 className="mt-1 text-2xl font-semibold text-zinc-900">What clients say</h3>
-        </div>
-        <div className="flex items-center gap-2">
-          {items.map((_, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => setActiveIndex(index)}
-              aria-label={`Show testimonial ${index + 1}`}
-              className={`h-2.5 w-2.5 rounded-full transition ${activeIndex === index ? 'bg-indigo-600' : 'bg-zinc-300'}`}
-            />
-          ))}
-        </div>
-      </div>
+    <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+      <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500" />
 
-      <div className="mt-6 rounded-3xl bg-gradient-to-br from-zinc-50 to-white p-5 ring-1 ring-zinc-100 md:p-6">
-        <StarRating rating={active.rating} />
-        <p className="mt-4 text-lg leading-8 text-zinc-700 md:text-xl">“{active.quote}”</p>
-
-        <div className="mt-6 flex items-center gap-4">
-          <div className="relative h-14 w-14 overflow-hidden rounded-full border border-zinc-200 bg-gradient-to-br from-blue-100 via-indigo-100 to-violet-100">
-            {active.avatar ? (
-              <Image src={active.avatar} alt={active.name} fill className="object-cover" unoptimized />
-            ) : null}
-          </div>
+      <div className="p-6 md:p-8">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="font-semibold text-zinc-900">{active.name}</p>
-            <p className="text-sm text-zinc-600">{active.role}</p>
-            <p className="text-sm font-medium text-indigo-600">{active.company}</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400">Testimonials</p>
+            <h3 className="mt-1 text-2xl font-bold text-zinc-900">What clients say</h3>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {items.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setActiveIndex(index)}
+                aria-label={`Show testimonial ${index + 1}`}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  activeIndex === index
+                    ? 'w-6 bg-indigo-600'
+                    : 'w-2 bg-zinc-300 hover:bg-zinc-400'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-2xl bg-gradient-to-br from-zinc-50 to-white p-5 ring-1 ring-zinc-100 md:p-6">
+          <div className="mb-2 text-5xl font-black leading-none text-indigo-200 select-none">&ldquo;</div>
+
+          <StarRating rating={active.rating} />
+          <p className="mt-3 text-lg leading-8 text-zinc-700 md:text-xl">{active.quote}</p>
+
+          <div className="mt-6 flex items-center gap-4">
+            <div className="relative h-14 w-14 overflow-hidden rounded-full ring-2 ring-indigo-200 ring-offset-2 bg-gradient-to-br from-blue-100 via-indigo-100 to-violet-100">
+              {active.avatar ? (
+                <Image src={active.avatar} alt={active.name} fill className="object-cover" unoptimized />
+              ) : null}
+            </div>
+            <div>
+              <p className="font-bold text-zinc-900">{active.name}</p>
+              <p className="text-sm text-zinc-500">{active.role}</p>
+              <p className="text-sm font-semibold text-indigo-600">{active.company}</p>
+            </div>
           </div>
         </div>
       </div>

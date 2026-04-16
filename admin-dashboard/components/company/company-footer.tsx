@@ -6,7 +6,6 @@ const quickLinks = [
   { href: '/properties', label: 'Properties' },
   { href: '/portfolio', label: 'Portfolio' },
   { href: '/blog', label: 'Insights' },
-  { href: '/dashboard?mode=demo', label: 'Dashboard Demo', newTab: true },
   { href: '/contact', label: 'Contact' },
 ];
 
@@ -35,8 +34,6 @@ export function CompanyFooter() {
               <li key={item.href + item.label}>
                 <Link
                   href={item.href}
-                  target={item.newTab ? '_blank' : undefined}
-                  rel={item.newTab ? 'noopener noreferrer' : undefined}
                   className="transition hover:text-white"
                 >
                   {item.label}

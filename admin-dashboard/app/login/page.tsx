@@ -43,7 +43,7 @@ export default function LoginPage() {
   const [verificationCode, setVerificationCode] = useState('');
 
   const [loginForm, setLoginForm] = useState({
-    email: isDemoRequest ? '' : 'admin@example.com',
+    email: '',
     password: '',
   });
 

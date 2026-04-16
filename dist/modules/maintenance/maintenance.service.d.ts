@@ -9,6 +9,23 @@ export declare class MaintenanceService {
     private readonly notificationsService;
     constructor(prisma: PrismaService, notificationsService: NotificationsService);
     createRequest(actorUserId: string, dto: CreateRequestDto): Promise<{
+        unit: {
+            property: {
+                id: string;
+                name: string;
+                landlordId: string;
+            };
+        } & {
+            status: import(".prisma/client").$Enums.UnitStatus;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            propertyId: string;
+            unitNumber: string;
+            floor: string | null;
+            rentAmount: import("@prisma/client/runtime/library").Decimal;
+            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
+        };
         tenant: {
             user: {
                 id: string;
@@ -18,30 +35,13 @@ export declare class MaintenanceService {
             };
         } & {
             id: string;
+            userId: string;
             createdAt: Date;
             updatedAt: Date;
             isActive: boolean;
-            userId: string;
             unitId: string;
             moveInDate: Date;
             moveOutDate: Date | null;
-        };
-        unit: {
-            property: {
-                id: string;
-                name: string;
-                landlordId: string;
-            };
-        } & {
-            id: string;
-            status: import(".prisma/client").$Enums.UnitStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            propertyId: string;
-            unitNumber: string;
-            floor: string | null;
-            rentAmount: import("@prisma/client/runtime/library").Decimal;
-            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         };
         reportedBy: {
             id: string;
@@ -55,20 +55,37 @@ export declare class MaintenanceService {
             lastName: string | null;
         } | null;
     } & {
-        id: string;
         status: import(".prisma/client").$Enums.MaintenanceStatus;
+        id: string;
+        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
         description: string;
-        tenantId: string;
         unitId: string;
-        title: string;
         priority: import(".prisma/client").$Enums.MaintenancePriority;
-        resolvedAt: Date | null;
+        title: string;
         reportedById: string;
         assignedToId: string | null;
+        resolvedAt: Date | null;
     }>;
     listRequests(actorUserId: string, actorRole: RoleName): Promise<({
+        unit: {
+            property: {
+                id: string;
+                name: string;
+                landlordId: string;
+            };
+        } & {
+            status: import(".prisma/client").$Enums.UnitStatus;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            propertyId: string;
+            unitNumber: string;
+            floor: string | null;
+            rentAmount: import("@prisma/client/runtime/library").Decimal;
+            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
+        };
         tenant: {
             user: {
                 id: string;
@@ -78,30 +95,13 @@ export declare class MaintenanceService {
             };
         } & {
             id: string;
+            userId: string;
             createdAt: Date;
             updatedAt: Date;
             isActive: boolean;
-            userId: string;
             unitId: string;
             moveInDate: Date;
             moveOutDate: Date | null;
-        };
-        unit: {
-            property: {
-                id: string;
-                name: string;
-                landlordId: string;
-            };
-        } & {
-            id: string;
-            status: import(".prisma/client").$Enums.UnitStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            propertyId: string;
-            unitNumber: string;
-            floor: string | null;
-            rentAmount: import("@prisma/client/runtime/library").Decimal;
-            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         };
         reportedBy: {
             id: string;
@@ -115,20 +115,37 @@ export declare class MaintenanceService {
             lastName: string | null;
         } | null;
     } & {
-        id: string;
         status: import(".prisma/client").$Enums.MaintenanceStatus;
+        id: string;
+        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
         description: string;
-        tenantId: string;
         unitId: string;
-        title: string;
         priority: import(".prisma/client").$Enums.MaintenancePriority;
-        resolvedAt: Date | null;
+        title: string;
         reportedById: string;
         assignedToId: string | null;
+        resolvedAt: Date | null;
     })[]>;
     assignCaretaker(actorUserId: string, requestId: string, dto: AssignCaretakerDto): Promise<{
+        unit: {
+            property: {
+                id: string;
+                name: string;
+                landlordId: string;
+            };
+        } & {
+            status: import(".prisma/client").$Enums.UnitStatus;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            propertyId: string;
+            unitNumber: string;
+            floor: string | null;
+            rentAmount: import("@prisma/client/runtime/library").Decimal;
+            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
+        };
         tenant: {
             user: {
                 id: string;
@@ -138,30 +155,13 @@ export declare class MaintenanceService {
             };
         } & {
             id: string;
+            userId: string;
             createdAt: Date;
             updatedAt: Date;
             isActive: boolean;
-            userId: string;
             unitId: string;
             moveInDate: Date;
             moveOutDate: Date | null;
-        };
-        unit: {
-            property: {
-                id: string;
-                name: string;
-                landlordId: string;
-            };
-        } & {
-            id: string;
-            status: import(".prisma/client").$Enums.UnitStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            propertyId: string;
-            unitNumber: string;
-            floor: string | null;
-            rentAmount: import("@prisma/client/runtime/library").Decimal;
-            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         };
         reportedBy: {
             id: string;
@@ -175,20 +175,37 @@ export declare class MaintenanceService {
             lastName: string | null;
         } | null;
     } & {
-        id: string;
         status: import(".prisma/client").$Enums.MaintenanceStatus;
+        id: string;
+        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
         description: string;
-        tenantId: string;
         unitId: string;
-        title: string;
         priority: import(".prisma/client").$Enums.MaintenancePriority;
-        resolvedAt: Date | null;
+        title: string;
         reportedById: string;
         assignedToId: string | null;
+        resolvedAt: Date | null;
     }>;
     updateStatus(actorUserId: string, actorRole: RoleName, requestId: string, dto: UpdateStatusDto): Promise<{
+        unit: {
+            property: {
+                id: string;
+                name: string;
+                landlordId: string;
+            };
+        } & {
+            status: import(".prisma/client").$Enums.UnitStatus;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            propertyId: string;
+            unitNumber: string;
+            floor: string | null;
+            rentAmount: import("@prisma/client/runtime/library").Decimal;
+            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
+        };
         tenant: {
             user: {
                 id: string;
@@ -198,30 +215,13 @@ export declare class MaintenanceService {
             };
         } & {
             id: string;
+            userId: string;
             createdAt: Date;
             updatedAt: Date;
             isActive: boolean;
-            userId: string;
             unitId: string;
             moveInDate: Date;
             moveOutDate: Date | null;
-        };
-        unit: {
-            property: {
-                id: string;
-                name: string;
-                landlordId: string;
-            };
-        } & {
-            id: string;
-            status: import(".prisma/client").$Enums.UnitStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            propertyId: string;
-            unitNumber: string;
-            floor: string | null;
-            rentAmount: import("@prisma/client/runtime/library").Decimal;
-            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         };
         reportedBy: {
             id: string;
@@ -235,20 +235,37 @@ export declare class MaintenanceService {
             lastName: string | null;
         } | null;
     } & {
-        id: string;
         status: import(".prisma/client").$Enums.MaintenanceStatus;
+        id: string;
+        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
         description: string;
-        tenantId: string;
         unitId: string;
-        title: string;
         priority: import(".prisma/client").$Enums.MaintenancePriority;
-        resolvedAt: Date | null;
+        title: string;
         reportedById: string;
         assignedToId: string | null;
+        resolvedAt: Date | null;
     }>;
     getRequest(actorUserId: string, actorRole: RoleName, requestId: string): Promise<{
+        unit: {
+            property: {
+                id: string;
+                name: string;
+                landlordId: string;
+            };
+        } & {
+            status: import(".prisma/client").$Enums.UnitStatus;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            propertyId: string;
+            unitNumber: string;
+            floor: string | null;
+            rentAmount: import("@prisma/client/runtime/library").Decimal;
+            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
+        };
         tenant: {
             user: {
                 id: string;
@@ -258,30 +275,13 @@ export declare class MaintenanceService {
             };
         } & {
             id: string;
+            userId: string;
             createdAt: Date;
             updatedAt: Date;
             isActive: boolean;
-            userId: string;
             unitId: string;
             moveInDate: Date;
             moveOutDate: Date | null;
-        };
-        unit: {
-            property: {
-                id: string;
-                name: string;
-                landlordId: string;
-            };
-        } & {
-            id: string;
-            status: import(".prisma/client").$Enums.UnitStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            propertyId: string;
-            unitNumber: string;
-            floor: string | null;
-            rentAmount: import("@prisma/client/runtime/library").Decimal;
-            imageUrls: import("@prisma/client/runtime/library").JsonValue | null;
         };
         reportedBy: {
             id: string;
@@ -295,17 +295,17 @@ export declare class MaintenanceService {
             lastName: string | null;
         } | null;
     } & {
-        id: string;
         status: import(".prisma/client").$Enums.MaintenanceStatus;
+        id: string;
+        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
         description: string;
-        tenantId: string;
         unitId: string;
-        title: string;
         priority: import(".prisma/client").$Enums.MaintenancePriority;
-        resolvedAt: Date | null;
+        title: string;
         reportedById: string;
         assignedToId: string | null;
+        resolvedAt: Date | null;
     }>;
 }

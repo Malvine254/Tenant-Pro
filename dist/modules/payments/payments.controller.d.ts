@@ -24,13 +24,13 @@ export declare class PaymentsController {
     }>;
     getPaymentsByInvoice(req: AuthenticatedRequest, invoiceId: string): Promise<({
         transactions: {
+            amount: import("@prisma/client/runtime/library").Decimal | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            amount: import("@prisma/client/runtime/library").Decimal | null;
+            type: import(".prisma/client").$Enums.TransactionType;
             paymentId: string;
             externalReference: string | null;
-            type: import(".prisma/client").$Enums.TransactionType;
             provider: string;
             resultCode: string | null;
             resultDescription: string | null;
@@ -39,20 +39,20 @@ export declare class PaymentsController {
             processedAt: Date | null;
         }[];
     } & {
-        id: string;
         status: import(".prisma/client").$Enums.PaymentStatus;
-        createdAt: Date;
-        updatedAt: Date;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        id: string;
+        invoiceId: string;
+        tenantId: string;
+        userId: string;
+        method: string;
         phoneNumber: string | null;
         mpesaRequestId: string | null;
         mpesaCheckoutRequestId: string | null;
         mpesaReceiptNumber: string | null;
-        invoiceId: string;
-        tenantId: string;
-        userId: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
-        method: string;
         paidAt: Date | null;
+        createdAt: Date;
+        updatedAt: Date;
     })[]>;
 }
 export {};
