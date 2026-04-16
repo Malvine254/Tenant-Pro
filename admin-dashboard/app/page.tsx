@@ -1,7 +1,7 @@
 import { BackToTopButton } from '../components/company/back-to-top';
 import { CompanyFooter } from '../components/company/company-footer';
-import { CompanyHero } from '../components/company/company-hero';
 import { CompanyHighlights } from '../components/company/company-highlights';
+import { HeroSlider } from '../components/company/hero-slider';
 import { CompanyNavbar } from '../components/company/company-navbar';
 import { CompanyProcess } from '../components/company/company-process';
 import { CompanyRequirementsForm } from '../components/company/company-requirements-form';
@@ -16,7 +16,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-white text-zinc-900">
       <CompanyNavbar />
-      <CompanyHero />
+      <HeroSlider />
       <Reveal>
         <CompanyServices />
       </Reveal>

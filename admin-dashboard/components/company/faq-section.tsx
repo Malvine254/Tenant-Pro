@@ -31,14 +31,27 @@ export function FaqSection() {
 
       <div className="mt-8 space-y-3">
         {faqs.map((item) => (
-          <details key={item.question} className="group rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-            <summary className="cursor-pointer list-none text-base font-semibold text-zinc-900">
-              <div className="flex items-center justify-between gap-4">
-                <span>{item.question}</span>
-                <span className="text-zinc-500 transition group-open:rotate-45">+</span>
-              </div>
+          <details
+            key={item.question}
+            className="group rounded-2xl border border-zinc-200 bg-white shadow-sm transition duration-200 hover:border-indigo-200 open:border-indigo-200 open:shadow-md"
+          >
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4">
+              <span className="text-sm font-semibold text-zinc-900">{item.question}</span>
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-zinc-200 text-zinc-400 transition duration-200 group-open:border-indigo-200 group-open:bg-indigo-50 group-open:text-indigo-600">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className="h-4 w-4 transition duration-200 group-open:rotate-180"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </span>
             </summary>
-            <p className="mt-3 text-sm leading-6 text-zinc-600">{item.answer}</p>
+            <div className="border-t border-zinc-100 px-5 pb-4 pt-3">
+              <p className="text-sm leading-6 text-zinc-600">{item.answer}</p>
+            </div>
           </details>
         ))}
       </div>
