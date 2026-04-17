@@ -3,6 +3,11 @@ RewriteEngine On
 # Keep Let's Encrypt validation working
 RewriteRule ^\.well-known/ - [L]
 
+# Proxy /rebuild/ to the Node.js rebuild tool on port 9090
+# Requires mod_proxy and mod_proxy_http to be enabled on the server
+RewriteCond %{REQUEST_URI} ^/rebuild(/.*)?$
+RewriteRule ^rebuild(/(.*))?$ http://127.0.0.1:9090/$2 [P,L]
+
 # Serve existing files/folders directly
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
