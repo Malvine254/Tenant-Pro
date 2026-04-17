@@ -7,8 +7,7 @@
 
     # Rebuild tool passthrough (Node.js on 127.0.0.1:9090)
     # Requires mod_proxy and mod_proxy_http.
-    RewriteRule ^rebuild$ rebuild/ [R=302,L]
-    RewriteRule ^rebuild/(.*)$ http://127.0.0.1:9090/$1 [P,L]
+    RewriteRule ^rebuild/?(.*)$ http://127.0.0.1:9090/$1 [P,L,QSA,NC]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
