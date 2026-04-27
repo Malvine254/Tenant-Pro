@@ -8,7 +8,7 @@ import { MonthlyTrendQueryDto } from './dto/monthly-trend-query.dto';
 
 @Controller('admin/analytics')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(RoleName.ADMIN)
+@Roles(RoleName.ADMIN, RoleName.LANDLORD)
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 

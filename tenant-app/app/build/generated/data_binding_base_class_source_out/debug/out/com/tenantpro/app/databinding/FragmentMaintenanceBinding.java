@@ -5,13 +5,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.widget.NestedScrollView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.tenantpro.app.R;
@@ -21,7 +20,7 @@ import java.lang.String;
 
 public final class FragmentMaintenanceBinding implements ViewBinding {
   @NonNull
-  private final NestedScrollView rootView;
+  private final LinearLayout rootView;
 
   @NonNull
   public final MaterialAutoCompleteTextView actPriority;
@@ -42,14 +41,18 @@ public final class FragmentMaintenanceBinding implements ViewBinding {
   public final LinearLayout llMaintenanceItems;
 
   @NonNull
-  public final TextView tvMaintenanceEmpty;
+  public final LinearProgressIndicator progressMaintenance;
 
-  private FragmentMaintenanceBinding(@NonNull NestedScrollView rootView,
+  @NonNull
+  public final LinearLayout tvMaintenanceEmpty;
+
+  private FragmentMaintenanceBinding(@NonNull LinearLayout rootView,
       @NonNull MaterialAutoCompleteTextView actPriority,
       @NonNull MaterialButton btnRefreshMaintenance, @NonNull MaterialButton btnSubmitMaintenance,
       @NonNull TextInputEditText etMaintenanceDescription,
       @NonNull TextInputEditText etMaintenanceTitle, @NonNull LinearLayout llMaintenanceItems,
-      @NonNull TextView tvMaintenanceEmpty) {
+      @NonNull LinearProgressIndicator progressMaintenance,
+      @NonNull LinearLayout tvMaintenanceEmpty) {
     this.rootView = rootView;
     this.actPriority = actPriority;
     this.btnRefreshMaintenance = btnRefreshMaintenance;
@@ -57,12 +60,13 @@ public final class FragmentMaintenanceBinding implements ViewBinding {
     this.etMaintenanceDescription = etMaintenanceDescription;
     this.etMaintenanceTitle = etMaintenanceTitle;
     this.llMaintenanceItems = llMaintenanceItems;
+    this.progressMaintenance = progressMaintenance;
     this.tvMaintenanceEmpty = tvMaintenanceEmpty;
   }
 
   @Override
   @NonNull
-  public NestedScrollView getRoot() {
+  public LinearLayout getRoot() {
     return rootView;
   }
 
@@ -123,15 +127,21 @@ public final class FragmentMaintenanceBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.progressMaintenance;
+      LinearProgressIndicator progressMaintenance = ViewBindings.findChildViewById(rootView, id);
+      if (progressMaintenance == null) {
+        break missingId;
+      }
+
       id = R.id.tvMaintenanceEmpty;
-      TextView tvMaintenanceEmpty = ViewBindings.findChildViewById(rootView, id);
+      LinearLayout tvMaintenanceEmpty = ViewBindings.findChildViewById(rootView, id);
       if (tvMaintenanceEmpty == null) {
         break missingId;
       }
 
-      return new FragmentMaintenanceBinding((NestedScrollView) rootView, actPriority,
+      return new FragmentMaintenanceBinding((LinearLayout) rootView, actPriority,
           btnRefreshMaintenance, btnSubmitMaintenance, etMaintenanceDescription, etMaintenanceTitle,
-          llMaintenanceItems, tvMaintenanceEmpty);
+          llMaintenanceItems, progressMaintenance, tvMaintenanceEmpty);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

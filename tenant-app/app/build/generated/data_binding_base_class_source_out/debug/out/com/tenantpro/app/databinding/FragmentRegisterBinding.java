@@ -5,14 +5,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.ProgressBar;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.widget.NestedScrollView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.tenantpro.app.R;
@@ -22,7 +22,7 @@ import java.lang.String;
 
 public final class FragmentRegisterBinding implements ViewBinding {
   @NonNull
-  private final NestedScrollView rootView;
+  private final LinearLayout rootView;
 
   @NonNull
   public final MaterialButton btnRegister;
@@ -46,7 +46,7 @@ public final class FragmentRegisterBinding implements ViewBinding {
   public final TextInputEditText etRegPhone;
 
   @NonNull
-  public final ProgressBar progressBar;
+  public final LinearProgressIndicator progressBar;
 
   @NonNull
   public final TextInputLayout tilRegConfirmPassword;
@@ -66,11 +66,11 @@ public final class FragmentRegisterBinding implements ViewBinding {
   @NonNull
   public final TextView tvLoginLink;
 
-  private FragmentRegisterBinding(@NonNull NestedScrollView rootView,
+  private FragmentRegisterBinding(@NonNull LinearLayout rootView,
       @NonNull MaterialButton btnRegister, @NonNull CheckBox cbTerms,
       @NonNull TextInputEditText etRegConfirmPassword, @NonNull TextInputEditText etRegEmail,
       @NonNull TextInputEditText etRegName, @NonNull TextInputEditText etRegPassword,
-      @NonNull TextInputEditText etRegPhone, @NonNull ProgressBar progressBar,
+      @NonNull TextInputEditText etRegPhone, @NonNull LinearProgressIndicator progressBar,
       @NonNull TextInputLayout tilRegConfirmPassword, @NonNull TextInputLayout tilRegEmail,
       @NonNull TextInputLayout tilRegName, @NonNull TextInputLayout tilRegPassword,
       @NonNull TextInputLayout tilRegPhone, @NonNull TextView tvLoginLink) {
@@ -93,7 +93,7 @@ public final class FragmentRegisterBinding implements ViewBinding {
 
   @Override
   @NonNull
-  public NestedScrollView getRoot() {
+  public LinearLayout getRoot() {
     return rootView;
   }
 
@@ -161,7 +161,7 @@ public final class FragmentRegisterBinding implements ViewBinding {
       }
 
       id = R.id.progressBar;
-      ProgressBar progressBar = ViewBindings.findChildViewById(rootView, id);
+      LinearProgressIndicator progressBar = ViewBindings.findChildViewById(rootView, id);
       if (progressBar == null) {
         break missingId;
       }
@@ -202,7 +202,7 @@ public final class FragmentRegisterBinding implements ViewBinding {
         break missingId;
       }
 
-      return new FragmentRegisterBinding((NestedScrollView) rootView, btnRegister, cbTerms,
+      return new FragmentRegisterBinding((LinearLayout) rootView, btnRegister, cbTerms,
           etRegConfirmPassword, etRegEmail, etRegName, etRegPassword, etRegPhone, progressBar,
           tilRegConfirmPassword, tilRegEmail, tilRegName, tilRegPassword, tilRegPhone, tvLoginLink);
     }

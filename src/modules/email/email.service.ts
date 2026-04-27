@@ -180,6 +180,36 @@ export class EmailService {
     }
   }
 
+  async sendInvitationEmail(
+    email: string,
+    code: string,
+    expiresAt: Date,
+    propertyName: string,
+    unitName: string,
+    tenantName?: string,
+  ) {
+    const fromName = this.configService.get<string>('MAIL_FROM_NAME');
+    const fromEmail = this.configService.get<string>('MAIL_FROM_EMAIL');
+
+    const subject = `You've been invited to ${propertyName} — Tenant Pro`;
+    const html = this.getInvitationEmailTemplate(code, expiresAt, propertyName, unitName, tenantName);
+
+    try {
+      await this.transporter.sendMail({
+        from: `"${fromName}" <${fromEmail}>`,
+        to: email,
+        subject,
+        html,
+      });
+
+      this.logger.log(`Invitation email sent to ${email}`);
+      return { success: true };
+    } catch (error) {
+      this.logger.error(`Failed to send invitation email to ${email}:`, error);
+      return { success: false };
+    }
+  }
+
   async sendMaintenanceUpdateEmail(
     email: string,
     firstName: string,
@@ -484,6 +514,88 @@ export class EmailService {
     <p>If you've already paid, please disregard this notice. For payment arrangements or questions, contact us immediately.</p>
     <div class="footer">
       <p>&copy; ${new Date().getFullYear()} Starmax Ltd. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+  }
+
+  private getInvitationEmailTemplate(
+    code: string,
+    expiresAt: Date,
+    propertyName: string,
+    unitName: string,
+    tenantName?: string,
+  ): string {
+    const greeting = tenantName ? `Hi ${tenantName},` : 'Hi,';
+    const expiry = expiresAt.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { margin: 0; padding: 0; background: #f4f7fb; font-family: Arial, Helvetica, sans-serif; color: #1f2937; }
+    .shell { padding: 24px 12px; }
+    .card { max-width: 620px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(15,23,42,0.08); }
+    .hero { background: linear-gradient(135deg, #0f172a, #312e81); color: #ffffff; padding: 28px 32px; }
+    .hero h1 { margin: 0; font-size: 24px; }
+    .hero p { margin: 8px 0 0; color: #dbeafe; font-size: 14px; }
+    .content { padding: 28px 32px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+    .detail-label { color: #64748b; }
+    .detail-value { font-weight: 600; color: #0f172a; }
+    .code-box { margin: 24px 0; border-radius: 16px; background: linear-gradient(135deg, #eef2ff, #eff6ff); border: 1px solid #c7d2fe; text-align: center; padding: 20px; }
+    .code-label { font-size: 12px; color: #6366f1; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 10px; }
+    .code-value { font-size: 36px; letter-spacing: 10px; font-weight: 800; color: #312e81; }
+    .steps { margin: 20px 0; padding: 16px 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; }
+    .steps ol { margin: 8px 0 0; padding-left: 18px; font-size: 14px; color: #475569; line-height: 1.8; }
+    .expiry { margin-top: 16px; font-size: 13px; color: #dc2626; font-weight: 600; }
+    .footer { border-top: 1px solid #e5e7eb; padding: 18px 32px 24px; font-size: 12px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="card">
+      <div class="hero">
+        <h1>You've been invited!</h1>
+        <p>Your landlord has set up a unit for you on Tenant Pro</p>
+      </div>
+      <div class="content">
+        <p>${greeting}</p>
+        <p>You've been invited to move into a unit. Use the invitation code below to accept and activate your tenancy.</p>
+
+        <div class="detail-row">
+          <span class="detail-label">Property</span>
+          <span class="detail-value">${propertyName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Unit</span>
+          <span class="detail-value">${unitName}</span>
+        </div>
+
+        <div class="code-box">
+          <div class="code-label">Your invitation code</div>
+          <div class="code-value">${code}</div>
+        </div>
+
+        <div class="steps">
+          <strong>How to accept your invitation:</strong>
+          <ol>
+            <li>Download the <strong>Tenant Pro</strong> app and create an account</li>
+            <li>Go to <strong>Account → Accept Invitation</strong></li>
+            <li>Enter the code above to activate your tenancy</li>
+          </ol>
+        </div>
+
+        <p class="expiry">⚠ This code expires on ${expiry}. Do not share it with anyone.</p>
+      </div>
+      <div class="footer">
+        <p>If you were not expecting this invitation, please ignore this email.</p>
+        <p>&copy; ${new Date().getFullYear()} Starmax Ltd. All rights reserved.</p>
+      </div>
     </div>
   </div>
 </body>

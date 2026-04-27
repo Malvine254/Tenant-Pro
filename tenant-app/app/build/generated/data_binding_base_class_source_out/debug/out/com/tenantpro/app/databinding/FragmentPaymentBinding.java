@@ -4,14 +4,15 @@ package com.tenantpro.app.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.widget.NestedScrollView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -22,7 +23,10 @@ import java.lang.String;
 
 public final class FragmentPaymentBinding implements ViewBinding {
   @NonNull
-  private final NestedScrollView rootView;
+  private final LinearLayout rootView;
+
+  @NonNull
+  public final ImageButton btnBack;
 
   @NonNull
   public final MaterialButton btnPay;
@@ -34,7 +38,7 @@ public final class FragmentPaymentBinding implements ViewBinding {
   public final TextInputEditText etPhone;
 
   @NonNull
-  public final ProgressBar progressBar;
+  public final LinearProgressIndicator progressBar;
 
   @NonNull
   public final SwitchMaterial switchSimulation;
@@ -54,13 +58,14 @@ public final class FragmentPaymentBinding implements ViewBinding {
   @NonNull
   public final TextView tvSimulationHint;
 
-  private FragmentPaymentBinding(@NonNull NestedScrollView rootView, @NonNull MaterialButton btnPay,
-      @NonNull TextInputEditText etAmount, @NonNull TextInputEditText etPhone,
-      @NonNull ProgressBar progressBar, @NonNull SwitchMaterial switchSimulation,
-      @NonNull TextInputLayout tilAmount, @NonNull TextInputLayout tilPhone,
-      @NonNull TextView tvInvoiceLabel, @NonNull TextView tvRemainingAmount,
-      @NonNull TextView tvSimulationHint) {
+  private FragmentPaymentBinding(@NonNull LinearLayout rootView, @NonNull ImageButton btnBack,
+      @NonNull MaterialButton btnPay, @NonNull TextInputEditText etAmount,
+      @NonNull TextInputEditText etPhone, @NonNull LinearProgressIndicator progressBar,
+      @NonNull SwitchMaterial switchSimulation, @NonNull TextInputLayout tilAmount,
+      @NonNull TextInputLayout tilPhone, @NonNull TextView tvInvoiceLabel,
+      @NonNull TextView tvRemainingAmount, @NonNull TextView tvSimulationHint) {
     this.rootView = rootView;
+    this.btnBack = btnBack;
     this.btnPay = btnPay;
     this.etAmount = etAmount;
     this.etPhone = etPhone;
@@ -75,7 +80,7 @@ public final class FragmentPaymentBinding implements ViewBinding {
 
   @Override
   @NonNull
-  public NestedScrollView getRoot() {
+  public LinearLayout getRoot() {
     return rootView;
   }
 
@@ -100,6 +105,12 @@ public final class FragmentPaymentBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.btnBack;
+      ImageButton btnBack = ViewBindings.findChildViewById(rootView, id);
+      if (btnBack == null) {
+        break missingId;
+      }
+
       id = R.id.btnPay;
       MaterialButton btnPay = ViewBindings.findChildViewById(rootView, id);
       if (btnPay == null) {
@@ -119,7 +130,7 @@ public final class FragmentPaymentBinding implements ViewBinding {
       }
 
       id = R.id.progressBar;
-      ProgressBar progressBar = ViewBindings.findChildViewById(rootView, id);
+      LinearProgressIndicator progressBar = ViewBindings.findChildViewById(rootView, id);
       if (progressBar == null) {
         break missingId;
       }
@@ -160,7 +171,7 @@ public final class FragmentPaymentBinding implements ViewBinding {
         break missingId;
       }
 
-      return new FragmentPaymentBinding((NestedScrollView) rootView, btnPay, etAmount, etPhone,
+      return new FragmentPaymentBinding((LinearLayout) rootView, btnBack, btnPay, etAmount, etPhone,
           progressBar, switchSimulation, tilAmount, tilPhone, tvInvoiceLabel, tvRemainingAmount,
           tvSimulationHint);
     }

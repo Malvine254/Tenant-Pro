@@ -1,11 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true">
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <!-- Back navigation header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="8dp"
+        android:background="@color/surface"
+        android:elevation="2dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_arrow_back"
+            android:tint="@color/on_surface"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Go back"
+            android:padding="8dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Make Payment"
+            android:textColor="@color/on_surface"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,25 +52,28 @@
 
         <!-- Invoice summary card -->
         <com.google.android.material.card.MaterialCardView
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="24dp"
+            app:cardBackgroundColor="@color/primary"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/label_paying_for"
                     android:textSize="12sp"
-                    android:textColor="@color/on_surface_variant"
-                    android:layout_marginBottom="4dp" />
+                    android:textColor="#99FFFFFF"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.06"
+                    android:layout_marginBottom="6dp" />
 
                 <TextView
                     android:id="@+id/tvInvoiceLabel"
@@ -41,26 +81,44 @@
                     android:layout_height="wrap_content"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="@color/on_surface"
-                    android:layout_marginBottom="8dp" />
+                    android:textColor="#FFFFFF"
+                    android:layout_marginBottom="16dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#33FFFFFF"
+                    android:layout_marginBottom="16dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/label_remaining_balance"
                     android:textSize="12sp"
-                    android:textColor="@color/on_surface_variant" />
+                    android:textColor="#99FFFFFF"
+                    android:layout_marginBottom="4dp" />
 
                 <TextView
                     android:id="@+id/tvRemainingAmount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="24sp"
+                    android:textSize="32sp"
                     android:textStyle="bold"
-                    android:textColor="@color/primary" />
+                    android:textColor="#FFFFFF" />
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
+
+        <!-- M-Pesa section label -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PAYMENT DETAILS"
+            android:textColor="@color/on_surface_variant"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:layout_marginBottom="12dp" />
 
         <!-- Phone field -->
         <com.google.android.material.textfield.TextInputLayout
@@ -70,7 +128,8 @@
             android:layout_height="wrap_content"
             android:hint="@string/hint_mpesa_phone"
             app:startIconDrawable="@drawable/ic_phone"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="14dp"
+            app:helperText="Format: 254XXXXXXXXX">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPhone"
@@ -88,7 +147,8 @@
             android:layout_height="wrap_content"
             android:hint="@string/hint_amount_optional"
             app:startIconDrawable="@drawable/ic_money"
-            android:layout_marginBottom="32dp">
+            android:layout_marginBottom="20dp"
+            app:helperText="Leave blank to pay full balance">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etAmount"
@@ -97,38 +157,72 @@
                 android:inputType="numberDecimal" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switchSimulation"
+        <!-- Simulation toggle card -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:checked="true"
-            android:text="@string/mpesa_simulation_toggle" />
+            android:layout_marginBottom="24dp"
+            app:cardBackgroundColor="@color/surface_variant"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp">
 
-        <TextView
-            android:id="@+id/tvSimulationHint"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="@string/mpesa_simulation_hint"
-            android:textColor="@color/on_surface_variant"
-            android:textSize="12sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp">
 
-        <!-- Pay with M-Pesa button -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mpesa_simulation_toggle"
+                        android:textColor="@color/on_surface"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvSimulationHint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/mpesa_simulation_hint"
+                        android:textColor="@color/on_surface_variant"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchSimulation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Pay button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnPay"
+            style="@style/Theme.TenantPro.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:text="@string/btn_pay_now"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
-        <ProgressBar
+        <com.google.android.material.progressindicator.LinearProgressIndicator
             android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
             android:layout_marginTop="16dp"
-            android:visibility="gone" />
+            android:indeterminate="true"
+            android:visibility="gone"
+            app:trackCornerRadius="4dp" />
 
         <TextView
             android:layout_width="match_parent"
@@ -137,8 +231,10 @@
             android:textSize="12sp"
             android:textColor="@color/on_surface_variant"
             android:gravity="center"
-            android:layout_marginTop="20dp" />
+            android:layout_marginTop="16dp" />
 
     </LinearLayout>
 
-</androidx.core.widget.NestedScrollView>
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

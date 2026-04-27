@@ -4,13 +4,13 @@ package com.tenantpro.app.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.tenantpro.app.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -18,7 +18,7 @@ import java.lang.String;
 
 public final class ItemInvoiceBinding implements ViewBinding {
   @NonNull
-  private final LinearLayout rootView;
+  private final MaterialCardView rootView;
 
   @NonNull
   public final MaterialButton btnPay;
@@ -50,10 +50,14 @@ public final class ItemInvoiceBinding implements ViewBinding {
   @NonNull
   public final TextView tvStatus;
 
-  private ItemInvoiceBinding(@NonNull LinearLayout rootView, @NonNull MaterialButton btnPay,
+  @NonNull
+  public final View viewTypeAccent;
+
+  private ItemInvoiceBinding(@NonNull MaterialCardView rootView, @NonNull MaterialButton btnPay,
       @NonNull MaterialButton btnSave, @NonNull TextView tvAmount, @NonNull TextView tvBillingType,
       @NonNull TextView tvDue, @NonNull TextView tvPaid, @NonNull TextView tvPeriod,
-      @NonNull TextView tvProperty, @NonNull TextView tvRowNumber, @NonNull TextView tvStatus) {
+      @NonNull TextView tvProperty, @NonNull TextView tvRowNumber, @NonNull TextView tvStatus,
+      @NonNull View viewTypeAccent) {
     this.rootView = rootView;
     this.btnPay = btnPay;
     this.btnSave = btnSave;
@@ -65,11 +69,12 @@ public final class ItemInvoiceBinding implements ViewBinding {
     this.tvProperty = tvProperty;
     this.tvRowNumber = tvRowNumber;
     this.tvStatus = tvStatus;
+    this.viewTypeAccent = viewTypeAccent;
   }
 
   @Override
   @NonNull
-  public LinearLayout getRoot() {
+  public MaterialCardView getRoot() {
     return rootView;
   }
 
@@ -154,8 +159,15 @@ public final class ItemInvoiceBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ItemInvoiceBinding((LinearLayout) rootView, btnPay, btnSave, tvAmount,
-          tvBillingType, tvDue, tvPaid, tvPeriod, tvProperty, tvRowNumber, tvStatus);
+      id = R.id.viewTypeAccent;
+      View viewTypeAccent = ViewBindings.findChildViewById(rootView, id);
+      if (viewTypeAccent == null) {
+        break missingId;
+      }
+
+      return new ItemInvoiceBinding((MaterialCardView) rootView, btnPay, btnSave, tvAmount,
+          tvBillingType, tvDue, tvPaid, tvPeriod, tvProperty, tvRowNumber, tvStatus,
+          viewTypeAccent);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

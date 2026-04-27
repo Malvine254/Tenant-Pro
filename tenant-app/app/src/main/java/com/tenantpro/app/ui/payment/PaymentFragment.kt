@@ -10,10 +10,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tenantpro.app.databinding.FragmentPaymentBinding
 import com.tenantpro.app.utils.Resource
 import com.tenantpro.app.utils.gone
-import com.tenantpro.app.utils.toast
+import com.tenantpro.app.utils.showErrorSnackbar
+import com.tenantpro.app.utils.showSuccessSnackbar
 import com.tenantpro.app.utils.toKes
 import com.tenantpro.app.utils.visible
 import dagger.hilt.android.AndroidEntryPoint
@@ -70,17 +72,26 @@ class PaymentFragment : Fragment() {
             }
         }
 
+        binding.btnBack.setOnClickListener { findNavController().popBackStack() }
+
         binding.btnPay.setOnClickListener {
-            val phone  = binding.etPhone.text?.toString()?.trim() ?: return@setOnClickListener
+            val phone = binding.etPhone.text?.toString()?.trim() ?: return@setOnClickListener
             val amountText = binding.etAmount.text?.toString()?.trim()
-            val amount = amountText?.toDoubleOrNull()   // null = full balance
+            val amount = amountText?.toDoubleOrNull()
 
             if (phone.isBlank()) {
                 binding.tilPhone.error = getString(com.tenantpro.app.R.string.error_phone_required)
                 return@setOnClickListener
             }
             binding.tilPhone.error = null
-            viewModel.pay(invoiceId, phone, amount)
+
+            val displayAmount = if (amount != null) amount.toKes() else remainingAmount.toDouble().toKes()
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Confirm Payment")
+                .setMessage("Send M-Pesa STK push of $displayAmount to $phone?\n\nYou will receive a prompt on your phone to enter your PIN.")
+                .setPositiveButton("Confirm") { _, _ -> viewModel.pay(invoiceId, phone, amount) }
+                .setNegativeButton("Cancel", null)
+                .show()
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -96,17 +107,19 @@ class PaymentFragment : Fragment() {
                             binding.btnPay.isEnabled = true
                             val simulated = binding.switchSimulation.isChecked
                             viewModel.reset()
-                            if (simulated) {
-                                toast(getString(com.tenantpro.app.R.string.mpesa_sim_success))
-                            } else {
-                                toast(getString(com.tenantpro.app.R.string.mpesa_live_success))
-                            }
+                            val msg = if (simulated)
+                                getString(com.tenantpro.app.R.string.mpesa_sim_success)
+                            else
+                                getString(com.tenantpro.app.R.string.mpesa_live_success)
+                            showSuccessSnackbar(msg)
                             findNavController().popBackStack()
                         }
                         is Resource.Error -> {
                             binding.progressBar.gone()
                             binding.btnPay.isEnabled = true
-                            toast(state.message)
+                            showErrorSnackbar(state.message ?: "Payment failed", "Retry") {
+                                binding.btnPay.performClick()
+                            }
                             viewModel.reset()
                         }
                         null -> binding.progressBar.gone()

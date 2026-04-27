@@ -1,6 +1,23 @@
 {
   "users": [
     {
+      "id": "35256b01-6644-46cf-ae8e-916733f25d64",
+      "phoneNumber": "+2544646467676",
+      "email": "owuormalvine75@gmail.com",
+      "firstName": "Malvine",
+      "lastName": "Owuor",
+      "passwordHash": "$2a$10$wNGsRYt.caKyOC0y3DewleSPdn1XwoGWmhd74.UtqGgrFmMFDb4ce",
+      "role": "TENANT",
+      "isActive": false,
+      "emailVerified": false,
+      "profileImageUrl": null,
+      "emergencyContactName": null,
+      "emergencyContactPhone": null,
+      "bio": null,
+      "createdAt": "2026-04-27T11:37:43.761Z",
+      "updatedAt": "2026-04-27T11:37:43.761Z"
+    },
+    {
       "id": "dac260de-5404-4939-b5d8-6583cd37346d",
       "phoneNumber": "+254791951323",
       "email": "demo+mnrdcnrvnvg2i@starmax.preview",

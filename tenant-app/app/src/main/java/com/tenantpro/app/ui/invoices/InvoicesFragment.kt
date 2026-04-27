@@ -74,6 +74,7 @@ class InvoicesFragment : Fragment() {
         binding.rvInvoices.adapter = adapter
 
         binding.swipeRefresh.setOnRefreshListener { viewModel.loadInvoices() }
+        binding.btnRetry.setOnClickListener { viewModel.loadInvoices() }
 
         setupSearchAndSortControls()
         setupPagination()
@@ -146,7 +147,7 @@ class InvoicesFragment : Fragment() {
                             binding.tvError.gone()
                         }
                         is Resource.Error -> {
-                            binding.tvError.text = state.message
+                            binding.tvErrorMessage.text = state.message
                             binding.tvError.visible()
                             binding.tvEmpty.gone()
                         }

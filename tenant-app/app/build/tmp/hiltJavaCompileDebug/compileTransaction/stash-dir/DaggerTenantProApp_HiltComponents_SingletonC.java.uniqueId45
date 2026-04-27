@@ -505,52 +505,40 @@ public final class DaggerTenantProApp_HiltComponents_SingletonC {
 
     @IdentifierNameString
     private static final class LazyClassKeyProvider {
-      static String com_tenantpro_app_ui_auth_LoginViewModel = "com.tenantpro.app.ui.auth.LoginViewModel";
-
-      static String com_tenantpro_app_ui_history_PaymentHistoryViewModel = "com.tenantpro.app.ui.history.PaymentHistoryViewModel";
-
-      static String com_tenantpro_app_ui_rental_RentalInfoViewModel = "com.tenantpro.app.ui.rental.RentalInfoViewModel";
-
-      static String com_tenantpro_app_ui_account_AccountSettingsViewModel = "com.tenantpro.app.ui.account.AccountSettingsViewModel";
-
       static String com_tenantpro_app_ui_auth_OtpViewModel = "com.tenantpro.app.ui.auth.OtpViewModel";
 
-      static String com_tenantpro_app_ui_notifications_NotificationsViewModel = "com.tenantpro.app.ui.notifications.NotificationsViewModel";
-
       static String com_tenantpro_app_ui_queries_QueriesViewModel = "com.tenantpro.app.ui.queries.QueriesViewModel";
+
+      static String com_tenantpro_app_ui_invoices_InvoicesViewModel = "com.tenantpro.app.ui.invoices.InvoicesViewModel";
 
       static String com_tenantpro_app_ui_maintenance_MaintenanceViewModel = "com.tenantpro.app.ui.maintenance.MaintenanceViewModel";
 
       static String com_tenantpro_app_ui_auth_RegisterViewModel = "com.tenantpro.app.ui.auth.RegisterViewModel";
 
-      static String com_tenantpro_app_ui_auth_ForgotPasswordViewModel = "com.tenantpro.app.ui.auth.ForgotPasswordViewModel";
+      static String com_tenantpro_app_ui_notifications_NotificationsViewModel = "com.tenantpro.app.ui.notifications.NotificationsViewModel";
 
-      static String com_tenantpro_app_ui_invoices_InvoicesViewModel = "com.tenantpro.app.ui.invoices.InvoicesViewModel";
+      static String com_tenantpro_app_ui_history_PaymentHistoryViewModel = "com.tenantpro.app.ui.history.PaymentHistoryViewModel";
 
       static String com_tenantpro_app_ui_payment_PaymentViewModel = "com.tenantpro.app.ui.payment.PaymentViewModel";
 
+      static String com_tenantpro_app_ui_auth_ForgotPasswordViewModel = "com.tenantpro.app.ui.auth.ForgotPasswordViewModel";
+
+      static String com_tenantpro_app_ui_rental_RentalInfoViewModel = "com.tenantpro.app.ui.rental.RentalInfoViewModel";
+
+      static String com_tenantpro_app_ui_account_AccountSettingsViewModel = "com.tenantpro.app.ui.account.AccountSettingsViewModel";
+
       static String com_tenantpro_app_ui_home_HomeViewModel = "com.tenantpro.app.ui.home.HomeViewModel";
 
-      @KeepFieldType
-      LoginViewModel com_tenantpro_app_ui_auth_LoginViewModel2;
-
-      @KeepFieldType
-      PaymentHistoryViewModel com_tenantpro_app_ui_history_PaymentHistoryViewModel2;
-
-      @KeepFieldType
-      RentalInfoViewModel com_tenantpro_app_ui_rental_RentalInfoViewModel2;
-
-      @KeepFieldType
-      AccountSettingsViewModel com_tenantpro_app_ui_account_AccountSettingsViewModel2;
+      static String com_tenantpro_app_ui_auth_LoginViewModel = "com.tenantpro.app.ui.auth.LoginViewModel";
 
       @KeepFieldType
       OtpViewModel com_tenantpro_app_ui_auth_OtpViewModel2;
 
       @KeepFieldType
-      NotificationsViewModel com_tenantpro_app_ui_notifications_NotificationsViewModel2;
+      QueriesViewModel com_tenantpro_app_ui_queries_QueriesViewModel2;
 
       @KeepFieldType
-      QueriesViewModel com_tenantpro_app_ui_queries_QueriesViewModel2;
+      InvoicesViewModel com_tenantpro_app_ui_invoices_InvoicesViewModel2;
 
       @KeepFieldType
       MaintenanceViewModel com_tenantpro_app_ui_maintenance_MaintenanceViewModel2;
@@ -559,16 +547,28 @@ public final class DaggerTenantProApp_HiltComponents_SingletonC {
       RegisterViewModel com_tenantpro_app_ui_auth_RegisterViewModel2;
 
       @KeepFieldType
-      ForgotPasswordViewModel com_tenantpro_app_ui_auth_ForgotPasswordViewModel2;
+      NotificationsViewModel com_tenantpro_app_ui_notifications_NotificationsViewModel2;
 
       @KeepFieldType
-      InvoicesViewModel com_tenantpro_app_ui_invoices_InvoicesViewModel2;
+      PaymentHistoryViewModel com_tenantpro_app_ui_history_PaymentHistoryViewModel2;
 
       @KeepFieldType
       PaymentViewModel com_tenantpro_app_ui_payment_PaymentViewModel2;
 
       @KeepFieldType
+      ForgotPasswordViewModel com_tenantpro_app_ui_auth_ForgotPasswordViewModel2;
+
+      @KeepFieldType
+      RentalInfoViewModel com_tenantpro_app_ui_rental_RentalInfoViewModel2;
+
+      @KeepFieldType
+      AccountSettingsViewModel com_tenantpro_app_ui_account_AccountSettingsViewModel2;
+
+      @KeepFieldType
       HomeViewModel com_tenantpro_app_ui_home_HomeViewModel2;
+
+      @KeepFieldType
+      LoginViewModel com_tenantpro_app_ui_auth_LoginViewModel2;
     }
   }
 
@@ -645,70 +645,70 @@ public final class DaggerTenantProApp_HiltComponents_SingletonC {
 
     @IdentifierNameString
     private static final class LazyClassKeyProvider {
-      static String com_tenantpro_app_ui_invoices_InvoicesViewModel = "com.tenantpro.app.ui.invoices.InvoicesViewModel";
-
-      static String com_tenantpro_app_ui_payment_PaymentViewModel = "com.tenantpro.app.ui.payment.PaymentViewModel";
-
-      static String com_tenantpro_app_ui_maintenance_MaintenanceViewModel = "com.tenantpro.app.ui.maintenance.MaintenanceViewModel";
-
       static String com_tenantpro_app_ui_rental_RentalInfoViewModel = "com.tenantpro.app.ui.rental.RentalInfoViewModel";
-
-      static String com_tenantpro_app_ui_auth_ForgotPasswordViewModel = "com.tenantpro.app.ui.auth.ForgotPasswordViewModel";
-
-      static String com_tenantpro_app_ui_account_AccountSettingsViewModel = "com.tenantpro.app.ui.account.AccountSettingsViewModel";
-
-      static String com_tenantpro_app_ui_history_PaymentHistoryViewModel = "com.tenantpro.app.ui.history.PaymentHistoryViewModel";
-
-      static String com_tenantpro_app_ui_auth_RegisterViewModel = "com.tenantpro.app.ui.auth.RegisterViewModel";
 
       static String com_tenantpro_app_ui_notifications_NotificationsViewModel = "com.tenantpro.app.ui.notifications.NotificationsViewModel";
 
-      static String com_tenantpro_app_ui_auth_LoginViewModel = "com.tenantpro.app.ui.auth.LoginViewModel";
-
-      static String com_tenantpro_app_ui_auth_OtpViewModel = "com.tenantpro.app.ui.auth.OtpViewModel";
+      static String com_tenantpro_app_ui_queries_QueriesViewModel = "com.tenantpro.app.ui.queries.QueriesViewModel";
 
       static String com_tenantpro_app_ui_home_HomeViewModel = "com.tenantpro.app.ui.home.HomeViewModel";
 
-      static String com_tenantpro_app_ui_queries_QueriesViewModel = "com.tenantpro.app.ui.queries.QueriesViewModel";
+      static String com_tenantpro_app_ui_auth_ForgotPasswordViewModel = "com.tenantpro.app.ui.auth.ForgotPasswordViewModel";
 
-      @KeepFieldType
-      InvoicesViewModel com_tenantpro_app_ui_invoices_InvoicesViewModel2;
+      static String com_tenantpro_app_ui_invoices_InvoicesViewModel = "com.tenantpro.app.ui.invoices.InvoicesViewModel";
 
-      @KeepFieldType
-      PaymentViewModel com_tenantpro_app_ui_payment_PaymentViewModel2;
+      static String com_tenantpro_app_ui_auth_OtpViewModel = "com.tenantpro.app.ui.auth.OtpViewModel";
 
-      @KeepFieldType
-      MaintenanceViewModel com_tenantpro_app_ui_maintenance_MaintenanceViewModel2;
+      static String com_tenantpro_app_ui_auth_LoginViewModel = "com.tenantpro.app.ui.auth.LoginViewModel";
+
+      static String com_tenantpro_app_ui_maintenance_MaintenanceViewModel = "com.tenantpro.app.ui.maintenance.MaintenanceViewModel";
+
+      static String com_tenantpro_app_ui_history_PaymentHistoryViewModel = "com.tenantpro.app.ui.history.PaymentHistoryViewModel";
+
+      static String com_tenantpro_app_ui_account_AccountSettingsViewModel = "com.tenantpro.app.ui.account.AccountSettingsViewModel";
+
+      static String com_tenantpro_app_ui_auth_RegisterViewModel = "com.tenantpro.app.ui.auth.RegisterViewModel";
+
+      static String com_tenantpro_app_ui_payment_PaymentViewModel = "com.tenantpro.app.ui.payment.PaymentViewModel";
 
       @KeepFieldType
       RentalInfoViewModel com_tenantpro_app_ui_rental_RentalInfoViewModel2;
 
       @KeepFieldType
-      ForgotPasswordViewModel com_tenantpro_app_ui_auth_ForgotPasswordViewModel2;
-
-      @KeepFieldType
-      AccountSettingsViewModel com_tenantpro_app_ui_account_AccountSettingsViewModel2;
-
-      @KeepFieldType
-      PaymentHistoryViewModel com_tenantpro_app_ui_history_PaymentHistoryViewModel2;
-
-      @KeepFieldType
-      RegisterViewModel com_tenantpro_app_ui_auth_RegisterViewModel2;
-
-      @KeepFieldType
       NotificationsViewModel com_tenantpro_app_ui_notifications_NotificationsViewModel2;
 
       @KeepFieldType
-      LoginViewModel com_tenantpro_app_ui_auth_LoginViewModel2;
-
-      @KeepFieldType
-      OtpViewModel com_tenantpro_app_ui_auth_OtpViewModel2;
+      QueriesViewModel com_tenantpro_app_ui_queries_QueriesViewModel2;
 
       @KeepFieldType
       HomeViewModel com_tenantpro_app_ui_home_HomeViewModel2;
 
       @KeepFieldType
-      QueriesViewModel com_tenantpro_app_ui_queries_QueriesViewModel2;
+      ForgotPasswordViewModel com_tenantpro_app_ui_auth_ForgotPasswordViewModel2;
+
+      @KeepFieldType
+      InvoicesViewModel com_tenantpro_app_ui_invoices_InvoicesViewModel2;
+
+      @KeepFieldType
+      OtpViewModel com_tenantpro_app_ui_auth_OtpViewModel2;
+
+      @KeepFieldType
+      LoginViewModel com_tenantpro_app_ui_auth_LoginViewModel2;
+
+      @KeepFieldType
+      MaintenanceViewModel com_tenantpro_app_ui_maintenance_MaintenanceViewModel2;
+
+      @KeepFieldType
+      PaymentHistoryViewModel com_tenantpro_app_ui_history_PaymentHistoryViewModel2;
+
+      @KeepFieldType
+      AccountSettingsViewModel com_tenantpro_app_ui_account_AccountSettingsViewModel2;
+
+      @KeepFieldType
+      RegisterViewModel com_tenantpro_app_ui_auth_RegisterViewModel2;
+
+      @KeepFieldType
+      PaymentViewModel com_tenantpro_app_ui_payment_PaymentViewModel2;
     }
 
     private static final class SwitchingProvider<T> implements Provider<T> {
@@ -739,7 +739,7 @@ public final class DaggerTenantProApp_HiltComponents_SingletonC {
           return (T) new ForgotPasswordViewModel(singletonCImpl.authRepositoryProvider.get());
 
           case 2: // com.tenantpro.app.ui.home.HomeViewModel 
-          return (T) new HomeViewModel(singletonCImpl.invoiceRepositoryProvider.get(), singletonCImpl.dataStoreManagerProvider.get(), singletonCImpl.networkConnectivityObserverProvider.get());
+          return (T) new HomeViewModel(singletonCImpl.authRepositoryProvider.get(), singletonCImpl.invoiceRepositoryProvider.get(), singletonCImpl.dataStoreManagerProvider.get(), singletonCImpl.networkConnectivityObserverProvider.get());
 
           case 3: // com.tenantpro.app.ui.invoices.InvoicesViewModel 
           return (T) new InvoicesViewModel(singletonCImpl.invoiceRepositoryProvider.get(), singletonCImpl.authRepositoryProvider.get(), singletonCImpl.networkConnectivityObserverProvider.get());
@@ -751,7 +751,7 @@ public final class DaggerTenantProApp_HiltComponents_SingletonC {
           return (T) new MaintenanceViewModel(singletonCImpl.tenantFeatureRepositoryProvider.get());
 
           case 6: // com.tenantpro.app.ui.notifications.NotificationsViewModel 
-          return (T) new NotificationsViewModel(singletonCImpl.tenantFeatureRepositoryProvider.get());
+          return (T) new NotificationsViewModel(singletonCImpl.tenantFeatureRepositoryProvider.get(), singletonCImpl.dataStoreManagerProvider.get(), ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
           case 7: // com.tenantpro.app.ui.auth.OtpViewModel 
           return (T) new OtpViewModel(singletonCImpl.authRepositoryProvider.get());

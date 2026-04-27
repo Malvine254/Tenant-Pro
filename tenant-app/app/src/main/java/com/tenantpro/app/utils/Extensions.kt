@@ -1,10 +1,12 @@
 package com.tenantpro.app.utils
 
+import android.graphics.Color
 import android.view.View
 import android.widget.Toast
 import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -26,6 +28,36 @@ fun Context.toast(msg: String) =
 
 fun AppCompatActivity.toast(msg: String) =
     Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+
+// ─── Snackbar helpers ────────────────────────────────────────────────────────
+
+fun Fragment.showSnackbar(msg: String, duration: Int = Snackbar.LENGTH_SHORT) =
+    Snackbar.make(requireView(), msg, duration).show()
+
+fun Fragment.showSuccessSnackbar(msg: String) {
+    val snack = Snackbar.make(requireView(), msg, Snackbar.LENGTH_SHORT)
+    snack.view.setBackgroundColor(Color.parseColor("#16A34A"))
+    snack.setTextColor(Color.WHITE)
+    snack.show()
+}
+
+fun Fragment.showErrorSnackbar(msg: String, action: String? = null, onAction: (() -> Unit)? = null) {
+    val snack = Snackbar.make(requireView(), msg, Snackbar.LENGTH_LONG)
+    snack.view.setBackgroundColor(Color.parseColor("#DC2626"))
+    snack.setTextColor(Color.WHITE)
+    if (action != null && onAction != null) {
+        snack.setAction(action) { onAction() }
+        snack.setActionTextColor(Color.WHITE)
+    }
+    snack.show()
+}
+
+fun Fragment.showInfoSnackbar(msg: String) {
+    val snack = Snackbar.make(requireView(), msg, Snackbar.LENGTH_SHORT)
+    snack.view.setBackgroundColor(Color.parseColor("#4338CA"))
+    snack.setTextColor(Color.WHITE)
+    snack.show()
+}
 
 // ─── Formatting helpers ───────────────────────────────────────────────────────
 

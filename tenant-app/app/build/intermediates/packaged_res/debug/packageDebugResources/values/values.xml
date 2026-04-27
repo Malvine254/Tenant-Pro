@@ -1,28 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="background">#F9FAFB</color>
+    <color name="background">#F8FAFC</color>
     <color name="badge_gray_text">#475569</color>
     <color name="badge_green_text">#166534</color>
     <color name="badge_red_text">#991B1B</color>
     <color name="badge_yellow_text">#92400E</color>
-    <color name="bottom_nav_item_active">#111827</color>
-    <color name="bottom_nav_item_inactive">#64748B</color>
+    <color name="bottom_nav_item_active">#0F172A</color>
+    <color name="bottom_nav_item_inactive">#94A3B8</color>
     <color name="error">#DC2626</color>
+    <color name="error_border">#FECDD3</color>
+    <color name="error_surface">#FFF1F2</color>
+    <color name="hint_color">#94A3B8</color>
+    <color name="info_border">#BFDBFE</color>
+    <color name="info_surface">#EFF6FF</color>
     <color name="on_primary">#FFFFFF</color>
     <color name="on_secondary">#FFFFFF</color>
-    <color name="on_surface">#111827</color>
-    <color name="on_surface_variant">#475569</color>
-    <color name="outline_variant">#CBD5E1</color>
+    <color name="on_surface">#0F172A</color>
+    <color name="on_surface_variant">#64748B</color>
+    <color name="outline_variant">#E2E8F0</color>
     <color name="primary">#0F172A</color>
+    <color name="primary_dark">#070E1C</color>
+    <color name="primary_mid">#1A2744</color>
     <color name="primary_variant">#E2E8F0</color>
     <color name="secondary">#4338CA</color>
+    <color name="secondary_light">#EEF2FF</color>
     <color name="success">#16A34A</color>
+    <color name="success_border">#BBF7D0</color>
+    <color name="success_surface">#F0FDF4</color>
     <color name="surface">#FFFFFF</color>
     <color name="surface_variant">#F1F5F9</color>
     <color name="text_input_box_stroke_error">#DC2626</color>
     <color name="text_input_box_stroke_focus">#4338CA</color>
-    <color name="text_input_box_stroke_normal">#94A3B8</color>
+    <color name="text_input_box_stroke_normal">#CBD5E1</color>
+    <color name="type_garbage">#16A34A</color>
+    <color name="type_other">#D97706</color>
+    <color name="type_rent">#4338CA</color>
+    <color name="type_water">#0EA5E9</color>
     <color name="warning">#D97706</color>
+    <color name="warning_border">#FDE68A</color>
+    <color name="warning_surface">#FFFBEB</color>
     <string name="account_intro">Manage your profile and session.</string>
     <string name="already_have_account">Already have an account?</string>
     <string name="app_name">Tenant Pro</string>
@@ -218,12 +234,11 @@
         <item name="android:navigationBarColor">@color/surface</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">true</item>
-        
-        <item name="android:windowSplashScreenBackground">@color/background</item>
+        <item name="android:windowSplashScreenBackground">@color/primary</item>
     </style>
     <style name="Theme.TenantPro.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
         <item name="strokeColor">@color/button_outlined_stroke</item>
-        <item name="strokeWidth">1.25dp</item>
+        <item name="strokeWidth">1.5dp</item>
         <item name="android:textColor">@color/on_surface</item>
         <item name="backgroundTint">@android:color/transparent</item>
         <item name="cornerRadius">14dp</item>
@@ -237,6 +252,8 @@
         <item name="android:minHeight">56dp</item>
         <item name="android:elevation">0dp</item>
         <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0.01</item>
     </style>
     <style name="Theme.TenantPro.Button.RowActionPrimary" parent="Widget.Material3.Button">
         <item name="backgroundTint">@color/primary</item>
@@ -245,8 +262,6 @@
         <item name="android:minHeight">32dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
-        <item name="android:paddingLeft">0dp</item>
-        <item name="android:paddingRight">0dp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">10sp</item>
         <item name="android:elevation">0dp</item>
@@ -261,60 +276,78 @@
         <item name="android:minHeight">32dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
-        <item name="android:paddingLeft">0dp</item>
-        <item name="android:paddingRight">0dp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">10sp</item>
         <item name="android:elevation">0dp</item>
         <item name="android:textAllCaps">false</item>
     </style>
-    <style name="Theme.TenantPro.Card.Form" parent="Widget.MaterialComponents.CardView">
-        <item name="cardBackgroundColor">@android:color/white</item>
-        <item name="backgroundTint">@android:color/white</item>
+    <style name="Theme.TenantPro.Card" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/surface</item>
         <item name="cardCornerRadius">16dp</item>
-        <item name="cardElevation">16dp</item>
-        <item name="cardUseCompatPadding">true</item>
-        <item name="contentPadding">4dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">@color/outline_variant</item>
+        <item name="cardUseCompatPadding">false</item>
+    </style>
+    <style name="Theme.TenantPro.Card.Elevated" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/surface</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">4dp</item>
         <item name="strokeWidth">0dp</item>
     </style>
+    <style name="Theme.TenantPro.Card.Form" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@android:color/white</item>
+        <item name="cardCornerRadius">20dp</item>
+        <item name="cardElevation">8dp</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
+    <style name="Theme.TenantPro.SectionHeader">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
+    </style>
     <style name="Theme.TenantPro.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/background</item>
+        <item name="windowSplashScreenBackground">@color/primary</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <item name="postSplashScreenTheme">@style/Theme.TenantPro</item>
     </style>
     <style name="Theme.TenantPro.TextInputEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
-        <item name="android:minHeight">56dp</item>
+        <item name="android:minHeight">54dp</item>
         <item name="android:textSize">15sp</item>
         <item name="android:textColor">@color/on_surface</item>
-        <item name="android:textColorHint">@color/on_surface_variant</item>
+        <item name="android:textColorHint">@color/hint_color</item>
+        <item name="android:background">@android:color/white</item>
     </style>
     <style name="Theme.TenantPro.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="boxStrokeColor">@color/text_input_box_stroke</item>
-        <item name="boxStrokeWidth">2dp</item>
-        <item name="boxStrokeWidthFocused">2.5dp</item>
-        <item name="boxBackgroundColor">@color/surface</item>
+        <item name="boxStrokeWidth">1.5dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxBackgroundColor">@android:color/white</item>
         <item name="boxCornerRadiusBottomEnd">12dp</item>
         <item name="boxCornerRadiusBottomStart">12dp</item>
         <item name="boxCornerRadiusTopEnd">12dp</item>
         <item name="boxCornerRadiusTopStart">12dp</item>
-        <item name="hintTextColor">@color/on_surface_variant</item>
+        <item name="hintTextColor">@color/hint_color</item>
         <item name="counterTextColor">@color/on_surface_variant</item>
     </style>
     <style name="Theme.TenantPro.TextInputLayout.Auth" parent="Theme.TenantPro.TextInputLayout">
-        <item name="boxStrokeColor">@color/primary_variant</item>
+        <item name="boxStrokeColor">@color/text_input_box_stroke</item>
         <item name="boxStrokeWidth">1.5dp</item>
         <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxBackgroundColor">@android:color/white</item>
     </style>
     <style name="Theme.TenantPro.TextInputLayout.ExposedDropdown" parent="Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
         <item name="boxStrokeColor">@color/primary</item>
         <item name="boxStrokeWidth">1.5dp</item>
         <item name="boxStrokeWidthFocused">2dp</item>
-        <item name="boxCornerRadiusBottomEnd">8dp</item>
-        <item name="boxCornerRadiusBottomStart">8dp</item>
-        <item name="boxCornerRadiusTopEnd">8dp</item>
-        <item name="boxCornerRadiusTopStart">8dp</item>
-        <item name="boxBackgroundColor">@color/surface</item>
-        <item name="hintTextColor">@color/on_surface_variant</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxBackgroundColor">@android:color/white</item>
+        <item name="hintTextColor">@color/hint_color</item>
         <item name="android:textColor">@color/on_surface</item>
         <item name="endIconTint">@color/primary</item>
     </style>
@@ -323,10 +356,10 @@
         <item name="boxStrokeWidth">0dp</item>
         <item name="boxStrokeWidthFocused">0dp</item>
         <item name="boxBackgroundColor">@android:color/transparent</item>
-        <item name="boxCornerRadiusBottomEnd">8dp</item>
-        <item name="boxCornerRadiusBottomStart">8dp</item>
-        <item name="boxCornerRadiusTopEnd">8dp</item>
-        <item name="boxCornerRadiusTopStart">8dp</item>
+        <item name="boxCornerRadiusBottomEnd">10dp</item>
+        <item name="boxCornerRadiusBottomStart">10dp</item>
+        <item name="boxCornerRadiusTopEnd">10dp</item>
+        <item name="boxCornerRadiusTopStart">10dp</item>
         <item name="hintTextColor">@color/on_surface_variant</item>
         <item name="startIconTint">@color/on_surface_variant</item>
         <item name="endIconTint">@color/on_surface_variant</item>

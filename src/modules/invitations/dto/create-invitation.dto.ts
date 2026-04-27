@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsEmail,
   IsInt,
   IsOptional,
   IsString,
@@ -19,6 +20,14 @@ export class CreateInvitationDto {
   @IsString()
   @Matches(/^\+?[1-9]\d{7,14}$/)
   phoneNumber!: string;
+
+  @IsOptional()
+  @IsEmail()
+  tenantEmail?: string;
+
+  @IsOptional()
+  @IsString()
+  tenantName?: string;
 
   @IsOptional()
   @Type(() => Number)

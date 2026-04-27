@@ -10,13 +10,17 @@ import {
   UnitStatus,
 } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import { EmailService } from '../email/email.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 
 @Injectable()
 export class InvitationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   private async generateUniqueCode() {
     for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -67,6 +71,17 @@ export class InvitationsService {
         status: InvitationStatus.PENDING,
       },
     });
+
+    if (dto.tenantEmail) {
+      void this.emailService.sendInvitationEmail(
+        dto.tenantEmail,
+        code,
+        expiresAt,
+        property.name,
+        unit.unitName,
+        dto.tenantName,
+      );
+    }
 
     return invitation;
   }

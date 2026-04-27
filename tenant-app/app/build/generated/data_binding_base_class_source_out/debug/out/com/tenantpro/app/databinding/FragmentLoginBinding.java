@@ -4,14 +4,14 @@ package com.tenantpro.app.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.widget.NestedScrollView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.tenantpro.app.R;
@@ -21,7 +21,7 @@ import java.lang.String;
 
 public final class FragmentLoginBinding implements ViewBinding {
   @NonNull
-  private final NestedScrollView rootView;
+  private final LinearLayout rootView;
 
   @NonNull
   public final MaterialButton btnLogin;
@@ -33,7 +33,7 @@ public final class FragmentLoginBinding implements ViewBinding {
   public final TextInputEditText etPassword;
 
   @NonNull
-  public final ProgressBar progressBar;
+  public final LinearProgressIndicator progressBar;
 
   @NonNull
   public final TextInputLayout tilEmail;
@@ -47,9 +47,9 @@ public final class FragmentLoginBinding implements ViewBinding {
   @NonNull
   public final TextView tvRegisterLink;
 
-  private FragmentLoginBinding(@NonNull NestedScrollView rootView, @NonNull MaterialButton btnLogin,
+  private FragmentLoginBinding(@NonNull LinearLayout rootView, @NonNull MaterialButton btnLogin,
       @NonNull TextInputEditText etEmail, @NonNull TextInputEditText etPassword,
-      @NonNull ProgressBar progressBar, @NonNull TextInputLayout tilEmail,
+      @NonNull LinearProgressIndicator progressBar, @NonNull TextInputLayout tilEmail,
       @NonNull TextInputLayout tilPassword, @NonNull TextView tvForgotPassword,
       @NonNull TextView tvRegisterLink) {
     this.rootView = rootView;
@@ -65,7 +65,7 @@ public final class FragmentLoginBinding implements ViewBinding {
 
   @Override
   @NonNull
-  public NestedScrollView getRoot() {
+  public LinearLayout getRoot() {
     return rootView;
   }
 
@@ -109,7 +109,7 @@ public final class FragmentLoginBinding implements ViewBinding {
       }
 
       id = R.id.progressBar;
-      ProgressBar progressBar = ViewBindings.findChildViewById(rootView, id);
+      LinearProgressIndicator progressBar = ViewBindings.findChildViewById(rootView, id);
       if (progressBar == null) {
         break missingId;
       }
@@ -138,7 +138,7 @@ public final class FragmentLoginBinding implements ViewBinding {
         break missingId;
       }
 
-      return new FragmentLoginBinding((NestedScrollView) rootView, btnLogin, etEmail, etPassword,
+      return new FragmentLoginBinding((LinearLayout) rootView, btnLogin, etEmail, etPassword,
           progressBar, tilEmail, tilPassword, tvForgotPassword, tvRegisterLink);
     }
     String missingId = rootView.getResources().getResourceName(id);

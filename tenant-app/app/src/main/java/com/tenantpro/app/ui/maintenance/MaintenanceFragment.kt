@@ -15,7 +15,10 @@ import com.google.android.material.textview.MaterialTextView
 import com.tenantpro.app.R
 import com.tenantpro.app.data.model.MaintenanceRequestItem
 import com.tenantpro.app.databinding.FragmentMaintenanceBinding
-import com.tenantpro.app.utils.toast
+import com.tenantpro.app.utils.gone
+import com.tenantpro.app.utils.showErrorSnackbar
+import com.tenantpro.app.utils.showSuccessSnackbar
+import com.tenantpro.app.utils.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -62,11 +65,18 @@ class MaintenanceFragment : Fragment() {
                 launch {
                     viewModel.submitting.collect { submitting ->
                         binding.btnSubmitMaintenance.isEnabled = !submitting
-                        binding.btnSubmitMaintenance.text = if (submitting) "Submitting..." else getString(R.string.maintenance_submit)
+                        binding.btnSubmitMaintenance.text = if (submitting) "Submitting…" else getString(R.string.maintenance_submit)
+                        binding.progressMaintenance.visibility = if (submitting) View.VISIBLE else View.GONE
                     }
                 }
                 launch {
-                    viewModel.events.collect { toast(it) }
+                    viewModel.events.collect { msg ->
+                        if (msg.contains("success", ignoreCase = true) || msg.contains("submitted", ignoreCase = true)) {
+                            showSuccessSnackbar(msg)
+                        } else {
+                            showErrorSnackbar(msg)
+                        }
+                    }
                 }
             }
         }

@@ -5,14 +5,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
 import com.tenantpro.app.R;
 import java.lang.NullPointerException;
@@ -21,7 +20,7 @@ import java.lang.String;
 
 public final class FragmentForgotPasswordBinding implements ViewBinding {
   @NonNull
-  private final ScrollView rootView;
+  private final LinearLayout rootView;
 
   @NonNull
   public final MaterialButton btnResetPassword;
@@ -48,21 +47,21 @@ public final class FragmentForgotPasswordBinding implements ViewBinding {
   public final LinearLayout layoutResetPassword;
 
   @NonNull
-  public final ProgressBar progressBar;
+  public final LinearProgressIndicator progressBar;
 
   @NonNull
-  public final ProgressBar progressBarReset;
+  public final LinearProgressIndicator progressBarReset;
 
   @NonNull
   public final TextView tvBackToLogin;
 
-  private FragmentForgotPasswordBinding(@NonNull ScrollView rootView,
+  private FragmentForgotPasswordBinding(@NonNull LinearLayout rootView,
       @NonNull MaterialButton btnResetPassword, @NonNull MaterialButton btnSendOtp,
       @NonNull TextInputEditText etConfirmPassword, @NonNull TextInputEditText etEmail,
       @NonNull TextInputEditText etNewPassword, @NonNull TextInputEditText etOtpCode,
       @NonNull LinearLayout layoutRequestOtp, @NonNull LinearLayout layoutResetPassword,
-      @NonNull ProgressBar progressBar, @NonNull ProgressBar progressBarReset,
-      @NonNull TextView tvBackToLogin) {
+      @NonNull LinearProgressIndicator progressBar,
+      @NonNull LinearProgressIndicator progressBarReset, @NonNull TextView tvBackToLogin) {
     this.rootView = rootView;
     this.btnResetPassword = btnResetPassword;
     this.btnSendOtp = btnSendOtp;
@@ -79,7 +78,7 @@ public final class FragmentForgotPasswordBinding implements ViewBinding {
 
   @Override
   @NonNull
-  public ScrollView getRoot() {
+  public LinearLayout getRoot() {
     return rootView;
   }
 
@@ -153,13 +152,13 @@ public final class FragmentForgotPasswordBinding implements ViewBinding {
       }
 
       id = R.id.progressBar;
-      ProgressBar progressBar = ViewBindings.findChildViewById(rootView, id);
+      LinearProgressIndicator progressBar = ViewBindings.findChildViewById(rootView, id);
       if (progressBar == null) {
         break missingId;
       }
 
       id = R.id.progressBarReset;
-      ProgressBar progressBarReset = ViewBindings.findChildViewById(rootView, id);
+      LinearProgressIndicator progressBarReset = ViewBindings.findChildViewById(rootView, id);
       if (progressBarReset == null) {
         break missingId;
       }
@@ -170,8 +169,8 @@ public final class FragmentForgotPasswordBinding implements ViewBinding {
         break missingId;
       }
 
-      return new FragmentForgotPasswordBinding((ScrollView) rootView, btnResetPassword, btnSendOtp,
-          etConfirmPassword, etEmail, etNewPassword, etOtpCode, layoutRequestOtp,
+      return new FragmentForgotPasswordBinding((LinearLayout) rootView, btnResetPassword,
+          btnSendOtp, etConfirmPassword, etEmail, etNewPassword, etOtpCode, layoutRequestOtp,
           layoutResetPassword, progressBar, progressBarReset, tvBackToLogin);
     }
     String missingId = rootView.getResources().getResourceName(id);

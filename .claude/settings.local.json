@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(adb devices *)",
+      "Bash(./gradlew clean *)",
+      "Bash(adb uninstall *)",
+      "Read(//c/Users/owuor/AppData/Local/Android/Sdk/platform-tools//**)",
+      "Read(//c/Users/owuor//**)",
+      "Bash(/c/Users/owuor/AppData/Local/Android/Sdk/platform-tools/adb.exe uninstall *)",
+      "Bash(/c/Users/owuor/AppData/Local/Android/Sdk/platform-tools/adb.exe devices *)",
+      "Bash(/c/Users/owuor/AppData/Local/Android/Sdk/platform-tools/adb.exe shell *)",
+      "Bash(/c/Users/owuor/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554 shell 'df -h /data')",
+      "Bash(/c/Users/owuor/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554 install -r \"C:/Users/owuor/Desktop/Tenant Pro/tenant-app/app/build/intermediates/apk/debug/app-debug.apk\")",
+      "Bash(/c/Users/owuor/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554 emu avd name)",
+      "Bash(/c/Users/owuor/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554 reboot)",
+      "Bash(/c/Users/owuor/AppData/Local/Android/Sdk/platform-tools/adb.exe wait-for-device *)",
+      "Bash(/c/Users/owuor/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554 shell getprop sys.boot_completed)",
+      "Bash(/c/Users/owuor/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554 emu kill)",
+      "Bash(taskkill /F /IM qemu-system-x86_64.exe)",
+      "Bash(/c/Users/owuor/AppData/Local/Android/Sdk/emulator/emulator.exe -avd Pixel_3a_API_34 -no-snapshot-load)",
+      "Bash(echo \"Emulator starting with cold boot \\(PID: $!\\)\")",
+      "Bash(tasklist)",
+      "Bash(/c/Users/owuor/AppData/Local/Android/Sdk/platform-tools/adb.exe -s adb-RF8X80ANPPD-rQo7Vd._adb-tls-connect._tcp install -r -t 'C:/Users/owuor/Desktop/Tenant Pro/tenant-app/app/build/intermediates/apk/debug/app-debug.apk')",
+      "Bash(npx prisma *)",
+      "Bash(ipconfig)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(cmd //c \"gradlew.bat assembleDebug\")",
+      "Bash(netstat -ano)",
+      "Bash(npm run *)",
+      "Bash(echo \"Backend starting \\(PID: $!\\)\")",
+      "PowerShell(netsh advfirewall firewall show rule name=\"NestJS Port 3000\" 2>$null)",
+      "PowerShell(New-NetFirewallRule -DisplayName \"NestJS Port 3000\" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow -Profile Any 2>&1)"
+    ]
+  }
+}

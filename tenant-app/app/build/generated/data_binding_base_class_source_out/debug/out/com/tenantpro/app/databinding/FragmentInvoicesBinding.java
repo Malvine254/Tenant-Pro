@@ -31,6 +31,9 @@ public final class FragmentInvoicesBinding implements ViewBinding {
   public final MaterialButton btnPrevPage;
 
   @NonNull
+  public final MaterialButton btnRetry;
+
+  @NonNull
   public final TextInputEditText etSearch;
 
   @NonNull
@@ -46,10 +49,13 @@ public final class FragmentInvoicesBinding implements ViewBinding {
   public final TextInputLayout tilSearch;
 
   @NonNull
-  public final TextView tvEmpty;
+  public final LinearLayout tvEmpty;
 
   @NonNull
-  public final TextView tvError;
+  public final LinearLayout tvError;
+
+  @NonNull
+  public final TextView tvErrorMessage;
 
   @NonNull
   public final TextView tvHeaderInvoiceSort;
@@ -59,13 +65,16 @@ public final class FragmentInvoicesBinding implements ViewBinding {
 
   private FragmentInvoicesBinding(@NonNull LinearLayout rootView,
       @NonNull MaterialButton btnNextPage, @NonNull MaterialButton btnPrevPage,
-      @NonNull TextInputEditText etSearch, @NonNull LinearLayout paginationBar,
-      @NonNull RecyclerView rvInvoices, @NonNull SwipeRefreshLayout swipeRefresh,
-      @NonNull TextInputLayout tilSearch, @NonNull TextView tvEmpty, @NonNull TextView tvError,
-      @NonNull TextView tvHeaderInvoiceSort, @NonNull TextView tvPageIndicator) {
+      @NonNull MaterialButton btnRetry, @NonNull TextInputEditText etSearch,
+      @NonNull LinearLayout paginationBar, @NonNull RecyclerView rvInvoices,
+      @NonNull SwipeRefreshLayout swipeRefresh, @NonNull TextInputLayout tilSearch,
+      @NonNull LinearLayout tvEmpty, @NonNull LinearLayout tvError,
+      @NonNull TextView tvErrorMessage, @NonNull TextView tvHeaderInvoiceSort,
+      @NonNull TextView tvPageIndicator) {
     this.rootView = rootView;
     this.btnNextPage = btnNextPage;
     this.btnPrevPage = btnPrevPage;
+    this.btnRetry = btnRetry;
     this.etSearch = etSearch;
     this.paginationBar = paginationBar;
     this.rvInvoices = rvInvoices;
@@ -73,6 +82,7 @@ public final class FragmentInvoicesBinding implements ViewBinding {
     this.tilSearch = tilSearch;
     this.tvEmpty = tvEmpty;
     this.tvError = tvError;
+    this.tvErrorMessage = tvErrorMessage;
     this.tvHeaderInvoiceSort = tvHeaderInvoiceSort;
     this.tvPageIndicator = tvPageIndicator;
   }
@@ -116,6 +126,12 @@ public final class FragmentInvoicesBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.btnRetry;
+      MaterialButton btnRetry = ViewBindings.findChildViewById(rootView, id);
+      if (btnRetry == null) {
+        break missingId;
+      }
+
       id = R.id.etSearch;
       TextInputEditText etSearch = ViewBindings.findChildViewById(rootView, id);
       if (etSearch == null) {
@@ -147,14 +163,20 @@ public final class FragmentInvoicesBinding implements ViewBinding {
       }
 
       id = R.id.tvEmpty;
-      TextView tvEmpty = ViewBindings.findChildViewById(rootView, id);
+      LinearLayout tvEmpty = ViewBindings.findChildViewById(rootView, id);
       if (tvEmpty == null) {
         break missingId;
       }
 
       id = R.id.tvError;
-      TextView tvError = ViewBindings.findChildViewById(rootView, id);
+      LinearLayout tvError = ViewBindings.findChildViewById(rootView, id);
       if (tvError == null) {
+        break missingId;
+      }
+
+      id = R.id.tvErrorMessage;
+      TextView tvErrorMessage = ViewBindings.findChildViewById(rootView, id);
+      if (tvErrorMessage == null) {
         break missingId;
       }
 
@@ -171,8 +193,8 @@ public final class FragmentInvoicesBinding implements ViewBinding {
       }
 
       return new FragmentInvoicesBinding((LinearLayout) rootView, btnNextPage, btnPrevPage,
-          etSearch, paginationBar, rvInvoices, swipeRefresh, tilSearch, tvEmpty, tvError,
-          tvHeaderInvoiceSort, tvPageIndicator);
+          btnRetry, etSearch, paginationBar, rvInvoices, swipeRefresh, tilSearch, tvEmpty, tvError,
+          tvErrorMessage, tvHeaderInvoiceSort, tvPageIndicator);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

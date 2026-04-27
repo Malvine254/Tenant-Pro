@@ -97,9 +97,19 @@ export default function DashboardPage() {
         return;
       }
 
+      if (session.user.role === 'TENANT') {
+        router.replace('/dashboard/invoices');
+        return;
+      }
+
+      if (session.user.role === 'LANDLORD' || session.user.role === 'CARETAKER') {
+        router.replace('/dashboard/properties');
+        return;
+      }
+
       if (session.user.role !== 'ADMIN') {
         clearSession();
-        setError('Admin access is required for this dashboard.');
+        setError('Access denied.');
         router.push('/login');
         return;
       }

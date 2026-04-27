@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,6 +13,7 @@ import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.github.mikephil.charting.charts.LineChart;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.tenantpro.app.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -39,13 +39,13 @@ public final class FragmentHomeBinding implements ViewBinding {
   public final LinearLayout llRecentInvoices;
 
   @NonNull
-  public final ProgressBar progressBar;
+  public final CircularProgressIndicator progressBar;
 
   @NonNull
   public final SwipeRefreshLayout swipeRefresh;
 
   @NonNull
-  public final TextView tvEmpty;
+  public final LinearLayout tvEmpty;
 
   @NonNull
   public final TextView tvGreeting;
@@ -77,8 +77,8 @@ public final class FragmentHomeBinding implements ViewBinding {
   private FragmentHomeBinding(@NonNull SwipeRefreshLayout rootView,
       @NonNull MaterialCardView cardMaintenance, @NonNull MaterialCardView cardMyRental,
       @NonNull MaterialCardView cardSupport, @NonNull LineChart lineChart,
-      @NonNull LinearLayout llRecentInvoices, @NonNull ProgressBar progressBar,
-      @NonNull SwipeRefreshLayout swipeRefresh, @NonNull TextView tvEmpty,
+      @NonNull LinearLayout llRecentInvoices, @NonNull CircularProgressIndicator progressBar,
+      @NonNull SwipeRefreshLayout swipeRefresh, @NonNull LinearLayout tvEmpty,
       @NonNull TextView tvGreeting, @NonNull TextView tvOfflineBanner,
       @NonNull TextView tvOutstanding, @NonNull TextView tvOverdueCount,
       @NonNull TextView tvPaidAmount, @NonNull TextView tvPendingCount,
@@ -161,7 +161,7 @@ public final class FragmentHomeBinding implements ViewBinding {
       }
 
       id = R.id.progressBar;
-      ProgressBar progressBar = ViewBindings.findChildViewById(rootView, id);
+      CircularProgressIndicator progressBar = ViewBindings.findChildViewById(rootView, id);
       if (progressBar == null) {
         break missingId;
       }
@@ -169,7 +169,7 @@ public final class FragmentHomeBinding implements ViewBinding {
       SwipeRefreshLayout swipeRefresh = (SwipeRefreshLayout) rootView;
 
       id = R.id.tvEmpty;
-      TextView tvEmpty = ViewBindings.findChildViewById(rootView, id);
+      LinearLayout tvEmpty = ViewBindings.findChildViewById(rootView, id);
       if (tvEmpty == null) {
         break missingId;
       }

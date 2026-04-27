@@ -28,13 +28,17 @@ public final class ItemNotificationBinding implements ViewBinding {
   @NonNull
   public final TextView tvNotificationTitle;
 
+  @NonNull
+  public final View viewUnreadDot;
+
   private ItemNotificationBinding(@NonNull MaterialCardView rootView,
       @NonNull TextView tvNotificationMessage, @NonNull TextView tvNotificationMeta,
-      @NonNull TextView tvNotificationTitle) {
+      @NonNull TextView tvNotificationTitle, @NonNull View viewUnreadDot) {
     this.rootView = rootView;
     this.tvNotificationMessage = tvNotificationMessage;
     this.tvNotificationMeta = tvNotificationMeta;
     this.tvNotificationTitle = tvNotificationTitle;
+    this.viewUnreadDot = viewUnreadDot;
   }
 
   @Override
@@ -82,8 +86,14 @@ public final class ItemNotificationBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.viewUnreadDot;
+      View viewUnreadDot = ViewBindings.findChildViewById(rootView, id);
+      if (viewUnreadDot == null) {
+        break missingId;
+      }
+
       return new ItemNotificationBinding((MaterialCardView) rootView, tvNotificationMessage,
-          tvNotificationMeta, tvNotificationTitle);
+          tvNotificationMeta, tvNotificationTitle, viewUnreadDot);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

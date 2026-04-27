@@ -8,7 +8,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.widget.NestedScrollView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
@@ -20,7 +19,7 @@ import java.lang.String;
 
 public final class FragmentNotificationsBinding implements ViewBinding {
   @NonNull
-  private final NestedScrollView rootView;
+  private final LinearLayout rootView;
 
   @NonNull
   public final MaterialButton btnMarkAllRead;
@@ -37,7 +36,7 @@ public final class FragmentNotificationsBinding implements ViewBinding {
   @NonNull
   public final TextView tvNotificationsEmpty;
 
-  private FragmentNotificationsBinding(@NonNull NestedScrollView rootView,
+  private FragmentNotificationsBinding(@NonNull LinearLayout rootView,
       @NonNull MaterialButton btnMarkAllRead, @NonNull MaterialButton btnRefreshNotifications,
       @NonNull LinearLayout llNotificationItems,
       @NonNull LinearProgressIndicator progressNotifications,
@@ -52,7 +51,7 @@ public final class FragmentNotificationsBinding implements ViewBinding {
 
   @Override
   @NonNull
-  public NestedScrollView getRoot() {
+  public LinearLayout getRoot() {
     return rootView;
   }
 
@@ -107,7 +106,7 @@ public final class FragmentNotificationsBinding implements ViewBinding {
         break missingId;
       }
 
-      return new FragmentNotificationsBinding((NestedScrollView) rootView, btnMarkAllRead,
+      return new FragmentNotificationsBinding((LinearLayout) rootView, btnMarkAllRead,
           btnRefreshNotifications, llNotificationItems, progressNotifications,
           tvNotificationsEmpty);
     }
