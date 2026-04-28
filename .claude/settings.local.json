@@ -29,7 +29,8 @@
       "Bash(npm run *)",
       "Bash(echo \"Backend starting \\(PID: $!\\)\")",
       "PowerShell(netsh advfirewall firewall show rule name=\"NestJS Port 3000\" 2>$null)",
-      "PowerShell(New-NetFirewallRule -DisplayName \"NestJS Port 3000\" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow -Profile Any 2>&1)"
+      "PowerShell(New-NetFirewallRule -DisplayName \"NestJS Port 3000\" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow -Profile Any 2>&1)",
+      "Bash(node -e ' *)"
     ]
   }
 }

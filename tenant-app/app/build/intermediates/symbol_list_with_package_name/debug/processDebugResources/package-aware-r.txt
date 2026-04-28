@@ -3136,6 +3136,7 @@ drawable ic_call_answer_video
 drawable ic_call_answer_video_low
 drawable ic_call_decline
 drawable ic_call_decline_low
+drawable ic_chat
 drawable ic_clear_black_24
 drawable ic_clock_black_24dp
 drawable ic_close_small
@@ -3513,6 +3514,7 @@ id frost
 id fullscreen_header
 id ghost_view
 id ghost_view_holder
+id glide_custom_view_target_tag
 id gone
 id graph
 id graph_wrap
@@ -3542,6 +3544,7 @@ id invoicesFragment
 id inward
 id italic
 id item_touch_helper_previous_elevation
+id ivAttachmentImage
 id ivProfile
 id jumpToEnd
 id jumpToStart
@@ -3563,6 +3566,8 @@ id list_item
 id llMaintenanceItems
 id llNotificationItems
 id llRecentInvoices
+id llRentalEmpty
+id llRentalUnits
 id locale
 id loginFragment
 id logoutItem
@@ -3902,15 +3907,17 @@ id tvPropertyValue
 id tvReceipt
 id tvRegisterLink
 id tvRemainingAmount
-id tvRentalAddress
-id tvRentalDueDate
-id tvRentalMoveIn
-id tvRentalProperty
-id tvRentalUnit
 id tvRowNumber
 id tvSimulationHint
 id tvStatus
 id tvTopic
+id tvUnitActiveBadge
+id tvUnitAddress
+id tvUnitFloor
+id tvUnitMoveIn
+id tvUnitNumber
+id tvUnitPropertyName
+id tvUnitRent
 id tvUnitValue
 id tvUserName
 id tvViewAll
@@ -4098,6 +4105,7 @@ layout item_payment_history
 layout item_query_chat_incoming
 layout item_query_chat_outgoing
 layout item_recent_invoice
+layout item_rental_unit
 layout m3_alert_dialog
 layout m3_alert_dialog_actions
 layout m3_alert_dialog_title

@@ -9,6 +9,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { IsUUID } from 'class-validator';
 import { RoleName } from '@prisma/client';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -19,6 +20,11 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserIdParamDto } from './dto/user-id-param.dto';
 import { UsersService } from './users.service';
+
+class AssignUnitDto {
+  @IsUUID()
+  unitId!: string;
+}
 
 type AuthenticatedRequest = {
   user: {
@@ -79,5 +85,30 @@ export class UsersController {
   @Roles(RoleName.ADMIN)
   remove(@Param() params: UserIdParamDto) {
     return this.usersService.remove(params.id);
+  }
+
+  @Get(':id/units')
+  @Roles(RoleName.ADMIN, RoleName.LANDLORD)
+  getUserUnits(@Param() params: UserIdParamDto) {
+    return this.usersService.getUserUnits(params.id);
+  }
+
+  @Post(':id/assign-unit')
+  @Roles(RoleName.ADMIN, RoleName.LANDLORD)
+  assignUnit(
+    @Req() req: AuthenticatedRequest,
+    @Param() params: UserIdParamDto,
+    @Body() dto: AssignUnitDto,
+  ) {
+    return this.usersService.assignUnit(req.user.role, req.user.userId, params.id, dto.unitId);
+  }
+
+  @Delete(':id/units/:unitId')
+  @Roles(RoleName.ADMIN, RoleName.LANDLORD)
+  removeUnit(
+    @Req() req: AuthenticatedRequest,
+    @Param() params: UserIdParamDto & { unitId: string },
+  ) {
+    return this.usersService.removeUnit(req.user.role, req.user.userId, params.id, params.unitId);
   }
 }

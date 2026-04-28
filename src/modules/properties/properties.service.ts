@@ -168,7 +168,23 @@ export class PropertiesService {
           },
         },
         units: {
-          orderBy: { unitNumber: 'asc' },
+          orderBy: [{ floor: 'asc' }, { unitNumber: 'asc' }],
+          include: {
+            tenants: {
+              where: { isActive: true },
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    phoneNumber: true,
+                    profileImageUrl: true,
+                  },
+                },
+              },
+            },
+          },
         },
       },
       orderBy: {

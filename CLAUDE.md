@@ -83,14 +83,17 @@ All routes prefixed with `/api`. JWT required unless noted.
 ### Users — `/api/users`
 | Method | Path | Access |
 |--------|------|--------|
-| GET | /me/profile | Own profile |
+| GET | /me/profile | Own profile (returns `tenantProfile` + `tenantProfiles[]`) |
 | PATCH | /me/profile | Update own profile |
 | POST | / | Create user (ADMIN) |
-| GET | / | List all users (ADMIN) |
-| GET | /:id | Get user (ADMIN) |
+| GET | / | List all users (ADMIN/LANDLORD/CARETAKER) |
+| GET | /:id | Get user (ADMIN/LANDLORD/CARETAKER) |
 | PATCH | /:id | Update user (ADMIN) |
 | PATCH | /:id/role | Assign role (ADMIN) |
 | DELETE | /:id | Delete user (ADMIN) |
+| GET | /:id/units | List tenant's active unit assignments (ADMIN/LANDLORD) |
+| POST | /:id/assign-unit | Assign a unit to a tenant `{ unitId }` (ADMIN/LANDLORD) |
+| DELETE | /:id/units/:unitId | Remove a unit assignment (ADMIN/LANDLORD) |
 
 ### Properties — `/api/properties`
 | Method | Path | Access |
@@ -359,4 +362,4 @@ These integrations are identified but not yet built. Prioritize in future sessio
 
 ---
 
-*Last updated: 2026-04-27 — Added UI design system docs, pending integration notes, Material 3 modernisation.*
+*Last updated: 2026-04-28 — Multi-unit support: tenants can hold multiple unit assignments; Prisma Tenant model now uses composite unique (userId, unitId); getProfile returns tenantProfiles[]; admin can assign/remove units via new endpoints; Android rental screen shows list of all assigned units.*

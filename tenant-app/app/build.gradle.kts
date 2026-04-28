@@ -109,6 +109,7 @@ dependencies {
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.mpandroidchart)
     implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation(libs.glide)
 
     // Room (offline cache)
     implementation(libs.androidx.room.runtime)

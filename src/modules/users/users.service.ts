@@ -1,15 +1,17 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma, RoleName } from '@prisma/client';
+import { NotificationType, Prisma, RoleName } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AssignRoleDto } from './dto/assign-role.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -55,6 +57,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private toUserResponse(user: {
@@ -560,6 +563,56 @@ export class UsersService {
     return this.toUserResponse(user);
   }
 
+  private mapTenantProfile(tenancy: {
+    id: string;
+    moveInDate: Date;
+    moveOutDate: Date | null;
+    isActive: boolean;
+    unit: {
+      id: string;
+      unitNumber: string;
+      floor: string | null;
+      rentAmount: { toNumber: () => number } | number;
+      imageUrls: unknown;
+      property: {
+        id: string;
+        name: string;
+        description: string | null;
+        coverImageUrl: string | null;
+        addressLine: string;
+        city: string;
+        state: string | null;
+        country: string;
+      };
+    };
+  }) {
+    return {
+      id: tenancy.id,
+      moveInDate: tenancy.moveInDate,
+      moveOutDate: tenancy.moveOutDate,
+      isActive: tenancy.isActive,
+      unit: {
+        id: tenancy.unit.id,
+        unitNumber: tenancy.unit.unitNumber,
+        floor: tenancy.unit.floor,
+        rentAmount: typeof tenancy.unit.rentAmount === 'number'
+          ? tenancy.unit.rentAmount
+          : Number(tenancy.unit.rentAmount),
+        imageUrls: (tenancy.unit.imageUrls as string[] | null) ?? [],
+        property: {
+          id: tenancy.unit.property.id,
+          name: tenancy.unit.property.name,
+          description: tenancy.unit.property.description,
+          coverImageUrl: tenancy.unit.property.coverImageUrl,
+          addressLine: tenancy.unit.property.addressLine,
+          city: tenancy.unit.property.city,
+          state: tenancy.unit.property.state,
+          country: tenancy.unit.property.country,
+        },
+      },
+    };
+  }
+
   async getProfile(userId: string) {
     if (this.isJsonDbMode()) {
       const db = await this.readJsonDb();
@@ -572,6 +625,7 @@ export class UsersService {
       return {
         ...this.toUserResponse(this.mapJsonUser(user)),
         tenantProfile: null,
+        tenantProfiles: [],
       };
     }
 
@@ -579,7 +633,7 @@ export class UsersService {
       where: { id: userId },
       include: {
         role: true,
-        tenantProfile: {
+        tenantProfiles: {
           include: {
             unit: {
               include: {
@@ -587,6 +641,7 @@ export class UsersService {
               },
             },
           },
+          orderBy: { createdAt: 'desc' },
         },
       },
     });
@@ -595,34 +650,126 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
+    const profiles = user.tenantProfiles.map((t) => this.mapTenantProfile(t));
+    const activeProfile = profiles.find((p) => p.isActive) ?? profiles[0] ?? null;
+
     return {
       ...this.toUserResponse(user),
-      tenantProfile: user.tenantProfile
-        ? {
-            id: user.tenantProfile.id,
-            moveInDate: user.tenantProfile.moveInDate,
-            moveOutDate: user.tenantProfile.moveOutDate,
-            isActive: user.tenantProfile.isActive,
-            unit: {
-              id: user.tenantProfile.unit.id,
-              unitNumber: user.tenantProfile.unit.unitNumber,
-              floor: user.tenantProfile.unit.floor,
-              rentAmount: Number(user.tenantProfile.unit.rentAmount),
-              imageUrls: (user.tenantProfile.unit.imageUrls as string[] | null) ?? [],
-              property: {
-                id: user.tenantProfile.unit.property.id,
-                name: user.tenantProfile.unit.property.name,
-                description: user.tenantProfile.unit.property.description,
-                coverImageUrl: user.tenantProfile.unit.property.coverImageUrl,
-                addressLine: user.tenantProfile.unit.property.addressLine,
-                city: user.tenantProfile.unit.property.city,
-                state: user.tenantProfile.unit.property.state,
-                country: user.tenantProfile.unit.property.country,
-              },
-            },
-          }
-        : null,
+      tenantProfile: activeProfile,   // backward-compat: first active profile
+      tenantProfiles: profiles,        // full list
     };
+  }
+
+  async getUserUnits(userId: string) {
+    const tenancies = await this.prisma.tenant.findMany({
+      where: { userId, isActive: true },
+      include: {
+        unit: { include: { property: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return tenancies.map((t) => this.mapTenantProfile(t));
+  }
+
+  async assignUnit(actorRole: RoleName, actorUserId: string, targetUserId: string, unitId: string) {
+    const unit = await this.prisma.unit.findUnique({
+      where: { id: unitId },
+      include: { property: true },
+    });
+
+    if (!unit) throw new NotFoundException('Unit not found');
+
+    if (actorRole !== RoleName.ADMIN && unit.property.landlordId !== actorUserId) {
+      throw new ForbiddenException('You can only assign units in your own properties');
+    }
+
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      include: { role: true },
+    });
+
+    if (!targetUser) throw new NotFoundException('User not found');
+    if (targetUser.role.name !== RoleName.TENANT) {
+      throw new BadRequestException('Only TENANT users can be assigned to units');
+    }
+
+    const occupiedBy = await this.prisma.tenant.findFirst({
+      where: { unitId, isActive: true, NOT: { userId: targetUserId } },
+    });
+
+    if (occupiedBy) {
+      throw new BadRequestException('This unit is already occupied by another active tenant');
+    }
+
+    const existing = await this.prisma.tenant.findUnique({
+      where: { userId_unitId: { userId: targetUserId, unitId } },
+    });
+
+    let tenant;
+    if (existing) {
+      if (existing.isActive) {
+        throw new BadRequestException('This tenant is already assigned to this unit');
+      }
+      tenant = await this.prisma.tenant.update({
+        where: { id: existing.id },
+        data: { isActive: true, moveInDate: new Date(), moveOutDate: null },
+        include: { unit: { include: { property: true } } },
+      });
+    } else {
+      tenant = await this.prisma.tenant.create({
+        data: { userId: targetUserId, unitId, isActive: true, moveInDate: new Date() },
+        include: { unit: { include: { property: true } } },
+      });
+    }
+
+    await this.prisma.unit.update({
+      where: { id: unitId },
+      data: { status: 'OCCUPIED' },
+    });
+
+    void this.notificationsService.createNotification(
+      targetUserId,
+      NotificationType.GENERAL,
+      'Unit assigned',
+      `You have been assigned to Unit ${unit.unitNumber} at ${unit.property.name}.`,
+      { unitId, propertyId: unit.propertyId },
+    );
+
+    return this.mapTenantProfile(tenant);
+  }
+
+  async removeUnit(actorRole: RoleName, actorUserId: string, targetUserId: string, unitId: string) {
+    const existing = await this.prisma.tenant.findUnique({
+      where: { userId_unitId: { userId: targetUserId, unitId } },
+      include: { unit: { include: { property: true } } },
+    });
+
+    if (!existing || !existing.isActive) {
+      throw new NotFoundException('Active tenant assignment not found');
+    }
+
+    if (actorRole !== RoleName.ADMIN && existing.unit.property.landlordId !== actorUserId) {
+      throw new ForbiddenException('You can only remove units in your own properties');
+    }
+
+    await this.prisma.tenant.update({
+      where: { id: existing.id },
+      data: { isActive: false, moveOutDate: new Date() },
+    });
+
+    const remainingActive = await this.prisma.tenant.findFirst({
+      where: { unitId, isActive: true },
+    });
+
+    if (!remainingActive) {
+      await this.prisma.unit.update({
+        where: { id: unitId },
+        data: { status: 'VACANT' },
+      });
+    }
+
+    return { message: 'Unit assignment removed successfully' };
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {

@@ -1,63 +1,64 @@
-com.tenantpro.app-jetified-lifecycle-process-2.8.6-0 C:\Users\owuor\.gradle\caches\8.9\transforms\02f8718e31e167e685ca89565387a41f\transformed\jetified-lifecycle-process-2.8.6\res
-com.tenantpro.app-constraintlayout-2.1.4-1 C:\Users\owuor\.gradle\caches\8.9\transforms\056abe3626b08756d2c9a0c2a0276a86\transformed\constraintlayout-2.1.4\res
-com.tenantpro.app-jetified-annotation-experimental-1.4.1-2 C:\Users\owuor\.gradle\caches\8.9\transforms\08518f443f330e6606c247343f5205cc\transformed\jetified-annotation-experimental-1.4.1\res
-com.tenantpro.app-jetified-lifecycle-livedata-ktx-2.8.6-3 C:\Users\owuor\.gradle\caches\8.9\transforms\13bd3d2f854a2031590a5ede220f1107\transformed\jetified-lifecycle-livedata-ktx-2.8.6\res
-com.tenantpro.app-fragment-1.8.4-4 C:\Users\owuor\.gradle\caches\8.9\transforms\1b967cce0eb01bfe41324ba66beb9b6c\transformed\fragment-1.8.4\res
-com.tenantpro.app-jetified-lifecycle-runtime-release-5 C:\Users\owuor\.gradle\caches\8.9\transforms\1f1a8101ef53ff9529893272ed236ed2\transformed\jetified-lifecycle-runtime-release\res
-com.tenantpro.app-jetified-lifecycle-viewmodel-savedstate-2.8.6-6 C:\Users\owuor\.gradle\caches\8.9\transforms\23d9cd7260d97877ec46b4786ab62e23\transformed\jetified-lifecycle-viewmodel-savedstate-2.8.6\res
-com.tenantpro.app-cardview-1.0.0-7 C:\Users\owuor\.gradle\caches\8.9\transforms\2767286c52d60fd8413a5e1291433a8c\transformed\cardview-1.0.0\res
-com.tenantpro.app-jetified-window-1.0.0-8 C:\Users\owuor\.gradle\caches\8.9\transforms\27a11961cdca9ef3836ca655c44fa4cb\transformed\jetified-window-1.0.0\res
-com.tenantpro.app-jetified-datastore-preferences-release-9 C:\Users\owuor\.gradle\caches\8.9\transforms\2905fc327a46ccdfbb3315dd19731a35\transformed\jetified-datastore-preferences-release\res
-com.tenantpro.app-jetified-core-ktx-1.13.1-10 C:\Users\owuor\.gradle\caches\8.9\transforms\2d804aebd3b96a8d24c9f0636357515e\transformed\jetified-core-ktx-1.13.1\res
-com.tenantpro.app-jetified-lifecycle-service-2.8.6-11 C:\Users\owuor\.gradle\caches\8.9\transforms\2e1134aab209150764b5810282c4dfe4\transformed\jetified-lifecycle-service-2.8.6\res
-com.tenantpro.app-jetified-savedstate-ktx-1.2.1-12 C:\Users\owuor\.gradle\caches\8.9\transforms\31c4e297ee8412a2b8533fae2e8d66c6\transformed\jetified-savedstate-ktx-1.2.1\res
-com.tenantpro.app-jetified-fragment-ktx-1.8.4-13 C:\Users\owuor\.gradle\caches\8.9\transforms\357ce8177d2e00a357027252ccf5534d\transformed\jetified-fragment-ktx-1.8.4\res
-com.tenantpro.app-jetified-viewpager2-1.0.0-14 C:\Users\owuor\.gradle\caches\8.9\transforms\446b8be85b0493a187465f77ac0ef024\transformed\jetified-viewpager2-1.0.0\res
-com.tenantpro.app-jetified-lifecycle-livedata-core-ktx-2.8.6-15 C:\Users\owuor\.gradle\caches\8.9\transforms\4db3a7c627cfcab9b6f33da51bbb5095\transformed\jetified-lifecycle-livedata-core-ktx-2.8.6\res
-com.tenantpro.app-navigation-fragment-ktx-2.8.3-16 C:\Users\owuor\.gradle\caches\8.9\transforms\4df26bf6ba08bd6d3c2814cb640caecd\transformed\navigation-fragment-ktx-2.8.3\res
-com.tenantpro.app-jetified-core-splashscreen-1.0.1-17 C:\Users\owuor\.gradle\caches\8.9\transforms\526898ab6fee583d8ebfae813ff1b467\transformed\jetified-core-splashscreen-1.0.1\res
-com.tenantpro.app-jetified-lifecycle-viewmodel-release-18 C:\Users\owuor\.gradle\caches\8.9\transforms\54384fd9c9b5732b1ee678872917e47f\transformed\jetified-lifecycle-viewmodel-release\res
-com.tenantpro.app-jetified-savedstate-1.2.1-19 C:\Users\owuor\.gradle\caches\8.9\transforms\56478db8497ecaa53a9e2f7ff449d6fd\transformed\jetified-savedstate-1.2.1\res
-com.tenantpro.app-work-runtime-2.9.1-20 C:\Users\owuor\.gradle\caches\8.9\transforms\57c76fbec953ddfe47d0e5e8872e6895\transformed\work-runtime-2.9.1\res
-com.tenantpro.app-lifecycle-livedata-2.8.6-21 C:\Users\owuor\.gradle\caches\8.9\transforms\5a691cde5b89e37bc11eb68683db2800\transformed\lifecycle-livedata-2.8.6\res
-com.tenantpro.app-jetified-emoji2-views-helper-1.3.0-22 C:\Users\owuor\.gradle\caches\8.9\transforms\65d2dde0fbc6b361b5e1d6e39e8123fc\transformed\jetified-emoji2-views-helper-1.3.0\res
-com.tenantpro.app-slidingpanelayout-1.2.0-23 C:\Users\owuor\.gradle\caches\8.9\transforms\66ceb019a6102eafb68996059b3f61e8\transformed\slidingpanelayout-1.2.0\res
-com.tenantpro.app-jetified-activity-1.9.2-24 C:\Users\owuor\.gradle\caches\8.9\transforms\6a0468c0f21d17f77caa9340ca43b649\transformed\jetified-activity-1.9.2\res
-com.tenantpro.app-sqlite-framework-2.4.0-25 C:\Users\owuor\.gradle\caches\8.9\transforms\6a2975b68f3dbacf0d5dd6940352bb8f\transformed\sqlite-framework-2.4.0\res
-com.tenantpro.app-navigation-runtime-2.8.3-26 C:\Users\owuor\.gradle\caches\8.9\transforms\746d4e84a9f5bd43b9024d5a8e789c42\transformed\navigation-runtime-2.8.3\res
-com.tenantpro.app-appcompat-1.7.0-27 C:\Users\owuor\.gradle\caches\8.9\transforms\77ce94591a719711d15505e4b50d9c69\transformed\appcompat-1.7.0\res
-com.tenantpro.app-swiperefreshlayout-1.1.0-28 C:\Users\owuor\.gradle\caches\8.9\transforms\7da2c90659e627a148bd09f58dd873ea\transformed\swiperefreshlayout-1.1.0\res
-com.tenantpro.app-jetified-lifecycle-runtime-ktx-release-29 C:\Users\owuor\.gradle\caches\8.9\transforms\7db706e24246cc16ce63d228d3a15571\transformed\jetified-lifecycle-runtime-ktx-release\res
-com.tenantpro.app-navigation-common-ktx-2.8.3-30 C:\Users\owuor\.gradle\caches\8.9\transforms\7f100249ad7231848d53e2aec2660675\transformed\navigation-common-ktx-2.8.3\res
-com.tenantpro.app-jetified-activity-ktx-1.9.2-31 C:\Users\owuor\.gradle\caches\8.9\transforms\80cf3480403c01696a6b53463765e83a\transformed\jetified-activity-ktx-1.9.2\res
-com.tenantpro.app-coordinatorlayout-1.1.0-32 C:\Users\owuor\.gradle\caches\8.9\transforms\870abbf68126f27a053d2b1141e64206\transformed\coordinatorlayout-1.1.0\res
-com.tenantpro.app-material-1.12.0-33 C:\Users\owuor\.gradle\caches\8.9\transforms\8deb9ad54d4cf3d74ca03138bc6918b8\transformed\material-1.12.0\res
-com.tenantpro.app-navigation-ui-2.8.3-34 C:\Users\owuor\.gradle\caches\8.9\transforms\9e9aa1ef3c3c2c8993316505dfcebd0f\transformed\navigation-ui-2.8.3\res
-com.tenantpro.app-jetified-room-ktx-2.6.1-35 C:\Users\owuor\.gradle\caches\8.9\transforms\9eef85ea85f5e3a37f588f11488a2150\transformed\jetified-room-ktx-2.6.1\res
-com.tenantpro.app-jetified-emoji2-1.3.0-36 C:\Users\owuor\.gradle\caches\8.9\transforms\a70bda5ba4adefaf426e65cdeb629761\transformed\jetified-emoji2-1.3.0\res
-com.tenantpro.app-jetified-appcompat-resources-1.7.0-37 C:\Users\owuor\.gradle\caches\8.9\transforms\a83975003db52ae299cb9d6801d935d4\transformed\jetified-appcompat-resources-1.7.0\res
-com.tenantpro.app-navigation-common-2.8.3-38 C:\Users\owuor\.gradle\caches\8.9\transforms\abac1392545d183cea3358857223632e\transformed\navigation-common-2.8.3\res
-com.tenantpro.app-jetified-lifecycle-viewmodel-ktx-2.8.6-39 C:\Users\owuor\.gradle\caches\8.9\transforms\b4c148a8338ed2e08179935412154acb\transformed\jetified-lifecycle-viewmodel-ktx-2.8.6\res
-com.tenantpro.app-jetified-startup-runtime-1.1.1-40 C:\Users\owuor\.gradle\caches\8.9\transforms\bd60ff9c1bb99ae2786e016be74b79ab\transformed\jetified-startup-runtime-1.1.1\res
-com.tenantpro.app-navigation-runtime-ktx-2.8.3-41 C:\Users\owuor\.gradle\caches\8.9\transforms\c6e9ce93908af27e505ce03366e31ac5\transformed\navigation-runtime-ktx-2.8.3\res
-com.tenantpro.app-core-runtime-2.2.0-42 C:\Users\owuor\.gradle\caches\8.9\transforms\c973611ee72a4197d22add3a060a3f42\transformed\core-runtime-2.2.0\res
-com.tenantpro.app-lifecycle-livedata-core-2.8.6-43 C:\Users\owuor\.gradle\caches\8.9\transforms\cf26f5872b79863c146722d183d1c60a\transformed\lifecycle-livedata-core-2.8.6\res
-com.tenantpro.app-jetified-datastore-core-release-44 C:\Users\owuor\.gradle\caches\8.9\transforms\d039b504e515a364321b6d900dca04d1\transformed\jetified-datastore-core-release\res
-com.tenantpro.app-work-runtime-ktx-2.9.1-45 C:\Users\owuor\.gradle\caches\8.9\transforms\d45e65e15103622626e0a7c9933cd829\transformed\work-runtime-ktx-2.9.1\res
-com.tenantpro.app-jetified-datastore-release-46 C:\Users\owuor\.gradle\caches\8.9\transforms\d4ee931227fc876c14431f4d9c1d918a\transformed\jetified-datastore-release\res
-com.tenantpro.app-drawerlayout-1.1.1-47 C:\Users\owuor\.gradle\caches\8.9\transforms\d61efbbca8b30d173c747582b0b96207\transformed\drawerlayout-1.1.1\res
-com.tenantpro.app-recyclerview-1.1.0-48 C:\Users\owuor\.gradle\caches\8.9\transforms\d625b006306a18b84a7a5bf64f43ff92\transformed\recyclerview-1.1.0\res
-com.tenantpro.app-transition-1.5.0-49 C:\Users\owuor\.gradle\caches\8.9\transforms\da71480609ba048b93f57adecb32451b\transformed\transition-1.5.0\res
-com.tenantpro.app-navigation-fragment-2.8.3-50 C:\Users\owuor\.gradle\caches\8.9\transforms\df8a21b7f1a76549802114707d1e0d15\transformed\navigation-fragment-2.8.3\res
-com.tenantpro.app-navigation-ui-ktx-2.8.3-51 C:\Users\owuor\.gradle\caches\8.9\transforms\ebacc354aa1404a710837ba4b13ea083\transformed\navigation-ui-ktx-2.8.3\res
-com.tenantpro.app-jetified-profileinstaller-1.3.1-52 C:\Users\owuor\.gradle\caches\8.9\transforms\efbbea7179fe076eebdecd3fda4f0f55\transformed\jetified-profileinstaller-1.3.1\res
-com.tenantpro.app-core-1.13.1-53 C:\Users\owuor\.gradle\caches\8.9\transforms\f1e8a53a2895616bc4683b9baef4aeca\transformed\core-1.13.1\res
-com.tenantpro.app-sqlite-2.4.0-54 C:\Users\owuor\.gradle\caches\8.9\transforms\f338884334c29e4bfe65c94b312bb3b6\transformed\sqlite-2.4.0\res
-com.tenantpro.app-room-runtime-2.6.1-55 C:\Users\owuor\.gradle\caches\8.9\transforms\f5baf67ab6bdd049c9eb5fcd7d7fc49e\transformed\room-runtime-2.6.1\res
-com.tenantpro.app-pngs-56 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\build\generated\res\pngs\debug
-com.tenantpro.app-resValues-57 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\build\generated\res\resValues\debug
-com.tenantpro.app-packageDebugResources-58 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
-com.tenantpro.app-packageDebugResources-59 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
-com.tenantpro.app-debug-60 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\build\intermediates\merged_res\debug\mergeDebugResources
-com.tenantpro.app-debug-61 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\src\debug\res
-com.tenantpro.app-main-62 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\src\main\res
+com.tenantpro.app-jetified-lifecycle-service-2.8.6-0 C:\Users\owuor\.gradle\caches\8.9\transforms\05269f15be026df326e6e35b0bec25d0\transformed\jetified-lifecycle-service-2.8.6\res
+com.tenantpro.app-navigation-common-2.8.3-1 C:\Users\owuor\.gradle\caches\8.9\transforms\0cec390fcdb3ac1cbd78bb398a95f723\transformed\navigation-common-2.8.3\res
+com.tenantpro.app-lifecycle-livedata-core-2.8.6-2 C:\Users\owuor\.gradle\caches\8.9\transforms\0f258a59fb7b9b5229a85a7469af00e8\transformed\lifecycle-livedata-core-2.8.6\res
+com.tenantpro.app-material-1.12.0-3 C:\Users\owuor\.gradle\caches\8.9\transforms\11480405ecfee034c8df31a4fadca73e\transformed\material-1.12.0\res
+com.tenantpro.app-navigation-runtime-2.8.3-4 C:\Users\owuor\.gradle\caches\8.9\transforms\122aaffbf66cebe59371e18ec0ba6e75\transformed\navigation-runtime-2.8.3\res
+com.tenantpro.app-jetified-core-splashscreen-1.0.1-5 C:\Users\owuor\.gradle\caches\8.9\transforms\15eb4cf95f283c30c7acc05eea8b0cf4\transformed\jetified-core-splashscreen-1.0.1\res
+com.tenantpro.app-jetified-datastore-release-6 C:\Users\owuor\.gradle\caches\8.9\transforms\16d05f281f44426b6baa3653d2ebbc9a\transformed\jetified-datastore-release\res
+com.tenantpro.app-jetified-profileinstaller-1.3.1-7 C:\Users\owuor\.gradle\caches\8.9\transforms\1d9941c957bd69beba6682175befaeb4\transformed\jetified-profileinstaller-1.3.1\res
+com.tenantpro.app-navigation-common-ktx-2.8.3-8 C:\Users\owuor\.gradle\caches\8.9\transforms\21562c61e00f41244b3b434dfb9ee117\transformed\navigation-common-ktx-2.8.3\res
+com.tenantpro.app-cardview-1.0.0-9 C:\Users\owuor\.gradle\caches\8.9\transforms\227abc68b8c32ef85908e428d6498a3f\transformed\cardview-1.0.0\res
+com.tenantpro.app-fragment-1.8.4-10 C:\Users\owuor\.gradle\caches\8.9\transforms\242ff051920b423f9a35e01c2567eeb0\transformed\fragment-1.8.4\res
+com.tenantpro.app-jetified-emoji2-views-helper-1.3.0-11 C:\Users\owuor\.gradle\caches\8.9\transforms\257b78059361ffe69b460b6cc52b7037\transformed\jetified-emoji2-views-helper-1.3.0\res
+com.tenantpro.app-lifecycle-livedata-2.8.6-12 C:\Users\owuor\.gradle\caches\8.9\transforms\258e2d88a2c338c4870d4c53e1817aa6\transformed\lifecycle-livedata-2.8.6\res
+com.tenantpro.app-navigation-ui-ktx-2.8.3-13 C:\Users\owuor\.gradle\caches\8.9\transforms\277891c0821e2dbede4e7bac0cdb2eda\transformed\navigation-ui-ktx-2.8.3\res
+com.tenantpro.app-jetified-lifecycle-runtime-ktx-release-14 C:\Users\owuor\.gradle\caches\8.9\transforms\27c7fd0217195c9b5672e30509c93ed4\transformed\jetified-lifecycle-runtime-ktx-release\res
+com.tenantpro.app-transition-1.5.0-15 C:\Users\owuor\.gradle\caches\8.9\transforms\2b9292e821b82e9fabfcf763a9a027f4\transformed\transition-1.5.0\res
+com.tenantpro.app-work-runtime-2.9.1-16 C:\Users\owuor\.gradle\caches\8.9\transforms\35021e8ca24fc4aaa80b1dee9ffd18fc\transformed\work-runtime-2.9.1\res
+com.tenantpro.app-jetified-savedstate-1.2.1-17 C:\Users\owuor\.gradle\caches\8.9\transforms\36871b580bbb93ad9fd24784a5dad55a\transformed\jetified-savedstate-1.2.1\res
+com.tenantpro.app-sqlite-2.4.0-18 C:\Users\owuor\.gradle\caches\8.9\transforms\3999940288bc1ca9f57f4500ee6f4043\transformed\sqlite-2.4.0\res
+com.tenantpro.app-core-runtime-2.2.0-19 C:\Users\owuor\.gradle\caches\8.9\transforms\518932d64139682f185ab98d1364debf\transformed\core-runtime-2.2.0\res
+com.tenantpro.app-jetified-savedstate-ktx-1.2.1-20 C:\Users\owuor\.gradle\caches\8.9\transforms\556f65407df8bcb69225966a12d48063\transformed\jetified-savedstate-ktx-1.2.1\res
+com.tenantpro.app-jetified-activity-1.9.2-21 C:\Users\owuor\.gradle\caches\8.9\transforms\5615495e0ffb93fb9f3397d474d709b4\transformed\jetified-activity-1.9.2\res
+com.tenantpro.app-jetified-lifecycle-livedata-ktx-2.8.6-22 C:\Users\owuor\.gradle\caches\8.9\transforms\619df4a4aef9c8ef868f5994237c4ec4\transformed\jetified-lifecycle-livedata-ktx-2.8.6\res
+com.tenantpro.app-coordinatorlayout-1.1.0-23 C:\Users\owuor\.gradle\caches\8.9\transforms\625cf429f436c5dc2fcfa5acf6ee3b12\transformed\coordinatorlayout-1.1.0\res
+com.tenantpro.app-work-runtime-ktx-2.9.1-24 C:\Users\owuor\.gradle\caches\8.9\transforms\67ab6689cc7a617f920e08a93433ee73\transformed\work-runtime-ktx-2.9.1\res
+com.tenantpro.app-jetified-lifecycle-viewmodel-savedstate-2.8.6-25 C:\Users\owuor\.gradle\caches\8.9\transforms\736380f76a7fece8b082c49919012859\transformed\jetified-lifecycle-viewmodel-savedstate-2.8.6\res
+com.tenantpro.app-recyclerview-1.1.0-26 C:\Users\owuor\.gradle\caches\8.9\transforms\766d1b27fcd70c0e4a2107d53deb2532\transformed\recyclerview-1.1.0\res
+com.tenantpro.app-jetified-emoji2-1.3.0-27 C:\Users\owuor\.gradle\caches\8.9\transforms\79a6d292d137e8bc455ad2b31cf08552\transformed\jetified-emoji2-1.3.0\res
+com.tenantpro.app-appcompat-1.7.0-28 C:\Users\owuor\.gradle\caches\8.9\transforms\79e2c92fcd4dee616527165521dbc7a6\transformed\appcompat-1.7.0\res
+com.tenantpro.app-jetified-room-ktx-2.6.1-29 C:\Users\owuor\.gradle\caches\8.9\transforms\7c7a1cc0360ff48c5b9cb59fef90712a\transformed\jetified-room-ktx-2.6.1\res
+com.tenantpro.app-core-1.13.1-30 C:\Users\owuor\.gradle\caches\8.9\transforms\7f445cc3ae47dc1e2136c36a2b4f1918\transformed\core-1.13.1\res
+com.tenantpro.app-jetified-startup-runtime-1.1.1-31 C:\Users\owuor\.gradle\caches\8.9\transforms\81a139ee1b279b49878f506e59eed4d4\transformed\jetified-startup-runtime-1.1.1\res
+com.tenantpro.app-room-runtime-2.6.1-32 C:\Users\owuor\.gradle\caches\8.9\transforms\82e9ce769f1454db6d2e92cd383c6030\transformed\room-runtime-2.6.1\res
+com.tenantpro.app-jetified-lifecycle-runtime-release-33 C:\Users\owuor\.gradle\caches\8.9\transforms\89bbc653c762fa394d8104b596ae56cc\transformed\jetified-lifecycle-runtime-release\res
+com.tenantpro.app-jetified-glide-4.16.0-34 C:\Users\owuor\.gradle\caches\8.9\transforms\8a7e2dc4c67651b2fd9f6a096afd0531\transformed\jetified-glide-4.16.0\res
+com.tenantpro.app-navigation-ui-2.8.3-35 C:\Users\owuor\.gradle\caches\8.9\transforms\8b9dfe24094396cac9a2aa43059a6e3b\transformed\navigation-ui-2.8.3\res
+com.tenantpro.app-jetified-lifecycle-process-2.8.6-36 C:\Users\owuor\.gradle\caches\8.9\transforms\8f653e3a138bec6d1309a63a0f76decb\transformed\jetified-lifecycle-process-2.8.6\res
+com.tenantpro.app-sqlite-framework-2.4.0-37 C:\Users\owuor\.gradle\caches\8.9\transforms\91a54b1fe95d85ed7cc9227e25cedf38\transformed\sqlite-framework-2.4.0\res
+com.tenantpro.app-jetified-viewpager2-1.0.0-38 C:\Users\owuor\.gradle\caches\8.9\transforms\91ededfee6ae59ea74aa90b4a3c7bfe8\transformed\jetified-viewpager2-1.0.0\res
+com.tenantpro.app-navigation-fragment-ktx-2.8.3-39 C:\Users\owuor\.gradle\caches\8.9\transforms\983173820c8b170b3fa31ba237b6f21a\transformed\navigation-fragment-ktx-2.8.3\res
+com.tenantpro.app-slidingpanelayout-1.2.0-40 C:\Users\owuor\.gradle\caches\8.9\transforms\999da3533372c397530a51543d6185d7\transformed\slidingpanelayout-1.2.0\res
+com.tenantpro.app-swiperefreshlayout-1.1.0-41 C:\Users\owuor\.gradle\caches\8.9\transforms\9d71a61284c3e7aa7b6c4cc1fa36b440\transformed\swiperefreshlayout-1.1.0\res
+com.tenantpro.app-navigation-runtime-ktx-2.8.3-42 C:\Users\owuor\.gradle\caches\8.9\transforms\9ee4d9a404cf8460a777b404e07618eb\transformed\navigation-runtime-ktx-2.8.3\res
+com.tenantpro.app-jetified-core-ktx-1.13.1-43 C:\Users\owuor\.gradle\caches\8.9\transforms\a2e9fc31b0e58470ba9c11e68b66e878\transformed\jetified-core-ktx-1.13.1\res
+com.tenantpro.app-jetified-datastore-preferences-release-44 C:\Users\owuor\.gradle\caches\8.9\transforms\a3fa2e840dee37443be333fe37e12354\transformed\jetified-datastore-preferences-release\res
+com.tenantpro.app-drawerlayout-1.1.1-45 C:\Users\owuor\.gradle\caches\8.9\transforms\b169e0ef30a7d497842abda18373ac9c\transformed\drawerlayout-1.1.1\res
+com.tenantpro.app-jetified-lifecycle-viewmodel-release-46 C:\Users\owuor\.gradle\caches\8.9\transforms\d211185dc158dafa8b647a7818443f44\transformed\jetified-lifecycle-viewmodel-release\res
+com.tenantpro.app-jetified-lifecycle-livedata-core-ktx-2.8.6-47 C:\Users\owuor\.gradle\caches\8.9\transforms\d9a2b197c53f1f7bfee5dc040d6b4801\transformed\jetified-lifecycle-livedata-core-ktx-2.8.6\res
+com.tenantpro.app-jetified-appcompat-resources-1.7.0-48 C:\Users\owuor\.gradle\caches\8.9\transforms\e14839ce3caa21d988c5e4f1a3bc368c\transformed\jetified-appcompat-resources-1.7.0\res
+com.tenantpro.app-navigation-fragment-2.8.3-49 C:\Users\owuor\.gradle\caches\8.9\transforms\e508f0e5c1f35e53266f4c4dff63c64d\transformed\navigation-fragment-2.8.3\res
+com.tenantpro.app-constraintlayout-2.1.4-50 C:\Users\owuor\.gradle\caches\8.9\transforms\e62ab20a92513f7c613fb952d83d47e9\transformed\constraintlayout-2.1.4\res
+com.tenantpro.app-jetified-lifecycle-viewmodel-ktx-2.8.6-51 C:\Users\owuor\.gradle\caches\8.9\transforms\ee39b512a6a668253446d27953798baa\transformed\jetified-lifecycle-viewmodel-ktx-2.8.6\res
+com.tenantpro.app-jetified-window-1.0.0-52 C:\Users\owuor\.gradle\caches\8.9\transforms\ef81a177eae006ab597793df75db4f2e\transformed\jetified-window-1.0.0\res
+com.tenantpro.app-jetified-annotation-experimental-1.4.1-53 C:\Users\owuor\.gradle\caches\8.9\transforms\f375505e996473d5a5ef2a3ba4e8d91e\transformed\jetified-annotation-experimental-1.4.1\res
+com.tenantpro.app-jetified-fragment-ktx-1.8.4-54 C:\Users\owuor\.gradle\caches\8.9\transforms\f601c18876091ed5da719f95ff312549\transformed\jetified-fragment-ktx-1.8.4\res
+com.tenantpro.app-jetified-datastore-core-release-55 C:\Users\owuor\.gradle\caches\8.9\transforms\f689ffce2e61fe25cad4107962c0683c\transformed\jetified-datastore-core-release\res
+com.tenantpro.app-jetified-activity-ktx-1.9.2-56 C:\Users\owuor\.gradle\caches\8.9\transforms\fd40fd30cf6041b906d6e8e10fb1a707\transformed\jetified-activity-ktx-1.9.2\res
+com.tenantpro.app-pngs-57 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\build\generated\res\pngs\debug
+com.tenantpro.app-resValues-58 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\build\generated\res\resValues\debug
+com.tenantpro.app-packageDebugResources-59 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.tenantpro.app-packageDebugResources-60 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.tenantpro.app-debug-61 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\build\intermediates\merged_res\debug\mergeDebugResources
+com.tenantpro.app-debug-62 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\src\debug\res
+com.tenantpro.app-main-63 C:\Users\owuor\Desktop\Tenant Pro\tenant-app\app\src\main\res

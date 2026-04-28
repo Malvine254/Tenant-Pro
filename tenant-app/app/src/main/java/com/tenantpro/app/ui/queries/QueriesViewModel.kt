@@ -1,11 +1,14 @@
 package com.tenantpro.app.ui.queries
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tenantpro.app.data.model.SupportMessageDto
 import com.tenantpro.app.data.repository.TenantFeatureRepository
 import com.tenantpro.app.utils.DataStoreManager
 import com.tenantpro.app.utils.Resource
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -28,7 +31,8 @@ import kotlin.random.Random
 @HiltViewModel
 class QueriesViewModel @Inject constructor(
     private val dataStoreManager: DataStoreManager,
-    private val repository: TenantFeatureRepository
+    private val repository: TenantFeatureRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _messages = MutableStateFlow<List<QueryChatMessage>>(emptyList())
@@ -98,7 +102,7 @@ class QueriesViewModel @Inject constructor(
         }
     }
 
-    fun sendMessage(topic: String, text: String, attachmentUri: String? = null, attachmentName: String? = null) {
+    fun sendMessage(topic: String, text: String, attachmentUri: Uri? = null, attachmentName: String? = null) {
         val message = text.trim()
         if (message.isBlank() && attachmentUri == null) {
             viewModelScope.launch { _events.emit("Message cannot be empty") }
@@ -108,6 +112,24 @@ class QueriesViewModel @Inject constructor(
         viewModelScope.launch {
             _sending.value = true
 
+            // Upload file first to get a server-side path
+            var serverUri: String? = null
+            var serverName: String? = attachmentName
+            if (attachmentUri != null) {
+                when (val upload = repository.uploadSupportFile(attachmentUri, context)) {
+                    is Resource.Success -> {
+                        serverUri = upload.data.attachmentUri
+                        serverName = upload.data.attachmentName
+                    }
+                    is Resource.Error -> {
+                        _events.emit("Upload failed: ${upload.message}")
+                        _sending.value = false
+                        return@launch
+                    }
+                    Resource.Loading -> Unit
+                }
+            }
+
             val outbound = QueryChatMessage(
                 id = generateId(),
                 topic = topic,
@@ -115,15 +137,15 @@ class QueriesViewModel @Inject constructor(
                 isFromTenant = true,
                 timestamp = System.currentTimeMillis(),
                 status = "Sending",
-                attachmentUri = attachmentUri,
-                attachmentName = attachmentName
+                attachmentUri = serverUri,
+                attachmentName = serverName
             )
 
             val updated = (_messages.value + outbound).takeLast(300)
             _messages.value = updated
             persist(updated)
 
-            when (val result = repository.sendSupportMessage(topic, message, attachmentUri, attachmentName)) {
+            when (val result = repository.sendSupportMessage(topic, message, serverUri, serverName)) {
                 is Resource.Success -> {
                     val mapped = result.data.toChatMessages()
                     _messages.value = mapped

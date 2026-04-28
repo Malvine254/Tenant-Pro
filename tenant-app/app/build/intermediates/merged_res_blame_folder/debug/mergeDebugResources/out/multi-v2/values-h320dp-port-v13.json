@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.tenantpro.app-mergeDebugResources-58:/values-h320dp-port-v13/values-h320dp-port-v13.xml",
+            "outputFile": "com.tenantpro.app-mergeDebugResources-59:/values-h320dp-port-v13/values-h320dp-port-v13.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\owuor\\.gradle\\caches\\8.9\\transforms\\8deb9ad54d4cf3d74ca03138bc6918b8\\transformed\\material-1.12.0\\res\\values-h320dp-port-v13\\values-h320dp-port-v13.xml",
+                    "source": "C:\\Users\\owuor\\.gradle\\caches\\8.9\\transforms\\11480405ecfee034c8df31a4fadca73e\\transformed\\material-1.12.0\\res\\values-h320dp-port-v13\\values-h320dp-port-v13.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

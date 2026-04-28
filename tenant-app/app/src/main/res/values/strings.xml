@@ -21,14 +21,14 @@
     <string name="label_my_rental">My Rental</string>
     <string name="label_notifications">Notifications</string>
     <string name="label_maintenance">Maintenance</string>
-    <string name="label_queries">Support Queries</string>
+    <string name="label_queries">Chat</string>
     <string name="label_account_settings">Account Settings</string>
     <string name="label_pay">Pay with M-Pesa</string>
     <string name="label_payment_history">Payment History</string>
 
     <string name="nav_home">Home</string>
     <string name="nav_notifications">Notifications</string>
-    <string name="nav_queries">Queries</string>
+    <string name="nav_queries">Chat</string>
     <string name="nav_account">Account</string>
 
     <!-- Invoices screen -->

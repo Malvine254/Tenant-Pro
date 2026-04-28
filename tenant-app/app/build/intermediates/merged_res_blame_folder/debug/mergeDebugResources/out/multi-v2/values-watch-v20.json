@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.tenantpro.app-mergeDebugResources-58:/values-watch-v20/values-watch-v20.xml",
+            "outputFile": "com.tenantpro.app-mergeDebugResources-59:/values-watch-v20/values-watch-v20.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\owuor\\.gradle\\caches\\8.9\\transforms\\526898ab6fee583d8ebfae813ff1b467\\transformed\\jetified-core-splashscreen-1.0.1\\res\\values-watch-v20\\values-watch-v20.xml",
+                    "source": "C:\\Users\\owuor\\.gradle\\caches\\8.9\\transforms\\15eb4cf95f283c30c7acc05eea8b0cf4\\transformed\\jetified-core-splashscreen-1.0.1\\res\\values-watch-v20\\values-watch-v20.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",
@@ -14,7 +14,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\owuor\\.gradle\\caches\\8.9\\transforms\\77ce94591a719711d15505e4b50d9c69\\transformed\\appcompat-1.7.0\\res\\values-watch-v20\\values-watch-v20.xml",
+                    "source": "C:\\Users\\owuor\\.gradle\\caches\\8.9\\transforms\\79e2c92fcd4dee616527165521dbc7a6\\transformed\\appcompat-1.7.0\\res\\values-watch-v20\\values-watch-v20.xml",
                     "from": {
                         "startLines": "2,5,8",
                         "startColumns": "4,4,4",

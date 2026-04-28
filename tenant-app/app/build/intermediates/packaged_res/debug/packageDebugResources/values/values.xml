@@ -144,7 +144,7 @@
     <string name="label_payment_history">Payment History</string>
     <string name="label_phone">Phone</string>
     <string name="label_phone_value">Phone</string>
-    <string name="label_queries">Support Queries</string>
+    <string name="label_queries">Chat</string>
     <string name="label_receipt">Receipt #</string>
     <string name="label_remaining_balance">Remaining balance</string>
     <string name="label_total">Total</string>
@@ -169,7 +169,7 @@
     <string name="nav_account">Account</string>
     <string name="nav_home">Home</string>
     <string name="nav_notifications">Notifications</string>
-    <string name="nav_queries">Queries</string>
+    <string name="nav_queries">Chat</string>
     <string name="no_invoices">No invoices found.</string>
     <string name="no_payments">No payment records found.</string>
     <string name="notifications_empty">No new notifications right now.</string>

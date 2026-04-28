@@ -18,15 +18,19 @@ import com.tenantpro.app.data.model.RequestOtpRequest
 import com.tenantpro.app.data.model.ResetPasswordRequest
 import com.tenantpro.app.data.model.SupportMessageDto
 import com.tenantpro.app.data.model.SupportMessageRequest
+import com.tenantpro.app.data.model.UploadAttachmentResponse
 import com.tenantpro.app.data.model.UpdateProfileRequest
 import com.tenantpro.app.data.model.UserProfile
 import com.tenantpro.app.data.model.VerifyEmailOtpRequest
 import com.tenantpro.app.data.model.VerifyOtpRequest
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 
 interface ApiService {
@@ -129,6 +133,10 @@ interface ApiService {
 
     @POST("support/messages")
     suspend fun sendSupportMessage(@Body body: SupportMessageRequest): Response<List<SupportMessageDto>>
+
+    @Multipart
+    @POST("support/upload")
+    suspend fun uploadSupportAttachment(@Part file: MultipartBody.Part): Response<UploadAttachmentResponse>
 
     // ──────────────────────────────────────────────────────────────────────────
     // Maintenance

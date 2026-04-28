@@ -10,7 +10,7 @@
         android:title="@string/nav_notifications" />
     <item
         android:id="@+id/queriesFragment"
-        android:icon="@android:drawable/ic_menu_send"
+        android:icon="@drawable/ic_chat"
         android:title="@string/nav_queries" />
     <item
         android:id="@+id/accountSettingsFragment"

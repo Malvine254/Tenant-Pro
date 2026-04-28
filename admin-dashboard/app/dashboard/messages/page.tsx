@@ -46,6 +46,13 @@ type UploadResponse = {
   mimeType: string;
 };
 
+const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp']);
+
+function isImageAttachment(uri: string): boolean {
+  const ext = uri.split('.').pop()?.toLowerCase() ?? '';
+  return IMAGE_EXTENSIONS.has(ext);
+}
+
 export default function MessagesPage() {
   const searchParams = useSearchParams();
   const isDemoMode = searchParams.get('mode') === 'demo';
@@ -449,17 +456,33 @@ export default function MessagesPage() {
                       {message.isFromTenant ? 'Tenant' : 'Management'} • {new Date(message.timestamp).toLocaleString()}
                     </div>
                     <div>{message.message}</div>
-                    {message.attachmentName ? (
-                      <div className="mt-2 text-[11px] opacity-90">
-                        Attachment:{' '}
-                        <a
-                          href={message.attachmentUri?.startsWith('http') ? message.attachmentUri : `${API_BASE_URL.replace('/api', '')}${message.attachmentUri ?? ''}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="underline"
-                        >
-                          {message.attachmentName}
-                        </a>
+                    {message.attachmentUri ? (
+                      <div className="mt-2">
+                        {isImageAttachment(message.attachmentUri) ? (
+                          <a
+                            href={message.attachmentUri.startsWith('http') ? message.attachmentUri : `${API_BASE_URL.replace('/api', '')}${message.attachmentUri}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <img
+                              src={message.attachmentUri.startsWith('http') ? message.attachmentUri : `${API_BASE_URL.replace('/api', '')}${message.attachmentUri}`}
+                              alt={message.attachmentName ?? 'Attachment'}
+                              className="max-h-48 max-w-full rounded-lg object-cover"
+                            />
+                          </a>
+                        ) : (
+                          <div className="text-[11px] opacity-90">
+                            Attachment:{' '}
+                            <a
+                              href={message.attachmentUri.startsWith('http') ? message.attachmentUri : `${API_BASE_URL.replace('/api', '')}${message.attachmentUri}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="underline"
+                            >
+                              {message.attachmentName ?? message.attachmentUri}
+                            </a>
+                          </div>
+                        )}
                       </div>
                     ) : null}
                   </div>

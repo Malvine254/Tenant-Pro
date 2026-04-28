@@ -4,6 +4,7 @@ package com.tenantpro.app.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -18,6 +19,9 @@ import java.lang.String;
 public final class ItemQueryChatOutgoingBinding implements ViewBinding {
   @NonNull
   private final LinearLayout rootView;
+
+  @NonNull
+  public final ImageView ivAttachmentImage;
 
   @NonNull
   public final LinearLayout layoutAttachment;
@@ -35,9 +39,11 @@ public final class ItemQueryChatOutgoingBinding implements ViewBinding {
   public final TextView tvTopic;
 
   private ItemQueryChatOutgoingBinding(@NonNull LinearLayout rootView,
-      @NonNull LinearLayout layoutAttachment, @NonNull TextView tvAttachmentName,
-      @NonNull TextView tvMessage, @NonNull TextView tvMeta, @NonNull TextView tvTopic) {
+      @NonNull ImageView ivAttachmentImage, @NonNull LinearLayout layoutAttachment,
+      @NonNull TextView tvAttachmentName, @NonNull TextView tvMessage, @NonNull TextView tvMeta,
+      @NonNull TextView tvTopic) {
     this.rootView = rootView;
+    this.ivAttachmentImage = ivAttachmentImage;
     this.layoutAttachment = layoutAttachment;
     this.tvAttachmentName = tvAttachmentName;
     this.tvMessage = tvMessage;
@@ -72,6 +78,12 @@ public final class ItemQueryChatOutgoingBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.ivAttachmentImage;
+      ImageView ivAttachmentImage = ViewBindings.findChildViewById(rootView, id);
+      if (ivAttachmentImage == null) {
+        break missingId;
+      }
+
       id = R.id.layoutAttachment;
       LinearLayout layoutAttachment = ViewBindings.findChildViewById(rootView, id);
       if (layoutAttachment == null) {
@@ -102,8 +114,8 @@ public final class ItemQueryChatOutgoingBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ItemQueryChatOutgoingBinding((LinearLayout) rootView, layoutAttachment,
-          tvAttachmentName, tvMessage, tvMeta, tvTopic);
+      return new ItemQueryChatOutgoingBinding((LinearLayout) rootView, ivAttachmentImage,
+          layoutAttachment, tvAttachmentName, tvMessage, tvMeta, tvTopic);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

@@ -103,7 +103,7 @@ model User {
   isActive             Boolean              @default(true)
   roleId               String
   role                 Role                 @relation(fields: [roleId], references: [id])
-  tenantProfile        Tenant?
+  tenantProfiles       Tenant[]
   ownedProperties      Property[]           @relation("LandlordProperties")
   invitationsSent      Invitation[]         @relation("InvitationSender")
   tenantInvoices       Invoice[]            @relation("UserInvoices")
@@ -163,7 +163,7 @@ model Unit {
 
 model Tenant {
   id                  String               @id @default(uuid())
-  userId              String               @unique
+  userId              String
   unitId              String
   moveInDate          DateTime             @default(now())
   moveOutDate         DateTime?
@@ -176,6 +176,8 @@ model Tenant {
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
 
+  @@unique([userId, unitId])
+  @@index([userId, isActive])
   @@index([unitId, isActive])
   @@map("tenants")
 }

@@ -1,106 +1,94 @@
 [
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\item_maintenance_request.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\item_maintenance_request.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/item_maintenance_request.xml",
+        "source": "com.tenantpro.app-main-63:/layout/item_maintenance_request.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\fragment_queries.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\fragment_queries.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/item_notification.xml",
+        "source": "com.tenantpro.app-main-63:/layout/item_notification.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\fragment_payment.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\fragment_payment.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/fragment_payment_history.xml",
+        "source": "com.tenantpro.app-main-63:/layout/fragment_payment_history.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\fragment_forgot_password.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\fragment_forgot_password.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/item_payment_history.xml",
+        "source": "com.tenantpro.app-main-63:/layout/item_payment_history.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\item_query_chat_outgoing.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\item_query_chat_outgoing.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/fragment_login.xml",
+        "source": "com.tenantpro.app-main-63:/layout/fragment_login.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\fragment_home.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\fragment_home.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/item_query_chat_outgoing.xml",
+        "source": "com.tenantpro.app-main-63:/layout/item_query_chat_outgoing.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\item_payment_history.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\item_payment_history.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/fragment_forgot_password.xml",
+        "source": "com.tenantpro.app-main-63:/layout/fragment_forgot_password.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\drawer_header.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\drawer_header.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/fragment_notifications.xml",
+        "source": "com.tenantpro.app-main-63:/layout/fragment_notifications.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\fragment_notifications.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\fragment_notifications.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/fragment_otp.xml",
+        "source": "com.tenantpro.app-main-63:/layout/fragment_otp.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\fragment_invoices.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\fragment_invoices.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/item_query_chat_incoming.xml",
+        "source": "com.tenantpro.app-main-63:/layout/item_query_chat_incoming.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\fragment_register.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\fragment_register.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/fragment_invoices.xml",
+        "source": "com.tenantpro.app-main-63:/layout/fragment_invoices.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\fragment_payment_history.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\fragment_payment_history.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/fragment_payment.xml",
+        "source": "com.tenantpro.app-main-63:/layout/fragment_payment.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\fragment_maintenance.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\fragment_maintenance.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/item_invoice.xml",
+        "source": "com.tenantpro.app-main-63:/layout/item_invoice.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\item_query_chat_incoming.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\item_query_chat_incoming.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/item_rental_unit.xml",
+        "source": "com.tenantpro.app-main-63:/layout/item_rental_unit.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\fragment_login.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\fragment_login.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/fragment_queries.xml",
+        "source": "com.tenantpro.app-main-63:/layout/fragment_queries.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\item_notification.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\item_notification.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/fragment_register.xml",
+        "source": "com.tenantpro.app-main-63:/layout/fragment_register.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\item_invoice.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\item_invoice.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/drawer_header.xml",
+        "source": "com.tenantpro.app-main-63:/layout/drawer_header.xml"
     },
     {
-        "merged": "com.tenantpro.app-mergeDebugResources-59:/layout/fragment_payment.xml",
-        "source": "com.tenantpro.app-main-62:/layout/fragment_payment.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/fragment_home.xml",
+        "source": "com.tenantpro.app-main-63:/layout/fragment_home.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\fragment_rental_info.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\fragment_rental_info.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/item_recent_invoice.xml",
+        "source": "com.tenantpro.app-main-63:/layout/item_recent_invoice.xml"
     },
     {
-        "merged": "com.tenantpro.app-mergeDebugResources-59:/layout/fragment_invoices.xml",
-        "source": "com.tenantpro.app-main-62:/layout/fragment_invoices.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/activity_main.xml",
+        "source": "com.tenantpro.app-main-63:/layout/activity_main.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\fragment_otp.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\fragment_otp.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/fragment_account_settings.xml",
+        "source": "com.tenantpro.app-main-63:/layout/fragment_account_settings.xml"
     },
     {
-        "merged": "com.tenantpro.app-mergeDebugResources-59:/layout/fragment_maintenance.xml",
-        "source": "com.tenantpro.app-main-62:/layout/fragment_maintenance.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/fragment_maintenance.xml",
+        "source": "com.tenantpro.app-main-63:/layout/fragment_maintenance.xml"
     },
     {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\item_recent_invoice.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\item_recent_invoice.xml"
-    },
-    {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\fragment_account_settings.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\fragment_account_settings.xml"
-    },
-    {
-        "merged": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-mergeDebugResources-59:\\layout\\activity_main.xml",
-        "source": "C:\\Users\\owuor\\.gradle\\daemon\\8.9\\com.tenantpro.app-main-62:\\layout\\activity_main.xml"
-    },
-    {
-        "merged": "com.tenantpro.app-mergeDebugResources-59:/layout/fragment_home.xml",
-        "source": "com.tenantpro.app-main-62:/layout/fragment_home.xml"
+        "merged": "com.tenantpro.app-mergeDebugResources-60:/layout/fragment_rental_info.xml",
+        "source": "com.tenantpro.app-main-63:/layout/fragment_rental_info.xml"
     }
 ]

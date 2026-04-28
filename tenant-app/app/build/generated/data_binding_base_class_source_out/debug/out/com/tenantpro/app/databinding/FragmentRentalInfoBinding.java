@@ -4,6 +4,7 @@ package com.tenantpro.app.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -32,6 +33,12 @@ public final class FragmentRentalInfoBinding implements ViewBinding {
   public final TextInputEditText etRentalInvitationCode;
 
   @NonNull
+  public final LinearLayout llRentalEmpty;
+
+  @NonNull
+  public final LinearLayout llRentalUnits;
+
+  @NonNull
   public final LinearProgressIndicator progressRental;
 
   @NonNull
@@ -43,42 +50,22 @@ public final class FragmentRentalInfoBinding implements ViewBinding {
   @NonNull
   public final TextView tvPendingValue;
 
-  @NonNull
-  public final TextView tvRentalAddress;
-
-  @NonNull
-  public final TextView tvRentalDueDate;
-
-  @NonNull
-  public final TextView tvRentalMoveIn;
-
-  @NonNull
-  public final TextView tvRentalProperty;
-
-  @NonNull
-  public final TextView tvRentalUnit;
-
   private FragmentRentalInfoBinding(@NonNull CoordinatorLayout rootView,
       @NonNull MaterialButton btnLinkRental, @NonNull MaterialButton btnRefreshRental,
-      @NonNull TextInputEditText etRentalInvitationCode,
-      @NonNull LinearProgressIndicator progressRental, @NonNull TextView tvOutstandingValue,
-      @NonNull TextView tvOverdueValue, @NonNull TextView tvPendingValue,
-      @NonNull TextView tvRentalAddress, @NonNull TextView tvRentalDueDate,
-      @NonNull TextView tvRentalMoveIn, @NonNull TextView tvRentalProperty,
-      @NonNull TextView tvRentalUnit) {
+      @NonNull TextInputEditText etRentalInvitationCode, @NonNull LinearLayout llRentalEmpty,
+      @NonNull LinearLayout llRentalUnits, @NonNull LinearProgressIndicator progressRental,
+      @NonNull TextView tvOutstandingValue, @NonNull TextView tvOverdueValue,
+      @NonNull TextView tvPendingValue) {
     this.rootView = rootView;
     this.btnLinkRental = btnLinkRental;
     this.btnRefreshRental = btnRefreshRental;
     this.etRentalInvitationCode = etRentalInvitationCode;
+    this.llRentalEmpty = llRentalEmpty;
+    this.llRentalUnits = llRentalUnits;
     this.progressRental = progressRental;
     this.tvOutstandingValue = tvOutstandingValue;
     this.tvOverdueValue = tvOverdueValue;
     this.tvPendingValue = tvPendingValue;
-    this.tvRentalAddress = tvRentalAddress;
-    this.tvRentalDueDate = tvRentalDueDate;
-    this.tvRentalMoveIn = tvRentalMoveIn;
-    this.tvRentalProperty = tvRentalProperty;
-    this.tvRentalUnit = tvRentalUnit;
   }
 
   @Override
@@ -126,6 +113,18 @@ public final class FragmentRentalInfoBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.llRentalEmpty;
+      LinearLayout llRentalEmpty = ViewBindings.findChildViewById(rootView, id);
+      if (llRentalEmpty == null) {
+        break missingId;
+      }
+
+      id = R.id.llRentalUnits;
+      LinearLayout llRentalUnits = ViewBindings.findChildViewById(rootView, id);
+      if (llRentalUnits == null) {
+        break missingId;
+      }
+
       id = R.id.progressRental;
       LinearProgressIndicator progressRental = ViewBindings.findChildViewById(rootView, id);
       if (progressRental == null) {
@@ -150,40 +149,9 @@ public final class FragmentRentalInfoBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.tvRentalAddress;
-      TextView tvRentalAddress = ViewBindings.findChildViewById(rootView, id);
-      if (tvRentalAddress == null) {
-        break missingId;
-      }
-
-      id = R.id.tvRentalDueDate;
-      TextView tvRentalDueDate = ViewBindings.findChildViewById(rootView, id);
-      if (tvRentalDueDate == null) {
-        break missingId;
-      }
-
-      id = R.id.tvRentalMoveIn;
-      TextView tvRentalMoveIn = ViewBindings.findChildViewById(rootView, id);
-      if (tvRentalMoveIn == null) {
-        break missingId;
-      }
-
-      id = R.id.tvRentalProperty;
-      TextView tvRentalProperty = ViewBindings.findChildViewById(rootView, id);
-      if (tvRentalProperty == null) {
-        break missingId;
-      }
-
-      id = R.id.tvRentalUnit;
-      TextView tvRentalUnit = ViewBindings.findChildViewById(rootView, id);
-      if (tvRentalUnit == null) {
-        break missingId;
-      }
-
       return new FragmentRentalInfoBinding((CoordinatorLayout) rootView, btnLinkRental,
-          btnRefreshRental, etRentalInvitationCode, progressRental, tvOutstandingValue,
-          tvOverdueValue, tvPendingValue, tvRentalAddress, tvRentalDueDate, tvRentalMoveIn,
-          tvRentalProperty, tvRentalUnit);
+          btnRefreshRental, etRentalInvitationCode, llRentalEmpty, llRentalUnits, progressRental,
+          tvOutstandingValue, tvOverdueValue, tvPendingValue);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

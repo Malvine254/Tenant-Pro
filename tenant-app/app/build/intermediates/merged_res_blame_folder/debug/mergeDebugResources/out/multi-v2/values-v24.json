@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.tenantpro.app-mergeDebugResources-58:/values-v24/values-v24.xml",
+            "outputFile": "com.tenantpro.app-mergeDebugResources-59:/values-v24/values-v24.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\owuor\\.gradle\\caches\\8.9\\transforms\\77ce94591a719711d15505e4b50d9c69\\transformed\\appcompat-1.7.0\\res\\values-v24\\values-v24.xml",
+                    "source": "C:\\Users\\owuor\\.gradle\\caches\\8.9\\transforms\\79e2c92fcd4dee616527165521dbc7a6\\transformed\\appcompat-1.7.0\\res\\values-v24\\values-v24.xml",
                     "from": {
                         "startLines": "2,3",
                         "startColumns": "4,4",
@@ -14,7 +14,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\owuor\\.gradle\\caches\\8.9\\transforms\\8deb9ad54d4cf3d74ca03138bc6918b8\\transformed\\material-1.12.0\\res\\values-v24\\values-v24.xml",
+                    "source": "C:\\Users\\owuor\\.gradle\\caches\\8.9\\transforms\\11480405ecfee034c8df31a4fadca73e\\transformed\\material-1.12.0\\res\\values-v24\\values-v24.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,9,12,15",
                         "startColumns": "4,4,4,4,4,4,4,4",

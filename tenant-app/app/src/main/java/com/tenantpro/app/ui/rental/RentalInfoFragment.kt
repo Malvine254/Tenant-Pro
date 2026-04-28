@@ -9,8 +9,11 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.textview.MaterialTextView
+import com.tenantpro.app.R
 import com.tenantpro.app.databinding.FragmentRentalInfoBinding
-import com.tenantpro.app.utils.toast
+import com.tenantpro.app.utils.showErrorSnackbar
+import com.tenantpro.app.utils.showSuccessSnackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -33,9 +36,7 @@ class RentalInfoFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnRefreshRental.setOnClickListener {
-            viewModel.refreshRentalInfo()
-        }
+        binding.btnRefreshRental.setOnClickListener { viewModel.refreshRentalInfo() }
 
         binding.btnLinkRental.setOnClickListener {
             val code = binding.etRentalInvitationCode.text?.toString().orEmpty()
@@ -47,21 +48,51 @@ class RentalInfoFragment : Fragment() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.uiState.collect { state ->
-                        binding.progressRental.visibility = if (state.loading) View.VISIBLE else View.GONE
-                        binding.tvRentalProperty.text = state.apartment.propertyName
-                        binding.tvRentalUnit.text = state.apartment.unitName
-                        binding.tvRentalMoveIn.text = state.apartment.moveInDate
-                        binding.tvRentalDueDate.text = state.apartment.nextDueDate
-                        binding.tvRentalAddress.text = state.apartment.addressText
-                        binding.tvOutstandingValue.text = state.apartment.outstandingText
-                        binding.tvPendingValue.text = state.apartment.pendingCount.toString()
-                        binding.tvOverdueValue.text = state.apartment.overdueCount.toString()
+                        binding.progressRental.visibility =
+                            if (state.loading) View.VISIBLE else View.GONE
+                        binding.tvOutstandingValue.text = state.outstandingText
+                        binding.tvPendingValue.text = state.pendingCount.toString()
+                        binding.tvOverdueValue.text = state.overdueCount.toString()
+                        bindUnits(state.units)
                     }
                 }
                 launch {
-                    viewModel.events.collect { toast(it) }
+                    viewModel.events.collect { msg ->
+                        if (msg.contains("success", ignoreCase = true) ||
+                            msg.contains("accepted", ignoreCase = true)
+                        ) {
+                            showSuccessSnackbar(msg)
+                        } else {
+                            showErrorSnackbar(msg)
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    private fun bindUnits(units: List<RentalUnitItem>) {
+        binding.llRentalUnits.removeAllViews()
+
+        if (units.isEmpty()) {
+            binding.llRentalEmpty.visibility = View.VISIBLE
+            return
+        }
+
+        binding.llRentalEmpty.visibility = View.GONE
+        units.forEach { item ->
+            val card = layoutInflater.inflate(
+                R.layout.item_rental_unit,
+                binding.llRentalUnits,
+                false
+            )
+            card.findViewById<MaterialTextView>(R.id.tvUnitPropertyName).text = item.propertyName
+            card.findViewById<MaterialTextView>(R.id.tvUnitNumber).text = "Unit ${item.unitNumber}"
+            card.findViewById<MaterialTextView>(R.id.tvUnitFloor).text = item.floor ?: "—"
+            card.findViewById<MaterialTextView>(R.id.tvUnitRent).text = item.rentAmountText ?: "—"
+            card.findViewById<MaterialTextView>(R.id.tvUnitMoveIn).text = item.moveInDate
+            card.findViewById<MaterialTextView>(R.id.tvUnitAddress).text = item.address
+            binding.llRentalUnits.addView(card)
         }
     }
 

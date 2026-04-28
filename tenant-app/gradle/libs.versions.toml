@@ -23,6 +23,7 @@ swiperefreshlayout = "1.1.0"
 junit = "4.13.2"
 androidxJunit = "1.2.1"
 espresso = "3.6.1"
+glide = "4.16.0"
 
 [libraries]
 # AndroidX core
@@ -70,6 +71,9 @@ mpandroidchart = { group = "com.github.PhilJay", name = "MPAndroidChart", versio
 androidx-room-runtime  = { group = "androidx.room", name = "room-runtime",  version.ref = "room" }
 androidx-room-ktx      = { group = "androidx.room", name = "room-ktx",      version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+
+# Glide
+glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

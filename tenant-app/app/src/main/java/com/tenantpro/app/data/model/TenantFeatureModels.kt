@@ -38,6 +38,12 @@ data class SupportMessageRequest(
     @SerializedName("attachmentName") val attachmentName: String? = null
 )
 
+data class UploadAttachmentResponse(
+    @SerializedName("attachmentUri") val attachmentUri: String,
+    @SerializedName("attachmentName") val attachmentName: String,
+    @SerializedName("fileName") val fileName: String? = null
+)
+
 data class SupportMessageDto(
     @SerializedName("id") val id: String,
     @SerializedName("topic") val topic: String,

@@ -118,7 +118,7 @@ class QueriesFragment : Fragment() {
         viewModel.sendMessage(
             topic = topic.ifBlank { "General" },
             text = message,
-            attachmentUri = pendingAttachmentUri?.toString(),
+            attachmentUri = pendingAttachmentUri,
             attachmentName = pendingAttachmentName
         )
         binding.etQueryMessage.text?.clear()

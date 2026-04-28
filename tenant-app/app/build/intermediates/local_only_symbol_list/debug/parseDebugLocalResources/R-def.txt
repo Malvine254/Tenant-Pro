@@ -65,6 +65,7 @@ drawable ic_account_circle
 drawable ic_account_settings
 drawable ic_arrow_back
 drawable ic_attachment
+drawable ic_chat
 drawable ic_close_small
 drawable ic_download
 drawable ic_file
@@ -153,6 +154,7 @@ id etSearch
 id forgotPasswordFragment
 id homeFragment
 id invoicesFragment
+id ivAttachmentImage
 id ivProfile
 id layoutAttachment
 id layoutAttachmentPreview
@@ -162,6 +164,8 @@ id lineChart
 id llMaintenanceItems
 id llNotificationItems
 id llRecentInvoices
+id llRentalEmpty
+id llRentalUnits
 id loginFragment
 id logoutItem
 id main_group
@@ -257,15 +261,17 @@ id tvPropertyValue
 id tvReceipt
 id tvRegisterLink
 id tvRemainingAmount
-id tvRentalAddress
-id tvRentalDueDate
-id tvRentalMoveIn
-id tvRentalProperty
-id tvRentalUnit
 id tvRowNumber
 id tvSimulationHint
 id tvStatus
 id tvTopic
+id tvUnitActiveBadge
+id tvUnitAddress
+id tvUnitFloor
+id tvUnitMoveIn
+id tvUnitNumber
+id tvUnitPropertyName
+id tvUnitRent
 id tvUnitValue
 id tvUserName
 id tvViewAll
@@ -296,6 +302,7 @@ layout item_payment_history
 layout item_query_chat_incoming
 layout item_query_chat_outgoing
 layout item_recent_invoice
+layout item_rental_unit
 menu bottom_nav_menu
 menu drawer_menu
 mipmap ic_launcher

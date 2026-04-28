@@ -29,7 +29,7 @@
 
         <item
             android:id="@+id/queriesFragment"
-            android:icon="@drawable/ic_help"
+            android:icon="@drawable/ic_chat"
             android:title="@string/label_queries" />
 
         <item

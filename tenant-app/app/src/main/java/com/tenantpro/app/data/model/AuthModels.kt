@@ -65,6 +65,7 @@ data class UserProfile(
     @SerializedName("emergencyContactPhone") val emergencyContactPhone: String? = null,
     @SerializedName("bio") val bio: String? = null,
     @SerializedName("tenantProfile") val tenantProfile: TenantTenancyProfile? = null,
+    @SerializedName("tenantProfiles") val tenantProfiles: List<TenantTenancyProfile> = emptyList(),
     @SerializedName("role") val role: String
 )
 

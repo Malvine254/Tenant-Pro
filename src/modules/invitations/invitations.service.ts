@@ -6,11 +6,13 @@ import {
 } from '@nestjs/common';
 import {
   InvitationStatus,
+  NotificationType,
   RoleName,
   UnitStatus,
 } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import { EmailService } from '../email/email.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
@@ -20,6 +22,7 @@ export class InvitationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private async generateUniqueCode() {
@@ -83,6 +86,21 @@ export class InvitationsService {
       );
     }
 
+    // Notify the tenant in-app if their account exists
+    const tenantUser = await this.prisma.user.findUnique({
+      where: { phoneNumber: dto.phoneNumber },
+      select: { id: true },
+    });
+    if (tenantUser) {
+      void this.notificationsService.createNotification(
+        tenantUser.id,
+        NotificationType.GENERAL,
+        'Room invitation',
+        `You have been invited to ${unit.unitName} at ${property.name}. Use code ${code} to accept.`,
+        { invitationId: invitation.id, code, propertyId: dto.propertyId, unitId: dto.unitId },
+      );
+    }
+
     return invitation;
   }
 
@@ -132,29 +150,40 @@ export class InvitationsService {
       where: {
         unitId: invitation.unitId,
         isActive: true,
+        NOT: { userId: user.id },
       },
     });
 
     if (activeTenantOnUnit) {
-      throw new BadRequestException('This unit is already occupied by an active tenant');
+      throw new BadRequestException('This unit is already occupied by another active tenant');
     }
 
     const result = await this.prisma.$transaction(async (tx) => {
-      const tenant = await tx.tenant.upsert({
-        where: { userId: user.id },
-        update: {
-          unitId: invitation.unitId,
-          isActive: true,
-          moveInDate: new Date(),
-          moveOutDate: null,
-        },
-        create: {
-          userId: user.id,
-          unitId: invitation.unitId,
-          isActive: true,
-          moveInDate: new Date(),
-        },
+      // Check if user already has a (possibly inactive) record for this exact unit
+      const existingRecord = await tx.tenant.findUnique({
+        where: { userId_unitId: { userId: user.id, unitId: invitation.unitId } },
       });
+
+      let tenant;
+      if (existingRecord) {
+        if (existingRecord.isActive) {
+          throw new BadRequestException('You are already assigned to this unit');
+        }
+        // Reactivate (tenant moved back in)
+        tenant = await tx.tenant.update({
+          where: { id: existingRecord.id },
+          data: { isActive: true, moveInDate: new Date(), moveOutDate: null },
+        });
+      } else {
+        tenant = await tx.tenant.create({
+          data: {
+            userId: user.id,
+            unitId: invitation.unitId,
+            isActive: true,
+            moveInDate: new Date(),
+          },
+        });
+      }
 
       await tx.unit.update({
         where: { id: invitation.unitId },

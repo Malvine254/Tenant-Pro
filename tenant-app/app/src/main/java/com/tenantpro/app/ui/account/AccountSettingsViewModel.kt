@@ -92,7 +92,9 @@ class AccountSettingsViewModel @Inject constructor(
             when (val result = authRepository.getMyProfile()) {
                 is Resource.Success -> {
                     val profile = result.data
-                    val tenancy = profile.tenantProfile
+                    // Use first active tenancy from list, or fall back to singular profile
+                    val tenancy = profile.tenantProfiles.firstOrNull { it.isActive }
+                        ?: profile.tenantProfile
                     val currentInfo = _apartmentInfo.value
                     val resolvedAddress = listOfNotNull(
                         tenancy?.unit?.property?.addressLine,
