@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 // Send the app subdomain straight to the Laravel admin area.
 Route::redirect('/', '/admin');
+Route::redirect('/login', '/admin/login')->name('login');
 Route::get('/home', [SiteController::class, 'home'])->name('site.home');
 Route::get('/about', [SiteController::class, 'about']);
 Route::get('/services', [SiteController::class, 'services']);
