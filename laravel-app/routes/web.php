@@ -24,11 +24,7 @@ Route::post('/deployment-tools-once/run', [DeploymentToolsController::class, 'ru
 
 // Admin auth routes
 Route::prefix('admin')->name('admin.')->group(function () {
-	Route::get('/', function () {
-		return auth()->check()
-			? redirect()->route('admin.dashboard')
-			: redirect()->route('admin.login');
-	})->name('home');
+	Route::redirect('/', '/admin/login')->name('home');
 
 	Route::get('/login', [AuthAdminController::class, 'showLogin'])->name('login');
 	Route::post('/login', [AuthAdminController::class, 'login'])->name('login.post');
