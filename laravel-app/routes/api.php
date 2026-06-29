@@ -14,6 +14,17 @@ use App\Http\Controllers\UnitController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
+Route::get('/', fn () => response()->json([
+	'status' => 'ok',
+	'service' => 'tenantpro-api',
+]));
+
+Route::get('/health', fn () => response()->json([
+	'status' => 'ok',
+	'service' => 'tenantpro-api',
+	'timestamp' => now()->toISOString(),
+]));
+
 // Public auth routes
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
