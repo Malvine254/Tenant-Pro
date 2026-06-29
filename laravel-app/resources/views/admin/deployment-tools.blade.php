@@ -4,6 +4,12 @@
 @section('content')
 <div class="page-title">Deployment Tools</div>
 
+@if(!empty($isPublicTestingTool))
+    <div class="alert-error">
+        Testing mode: no admin login is required, but a valid DEPLOYMENT_TOOL_TOKEN is required before commands run.
+    </div>
+@endif
+
 <div class="card" style="margin-bottom:16px;">
     <h3 style="margin-bottom:10px;">Server Status</h3>
     <table>
@@ -23,9 +29,9 @@
 
 <div class="card" style="margin-bottom:16px;">
     <h3 style="margin-bottom:10px;">Run Operation</h3>
-    <p style="font-size:13px;color:#64748b;margin-bottom:14px;">Use this when GoDaddy terminal access is unavailable. Leave DEPLOYMENT_TOOL_TOKEN empty in .env if you do not want an extra token during testing.</p>
+    <p style="font-size:13px;color:#64748b;margin-bottom:14px;">Use this when GoDaddy terminal access is unavailable.</p>
 
-    <form method="POST" action="{{ route('admin.deployment-tools.run') }}">
+    <form method="POST" action="{{ $formAction ?? route('admin.deployment-tools.run') }}">
         @csrf
 
         @if($toolTokenRequired)
@@ -53,7 +59,7 @@
 
 <div class="card" style="margin-bottom:16px;">
     <h3 style="margin-bottom:10px;">Quick Run Buttons</h3>
-    <form method="POST" action="{{ route('admin.deployment-tools.run') }}">
+    <form method="POST" action="{{ $formAction ?? route('admin.deployment-tools.run') }}">
         @csrf
 
         @if($toolTokenRequired)

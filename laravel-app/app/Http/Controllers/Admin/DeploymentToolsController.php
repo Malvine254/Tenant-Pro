@@ -66,6 +66,20 @@ class DeploymentToolsController extends Controller
             'availableActions' => $this->availableActions(),
             'commandHints' => $this->commandHints(),
             'toolTokenRequired' => !empty((string) env('DEPLOYMENT_TOOL_TOKEN')),
+            'formAction' => route('admin.deployment-tools.run'),
+            'isPublicTestingTool' => false,
+        ]);
+    }
+
+    public function publicIndex(): View
+    {
+        return view('admin.deployment-tools', [
+            'status' => $this->statusSnapshot(),
+            'availableActions' => $this->publicAvailableActions(),
+            'commandHints' => $this->commandHints(),
+            'toolTokenRequired' => true,
+            'formAction' => route('deployment-tools.testing.run'),
+            'isPublicTestingTool' => true,
         ]);
     }
 
@@ -92,6 +106,42 @@ class DeploymentToolsController extends Controller
         try {
             $output = $this->executeAction($action);
             $message = $this->availableActions()[$action] . ' completed successfully.';
+
+            return back()
+                ->with('success', $message)
+                ->with('command_output', $output);
+        } catch (\Throwable $e) {
+            return back()
+                ->with('error', 'Action failed: ' . $e->getMessage());
+        }
+    }
+
+    public function publicRun(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'action' => 'required|string',
+            'tool_token' => 'required|string',
+        ]);
+
+        $expectedToken = (string) env('DEPLOYMENT_TOOL_TOKEN', '');
+        if ($expectedToken === '') {
+            return back()->with('error', 'DEPLOYMENT_TOOL_TOKEN is not configured in .env.');
+        }
+
+        if (!hash_equals($expectedToken, (string) $request->input('tool_token', ''))) {
+            return back()->with('error', 'Invalid deployment tool token.');
+        }
+
+        $action = (string) $request->input('action');
+        $availableActions = $this->publicAvailableActions();
+
+        if (!array_key_exists($action, $availableActions)) {
+            return back()->with('error', 'Unsupported action requested from testing tools.');
+        }
+
+        try {
+            $output = $this->executeAction($action);
+            $message = $availableActions[$action] . ' completed successfully.';
 
             return back()
                 ->with('success', $message)
@@ -160,6 +210,24 @@ class DeploymentToolsController extends Controller
             'migrate_force' => 'Run migrations (--force)',
             'migrate_rollback' => 'Rollback last migration batch',
             'migrate_fresh_seed' => 'Fresh database + seed (deletes tables)',
+            'seed_force' => 'Run database seeders (--force)',
+            'generate_key' => 'Generate app key',
+            'ensure_vendor' => 'Ensure vendor folder exists',
+        ];
+    }
+
+    private function publicAvailableActions(): array
+    {
+        return [
+            'full_deploy' => 'Full deployment sequence',
+            'clear_cache' => 'Clear all caches',
+            'optimize_cache' => 'Optimize/cache app',
+            'cache_config' => 'Rebuild config cache',
+            'cache_routes' => 'Rebuild route cache',
+            'cache_views' => 'Rebuild compiled views',
+            'storage_link' => 'Create storage symlink',
+            'migrate_status' => 'Show migration status',
+            'migrate_force' => 'Run migrations (--force)',
             'seed_force' => 'Run database seeders (--force)',
             'generate_key' => 'Generate app key',
             'ensure_vendor' => 'Ensure vendor folder exists',

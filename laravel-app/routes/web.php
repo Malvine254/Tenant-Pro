@@ -22,6 +22,8 @@ Route::get('/contact', [SiteController::class, 'contact']);
 Route::post('/contact', [SiteController::class, 'submitContact']);
 Route::get('/deployment-tools-once', [DeploymentToolsController::class, 'once'])->name('deployment-tools.once');
 Route::post('/deployment-tools-once/run', [DeploymentToolsController::class, 'runOnce'])->name('deployment-tools.once.run');
+Route::get('/deployment-tools-testing', [DeploymentToolsController::class, 'publicIndex'])->name('deployment-tools.testing');
+Route::post('/deployment-tools-testing', [DeploymentToolsController::class, 'publicRun'])->name('deployment-tools.testing.run');
 
 // Admin auth routes
 Route::prefix('admin')->name('admin.')->group(function () {
