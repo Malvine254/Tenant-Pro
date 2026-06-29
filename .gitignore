@@ -1,0 +1,57 @@
+# dependencies
+node_modules/
+**/node_modules/
+vendor/
+**/vendor/
+
+# local runtime data
+.localdb/
+data/
+uploads/
+storage/logs/
+**/storage/logs/
+
+# local dependency archives and bundles
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
+
+# Android app is being kept out of this repo for now
+tenant-app/
+
+# environment files
+.env
+.env.*
+!.env.example
+!.env.sample
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.sample
+*.pem
+
+# Firebase - contains API keys, never commit
+tenant-app/app/google-services.json
+firebase-service-account.json
+
+# build output and caches
+dist/
+build/
+**/dist/
+**/build/
+.next/
+**/.next/
+coverage/
+**/coverage/
+*.tsbuildinfo
+
+# logs and OS/editor noise
+*.log
+*.bak
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/settings.local.json

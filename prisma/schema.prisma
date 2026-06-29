@@ -1,0 +1,361 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleName {
+  LANDLORD
+  TENANT
+  ADMIN
+  CARETAKER
+}
+
+enum UnitStatus {
+  VACANT
+  OCCUPIED
+  MAINTENANCE
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum BillingType {
+  RENT
+  WATER
+  GARBAGE
+  OTHER
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentStatus {
+  INITIATED
+  PENDING
+  SUCCESS
+  FAILED
+  REVERSED
+}
+
+enum TransactionType {
+  STK_PUSH
+  CALLBACK
+  VALIDATION
+}
+
+enum MaintenanceStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum MaintenancePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum NotificationType {
+  GENERAL
+  INVOICE
+  PAYMENT
+  MAINTENANCE
+  MESSAGE
+  PROFILE
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        RoleName @unique
+  description String?
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model User {
+  id                   String               @id @default(uuid())
+  phoneNumber          String               @unique
+  email                String?              @unique
+  passwordHash         String?
+  firstName            String?
+  lastName             String?
+  profileImageUrl      String?
+  emergencyContactName String?
+  emergencyContactPhone String?
+  bio                  String?              @db.Text
+  fcmToken             String?
+  isActive             Boolean              @default(true)
+  roleId               String
+  role                 Role                 @relation(fields: [roleId], references: [id])
+  tenantProfiles       Tenant[]
+  ownedProperties      Property[]           @relation("LandlordProperties")
+  invitationsSent      Invitation[]         @relation("InvitationSender")
+  tenantInvoices       Invoice[]            @relation("UserInvoices")
+  userPayments         Payment[]            @relation("UserPayments")
+  submittedMaintenance MaintenanceRequest[] @relation("RequesterMaintenance")
+  assignedMaintenance  MaintenanceRequest[] @relation("AssigneeMaintenance")
+  notifications        Notification[]
+  supportConversations SupportConversation[] @relation("TenantSupportConversations")
+  supportMessages      SupportMessage[]      @relation("SupportMessageSender")
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  @@index([roleId])
+  @@map("users")
+}
+
+model Property {
+  id          String       @id @default(uuid())
+  landlordId  String
+  name        String
+  description String?
+  coverImageUrl String?
+  addressLine String
+  city        String
+  state       String?
+  country     String
+  landlord    User         @relation("LandlordProperties", fields: [landlordId], references: [id])
+  units       Unit[]
+  invitations Invitation[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([landlordId])
+  @@map("properties")
+}
+
+model Unit {
+  id                  String               @id @default(uuid())
+  propertyId          String
+  unitNumber          String
+  floor               String?
+  rentAmount          Decimal              @db.Decimal(12, 2)
+  status              UnitStatus           @default(VACANT)
+  imageUrls           Json?
+  property            Property             @relation(fields: [propertyId], references: [id])
+  tenants             Tenant[]
+  invitations         Invitation[]
+  invoices            Invoice[]
+  maintenanceRequests MaintenanceRequest[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@unique([propertyId, unitNumber])
+  @@index([propertyId, status])
+  @@map("units")
+}
+
+model Tenant {
+  id                  String               @id @default(uuid())
+  userId              String
+  unitId              String
+  moveInDate          DateTime             @default(now())
+  moveOutDate         DateTime?
+  isActive            Boolean              @default(true)
+  user                User                 @relation(fields: [userId], references: [id])
+  unit                Unit                 @relation(fields: [unitId], references: [id])
+  invoices            Invoice[]
+  payments            Payment[]
+  maintenanceRequests MaintenanceRequest[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@unique([userId, unitId])
+  @@index([userId, isActive])
+  @@index([unitId, isActive])
+  @@map("tenants")
+}
+
+model Invitation {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  phoneNumber String
+  propertyId  String
+  unitId      String
+  sentById    String
+  status      InvitationStatus @default(PENDING)
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  sentVia     String?
+  metadata    Json?
+  property    Property         @relation(fields: [propertyId], references: [id])
+  unit        Unit             @relation(fields: [unitId], references: [id])
+  sentBy      User             @relation("InvitationSender", fields: [sentById], references: [id])
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([propertyId, unitId])
+  @@index([sentById])
+  @@map("invitations")
+}
+
+model Invoice {
+  id            String        @id @default(uuid())
+  tenantId      String
+  userId        String
+  unitId        String
+  billingType   BillingType
+  periodMonth   Int
+  periodYear    Int
+  issueDate     DateTime      @default(now())
+  dueDate       DateTime
+  amount        Decimal       @db.Decimal(12, 2)
+  penaltyAmount Decimal       @default(0) @db.Decimal(12, 2)
+  totalAmount   Decimal       @db.Decimal(12, 2)
+  paidAmount    Decimal       @default(0) @db.Decimal(12, 2)
+  status        InvoiceStatus @default(PENDING)
+  paidAt        DateTime?
+  tenant        Tenant        @relation(fields: [tenantId], references: [id])
+  user          User          @relation("UserInvoices", fields: [userId], references: [id])
+  unit          Unit          @relation(fields: [unitId], references: [id])
+  payments      Payment[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([tenantId, billingType, periodMonth, periodYear])
+  @@index([unitId])
+  @@index([status, dueDate])
+  @@index([userId])
+  @@map("invoices")
+}
+
+model Payment {
+  id                    String        @id @default(uuid())
+  invoiceId             String
+  tenantId              String
+  userId                String
+  amount                Decimal       @db.Decimal(12, 2)
+  method                String        @default("MPESA")
+  status                PaymentStatus @default(INITIATED)
+  phoneNumber           String?
+  mpesaRequestId        String?       @unique
+  mpesaCheckoutRequestId String?      @unique
+  mpesaReceiptNumber    String?       @unique
+  paidAt                DateTime?
+  invoice               Invoice       @relation(fields: [invoiceId], references: [id])
+  tenant                Tenant        @relation(fields: [tenantId], references: [id])
+  user                  User          @relation("UserPayments", fields: [userId], references: [id])
+  transactions          Transaction[]
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([invoiceId, status])
+  @@index([tenantId])
+  @@index([userId])
+  @@map("payments")
+}
+
+model Transaction {
+  id                String          @id @default(uuid())
+  paymentId         String
+  externalReference String?         @unique
+  type              TransactionType @default(CALLBACK)
+  provider          String          @default("MPESA")
+  resultCode        String?
+  resultDescription String?
+  amount            Decimal?        @db.Decimal(12, 2)
+  rawPayload        Json?
+  isValid           Boolean         @default(false)
+  processedAt       DateTime?
+  payment           Payment         @relation(fields: [paymentId], references: [id])
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([paymentId, createdAt])
+  @@map("transactions")
+}
+
+model MaintenanceRequest {
+  id          String              @id @default(uuid())
+  tenantId    String
+  unitId      String
+  reportedById String             
+  assignedToId String?            
+  title       String
+  description String
+  priority    MaintenancePriority @default(MEDIUM)
+  status      MaintenanceStatus   @default(OPEN)
+  resolvedAt  DateTime?
+  tenant      Tenant              @relation(fields: [tenantId], references: [id])
+  unit        Unit                @relation(fields: [unitId], references: [id])
+  reportedBy  User                @relation("RequesterMaintenance", fields: [reportedById], references: [id])
+  assignedTo  User?               @relation("AssigneeMaintenance", fields: [assignedToId], references: [id])
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([tenantId, status])
+  @@index([unitId, status])
+  @@index([reportedById])
+  @@index([assignedToId])
+  @@map("maintenance_requests")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType @default(GENERAL)
+  title     String
+  message   String           @db.Text
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  metadata  Json?
+  user      User             @relation(fields: [userId], references: [id])
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
+}
+
+model SupportConversation {
+  id          String           @id @default(uuid())
+  tenantUserId String
+  subject     String?
+  topic       String?          @default("General")
+  isOpen      Boolean          @default(true)
+  tenantUser  User             @relation("TenantSupportConversations", fields: [tenantUserId], references: [id])
+  messages    SupportMessage[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([tenantUserId, updatedAt])
+  @@map("support_conversations")
+}
+
+model SupportMessage {
+  id              String              @id @default(uuid())
+  conversationId  String
+  senderId        String
+  topic           String?             @default("General")
+  body            String              @db.Text
+  attachmentName  String?
+  attachmentUri   String?
+  isFromTenant    Boolean             @default(true)
+  status          String              @default("Sent")
+  conversation    SupportConversation @relation(fields: [conversationId], references: [id])
+  sender          User                @relation("SupportMessageSender", fields: [senderId], references: [id])
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("support_messages")
+}

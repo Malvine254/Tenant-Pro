@@ -1,0 +1,18 @@
+RewriteEngine On
+
+# Keep Let's Encrypt validation working
+RewriteRule ^\.well-known/ - [L]
+
+# Proxy /rebuild and /rebuild/* to the Node.js rebuild tool on port 9090
+# Requires mod_proxy and mod_proxy_http to be enabled on the server
+RewriteRule ^rebuild/?(.*)$ http://127.0.0.1:9090/$1 [P,L,QSA,NC]
+
+# Serve existing files/folders directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Route all app requests to Laravel public directory
+RewriteCond %{REQUEST_URI} !^/laravel-app/public/
+RewriteCond %{REQUEST_URI} !^/rebuild(/.*)?$
+RewriteRule ^(.*)$ laravel-app/public/$1 [L]

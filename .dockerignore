@@ -1,0 +1,15 @@
+node_modules
+admin-dashboard/node_modules
+tenant-app/.gradle
+tenant-app/app/build
+tenant-app/build
+dist
+.git
+.localdb
+data
+uploads
+.env
+.env.*
+!.env.example
+firebase-service-account.json
+*.log
