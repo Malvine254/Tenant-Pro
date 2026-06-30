@@ -17,6 +17,9 @@
         .bad { color:#f87171; font-weight:700; }
         .warn { color:#f59e0b; font-weight:700; }
         .btn { background:#22c55e; border:none; color:#052e16; padding:12px 16px; border-radius:8px; font-weight:700; cursor:pointer; }
+        .btn-secondary { background:#334155; color:#e2e8f0; text-align:left; width:100%; }
+        .action-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; }
+        .hint { display:block; color:#93c5fd; font-size:12px; font-weight:400; margin-top:4px; }
         .note { color:#93c5fd; font-size:13px; }
         .error { background:#7f1d1d; border:1px solid #dc2626; color:#fecaca; padding:10px; border-radius:8px; margin-bottom:12px; }
         .success { background:#14532d; border:1px solid #22c55e; color:#bbf7d0; padding:10px; border-radius:8px; margin-bottom:12px; }
@@ -73,6 +76,28 @@
             </form>
         @elseif($isUsed)
             <p class="warn">Locked. Remove the lock file or deploy fresh code only if you explicitly want to allow another run.</p>
+        @else
+            <p class="bad">Cannot run: token missing/invalid or not configured.</p>
+        @endif
+    </div>
+
+    <div class="card">
+        <h2>Maintenance Commands</h2>
+        <p class="note">These commands can run with a valid token even after the full deployment sequence has locked.</p>
+
+        @if($isConfigured && $isValidToken)
+            <form method="POST" action="{{ route('deployment-tools.once.run') }}">
+                @csrf
+                <input type="hidden" name="token" value="{{ $token }}">
+                <div class="action-grid">
+                    @foreach($maintenanceActions as $action => $label)
+                        <button type="submit" name="action" value="{{ $action }}" class="btn btn-secondary">
+                            {{ $label }}
+                            <span class="hint">{{ $commandHints[$action] ?? $action }}</span>
+                        </button>
+                    @endforeach
+                </div>
+            </form>
         @else
             <p class="bad">Cannot run: token missing/invalid or not configured.</p>
         @endif
