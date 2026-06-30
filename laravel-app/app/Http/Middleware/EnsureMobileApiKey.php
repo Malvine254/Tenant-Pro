@@ -14,7 +14,7 @@ class EnsureMobileApiKey
 
         if ($expectedKey === '') {
             return response()->json([
-                'message' => 'Mobile API key is not configured.',
+                'message' => 'Mobile API key is not configured. Set MOBILE_API_KEY in .env, then clear and rebuild Laravel config cache.',
             ], 503);
         }
 

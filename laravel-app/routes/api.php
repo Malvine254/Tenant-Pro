@@ -22,6 +22,7 @@ Route::get('/', fn () => response()->json([
 Route::get('/health', fn () => response()->json([
 	'status' => 'ok',
 	'service' => 'tenantpro-api',
+	'mobile_api_key_configured' => (string) config('deployment.mobile_api_key', '') !== '',
 	'timestamp' => now()->toISOString(),
 ]));
 
