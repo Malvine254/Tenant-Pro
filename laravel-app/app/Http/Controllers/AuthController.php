@@ -12,6 +12,21 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
+        $firstName = (string) $request->input('first_name', $request->input('firstName', ''));
+        $lastName = (string) $request->input('last_name', $request->input('lastName', ''));
+        $name = (string) $request->input('name', trim($firstName . ' ' . $lastName));
+        $phoneNumber = $request->input('phone_number', $request->input('phoneNumber'));
+        $roleName = $request->input('role_name', $request->input('role', 'TENANT'));
+
+        $request->merge([
+            'name' => $name,
+            'first_name' => $firstName !== '' ? $firstName : null,
+            'last_name' => $lastName !== '' ? $lastName : null,
+            'phone_number' => $phoneNumber,
+            'role_name' => $roleName,
+            'password_confirmation' => $request->input('password_confirmation', $request->input('password')),
+        ]);
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -37,7 +52,13 @@ class AuthController extends Controller
         ]);
 
         $token = $user->createToken('api-token')->plainTextToken;
-        return response()->json(['user' => $user->load('role'), 'token' => $token], 201);
+        return response()->json([
+            'message' => 'Account created successfully.',
+            'email' => $user->email,
+            'user' => $this->userPayload($user->load('role')),
+            'token' => $token,
+            'accessToken' => $token,
+        ], 201);
     }
 
     public function login(Request $request)
@@ -60,17 +81,39 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('api-token')->plainTextToken;
-        return response()->json(['user' => $user->load('role'), 'token' => $token]);
+        return response()->json([
+            'user' => $this->userPayload($user->load('role')),
+            'token' => $token,
+            'accessToken' => $token,
+        ]);
     }
 
     public function me(Request $request)
     {
-        return response()->json($request->user()->load(['role', 'tenant.unit.property']));
+        return response()->json($this->userPayload($request->user()->load(['role', 'tenant.unit.property'])));
     }
 
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out successfully.']);
+    }
+
+    private function userPayload(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'userId' => $user->id,
+            'phoneNumber' => $user->phone_number ?? '',
+            'email' => $user->email,
+            'firstName' => $user->first_name,
+            'lastName' => $user->last_name,
+            'fullName' => $user->name,
+            'profileImageUrl' => $user->profile_image_url,
+            'emergencyContactName' => $user->emergency_contact_name,
+            'emergencyContactPhone' => $user->emergency_contact_phone,
+            'bio' => $user->bio,
+            'role' => $user->role?->name ?? 'TENANT',
+        ];
     }
 }
