@@ -25,30 +25,32 @@ Route::get('/health', fn () => response()->json([
 	'timestamp' => now()->toISOString(),
 ]));
 
-// Public auth routes
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/login', [AuthController::class, 'login']);
+Route::middleware('mobile.api.key')->group(function () {
+	// Public auth routes
+	Route::post('/auth/register', [AuthController::class, 'register']);
+	Route::post('/auth/login', [AuthController::class, 'login']);
 
-// Protected routes
-Route::middleware('auth:sanctum')->group(function () {
-	Route::get('/auth/me', [AuthController::class, 'me']);
-	Route::post('/auth/logout', [AuthController::class, 'logout']);
+	// Protected routes
+	Route::middleware('auth:sanctum')->group(function () {
+		Route::get('/auth/me', [AuthController::class, 'me']);
+		Route::post('/auth/logout', [AuthController::class, 'logout']);
 
-	Route::apiResource('properties', PropertyController::class);
-	Route::apiResource('units', UnitController::class);
-	Route::apiResource('tenants', TenantController::class);
-	Route::apiResource('invoices', InvoiceController::class);
-	Route::apiResource('payments', PaymentController::class)->except(['update']);
-	Route::apiResource('maintenance', MaintenanceRequestController::class)
-		->parameters(['maintenance' => 'maintenanceRequest']);
-	Route::apiResource('invitations', InvitationController::class);
-	Route::apiResource('support/conversations', SupportConversationController::class)
-		->parameters(['conversations' => 'supportConversation']);
-	Route::apiResource('support/messages', SupportMessageController::class)
-		->parameters(['messages' => 'supportMessage']);
+		Route::apiResource('properties', PropertyController::class);
+		Route::apiResource('units', UnitController::class);
+		Route::apiResource('tenants', TenantController::class);
+		Route::apiResource('invoices', InvoiceController::class);
+		Route::apiResource('payments', PaymentController::class)->except(['update']);
+		Route::apiResource('maintenance', MaintenanceRequestController::class)
+			->parameters(['maintenance' => 'maintenanceRequest']);
+		Route::apiResource('invitations', InvitationController::class);
+		Route::apiResource('support/conversations', SupportConversationController::class)
+			->parameters(['conversations' => 'supportConversation']);
+		Route::apiResource('support/messages', SupportMessageController::class)
+			->parameters(['messages' => 'supportMessage']);
 
-	Route::get('/notifications', [NotificationController::class, 'index']);
-	Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
-	Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
-	Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy']);
+		Route::get('/notifications', [NotificationController::class, 'index']);
+		Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
+		Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+		Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy']);
+	});
 });
