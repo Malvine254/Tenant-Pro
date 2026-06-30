@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>One-Time Deployment Tools</title>
+    <title>Token Deployment Tools</title>
     <style>
         body { font-family: Arial, sans-serif; background:#0f172a; color:#e2e8f0; margin:0; padding:20px; }
         .wrap { max-width:900px; margin:0 auto; }
@@ -29,8 +29,8 @@
 <body>
 <div class="wrap">
     <div class="card">
-        <h1>One-Time Deployment Tools</h1>
-        <p class="note">This page can run the full deployment sequence once, then locks itself automatically.</p>
+        <h1>Token Deployment Tools</h1>
+        <p class="note">This page runs deployment commands whenever the URL token matches the current server .env token.</p>
     </div>
 
     @if(session('error'))
@@ -44,9 +44,9 @@
     <div class="card">
         <h2>Access Check</h2>
         <table>
+            <tr><th>Token source</th><td>{{ $tokenSource }}</td></tr>
             <tr><th>Token configured in .env</th><td>{!! $isConfigured ? '<span class="ok">Yes</span>' : '<span class="bad">No</span>' !!}</td></tr>
             <tr><th>Token valid in URL</th><td>{!! $isValidToken ? '<span class="ok">Yes</span>' : '<span class="bad">No</span>' !!}</td></tr>
-            <tr><th>One-time link already used</th><td>{!! $isUsed ? '<span class="warn">Yes (locked)</span>' : '<span class="ok">No</span>' !!}</td></tr>
         </table>
     </div>
 
@@ -68,14 +68,12 @@
         <h2>Run Full Deployment Sequence</h2>
         <p class="note">Sequence: vendor check, APP_KEY generation (if missing), storage link, cache clear, migrate, seed, config cache, route cache.</p>
 
-        @if($isConfigured && $isValidToken && !$isUsed)
+        @if($isConfigured && $isValidToken)
             <form method="POST" action="{{ route('deployment-tools.once.run') }}">
                 @csrf
                 <input type="hidden" name="token" value="{{ $token }}">
-                <button type="submit" class="btn">Run Once</button>
+                <button type="submit" class="btn">Run Full Deployment</button>
             </form>
-        @elseif($isUsed)
-            <p class="warn">Locked. Remove the lock file or deploy fresh code only if you explicitly want to allow another run.</p>
         @else
             <p class="bad">Cannot run: token missing/invalid or not configured.</p>
         @endif
@@ -83,7 +81,7 @@
 
     <div class="card">
         <h2>Maintenance Commands</h2>
-        <p class="note">These commands can run with a valid token even after the full deployment sequence has locked.</p>
+        <p class="note">These commands can run whenever the URL token is valid.</p>
 
         @if($isConfigured && $isValidToken)
             <form method="POST" action="{{ route('deployment-tools.once.run') }}">

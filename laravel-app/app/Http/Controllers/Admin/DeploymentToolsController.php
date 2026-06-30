@@ -17,9 +17,9 @@ class DeploymentToolsController extends Controller
         $token = (string) $request->query('token', '');
 
         return view('deployment-tools-once', [
-            'isConfigured' => $this->oneTimeTokenConfigured(),
-            'isValidToken' => $this->oneTimeTokenValid($token),
-            'isUsed' => $this->oneTimeLinkUsed(),
+            'isConfigured' => $this->deploymentUrlTokenConfigured(),
+            'isValidToken' => $this->deploymentUrlTokenValid($token),
+            'tokenSource' => $this->deploymentUrlTokenSource(),
             'token' => $token,
             'status' => $this->statusSnapshot(),
             'maintenanceActions' => $this->oneTimeMaintenanceActions(),
@@ -37,20 +37,16 @@ class DeploymentToolsController extends Controller
         $token = (string) $request->input('token', '');
         $action = (string) $request->input('action', 'full_deploy');
 
-        if (!$this->oneTimeTokenConfigured()) {
-            return back()->with('error', 'DEPLOYMENT_ONE_TIME_TOKEN is not configured in .env.');
+        if (!$this->deploymentUrlTokenConfigured()) {
+            return back()->with('error', 'Set DEPLOYMENT_ONE_TIME_TOKEN or DEPLOYMENT_TOOL_TOKEN in .env.');
         }
 
-        if (!$this->oneTimeTokenValid($token)) {
-            return back()->with('error', 'Invalid one-time token.');
-        }
-
-        if ($action === 'full_deploy' && $this->oneTimeLinkUsed()) {
-            return back()->with('error', 'This one-time deployment link has already been used.');
+        if (!$this->deploymentUrlTokenValid($token)) {
+            return back()->with('error', 'Invalid deployment token.');
         }
 
         if ($action !== 'full_deploy' && !array_key_exists($action, $this->oneTimeMaintenanceActions())) {
-            return back()->with('error', 'Unsupported one-time maintenance action.');
+            return back()->with('error', 'Unsupported maintenance action.');
         }
 
         try {
@@ -58,12 +54,8 @@ class DeploymentToolsController extends Controller
                 ? $this->runFullDeploymentSequence()
                 : $this->executeAction($action);
 
-            if ($action === 'full_deploy') {
-                $this->markOneTimeLinkAsUsed();
-            }
-
             $message = $action === 'full_deploy'
-                ? 'Full deployment sequence completed. This one-time link is now locked.'
+                ? 'Full deployment sequence completed successfully.'
                 : $this->oneTimeMaintenanceActions()[$action] . ' completed successfully.';
 
             return back()
@@ -360,31 +352,32 @@ class DeploymentToolsController extends Controller
         return implode("\n\n", $logs);
     }
 
-    private function oneTimeTokenConfigured(): bool
+    private function deploymentUrlTokenConfigured(): bool
     {
-        return !empty((string) env('DEPLOYMENT_ONE_TIME_TOKEN', ''));
+        return $this->deploymentUrlToken() !== '';
     }
 
-    private function oneTimeTokenValid(string $token): bool
+    private function deploymentUrlTokenValid(string $token): bool
     {
-        $expected = (string) env('DEPLOYMENT_ONE_TIME_TOKEN', '');
+        $expected = $this->deploymentUrlToken();
 
         return $expected !== '' && hash_equals($expected, $token);
     }
 
-    private function oneTimeLinkUsed(): bool
+    private function deploymentUrlToken(): string
     {
-        return File::exists($this->oneTimeLockPath());
+        $oneTimeToken = (string) env('DEPLOYMENT_ONE_TIME_TOKEN', '');
+        if ($oneTimeToken !== '') {
+            return $oneTimeToken;
+        }
+
+        return (string) env('DEPLOYMENT_TOOL_TOKEN', '');
     }
 
-    private function markOneTimeLinkAsUsed(): void
+    private function deploymentUrlTokenSource(): string
     {
-        File::ensureDirectoryExists(dirname($this->oneTimeLockPath()));
-        File::put($this->oneTimeLockPath(), now()->toDateTimeString());
-    }
-
-    private function oneTimeLockPath(): string
-    {
-        return storage_path('app/deployment-tools-once-used.lock');
+        return (string) env('DEPLOYMENT_ONE_TIME_TOKEN', '') !== ''
+            ? 'DEPLOYMENT_ONE_TIME_TOKEN'
+            : 'DEPLOYMENT_TOOL_TOKEN';
     }
 }
