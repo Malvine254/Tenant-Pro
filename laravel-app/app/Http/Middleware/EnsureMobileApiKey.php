@@ -10,7 +10,7 @@ class EnsureMobileApiKey
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $expectedKey = (string) env('MOBILE_API_KEY', '');
+        $expectedKey = (string) config('deployment.mobile_api_key', '');
 
         if ($expectedKey === '') {
             return response()->json([

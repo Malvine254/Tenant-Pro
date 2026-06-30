@@ -74,7 +74,7 @@ class DeploymentToolsController extends Controller
             'status' => $this->statusSnapshot(),
             'availableActions' => $this->availableActions(),
             'commandHints' => $this->commandHints(),
-            'toolTokenRequired' => !empty((string) env('DEPLOYMENT_TOOL_TOKEN')),
+            'toolTokenRequired' => $this->deploymentToolToken() !== '',
             'formAction' => route('admin.deployment-tools.run'),
             'isPublicTestingTool' => false,
         ]);
@@ -101,7 +101,7 @@ class DeploymentToolsController extends Controller
             'tool_token' => 'nullable|string',
         ]);
 
-        $expectedToken = (string) env('DEPLOYMENT_TOOL_TOKEN', '');
+        $expectedToken = $this->deploymentToolToken();
         if ($expectedToken !== '' && !hash_equals($expectedToken, (string) $request->input('tool_token', ''))) {
             return back()->with('error', 'Invalid deployment tool token. Set DEPLOYMENT_TOOL_TOKEN in .env and use the same value here.');
         }
@@ -132,7 +132,7 @@ class DeploymentToolsController extends Controller
             'tool_token' => 'required|string',
         ]);
 
-        $expectedToken = (string) env('DEPLOYMENT_TOOL_TOKEN', '');
+        $expectedToken = $this->deploymentToolToken();
         if ($expectedToken === '') {
             return back()->with('error', 'DEPLOYMENT_TOOL_TOKEN is not configured in .env.');
         }
@@ -366,18 +366,23 @@ class DeploymentToolsController extends Controller
 
     private function deploymentUrlToken(): string
     {
-        $oneTimeToken = (string) env('DEPLOYMENT_ONE_TIME_TOKEN', '');
+        $oneTimeToken = (string) config('deployment.deployment_one_time_token', '');
         if ($oneTimeToken !== '') {
             return $oneTimeToken;
         }
 
-        return (string) env('DEPLOYMENT_TOOL_TOKEN', '');
+        return $this->deploymentToolToken();
     }
 
     private function deploymentUrlTokenSource(): string
     {
-        return (string) env('DEPLOYMENT_ONE_TIME_TOKEN', '') !== ''
+        return (string) config('deployment.deployment_one_time_token', '') !== ''
             ? 'DEPLOYMENT_ONE_TIME_TOKEN'
             : 'DEPLOYMENT_TOOL_TOKEN';
+    }
+
+    private function deploymentToolToken(): string
+    {
+        return (string) config('deployment.deployment_tool_token', '');
     }
 }
