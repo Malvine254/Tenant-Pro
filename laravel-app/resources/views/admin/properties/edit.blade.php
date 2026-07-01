@@ -14,7 +14,9 @@
                         <option value="{{ $landlord->id }}" {{ old('landlord_id', $property->landlord_id) == $landlord->id ? 'selected' : '' }}>{{ $landlord->name }} ({{ $landlord->email }})</option>
                     @endforeach
                 </select>
-                <div style="font-size:12px;margin-top:5px;color:#64748b;"><a href="{{ route('admin.landlords.create') }}">Add a new landlord</a></div>
+                @if(auth()->user()?->role?->name !== 'LANDLORD')
+                    <div style="font-size:12px;margin-top:5px;color:#64748b;"><a href="{{ route('admin.landlords.create') }}">Add a new landlord</a></div>
+                @endif
                 @error('landlord_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>
             <div class="form-group">

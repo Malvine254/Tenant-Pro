@@ -11,11 +11,15 @@ class PropertyUnitAdminController extends Controller
 {
     public function create(Property $property)
     {
+        $this->authorizeLandlordProperty($property);
+
         return view('admin.properties.units.create', compact('property'));
     }
 
     public function store(Request $request, Property $property)
     {
+        $this->authorizeLandlordProperty($property);
+
         $data = $request->validate([
             'unit_number' => 'required|string|max:50',
             'floor' => 'nullable|integer',
@@ -32,6 +36,7 @@ class PropertyUnitAdminController extends Controller
 
     public function edit(Property $property, Unit $unit)
     {
+        $this->authorizeLandlordProperty($property);
         abort_if($unit->property_id !== $property->id, 404);
 
         return view('admin.properties.units.edit', compact('property', 'unit'));
@@ -39,6 +44,7 @@ class PropertyUnitAdminController extends Controller
 
     public function update(Request $request, Property $property, Unit $unit)
     {
+        $this->authorizeLandlordProperty($property);
         abort_if($unit->property_id !== $property->id, 404);
 
         $data = $request->validate([
@@ -57,6 +63,7 @@ class PropertyUnitAdminController extends Controller
 
     public function destroy(Property $property, Unit $unit)
     {
+        $this->authorizeLandlordProperty($property);
         abort_if($unit->property_id !== $property->id, 404);
 
         if ($unit->tenant()->exists()) {
@@ -68,5 +75,11 @@ class PropertyUnitAdminController extends Controller
         return redirect()
             ->route('admin.properties.show', $property)
             ->with('success', 'Unit deleted.');
+    }
+
+    private function authorizeLandlordProperty(Property $property): void
+    {
+        $user = request()->user();
+        abort_if($user?->role?->name === 'LANDLORD' && $property->landlord_id !== $user->id, 403);
     }
 }

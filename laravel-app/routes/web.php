@@ -45,6 +45,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 		Route::put('/properties/{property}/units/{unit}', [PropertyUnitAdminController::class, 'update'])->name('properties.units.update');
 		Route::delete('/properties/{property}/units/{unit}', [PropertyUnitAdminController::class, 'destroy'])->name('properties.units.destroy');
 		Route::resource('/properties', PropertyAdminController::class);
+		Route::get('/tenants/create', [TenantAdminController::class, 'create'])->name('tenants.create');
+		Route::post('/tenants', [TenantAdminController::class, 'store'])->name('tenants.store');
 		Route::get('/tenants', [TenantAdminController::class, 'index'])->name('tenants.index');
 		Route::get('/tenants/{tenant}', [TenantAdminController::class, 'show'])->name('tenants.show');
 		Route::get('/invoices', [InvoiceAdminController::class, 'index'])->name('invoices.index');

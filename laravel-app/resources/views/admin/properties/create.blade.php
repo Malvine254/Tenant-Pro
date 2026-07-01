@@ -18,7 +18,9 @@
                 @if($landlords->isEmpty())
                     <div class="form-error">No landlords exist yet. <a href="{{ route('admin.landlords.create') }}">Add a landlord first</a>.</div>
                 @else
-                    <div style="font-size:12px;margin-top:5px;color:#64748b;"><a href="{{ route('admin.landlords.create') }}">Add a new landlord</a></div>
+                    @if(auth()->user()?->role?->name !== 'LANDLORD')
+                        <div style="font-size:12px;margin-top:5px;color:#64748b;"><a href="{{ route('admin.landlords.create') }}">Add a new landlord</a></div>
+                    @endif
                 @endif
                 @error('landlord_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>

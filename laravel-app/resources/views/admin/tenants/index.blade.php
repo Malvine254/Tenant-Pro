@@ -4,10 +4,13 @@
 @section('content')
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
     <h2 style="font-size:16px;font-weight:600;">All Tenants</h2>
-    <form method="GET" style="display:flex;gap:8px;">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name or email..." style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;width:220px;">
-        <button type="submit" class="btn btn-secondary">Search</button>
-    </form>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <form method="GET" style="display:flex;gap:8px;">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name or email..." style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;width:220px;">
+            <button type="submit" class="btn btn-secondary">Search</button>
+        </form>
+        <a href="{{ route('admin.tenants.create') }}" class="btn btn-primary">+ Add Tenant</a>
+    </div>
 </div>
 <div class="card">
     <table>

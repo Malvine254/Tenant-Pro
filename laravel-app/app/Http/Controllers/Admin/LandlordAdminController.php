@@ -12,6 +12,8 @@ class LandlordAdminController extends Controller
 {
     public function index(Request $request)
     {
+        abort_if($this->isLandlord($request->user()), 403);
+
         $landlords = User::withCount('properties')
             ->whereHas('role', fn ($query) => $query->where('name', 'LANDLORD'))
             ->when($request->search, fn ($query) => $query->where(function ($userQuery) use ($request) {
@@ -28,11 +30,15 @@ class LandlordAdminController extends Controller
 
     public function create()
     {
+        abort_if($this->isLandlord(request()->user()), 403);
+
         return view('admin.landlords.create');
     }
 
     public function store(Request $request)
     {
+        abort_if($this->isLandlord($request->user()), 403);
+
         $data = $request->validate([
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
@@ -60,5 +66,10 @@ class LandlordAdminController extends Controller
         return redirect()
             ->route('admin.properties.create', ['landlord_id' => $user->id])
             ->with('success', 'Landlord created. You can now assign a property to them.');
+    }
+
+    private function isLandlord(?User $user): bool
+    {
+        return $user?->role?->name === 'LANDLORD';
     }
 }
