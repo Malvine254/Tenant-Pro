@@ -38,7 +38,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 	// Protected admin routes
 	Route::middleware(['auth'])->group(function () {
 		Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-		Route::resource('/landlords', LandlordAdminController::class)->only(['index', 'create', 'store']);
+		Route::patch('/landlords/{landlord}/status', [LandlordAdminController::class, 'updateStatus'])->name('landlords.status');
+		Route::resource('/landlords', LandlordAdminController::class)->only(['index', 'create', 'store', 'edit', 'update']);
 		Route::get('/properties/{property}/units/create', [PropertyUnitAdminController::class, 'create'])->name('properties.units.create');
 		Route::post('/properties/{property}/units', [PropertyUnitAdminController::class, 'store'])->name('properties.units.store');
 		Route::get('/properties/{property}/units/{unit}/edit', [PropertyUnitAdminController::class, 'edit'])->name('properties.units.edit');

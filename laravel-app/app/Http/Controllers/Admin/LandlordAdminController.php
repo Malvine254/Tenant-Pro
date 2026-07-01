@@ -68,6 +68,60 @@ class LandlordAdminController extends Controller
             ->with('success', 'Landlord created. You can now assign a property to them.');
     }
 
+    public function edit(User $landlord)
+    {
+        abort_if($this->isLandlord(request()->user()), 403);
+        abort_unless($this->isLandlord($landlord), 404);
+
+        return view('admin.landlords.edit', compact('landlord'));
+    }
+
+    public function update(Request $request, User $landlord)
+    {
+        abort_if($this->isLandlord($request->user()), 403);
+        abort_unless($this->isLandlord($landlord), 404);
+
+        $data = $request->validate([
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'email' => 'required|email|unique:users,email,' . $landlord->id,
+            'phone_number' => 'nullable|string|unique:users,phone_number,' . $landlord->id,
+            'password' => 'nullable|string|min:8|confirmed',
+            'is_active' => 'sometimes|boolean',
+        ]);
+
+        $updates = [
+            'name' => trim($data['first_name'] . ' ' . $data['last_name']),
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'email' => $data['email'],
+            'phone_number' => $data['phone_number'] ?? null,
+            'is_active' => $request->boolean('is_active'),
+        ];
+
+        if (!empty($data['password'])) {
+            $updates['password'] = Hash::make($data['password']);
+        }
+
+        $landlord->update($updates);
+
+        return redirect()->route('admin.landlords.index')->with('success', 'Landlord account updated.');
+    }
+
+    public function updateStatus(Request $request, User $landlord)
+    {
+        abort_if($this->isLandlord($request->user()), 403);
+        abort_unless($this->isLandlord($landlord), 404);
+
+        $data = $request->validate([
+            'is_active' => 'required|boolean',
+        ]);
+
+        $landlord->update(['is_active' => (bool) $data['is_active']]);
+
+        return back()->with('success', 'Landlord status updated.');
+    }
+
     private function isLandlord(?User $user): bool
     {
         return $user?->role?->name === 'LANDLORD';

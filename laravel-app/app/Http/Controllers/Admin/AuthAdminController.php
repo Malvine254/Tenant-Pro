@@ -24,6 +24,17 @@ class AuthAdminController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $role = Auth::user()?->role?->name;
+            if (!in_array($role, ['ADMIN', 'LANDLORD'], true)) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()
+                    ->withErrors(['email' => 'This account does not have access to the admin portal.'])
+                    ->onlyInput('email');
+            }
+
             $request->session()->regenerate();
             return redirect()->intended(route('admin.dashboard'));
         }

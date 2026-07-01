@@ -22,6 +22,7 @@
                 <th>Phone</th>
                 <th>Properties</th>
                 <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -36,9 +37,19 @@
                         {{ $landlord->is_active ? 'Active' : 'Inactive' }}
                     </span>
                 </td>
+                <td>
+                    <a href="{{ route('admin.landlords.edit', $landlord) }}" class="btn btn-secondary" style="margin-right:6px;">Edit</a>
+                    <form method="POST" action="{{ route('admin.landlords.status', $landlord) }}" style="display:inline;">
+                        @csrf @method('PATCH')
+                        <input type="hidden" name="is_active" value="{{ $landlord->is_active ? 0 : 1 }}">
+                        <button type="submit" class="btn {{ $landlord->is_active ? 'btn-danger' : 'btn-primary' }}">
+                            {{ $landlord->is_active ? 'Deactivate' : 'Activate' }}
+                        </button>
+                    </form>
+                </td>
             </tr>
             @empty
-            <tr><td colspan="5" style="color:#94a3b8;text-align:center;padding:24px;">No landlords found.</td></tr>
+            <tr><td colspan="6" style="color:#94a3b8;text-align:center;padding:24px;">No landlords found.</td></tr>
             @endforelse
         </tbody>
     </table>
