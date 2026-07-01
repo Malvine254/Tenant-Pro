@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PropertyAdminController;
 use App\Http\Controllers\Admin\TenantAdminController;
 use App\Http\Controllers\Admin\InvoiceAdminController;
+use App\Http\Controllers\Admin\LandlordAdminController;
 use App\Http\Controllers\Admin\MaintenanceAdminController;
 use App\Http\Controllers\Admin\DeploymentToolsController;
 use App\Http\Controllers\SiteController;
@@ -36,6 +37,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 	// Protected admin routes
 	Route::middleware(['auth'])->group(function () {
 		Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+		Route::resource('/landlords', LandlordAdminController::class)->only(['index', 'create', 'store']);
 		Route::resource('/properties', PropertyAdminController::class);
 		Route::get('/tenants', [TenantAdminController::class, 'index'])->name('tenants.index');
 		Route::get('/tenants/{tenant}', [TenantAdminController::class, 'show'])->name('tenants.show');

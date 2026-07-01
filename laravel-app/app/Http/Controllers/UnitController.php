@@ -9,7 +9,9 @@ class UnitController extends Controller
 {
     public function index(Request $request)
     {
+        $user = $request->user();
         $query = Unit::with(['property', 'tenant.user'])
+            ->when($this->isTenant($user), fn($q) => $q->whereHas('tenant', fn($tenant) => $tenant->where('user_id', $user->id)))
             ->when($request->property_id, fn($q) => $q->where('property_id', $request->property_id))
             ->when($request->status, fn($q) => $q->where('status', $request->status));
         return response()->json($query->paginate(15));
@@ -30,6 +32,9 @@ class UnitController extends Controller
 
     public function show(Unit $unit)
     {
+        $user = request()->user();
+        abort_if($this->isTenant($user) && !$unit->tenant()->where('user_id', $user->id)->exists(), 403);
+
         return response()->json($unit->load(['property', 'tenant.user', 'maintenanceRequests', 'invoices']));
     }
 
@@ -50,5 +55,10 @@ class UnitController extends Controller
     {
         $unit->delete();
         return response()->json(null, 204);
+    }
+
+    private function isTenant($user): bool
+    {
+        return $user?->role?->name === 'TENANT';
     }
 }

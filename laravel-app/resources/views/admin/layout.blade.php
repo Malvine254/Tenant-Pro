@@ -51,6 +51,7 @@
     <div class="sidebar-logo">Starmax Admin</div>
     <nav>
         <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a>
+        <a href="{{ route('admin.landlords.index') }}" class="{{ request()->routeIs('admin.landlords*') ? 'active' : '' }}">Landlords</a>
         <a href="{{ route('admin.properties.index') }}" class="{{ request()->routeIs('admin.properties*') ? 'active' : '' }}">Properties</a>
         <a href="{{ route('admin.tenants.index') }}" class="{{ request()->routeIs('admin.tenants*') ? 'active' : '' }}">Tenants</a>
         <a href="{{ route('admin.invoices.index') }}" class="{{ request()->routeIs('admin.invoices*') ? 'active' : '' }}">Invoices</a>

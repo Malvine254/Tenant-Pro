@@ -9,7 +9,9 @@ class MaintenanceRequestController extends Controller
 {
     public function index(Request $request)
     {
+        $user = $request->user();
         $query = MaintenanceRequest::with(['unit.property', 'reportedBy', 'assignedTo'])
+            ->when($this->isTenant($user), fn($q) => $q->where('tenant_id', $user->id))
             ->when($request->unit_id, fn($q) => $q->where('unit_id', $request->unit_id))
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->priority, fn($q) => $q->where('priority', $request->priority));
@@ -18,6 +20,15 @@ class MaintenanceRequestController extends Controller
 
     public function store(Request $request)
     {
+        $user = $request->user();
+        $tenant = $this->isTenant($user) ? $user->tenant()->with('unit')->first() : null;
+
+        $request->merge([
+            'tenant_id' => $request->input('tenant_id', $user?->id),
+            'unit_id' => $request->input('unit_id', $tenant?->unit_id),
+            'reported_by_id' => $request->input('reported_by_id', $user?->id),
+        ]);
+
         $data = $request->validate([
             'tenant_id' => 'required|uuid|exists:users,id',
             'unit_id' => 'required|uuid|exists:units,id',
@@ -26,12 +37,17 @@ class MaintenanceRequestController extends Controller
             'description' => 'required|string',
             'priority' => 'in:LOW,MEDIUM,HIGH,URGENT',
         ]);
+        abort_if($this->isTenant($user) && ($data['tenant_id'] !== $user->id || $data['reported_by_id'] !== $user->id), 403);
+
         $data['status'] = 'OPEN';
         return response()->json(MaintenanceRequest::create($data)->load(['unit', 'reportedBy']), 201);
     }
 
     public function show(MaintenanceRequest $maintenanceRequest)
     {
+        $user = request()->user();
+        abort_if($this->isTenant($user) && $maintenanceRequest->tenant_id !== $user->id, 403);
+
         return response()->json($maintenanceRequest->load(['unit.property', 'tenant', 'reportedBy', 'assignedTo']));
     }
 
@@ -56,5 +72,10 @@ class MaintenanceRequestController extends Controller
     {
         $maintenanceRequest->delete();
         return response()->json(null, 204);
+    }
+
+    private function isTenant($user): bool
+    {
+        return $user?->role?->name === 'TENANT';
     }
 }

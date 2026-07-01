@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Property;
 use App\Models\Unit;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class PropertyAdminController extends Controller
@@ -17,7 +18,9 @@ class PropertyAdminController extends Controller
 
     public function create()
     {
-        $landlords = \App\Models\User::whereHas('role', fn($q) => $q->where('name', 'LANDLORD'))->get();
+        $landlords = User::whereHas('role', fn($q) => $q->where('name', 'LANDLORD'))
+            ->orderBy('name')
+            ->get();
         return view('admin.properties.create', compact('landlords'));
     }
 
@@ -44,13 +47,16 @@ class PropertyAdminController extends Controller
 
     public function edit(Property $property)
     {
-        $landlords = \App\Models\User::whereHas('role', fn($q) => $q->where('name', 'LANDLORD'))->get();
+        $landlords = User::whereHas('role', fn($q) => $q->where('name', 'LANDLORD'))
+            ->orderBy('name')
+            ->get();
         return view('admin.properties.edit', compact('property', 'landlords'));
     }
 
     public function update(Request $request, Property $property)
     {
         $data = $request->validate([
+            'landlord_id' => 'required|uuid|exists:users,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'address_line' => 'required|string',

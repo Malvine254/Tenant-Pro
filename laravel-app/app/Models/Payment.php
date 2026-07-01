@@ -9,6 +9,8 @@ class Payment extends Model
 {
     use HasUuids;
 
+    protected $appends = ['currency', 'currency_symbol', 'amount_formatted'];
+
     protected $fillable = ['invoice_id', 'amount', 'method', 'reference', 'paid_at'];
 
     protected $casts = [
@@ -18,4 +20,8 @@ class Payment extends Model
 
     public function invoice() { return $this->belongsTo(Invoice::class); }
     public function transactions() { return $this->hasMany(Transaction::class); }
+
+    public function getCurrencyAttribute(): string { return 'KES'; }
+    public function getCurrencySymbolAttribute(): string { return 'KSh'; }
+    public function getAmountFormattedAttribute(): string { return 'KSh ' . number_format((float) $this->amount, 2); }
 }

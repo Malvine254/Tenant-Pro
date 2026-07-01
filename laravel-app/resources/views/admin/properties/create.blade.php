@@ -9,12 +9,17 @@
             @csrf
             <div class="form-group">
                 <label>Landlord</label>
-                <select name="landlord_id" required>
-                    <option value="">— Select Landlord —</option>
+                <select name="landlord_id" required {{ $landlords->isEmpty() ? 'disabled' : '' }}>
+                    <option value="">- Select Landlord -</option>
                     @foreach($landlords as $landlord)
-                        <option value="{{ $landlord->id }}" {{ old('landlord_id') == $landlord->id ? 'selected' : '' }}>{{ $landlord->name }}</option>
+                        <option value="{{ $landlord->id }}" {{ old('landlord_id', request('landlord_id')) == $landlord->id ? 'selected' : '' }}>{{ $landlord->name }} ({{ $landlord->email }})</option>
                     @endforeach
                 </select>
+                @if($landlords->isEmpty())
+                    <div class="form-error">No landlords exist yet. <a href="{{ route('admin.landlords.create') }}">Add a landlord first</a>.</div>
+                @else
+                    <div style="font-size:12px;margin-top:5px;color:#64748b;"><a href="{{ route('admin.landlords.create') }}">Add a new landlord</a></div>
+                @endif
                 @error('landlord_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>
             <div class="form-group">
@@ -47,7 +52,7 @@
                 </div>
             </div>
             <div style="display:flex;gap:10px;">
-                <button type="submit" class="btn btn-primary">Save Property</button>
+                <button type="submit" class="btn btn-primary" {{ $landlords->isEmpty() ? 'disabled' : '' }}>Save Property</button>
                 <a href="{{ route('admin.properties.index') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>

@@ -9,7 +9,9 @@ class TenantController extends Controller
 {
     public function index(Request $request)
     {
+        $user = $request->user();
         $query = Tenant::with(['user.role', 'unit.property'])
+            ->when($this->isTenant($user), fn($q) => $q->where('user_id', $user->id))
             ->when($request->unit_id, fn($q) => $q->where('unit_id', $request->unit_id))
             ->when($request->is_active !== null, fn($q) => $q->where('is_active', $request->boolean('is_active')));
         return response()->json($query->paginate(15));
@@ -32,6 +34,9 @@ class TenantController extends Controller
 
     public function show(Tenant $tenant)
     {
+        $user = request()->user();
+        abort_if($this->isTenant($user) && $tenant->user_id !== $user->id, 403);
+
         return response()->json($tenant->load(['user', 'unit.property', 'unit.invoices', 'unit.maintenanceRequests']));
     }
 
@@ -52,5 +57,10 @@ class TenantController extends Controller
         $tenant->unit->update(['status' => 'AVAILABLE']);
         $tenant->delete();
         return response()->json(null, 204);
+    }
+
+    private function isTenant($user): bool
+    {
+        return $user?->role?->name === 'TENANT';
     }
 }

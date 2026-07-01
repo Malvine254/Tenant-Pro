@@ -9,7 +9,9 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
+        $user = $request->user();
         $query = Invoice::with(['tenant', 'unit.property'])
+            ->when($this->isTenant($user), fn($q) => $q->where('tenant_id', $user->id))
             ->when($request->tenant_id, fn($q) => $q->where('tenant_id', $request->tenant_id))
             ->when($request->unit_id, fn($q) => $q->where('unit_id', $request->unit_id))
             ->when($request->status, fn($q) => $q->where('status', $request->status));
@@ -38,6 +40,9 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
+        $user = request()->user();
+        abort_if($this->isTenant($user) && $invoice->tenant_id !== $user->id, 403);
+
         return response()->json($invoice->load(['tenant', 'unit.property', 'payments']));
     }
 
@@ -59,5 +64,10 @@ class InvoiceController extends Controller
     {
         $invoice->delete();
         return response()->json(null, 204);
+    }
+
+    private function isTenant($user): bool
+    {
+        return $user?->role?->name === 'TENANT';
     }
 }
