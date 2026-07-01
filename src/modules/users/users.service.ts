@@ -356,7 +356,7 @@ export class UsersService {
           lastName: dto.lastName,
           roleId,
           passwordHash,
-          isActive: normalizedEmail ? false : true,
+          isActive: true,
         },
         include: {
           role: true,
