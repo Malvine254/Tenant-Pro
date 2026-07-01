@@ -34,6 +34,7 @@ Route::middleware('mobile.api.key')->group(function () {
 	// Protected routes
 	Route::middleware('auth:sanctum')->group(function () {
 		Route::get('/auth/me', [AuthController::class, 'me']);
+		Route::get('/users/me/profile', [AuthController::class, 'profile']);
 		Route::post('/auth/logout', [AuthController::class, 'logout']);
 
 		Route::apiResource('properties', PropertyController::class);

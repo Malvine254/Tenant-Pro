@@ -55,7 +55,7 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Account created successfully.',
             'email' => $user->email,
-            'user' => $this->userPayload($user->load('role')),
+            'user' => $this->userPayload($user->load(['role', 'tenant.unit.property'])),
             'token' => $token,
             'accessToken' => $token,
         ], 201);
@@ -82,13 +82,18 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
         return response()->json([
-            'user' => $this->userPayload($user->load('role')),
+            'user' => $this->userPayload($user->load(['role', 'tenant.unit.property'])),
             'token' => $token,
             'accessToken' => $token,
         ]);
     }
 
     public function me(Request $request)
+    {
+        return response()->json($this->userPayload($request->user()->load(['role', 'tenant.unit.property'])));
+    }
+
+    public function profile(Request $request)
     {
         return response()->json($this->userPayload($request->user()->load(['role', 'tenant.unit.property'])));
     }
@@ -105,6 +110,33 @@ class AuthController extends Controller
         $unit = $tenant?->relationLoaded('unit') ? $tenant->unit : null;
         $property = $unit?->relationLoaded('property') ? $unit->property : null;
 
+        $tenantProfile = $tenant ? [
+            'id' => $tenant->id,
+            'userId' => $tenant->user_id,
+            'unitId' => $tenant->unit_id,
+            'moveInDate' => $tenant->move_in_date?->toDateString(),
+            'moveOutDate' => $tenant->move_out_date?->toDateString(),
+            'isActive' => $tenant->is_active,
+            'unit' => $unit ? [
+                'id' => $unit->id,
+                'unitNumber' => $unit->unit_number,
+                'floor' => $unit->floor,
+                'rentAmount' => $unit->rent_amount,
+                'rentAmountFormatted' => $unit->rent_amount_formatted,
+                'currency' => $unit->currency,
+                'currencySymbol' => $unit->currency_symbol,
+                'status' => $unit->status,
+                'property' => $property ? [
+                    'id' => $property->id,
+                    'name' => $property->name,
+                    'addressLine' => $property->address_line,
+                    'city' => $property->city,
+                    'state' => $property->state,
+                    'country' => $property->country,
+                ] : null,
+            ] : null,
+        ] : null;
+
         return [
             'id' => $user->id,
             'userId' => $user->id,
@@ -120,32 +152,9 @@ class AuthController extends Controller
             'role' => $user->role?->name ?? 'TENANT',
             'currency' => 'KES',
             'currencySymbol' => 'KSh',
-            'tenant' => $tenant ? [
-                'id' => $tenant->id,
-                'userId' => $tenant->user_id,
-                'unitId' => $tenant->unit_id,
-                'moveInDate' => $tenant->move_in_date?->toDateString(),
-                'moveOutDate' => $tenant->move_out_date?->toDateString(),
-                'isActive' => $tenant->is_active,
-                'unit' => $unit ? [
-                    'id' => $unit->id,
-                    'unitNumber' => $unit->unit_number,
-                    'floor' => $unit->floor,
-                    'rentAmount' => $unit->rent_amount,
-                    'rentAmountFormatted' => $unit->rent_amount_formatted,
-                    'currency' => $unit->currency,
-                    'currencySymbol' => $unit->currency_symbol,
-                    'status' => $unit->status,
-                    'property' => $property ? [
-                        'id' => $property->id,
-                        'name' => $property->name,
-                        'addressLine' => $property->address_line,
-                        'city' => $property->city,
-                        'state' => $property->state,
-                        'country' => $property->country,
-                    ] : null,
-                ] : null,
-            ] : null,
+            'tenant' => $tenantProfile,
+            'tenantProfile' => $tenantProfile,
+            'tenantProfiles' => $tenantProfile ? [$tenantProfile] : [],
         ];
     }
 }
