@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\InvoiceAdminController;
 use App\Http\Controllers\Admin\LandlordAdminController;
 use App\Http\Controllers\Admin\MaintenanceAdminController;
 use App\Http\Controllers\Admin\DeploymentToolsController;
+use App\Http\Controllers\Admin\PropertyUnitAdminController;
 use App\Http\Controllers\SiteController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
 	Route::middleware(['auth'])->group(function () {
 		Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 		Route::resource('/landlords', LandlordAdminController::class)->only(['index', 'create', 'store']);
+		Route::get('/properties/{property}/units/create', [PropertyUnitAdminController::class, 'create'])->name('properties.units.create');
+		Route::post('/properties/{property}/units', [PropertyUnitAdminController::class, 'store'])->name('properties.units.store');
+		Route::get('/properties/{property}/units/{unit}/edit', [PropertyUnitAdminController::class, 'edit'])->name('properties.units.edit');
+		Route::put('/properties/{property}/units/{unit}', [PropertyUnitAdminController::class, 'update'])->name('properties.units.update');
+		Route::delete('/properties/{property}/units/{unit}', [PropertyUnitAdminController::class, 'destroy'])->name('properties.units.destroy');
 		Route::resource('/properties', PropertyAdminController::class);
 		Route::get('/tenants', [TenantAdminController::class, 'index'])->name('tenants.index');
 		Route::get('/tenants/{tenant}', [TenantAdminController::class, 'show'])->name('tenants.show');

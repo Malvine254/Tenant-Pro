@@ -14,7 +14,7 @@
         <h3 style="font-size:13px;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;">Property Info</h3>
         <p style="font-size:14px;margin-bottom:6px;"><strong>Address:</strong> {{ $property->address_line }}, {{ $property->city }}{{ $property->state ? ', '.$property->state : '' }}</p>
         <p style="font-size:14px;margin-bottom:6px;"><strong>Country:</strong> {{ $property->country }}</p>
-        <p style="font-size:14px;margin-bottom:6px;"><strong>Landlord:</strong> {{ $property->landlord?->name ?? '—' }}</p>
+        <p style="font-size:14px;margin-bottom:6px;"><strong>Landlord:</strong> {{ $property->landlord?->name ?? '-' }}</p>
         @if($property->description)
         <p style="font-size:14px;margin-top:10px;color:#64748b;">{{ $property->description }}</p>
         @endif
@@ -28,25 +28,35 @@
 </div>
 
 <div class="card">
-    <h3 style="font-size:13px;color:#94a3b8;margin-bottom:12px;text-transform:uppercase;">Units</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="font-size:13px;color:#94a3b8;text-transform:uppercase;">Units</h3>
+        <a href="{{ route('admin.properties.units.create', $property) }}" class="btn btn-primary">+ Add Unit</a>
+    </div>
     <table>
         <thead>
-            <tr><th>Unit</th><th>Floor</th><th>Rent (KES)</th><th>Status</th><th>Tenant</th></tr>
+            <tr><th>Unit</th><th>Floor</th><th>Rent (KES)</th><th>Status</th><th>Tenant</th><th>Actions</th></tr>
         </thead>
         <tbody>
             @forelse($property->units as $unit)
             <tr>
                 <td>{{ $unit->unit_number }}</td>
-                <td>{{ $unit->floor ?? '—' }}</td>
+                <td>{{ $unit->floor ?? '-' }}</td>
                 <td>{{ number_format($unit->rent_amount, 2) }}</td>
                 <td>
                     @php $statusColors = ['AVAILABLE'=>'badge-green','OCCUPIED'=>'badge-blue','UNDER_MAINTENANCE'=>'badge-yellow']; @endphp
                     <span class="badge {{ $statusColors[$unit->status] ?? 'badge-gray' }}">{{ $unit->status }}</span>
                 </td>
-                <td>{{ $unit->tenant?->user?->name ?? '—' }}</td>
+                <td>{{ $unit->tenant?->user?->name ?? '-' }}</td>
+                <td>
+                    <a href="{{ route('admin.properties.units.edit', [$property, $unit]) }}" class="btn btn-secondary" style="margin-right:6px;">Edit</a>
+                    <form method="POST" action="{{ route('admin.properties.units.destroy', [$property, $unit]) }}" style="display:inline;">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this unit?')">Delete</button>
+                    </form>
+                </td>
             </tr>
             @empty
-            <tr><td colspan="5" style="color:#94a3b8;text-align:center;padding:20px;">No units yet.</td></tr>
+            <tr><td colspan="6" style="color:#94a3b8;text-align:center;padding:20px;">No units yet.</td></tr>
             @endforelse
         </tbody>
     </table>
