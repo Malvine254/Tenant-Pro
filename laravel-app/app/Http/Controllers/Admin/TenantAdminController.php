@@ -22,18 +22,17 @@ class TenantAdminController extends Controller
                   ->orWhere('email', 'like', "%{$request->search}%");
             }))
             ->latest()->paginate(15);
-        return view('admin.tenants.index', compact('tenants'));
+
+        $unassignedTenantUsers = $this->unassignedTenantUsers($request)
+            ->limit(10)
+            ->get();
+
+        return view('admin.tenants.index', compact('tenants', 'unassignedTenantUsers'));
     }
 
     public function create(Request $request)
     {
-        $user = $request->user();
-        $units = Unit::with('property')
-            ->whereDoesntHave('tenant', fn($tenant) => $tenant->where('is_active', true))
-            ->when($this->isLandlord($user), fn($q) => $q->whereHas('property', fn($property) => $property->where('landlord_id', $user->id)))
-            ->orderBy('unit_number')
-            ->get()
-            ->sortBy(fn($unit) => ($unit->property?->name ?? '') . ' ' . $unit->unit_number);
+        $units = $this->availableUnits($request);
 
         return view('admin.tenants.create', compact('units'));
     }
@@ -87,6 +86,48 @@ class TenantAdminController extends Controller
             ->with('success', 'Tenant created and assigned to unit.');
     }
 
+    public function assign(Request $request)
+    {
+        $tenantUsers = $this->unassignedTenantUsers($request)->get();
+        $units = $this->availableUnits($request);
+
+        return view('admin.tenants.assign', compact('tenantUsers', 'units'));
+    }
+
+    public function assignStore(Request $request)
+    {
+        $admin = $request->user();
+        $data = $request->validate([
+            'user_id' => 'required|uuid|exists:users,id',
+            'unit_id' => 'required|uuid|exists:units,id',
+            'move_in_date' => 'required|date',
+            'move_out_date' => 'nullable|date|after:move_in_date',
+        ]);
+
+        $tenantUser = User::where('id', $data['user_id'])
+            ->whereHas('role', fn($role) => $role->where('name', 'TENANT'))
+            ->firstOrFail();
+        abort_if($tenantUser->tenant()->where('is_active', true)->exists(), 422, 'This tenant already has an active unit assignment.');
+
+        $unit = Unit::with('property')->findOrFail($data['unit_id']);
+        abort_if($this->isLandlord($admin) && $unit->property?->landlord_id !== $admin->id, 403);
+        abort_if($unit->tenant()->where('is_active', true)->exists(), 422, 'This unit already has an active tenant.');
+
+        $tenant = Tenant::create([
+            'user_id' => $tenantUser->id,
+            'unit_id' => $unit->id,
+            'move_in_date' => $data['move_in_date'],
+            'move_out_date' => $data['move_out_date'] ?? null,
+            'is_active' => true,
+        ]);
+
+        $unit->update(['status' => 'OCCUPIED']);
+
+        return redirect()
+            ->route('admin.tenants.show', $tenant)
+            ->with('success', 'Existing tenant account assigned to unit.');
+    }
+
     public function show(Tenant $tenant)
     {
         $user = request()->user();
@@ -99,5 +140,30 @@ class TenantAdminController extends Controller
     private function isLandlord(?User $user): bool
     {
         return $user?->role?->name === 'LANDLORD';
+    }
+
+    private function availableUnits(Request $request)
+    {
+        $user = $request->user();
+
+        return Unit::with('property')
+            ->whereDoesntHave('tenant', fn($tenant) => $tenant->where('is_active', true))
+            ->when($this->isLandlord($user), fn($q) => $q->whereHas('property', fn($property) => $property->where('landlord_id', $user->id)))
+            ->orderBy('unit_number')
+            ->get()
+            ->sortBy(fn($unit) => ($unit->property?->name ?? '') . ' ' . $unit->unit_number);
+    }
+
+    private function unassignedTenantUsers(Request $request)
+    {
+        return User::with('role')
+            ->whereHas('role', fn($role) => $role->where('name', 'TENANT'))
+            ->whereDoesntHave('tenant', fn($tenant) => $tenant->where('is_active', true))
+            ->when($request->search, fn($query) => $query->where(function ($userQuery) use ($request) {
+                $userQuery->where('name', 'like', "%{$request->search}%")
+                    ->orWhere('email', 'like', "%{$request->search}%")
+                    ->orWhere('phone_number', 'like', "%{$request->search}%");
+            }))
+            ->orderBy('name');
     }
 }

@@ -48,6 +48,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 		Route::resource('/properties', PropertyAdminController::class);
 		Route::get('/tenants/create', [TenantAdminController::class, 'create'])->name('tenants.create');
 		Route::post('/tenants', [TenantAdminController::class, 'store'])->name('tenants.store');
+		Route::get('/tenants/assign', [TenantAdminController::class, 'assign'])->name('tenants.assign');
+		Route::post('/tenants/assign', [TenantAdminController::class, 'assignStore'])->name('tenants.assign.store');
 		Route::get('/tenants', [TenantAdminController::class, 'index'])->name('tenants.index');
 		Route::get('/tenants/{tenant}', [TenantAdminController::class, 'show'])->name('tenants.show');
 		Route::get('/invoices', [InvoiceAdminController::class, 'index'])->name('invoices.index');
