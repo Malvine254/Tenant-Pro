@@ -43,7 +43,7 @@ class AuthRecoveryTest extends TestCase
         Mail::assertSentCount(2);
     }
 
-    public function test_password_can_be_reset_but_unverified_account_stays_unverified(): void
+    public function test_password_reset_also_verifies_an_unverified_email(): void
     {
         $user = $this->makeUnverifiedUser();
         $code = '654321';
@@ -55,11 +55,11 @@ class AuthRecoveryTest extends TestCase
             'code' => $code,
             'newPassword' => 'new-password-123',
         ])->assertOk()->assertJsonFragment([
-            'message' => 'Password reset successfully. Please verify your email before signing in.',
+            'message' => 'Password reset successfully. You can now sign in.',
         ]);
 
         $this->assertTrue(Hash::check('new-password-123', $user->fresh()->password));
-        $this->assertNull($user->fresh()->email_verified_at);
+        $this->assertNotNull($user->fresh()->email_verified_at);
     }
 
     private function makeUnverifiedUser(): User

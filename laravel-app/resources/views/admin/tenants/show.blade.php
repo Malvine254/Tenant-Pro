@@ -6,6 +6,12 @@
     <a href="{{ route('admin.tenants.index') }}" style="color:#94a3b8;text-decoration:none;font-size:13px;">Tenants</a>
     <span style="color:#cbd5e1;">/</span>
     <span style="font-weight:600;">{{ $tenant->user->name }}</span>
+    @if($tenant->is_active)
+        <form method="POST" action="{{ route('admin.tenants.unassign', $tenant) }}" style="margin-left:auto;">
+            @csrf @method('PATCH')
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Unassign this tenant and mark the unit available?')">Unassign Tenant</button>
+        </form>
+    @endif
 </div>
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">

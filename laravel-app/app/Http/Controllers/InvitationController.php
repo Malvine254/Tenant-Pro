@@ -13,6 +13,10 @@ class InvitationController extends Controller
     public function index(Request $request)
     {
         $query = Invitation::with(['property', 'unit', 'sentBy'])
+            ->when(
+                $this->isLandlord($request->user()),
+                fn($q) => $q->where('sent_by_id', $request->user()->id)
+            )
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->property_id, fn($q) => $q->where('property_id', $request->property_id));
         return response()->json($query->latest()->paginate(15));
@@ -24,10 +28,15 @@ class InvitationController extends Controller
             'phone_number' => 'required|string|max:20',
             'property_id' => 'required|uuid|exists:properties,id',
             'unit_id' => 'required|uuid|exists:units,id',
-            'sent_by_id' => 'required|uuid|exists:users,id',
             'sent_via' => 'nullable|string',
             'metadata' => 'nullable|array',
         ]);
+        $property = \App\Models\Property::findOrFail($data['property_id']);
+        $unit = \App\Models\Unit::findOrFail($data['unit_id']);
+        abort_if($this->isLandlord($request->user()) && $property->landlord_id !== $request->user()->id, 403);
+        abort_if($unit->property_id !== $property->id, 422, 'The selected unit does not belong to this property.');
+
+        $data['sent_by_id'] = $request->user()->id;
         $data['code'] = strtoupper(Str::random(8));
         $data['status'] = 'PENDING';
         $data['expires_at'] = now()->addDays(7);
@@ -36,11 +45,13 @@ class InvitationController extends Controller
 
     public function show(Invitation $invitation)
     {
+        $this->authorizeInvitation($invitation);
         return response()->json($invitation->load(['property', 'unit', 'sentBy']));
     }
 
     public function update(Request $request, Invitation $invitation)
     {
+        $this->authorizeInvitation($invitation);
         $data = $request->validate([
             'status' => 'sometimes|in:PENDING,ACCEPTED,EXPIRED,REVOKED',
             'accepted_at' => 'nullable|date',
@@ -54,6 +65,7 @@ class InvitationController extends Controller
 
     public function destroy(Invitation $invitation)
     {
+        $this->authorizeInvitation($invitation);
         $invitation->delete();
         return response()->json(null, 204);
     }
@@ -86,5 +98,16 @@ class InvitationController extends Controller
         });
 
         return response()->json(['message' => 'Invitation accepted and unit linked.']);
+    }
+
+    private function isLandlord($user): bool
+    {
+        return $user?->role?->name === 'LANDLORD';
+    }
+
+    private function authorizeInvitation(Invitation $invitation): void
+    {
+        $user = request()->user();
+        abort_if($this->isLandlord($user) && $invitation->sent_by_id !== $user->id, 403);
     }
 }

@@ -57,6 +57,7 @@
         <a href="{{ route('admin.properties.index') }}" class="{{ request()->routeIs('admin.properties*') ? 'active' : '' }}">Properties</a>
         <a href="{{ route('admin.units.index') }}" class="{{ request()->routeIs('admin.units*') ? 'active' : '' }}">Units</a>
         <a href="{{ route('admin.tenants.index') }}" class="{{ request()->routeIs('admin.tenants*') ? 'active' : '' }}">Tenants</a>
+        <a href="{{ route('admin.invitations.index') }}" class="{{ request()->routeIs('admin.invitations*') ? 'active' : '' }}">Invitations</a>
         <a href="{{ route('admin.invoices.index') }}" class="{{ request()->routeIs('admin.invoices*') ? 'active' : '' }}">Invoices</a>
         <a href="{{ route('admin.maintenance.index') }}" class="{{ request()->routeIs('admin.maintenance*') ? 'active' : '' }}">Maintenance</a>
         <a href="{{ route('admin.deployment-tools.index') }}" class="{{ request()->routeIs('admin.deployment-tools*') ? 'active' : '' }}">Deployment Tools</a>

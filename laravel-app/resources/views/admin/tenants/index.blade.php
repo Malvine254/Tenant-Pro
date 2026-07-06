@@ -22,6 +22,7 @@
                 <th>Unit</th>
                 <th>Property</th>
                 <th>Move-in</th>
+                <th>Closing date</th>
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
@@ -34,6 +35,9 @@
                 <td>{{ $tenant->unit->unit_number }}</td>
                 <td>{{ $tenant->unit->property->name ?? '—' }}</td>
                 <td style="font-size:13px;">{{ $tenant->move_in_date?->format('d M Y') }}</td>
+                <td style="font-size:13px;">
+                    {{ $tenant->move_out_date?->format('d M Y') ?? ($tenant->is_active ? 'Active tenancy' : '—') }}
+                </td>
                 <td>
                     <span class="badge {{ $tenant->is_active ? 'badge-green' : 'badge-gray' }}">
                         {{ $tenant->is_active ? 'Active' : 'Inactive' }}
@@ -42,7 +46,7 @@
                 <td><a href="{{ route('admin.tenants.show', $tenant) }}" class="btn btn-secondary">View</a></td>
             </tr>
             @empty
-            <tr><td colspan="7" style="color:#94a3b8;text-align:center;padding:24px;">No tenants found.</td></tr>
+            <tr><td colspan="8" style="color:#94a3b8;text-align:center;padding:24px;">No tenants found.</td></tr>
             @endforelse
         </tbody>
     </table>

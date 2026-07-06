@@ -355,9 +355,10 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await this.usersService.updatePassword(user.id, hashedPassword);
+    await this.usersService.activateAndVerifyUser(user.id);
 
     return {
-      message: 'Password reset successfully',
+      message: 'Password reset successfully. You can now sign in.',
     };
   }
 }

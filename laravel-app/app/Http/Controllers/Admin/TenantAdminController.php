@@ -10,6 +10,7 @@ use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class TenantAdminController extends Controller
 {
@@ -75,15 +76,19 @@ class TenantAdminController extends Controller
             'is_active' => true,
         ]);
 
-        $tenant = Tenant::create([
-            'user_id' => $tenantUser->id,
-            'unit_id' => $unit->id,
-            'move_in_date' => $data['move_in_date'],
-            'move_out_date' => $data['move_out_date'] ?? null,
-            'is_active' => true,
-        ]);
-
-        $unit->update(['status' => 'OCCUPIED']);
+        $tenant = DB::transaction(function () use ($tenantUser, $unit, $data) {
+            $tenant = Tenant::updateOrCreate(
+                ['user_id' => $tenantUser->id],
+                [
+                    'unit_id' => $unit->id,
+                    'move_in_date' => $data['move_in_date'],
+                    'move_out_date' => $data['move_out_date'] ?? null,
+                    'is_active' => true,
+                ]
+            );
+            $unit->update(['status' => 'OCCUPIED']);
+            return $tenant;
+        });
 
         return redirect()
             ->route('admin.tenants.show', $tenant)
@@ -142,6 +147,31 @@ class TenantAdminController extends Controller
 
         $tenant->load(['user', 'unit.property', 'unit.invoices', 'unit.maintenanceRequests']);
         return view('admin.tenants.show', compact('tenant'));
+    }
+
+    public function unassign(Request $request, Tenant $tenant)
+    {
+        $tenant->load('unit.property');
+        abort_if(
+            $this->isLandlord($request->user()) && $tenant->unit?->property?->landlord_id !== $request->user()->id,
+            403
+        );
+
+        if (!$tenant->is_active) {
+            return back()->with('error', 'This tenant is already unassigned.');
+        }
+
+        DB::transaction(function () use ($tenant) {
+            $tenant->update([
+                'is_active' => false,
+                'move_out_date' => now()->toDateString(),
+            ]);
+            $tenant->unit()->update(['status' => 'AVAILABLE']);
+        });
+
+        return redirect()
+            ->route('admin.tenants.index')
+            ->with('success', 'Tenancy closed on '.now()->format('d M Y').' and the unit was marked available.');
     }
 
     private function isLandlord(?User $user): bool

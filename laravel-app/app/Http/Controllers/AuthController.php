@@ -273,13 +273,15 @@ class AuthController extends Controller
         }
 
         Cache::forget($this->passwordResetCacheKey($email));
-        $user->forceFill(['password' => Hash::make($data['new_password'])])->save();
+        // Possession of the emailed reset code also proves ownership of the email.
+        $user->forceFill([
+            'password' => Hash::make($data['new_password']),
+            'email_verified_at' => $user->email_verified_at ?? now(),
+        ])->save();
         $user->tokens()->delete();
 
         return response()->json([
-            'message' => $user->email_verified_at
-                ? 'Password reset successfully. You can now sign in.'
-                : 'Password reset successfully. Please verify your email before signing in.',
+            'message' => 'Password reset successfully. You can now sign in.',
         ]);
     }
 
@@ -407,6 +409,9 @@ class AuthController extends Controller
     private function userPayload(User $user): array
     {
         $tenant = $user->relationLoaded('tenant') ? $user->tenant : null;
+        if ($tenant && !$tenant->is_active) {
+            $tenant = null;
+        }
         $unit = $tenant?->relationLoaded('unit') ? $tenant->unit : null;
         $property = $unit?->relationLoaded('property') ? $unit->property : null;
 

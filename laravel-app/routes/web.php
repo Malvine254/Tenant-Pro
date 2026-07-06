@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\LandlordAdminController;
 use App\Http\Controllers\Admin\MaintenanceAdminController;
 use App\Http\Controllers\Admin\DeploymentToolsController;
 use App\Http\Controllers\Admin\PropertyUnitAdminController;
+use App\Http\Controllers\Admin\InvitationAdminController;
 use App\Http\Controllers\SiteController;
 use Illuminate\Support\Facades\Route;
 
@@ -53,6 +54,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 		Route::post('/tenants/assign', [TenantAdminController::class, 'assignStore'])->name('tenants.assign.store');
 		Route::get('/tenants', [TenantAdminController::class, 'index'])->name('tenants.index');
 		Route::get('/tenants/{tenant}', [TenantAdminController::class, 'show'])->name('tenants.show');
+		Route::patch('/tenants/{tenant}/unassign', [TenantAdminController::class, 'unassign'])->name('tenants.unassign');
+		Route::get('/invitations', [InvitationAdminController::class, 'index'])->name('invitations.index');
 		Route::get('/invoices', [InvoiceAdminController::class, 'index'])->name('invoices.index');
 		Route::get('/invoices/{invoice}', [InvoiceAdminController::class, 'show'])->name('invoices.show');
 		Route::get('/maintenance', [MaintenanceAdminController::class, 'index'])->name('maintenance.index');
