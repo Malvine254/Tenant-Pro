@@ -30,6 +30,8 @@ Route::middleware('mobile.api.key')->group(function () {
 	// Public auth routes
 	Route::post('/auth/register', [AuthController::class, 'register']);
 	Route::post('/auth/login', [AuthController::class, 'login']);
+	Route::post('/auth/email-otp/request', [AuthController::class, 'requestEmailOtp']);
+	Route::post('/auth/email-otp/verify', [AuthController::class, 'verifyEmailOtp']);
 
 	// Protected routes
 	Route::middleware('auth:sanctum')->group(function () {

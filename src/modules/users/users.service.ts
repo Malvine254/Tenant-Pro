@@ -89,7 +89,7 @@ export class UsersService {
       bio: user.bio ?? null,
       role: user.role.name,
       isActive: user.isActive,
-      emailVerified: user.emailVerified ?? true,
+      emailVerified: user.emailVerified === true,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
@@ -240,7 +240,7 @@ export class UsersService {
       emergencyContactPhone: user.emergencyContactPhone ?? null,
       bio: user.bio ?? null,
       isActive: user.isActive,
-      emailVerified: user.emailVerified ?? true,
+      emailVerified: user.emailVerified === true,
       createdAt: new Date(user.createdAt),
       updatedAt: new Date(user.updatedAt),
       role: { name: user.role },
@@ -357,6 +357,7 @@ export class UsersService {
           roleId,
           passwordHash,
           isActive: true,
+          emailVerified: false,
         },
         include: {
           role: true,
@@ -953,7 +954,7 @@ export class UsersService {
 
     return this.prisma.user.update({
       where: { id: userId },
-      data: { isActive: true },
+      data: { isActive: true, emailVerified: true },
     });
   }
 

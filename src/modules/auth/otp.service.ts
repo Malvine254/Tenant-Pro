@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { randomInt } from 'crypto';
 
 type OtpRecord = {
   code: string;
@@ -53,7 +54,7 @@ export class OtpService {
 
     const max = Math.pow(10, this.otpLength) - 1;
     const min = Math.pow(10, this.otpLength - 1);
-    const code = Math.floor(min + Math.random() * (max - min + 1)).toString();
+    const code = randomInt(min, max + 1).toString();
     const expiresAt = Date.now() + this.ttlMs;
     const lastSentAt = Date.now();
 
@@ -70,6 +71,10 @@ export class OtpService {
    */
   verifyOtp(phoneNumber: string, code: string) {
     return this.verifyOtpForIdentifier(phoneNumber, code);
+  }
+
+  discardOtp(identifier: string) {
+    this.otpStore.delete(identifier);
   }
 
   /**

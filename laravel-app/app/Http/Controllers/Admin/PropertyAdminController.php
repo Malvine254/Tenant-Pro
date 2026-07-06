@@ -45,8 +45,11 @@ class PropertyAdminController extends Controller
             'state' => 'nullable|string',
             'country' => 'nullable|string',
         ]);
-        Property::create($data);
-        return redirect()->route('admin.properties.index')->with('success', 'Property created.');
+        $property = Property::create($data);
+
+        return redirect()
+            ->route('admin.properties.units.create', $property)
+            ->with('success', 'Property created. Add its first unit below.');
     }
 
     public function show(Property $property)

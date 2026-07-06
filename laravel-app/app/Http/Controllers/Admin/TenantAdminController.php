@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Role;
+use App\Models\Property;
 use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
@@ -33,8 +34,9 @@ class TenantAdminController extends Controller
     public function create(Request $request)
     {
         $units = $this->availableUnits($request);
+        $properties = $this->assignableProperties($request);
 
-        return view('admin.tenants.create', compact('units'));
+        return view('admin.tenants.create', compact('units', 'properties'));
     }
 
     public function store(Request $request)
@@ -46,12 +48,14 @@ class TenantAdminController extends Controller
             'email' => 'required|email|unique:users,email',
             'phone_number' => 'nullable|string|unique:users,phone_number',
             'password' => 'required|string|min:8|confirmed',
+            'property_id' => 'required|uuid|exists:properties,id',
             'unit_id' => 'required|uuid|exists:units,id',
             'move_in_date' => 'required|date',
             'move_out_date' => 'nullable|date|after:move_in_date',
         ]);
 
         $unit = Unit::with('property')->findOrFail($data['unit_id']);
+        abort_if($unit->property_id !== $data['property_id'], 422, 'The selected unit does not belong to this property.');
         abort_if($this->isLandlord($admin) && $unit->property?->landlord_id !== $admin->id, 403);
         abort_if($unit->tenant()->where('is_active', true)->exists(), 422, 'This unit already has an active tenant.');
 
@@ -90,8 +94,9 @@ class TenantAdminController extends Controller
     {
         $tenantUsers = $this->unassignedTenantUsers($request)->get();
         $units = $this->availableUnits($request);
+        $properties = $this->assignableProperties($request);
 
-        return view('admin.tenants.assign', compact('tenantUsers', 'units'));
+        return view('admin.tenants.assign', compact('tenantUsers', 'units', 'properties'));
     }
 
     public function assignStore(Request $request)
@@ -99,6 +104,7 @@ class TenantAdminController extends Controller
         $admin = $request->user();
         $data = $request->validate([
             'user_id' => 'required|uuid|exists:users,id',
+            'property_id' => 'required|uuid|exists:properties,id',
             'unit_id' => 'required|uuid|exists:units,id',
             'move_in_date' => 'required|date',
             'move_out_date' => 'nullable|date|after:move_in_date',
@@ -110,6 +116,7 @@ class TenantAdminController extends Controller
         abort_if($tenantUser->tenant()->where('is_active', true)->exists(), 422, 'This tenant already has an active unit assignment.');
 
         $unit = Unit::with('property')->findOrFail($data['unit_id']);
+        abort_if($unit->property_id !== $data['property_id'], 422, 'The selected unit does not belong to this property.');
         abort_if($this->isLandlord($admin) && $unit->property?->landlord_id !== $admin->id, 403);
         abort_if($unit->tenant()->where('is_active', true)->exists(), 422, 'This unit already has an active tenant.');
 
@@ -152,6 +159,20 @@ class TenantAdminController extends Controller
             ->orderBy('unit_number')
             ->get()
             ->sortBy(fn($unit) => ($unit->property?->name ?? '') . ' ' . $unit->unit_number);
+    }
+
+    private function assignableProperties(Request $request)
+    {
+        $user = $request->user();
+
+        return Property::query()
+            ->when($this->isLandlord($user), fn($query) => $query->where('landlord_id', $user->id))
+            ->whereHas('units', fn($units) => $units->whereDoesntHave(
+                'tenant',
+                fn($tenant) => $tenant->where('is_active', true)
+            ))
+            ->orderBy('name')
+            ->get();
     }
 
     private function unassignedTenantUsers(Request $request)

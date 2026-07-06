@@ -22,13 +22,32 @@
                 @endif
                 @error('user_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>
+            @php
+                $oldUnit = $units->firstWhere('id', old('unit_id'));
+                $selectedProperty = old('property_id', request('property_id', $oldUnit?->property_id));
+                if (!$selectedProperty && auth()->user()?->role?->name === 'LANDLORD' && $properties->isNotEmpty()) {
+                    $selectedProperty = $properties->first()->id;
+                }
+            @endphp
+            <div class="form-group">
+                <label>Property</label>
+                <select id="propertySelect" name="property_id" required {{ $properties->isEmpty() ? 'disabled' : '' }}>
+                    <option value="">- Select Property -</option>
+                    @foreach($properties as $property)
+                        <option value="{{ $property->id }}" {{ $selectedProperty === $property->id ? 'selected' : '' }}>
+                            {{ $property->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('property_id')<div class="form-error">{{ $message }}</div>@enderror
+            </div>
             <div class="form-group">
                 <label>Available Unit</label>
-                <select name="unit_id" required {{ $units->isEmpty() ? 'disabled' : '' }}>
+                <select id="unitSelect" name="unit_id" required {{ $units->isEmpty() ? 'disabled' : '' }}>
                     <option value="">- Select Available Unit -</option>
                     @foreach($units as $unit)
-                        <option value="{{ $unit->id }}" {{ old('unit_id') === $unit->id ? 'selected' : '' }}>
-                            {{ $unit->property?->name }} - Unit {{ $unit->unit_number }} ({{ $unit->rent_amount_formatted }})
+                        <option value="{{ $unit->id }}" data-property-id="{{ $unit->property_id }}" {{ old('unit_id') === $unit->id ? 'selected' : '' }}>
+                            Unit {{ $unit->unit_number }} ({{ $unit->rent_amount_formatted }})
                         </option>
                     @endforeach
                 </select>
@@ -56,4 +75,20 @@
         </form>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const property = document.getElementById('propertySelect');
+    const unit = document.getElementById('unitSelect');
+    const filterUnits = () => {
+        const propertyId = property.value;
+        Array.from(unit.options).forEach((option, index) => {
+            if (index > 0) option.hidden = option.dataset.propertyId !== propertyId;
+        });
+        if (unit.selectedOptions[0]?.hidden) unit.value = '';
+        unit.disabled = !propertyId;
+    };
+    property.addEventListener('change', filterUnits);
+    filterUnits();
+});
+</script>
 @endsection

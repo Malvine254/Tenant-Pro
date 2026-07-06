@@ -101,9 +101,10 @@ model User {
   emergencyContactName String?
   emergencyContactPhone String?
   bio                  String?              @db.Text
-  fcmToken             String?
-  isActive             Boolean              @default(true)
-  roleId               String
+    fcmToken             String?
+    isActive             Boolean              @default(true)
+    emailVerified        Boolean              @default(false)
+    roleId               String
   role                 Role                 @relation(fields: [roleId], references: [id])
   tenantProfiles       Tenant[]
   ownedProperties      Property[]           @relation("LandlordProperties")

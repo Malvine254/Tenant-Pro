@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -51,13 +54,12 @@ class AuthController extends Controller
             'is_active' => true,
         ]);
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $this->sendEmailOtp($user);
+
         return response()->json([
-            'message' => 'Account created successfully.',
+            'message' => 'Account created. A verification code has been sent to your email.',
             'email' => $user->email,
             'user' => $this->userPayload($user->load(['role', 'tenant.unit.property'])),
-            'token' => $token,
-            'accessToken' => $token,
         ], 201);
     }
 
@@ -80,12 +82,120 @@ class AuthController extends Controller
             return response()->json(['message' => 'Account is inactive.'], 403);
         }
 
+        if (!$user->email_verified_at) {
+            return response()->json([
+                'message' => 'Please verify your email before signing in.',
+                'email' => $user->email,
+            ], 403);
+        }
+
         $token = $user->createToken('api-token')->plainTextToken;
         return response()->json([
             'user' => $this->userPayload($user->load(['role', 'tenant.unit.property'])),
             'token' => $token,
             'accessToken' => $token,
         ]);
+    }
+
+    public function requestEmailOtp(Request $request)
+    {
+        $data = $request->validate(['email' => 'required|email']);
+        $email = strtolower(trim($data['email']));
+        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'If the account exists, a verification code has been sent.',
+                'email' => $email,
+            ]);
+        }
+
+        if ($user->email_verified_at) {
+            return response()->json([
+                'message' => 'This email address is already verified.',
+                'email' => $email,
+            ]);
+        }
+
+        $rateKey = 'email-otp-resend:'.$user->id;
+        if (RateLimiter::tooManyAttempts($rateKey, 1)) {
+            return response()->json([
+                'message' => 'Please wait '.RateLimiter::availableIn($rateKey).' seconds before requesting another code.',
+            ], 429);
+        }
+
+        RateLimiter::hit($rateKey, 60);
+        try {
+            $this->sendEmailOtp($user);
+        } catch (\Throwable $error) {
+            RateLimiter::clear($rateKey);
+            throw $error;
+        }
+
+        return response()->json([
+            'message' => 'Verification code sent to your email.',
+            'email' => $user->email,
+            'expiresAt' => now()->addMinutes(10)->toISOString(),
+        ]);
+    }
+
+    public function verifyEmailOtp(Request $request)
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+            'code' => 'required|digits:6',
+        ]);
+
+        $email = strtolower(trim($data['email']));
+        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
+        $record = Cache::get($this->otpCacheKey($email));
+
+        if (!$user || !$record || !Hash::check($data['code'], $record['hash'])) {
+            throw ValidationException::withMessages([
+                'code' => ['The verification code is invalid or has expired.'],
+            ]);
+        }
+
+        Cache::forget($this->otpCacheKey($email));
+        $user->forceFill(['email_verified_at' => now()])->save();
+        $user->tokens()->delete();
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Email verified successfully.',
+            'user' => $this->userPayload($user->load(['role', 'tenant.unit.property'])),
+            'token' => $token,
+            'accessToken' => $token,
+        ]);
+    }
+
+    private function sendEmailOtp(User $user): void
+    {
+        $code = (string) random_int(100000, 999999);
+        $email = strtolower(trim($user->email));
+
+        Cache::put($this->otpCacheKey($email), [
+            'hash' => Hash::make($code),
+        ], now()->addMinutes(10));
+
+        Mail::html(
+            '<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:28px">'
+            .'<h2 style="color:#1a2744">Verify your email</h2>'
+            .'<p>Hello '.e($user->first_name ?: $user->name ?: 'there').',</p>'
+            .'<p>Use this code to finish setting up your TenantPro account:</p>'
+            .'<div style="font-size:32px;font-weight:700;letter-spacing:8px;color:#274690;padding:20px 0">'
+            .e($code).'</div>'
+            .'<p>This code expires in 10 minutes. If you did not request it, you can ignore this email.</p>'
+            .'</div>',
+            function ($message) use ($user) {
+                $message->to($user->email, $user->name)->subject('Your TenantPro verification code');
+            }
+        );
+    }
+
+    private function otpCacheKey(string $email): string
+    {
+        return 'email-verification-otp:'.hash('sha256', strtolower(trim($email)));
     }
 
     public function me(Request $request)

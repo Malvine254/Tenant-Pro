@@ -26,6 +26,7 @@
                 <td>{{ $property->landlord?->name ?? '—' }}</td>
                 <td>{{ $property->units_count ?? $property->units->count() }}</td>
                 <td>
+                    <a href="{{ route('admin.properties.units.create', $property) }}" class="btn btn-primary" style="margin-right:6px;">+ Add Unit</a>
                     <a href="{{ route('admin.properties.edit', $property) }}" class="btn btn-secondary" style="margin-right:6px;">Edit</a>
                     <form method="POST" action="{{ route('admin.properties.destroy', $property) }}" style="display:inline;">
                         @csrf @method('DELETE')

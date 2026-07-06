@@ -11,10 +11,21 @@
     <div class="card">
         <form method="POST" action="{{ route('admin.properties.units.store', $property) }}">
             @csrf
-            <div class="form-group">
-                <label>Unit Number</label>
-                <input type="text" name="unit_number" value="{{ old('unit_number') }}" required>
-                @error('unit_number')<div class="form-error">{{ $message }}</div>@enderror
+            <div style="padding:12px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px;margin-bottom:16px;color:#1e40af;font-size:13px;">
+                To add several units, enter the first unit number and quantity. For example,
+                <strong>101</strong> with quantity <strong>6</strong> creates units 101–106.
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;">
+                <div class="form-group">
+                    <label>First Unit Number</label>
+                    <input type="text" name="unit_number" value="{{ old('unit_number') }}" placeholder="e.g. 101 or A01" required>
+                    @error('unit_number')<div class="form-error">{{ $message }}</div>@enderror
+                </div>
+                <div class="form-group">
+                    <label>Number of Units</label>
+                    <input type="number" name="units_count" value="{{ old('units_count', 1) }}" min="1" max="100" required>
+                    @error('units_count')<div class="form-error">{{ $message }}</div>@enderror
+                </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div class="form-group">
@@ -38,7 +49,7 @@
                 @error('status')<div class="form-error">{{ $message }}</div>@enderror
             </div>
             <div style="display:flex;gap:10px;">
-                <button type="submit" class="btn btn-primary">Save Unit</button>
+                <button type="submit" class="btn btn-primary">Create Unit(s)</button>
                 <a href="{{ route('admin.properties.show', $property) }}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>

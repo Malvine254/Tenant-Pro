@@ -134,6 +134,10 @@
         <div style="font-weight:600;margin-bottom:4px;">Add Property</div>
         <div style="font-size:13px;color:#94a3b8;">Create property and assign owner</div>
     </a>
+    <a href="{{ route('admin.units.index') }}" class="card" style="text-decoration:none;color:inherit;display:block;">
+        <div style="font-weight:600;margin-bottom:4px;">Add Unit</div>
+        <div style="font-size:13px;color:#94a3b8;">Choose one of your properties and add a unit</div>
+    </a>
     <a href="{{ route('admin.tenants.create') }}" class="card" style="text-decoration:none;color:inherit;display:block;">
         <div style="font-weight:600;margin-bottom:4px;">Add Tenant</div>
         <div style="font-size:13px;color:#94a3b8;">Assign tenant to a unit</div>

@@ -85,7 +85,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    if (metadata.emailVerified === false) {
+    // Fail closed: a missing/legacy verification flag must never grant access.
+    if (metadata.emailVerified !== true) {
       throw new UnauthorizedException('Please verify your email before signing in');
     }
 
@@ -167,6 +168,11 @@ export class AuthService {
       throw new UnauthorizedException('User is inactive or not found');
     }
 
+    const metadata = user as typeof user & { emailVerified?: boolean };
+    if (user.email && metadata.emailVerified !== true) {
+      throw new UnauthorizedException('Please verify your email before signing in');
+    }
+
     if (!this.usersService.isAllowedAppRole(user.role.name as RoleName)) {
       throw new BadRequestException('Role is not allowed for this app login flow');
     }
@@ -210,7 +216,13 @@ export class AuthService {
 
     const otp = this.otpService.generateOtpForIdentifier(normalizedEmail);
 
-    await this.emailService.sendVerificationEmail(normalizedEmail, otp.code, user.firstName || undefined);
+    try {
+      await this.emailService.sendVerificationEmail(normalizedEmail, otp.code, user.firstName || undefined);
+    } catch (error) {
+      // A failed SMTP attempt must not start the resend cooldown.
+      this.otpService.discardOtp(normalizedEmail);
+      throw error;
+    }
 
     return {
       message: 'OTP sent to your email',
