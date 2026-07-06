@@ -1,5 +1,6 @@
 import {
   Body,
+  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -7,10 +8,15 @@ import {
   Patch,
   Post,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { IsUUID } from 'class-validator';
 import { RoleName } from '@prisma/client';
+import { existsSync, mkdirSync } from 'fs';
+import { extname, join } from 'path';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -20,6 +26,13 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserIdParamDto } from './dto/user-id-param.dto';
 import { UsersService } from './users.service';
+
+const { diskStorage } = require('multer');
+
+const profileUploadDir = join(process.cwd(), 'uploads', 'profile');
+if (!existsSync(profileUploadDir)) {
+  mkdirSync(profileUploadDir, { recursive: true });
+}
 
 class AssignUnitDto {
   @IsUUID()
@@ -49,6 +62,50 @@ export class UsersController {
   @Roles(RoleName.LANDLORD, RoleName.TENANT, RoleName.ADMIN)
   updateMyProfile(@Req() req: AuthenticatedRequest, @Body() dto: UpdateProfileDto) {
     return this.usersService.updateProfile(req.user.userId, dto);
+  }
+
+  @Post('me/profile-image')
+  @Roles(RoleName.LANDLORD, RoleName.TENANT, RoleName.ADMIN)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: (_req: unknown, _file: unknown, cb: (error: Error | null, destination: string) => void) =>
+          cb(null, profileUploadDir),
+        filename: (
+          _req: unknown,
+          file: { originalname: string },
+          cb: (error: Error | null, filename: string) => void,
+        ) => {
+          const safeBase = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\.[^.]+$/, '');
+          const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+          cb(null, `${safeBase || 'profile'}-${unique}${extname(file.originalname).toLowerCase()}`);
+        },
+      }),
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (
+        _req: unknown,
+        file: { mimetype: string },
+        cb: (error: Error | null, acceptFile: boolean) => void,
+      ) => {
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+          cb(new BadRequestException('Only JPG, PNG, or WebP profile images are supported') as unknown as Error, false);
+          return;
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  uploadMyProfileImage(
+    @Req() req: AuthenticatedRequest,
+    @UploadedFile()
+    file?: { originalname: string; filename: string; size: number; mimetype: string },
+  ) {
+    if (!file) {
+      throw new BadRequestException('No profile image uploaded');
+    }
+
+    const profileImageUrl = `/uploads/profile/${file.filename}`;
+    return this.usersService.updateProfile(req.user.userId, { profileImageUrl });
   }
 
   @Post('device-token')

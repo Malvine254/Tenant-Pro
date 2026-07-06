@@ -583,9 +583,17 @@ export class UsersService {
         city: string;
         state: string | null;
         country: string;
+        landlord?: {
+          id: string;
+          phoneNumber: string;
+          email: string | null;
+          firstName: string | null;
+          lastName: string | null;
+        } | null;
       };
     };
   }) {
+    const landlord = tenancy.unit.property.landlord ?? null;
     return {
       id: tenancy.id,
       moveInDate: tenancy.moveInDate,
@@ -608,6 +616,16 @@ export class UsersService {
           city: tenancy.unit.property.city,
           state: tenancy.unit.property.state,
           country: tenancy.unit.property.country,
+          landlord: landlord
+            ? {
+                id: landlord.id,
+                phoneNumber: landlord.phoneNumber,
+                email: landlord.email,
+                firstName: landlord.firstName,
+                lastName: landlord.lastName,
+                fullName: [landlord.firstName, landlord.lastName].filter(Boolean).join(' ').trim(),
+              }
+            : null,
         },
       },
     };
@@ -637,7 +655,19 @@ export class UsersService {
           include: {
             unit: {
               include: {
-                property: true,
+                property: {
+                  include: {
+                    landlord: {
+                      select: {
+                        id: true,
+                        phoneNumber: true,
+                        email: true,
+                        firstName: true,
+                        lastName: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
