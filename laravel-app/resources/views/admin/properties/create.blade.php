@@ -53,8 +53,42 @@
                     <input type="text" name="country" value="{{ old('country', 'Kenya') }}">
                 </div>
             </div>
+
+            <div style="border-top:1px solid #e2e8f0;margin:6px 0 18px;padding-top:18px;">
+                <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;">Add Units Now <span style="font-weight:normal;color:#64748b;">(optional)</span></h3>
+                <p style="font-size:12px;color:#64748b;margin-bottom:14px;">
+                    Create the property and its initial units together. Example: first unit 101 and quantity 6 creates 101–106.
+                </p>
+
+                <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;">
+                    <div class="form-group">
+                        <label>First Unit Number</label>
+                        <input type="text" name="first_unit_number" value="{{ old('first_unit_number') }}" placeholder="e.g. 101 or A01">
+                        @error('first_unit_number')<div class="form-error">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Units</label>
+                        <input type="number" name="initial_units_count" value="{{ old('initial_units_count') }}" min="1" max="100" placeholder="e.g. 6">
+                        @error('initial_units_count')<div class="form-error">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="form-group">
+                        <label>Floor</label>
+                        <input type="number" name="initial_floor" value="{{ old('initial_floor') }}" placeholder="e.g. 1">
+                        @error('initial_floor')<div class="form-error">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly Rent per Unit (KES)</label>
+                        <input type="number" name="initial_rent_amount" value="{{ old('initial_rent_amount') }}" min="0" step="0.01" placeholder="e.g. 15000">
+                        @error('initial_rent_amount')<div class="form-error">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+            </div>
+
             <div style="display:flex;gap:10px;">
-                <button type="submit" class="btn btn-primary" {{ $landlords->isEmpty() ? 'disabled' : '' }}>Save Property</button>
+                <button type="submit" class="btn btn-primary" {{ $landlords->isEmpty() ? 'disabled' : '' }}>Save Property &amp; Units</button>
                 <a href="{{ route('admin.properties.index') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>

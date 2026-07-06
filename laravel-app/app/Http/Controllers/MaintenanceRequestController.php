@@ -15,7 +15,7 @@ class MaintenanceRequestController extends Controller
             ->when($request->unit_id, fn($q) => $q->where('unit_id', $request->unit_id))
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->priority, fn($q) => $q->where('priority', $request->priority));
-        return response()->json($query->latest()->paginate(15));
+        return response()->json($query->latest()->get());
     }
 
     public function store(Request $request)

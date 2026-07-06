@@ -32,33 +32,45 @@
         <h3 style="font-size:13px;color:#94a3b8;text-transform:uppercase;">Units</h3>
         <a href="{{ route('admin.properties.units.create', $property) }}" class="btn btn-primary">+ Add Unit</a>
     </div>
-    <table>
-        <thead>
-            <tr><th>Unit</th><th>Floor</th><th>Rent (KES)</th><th>Status</th><th>Tenant</th><th>Actions</th></tr>
-        </thead>
-        <tbody>
-            @forelse($property->units as $unit)
-            <tr>
-                <td>{{ $unit->unit_number }}</td>
-                <td>{{ $unit->floor ?? '-' }}</td>
-                <td>{{ number_format($unit->rent_amount, 2) }}</td>
-                <td>
-                    @php $statusColors = ['AVAILABLE'=>'badge-green','OCCUPIED'=>'badge-blue','UNDER_MAINTENANCE'=>'badge-yellow']; @endphp
-                    <span class="badge {{ $statusColors[$unit->status] ?? 'badge-gray' }}">{{ $unit->status }}</span>
-                </td>
-                <td>{{ $unit->tenant?->user?->name ?? '-' }}</td>
-                <td>
-                    <a href="{{ route('admin.properties.units.edit', [$property, $unit]) }}" class="btn btn-secondary" style="margin-right:6px;">Edit</a>
-                    <form method="POST" action="{{ route('admin.properties.units.destroy', [$property, $unit]) }}" style="display:inline;">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this unit?')">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            @empty
-            <tr><td colspan="6" style="color:#94a3b8;text-align:center;padding:20px;">No units yet.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
+    @forelse($property->units->groupBy(fn($unit) => $unit->floor === null ? 'Unassigned floor' : 'Floor '.$unit->floor) as $floorLabel => $floorUnits)
+        <details style="border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px;overflow:hidden;">
+            <summary style="cursor:pointer;padding:13px 15px;background:#f8fafc;font-weight:600;display:flex;justify-content:space-between;align-items:center;">
+                <span>{{ $floorLabel }}</span>
+                <span style="font-size:12px;color:#64748b;font-weight:normal;">
+                    {{ $floorUnits->count() }} {{ Str::plural('unit', $floorUnits->count()) }}
+                    · {{ $floorUnits->where('status', 'AVAILABLE')->count() }} available
+                </span>
+            </summary>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr><th>Unit</th><th>Rent (KES)</th><th>Status</th><th>Tenant</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach($floorUnits as $unit)
+                        <tr>
+                            <td><strong>{{ $unit->unit_number }}</strong></td>
+                            <td>{{ number_format($unit->rent_amount, 2) }}</td>
+                            <td>
+                                @php $statusColors = ['AVAILABLE'=>'badge-green','OCCUPIED'=>'badge-blue','UNDER_MAINTENANCE'=>'badge-yellow']; @endphp
+                                <span class="badge {{ $statusColors[$unit->status] ?? 'badge-gray' }}">{{ str_replace('_', ' ', $unit->status) }}</span>
+                            </td>
+                            <td>{{ $unit->tenant?->user?->name ?? 'Unassigned' }}</td>
+                            <td>
+                                <a href="{{ route('admin.properties.units.edit', [$property, $unit]) }}" class="btn btn-secondary" style="margin-right:6px;">Edit</a>
+                                <form method="POST" action="{{ route('admin.properties.units.destroy', [$property, $unit]) }}" style="display:inline;">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this unit?')">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    @empty
+        <div style="color:#94a3b8;text-align:center;padding:20px;">No units yet.</div>
+    @endforelse
 </div>
 @endsection

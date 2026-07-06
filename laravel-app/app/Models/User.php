@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name', 'email', 'password', 'first_name', 'last_name',
         'phone_number', 'profile_image_url', 'emergency_contact_name',
         'emergency_contact_phone', 'bio', 'is_active', 'role_id',
+        'fcm_token',
     ];
 
     protected $hidden = [

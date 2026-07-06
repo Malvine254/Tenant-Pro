@@ -58,6 +58,29 @@ class PaymentController extends Controller
         return response()->json(null, 204);
     }
 
+    public function forInvoice(Request $request, Invoice $invoice)
+    {
+        abort_if($this->isTenant($request->user()) && $invoice->tenant_id !== $request->user()->id, 403);
+        return response()->json($invoice->payments()->with('transactions')->latest()->get());
+    }
+
+    public function pay(Request $request)
+    {
+        $request->merge([
+            'invoice_id' => $request->input('invoice_id', $request->input('invoiceId')),
+            'phone_number' => $request->input('phone_number', $request->input('phoneNumber')),
+        ]);
+        $request->validate([
+            'invoice_id' => 'required|uuid|exists:invoices,id',
+            'phone_number' => 'required|string',
+            'amount' => 'nullable|numeric|min:1',
+        ]);
+
+        return response()->json([
+            'message' => 'M-Pesa STK Push is not configured on this Laravel server yet.',
+        ], 503);
+    }
+
     private function isTenant($user): bool
     {
         return $user?->role?->name === 'TENANT';

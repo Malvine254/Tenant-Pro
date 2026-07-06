@@ -15,7 +15,13 @@ class PropertyUnitAdminController extends Controller
     public function index()
     {
         $user = request()->user();
-        $properties = Property::with(['units.tenant.user'])
+        $properties = Property::with([
+            'units' => fn($query) => $query
+                ->orderByRaw('floor IS NULL')
+                ->orderBy('floor')
+                ->orderBy('unit_number'),
+            'units.tenant.user',
+        ])
             ->when(
                 $user?->role?->name === 'LANDLORD',
                 fn($query) => $query->where('landlord_id', $user->id)

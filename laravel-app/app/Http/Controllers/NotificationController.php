@@ -11,7 +11,7 @@ class NotificationController extends Controller
     {
         $query = Notification::where('user_id', $request->user()->id)
             ->when($request->is_read !== null, fn($q) => $q->where('is_read', $request->boolean('is_read')));
-        return response()->json($query->latest()->paginate(20));
+        return response()->json($query->latest()->get());
     }
 
     public function markRead(Request $request, Notification $notification)
