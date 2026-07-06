@@ -188,6 +188,7 @@ model Invitation {
   id          String           @id @default(uuid())
   code        String           @unique
   phoneNumber String
+  tenantEmail String?
   propertyId  String
   unitId      String
   sentById    String
@@ -204,6 +205,7 @@ model Invitation {
 
   @@index([propertyId, unitId])
   @@index([sentById])
+  @@index([tenantEmail])
   @@map("invitations")
 }
 

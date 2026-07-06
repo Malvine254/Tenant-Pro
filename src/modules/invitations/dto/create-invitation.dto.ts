@@ -17,13 +17,13 @@ export class CreateInvitationDto {
   @IsUUID()
   unitId!: string;
 
+  @IsOptional()
   @IsString()
   @Matches(/^\+?[1-9]\d{7,14}$/)
-  phoneNumber!: string;
+  phoneNumber?: string;
 
-  @IsOptional()
   @IsEmail()
-  tenantEmail?: string;
+  tenantEmail!: string;
 
   @IsOptional()
   @IsString()

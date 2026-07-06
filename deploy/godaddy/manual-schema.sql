@@ -81,6 +81,7 @@ CREATE TABLE `invitations` (
     `id` VARCHAR(191) NOT NULL,
     `code` VARCHAR(191) NOT NULL,
     `phoneNumber` VARCHAR(191) NOT NULL,
+    `tenantEmail` VARCHAR(191) NULL,
     `propertyId` VARCHAR(191) NOT NULL,
     `unitId` VARCHAR(191) NOT NULL,
     `sentById` VARCHAR(191) NOT NULL,
@@ -94,6 +95,7 @@ CREATE TABLE `invitations` (
     UNIQUE INDEX `invitations_code_key`(`code`),
     INDEX `invitations_propertyId_unitId_idx`(`propertyId`, `unitId`),
     INDEX `invitations_sentById_idx`(`sentById`),
+    INDEX `invitations_tenantEmail_idx`(`tenantEmail`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 -- CreateTable

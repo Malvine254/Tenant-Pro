@@ -38,6 +38,8 @@ export class InvitationsService {
   }
 
   async createInvitation(actorUserId: string, actorRole: RoleName, dto: CreateInvitationDto) {
+    const tenantEmail = dto.tenantEmail.trim().toLowerCase();
+
     const property = await this.prisma.property.findUnique({
       where: { id: dto.propertyId },
     });
@@ -68,27 +70,26 @@ export class InvitationsService {
         propertyId: dto.propertyId,
         unitId: dto.unitId,
         sentById: actorUserId,
-        phoneNumber: dto.phoneNumber,
+        phoneNumber: dto.phoneNumber ?? '',
+        tenantEmail,
         sentVia: dto.sentVia,
         expiresAt,
         status: InvitationStatus.PENDING,
       },
     });
 
-    if (dto.tenantEmail) {
-      void this.emailService.sendInvitationEmail(
-        dto.tenantEmail,
-        code,
-        expiresAt,
-        property.name,
-        unit.unitNumber,
-        dto.tenantName,
-      );
-    }
+    void this.emailService.sendInvitationEmail(
+      tenantEmail,
+      code,
+      expiresAt,
+      property.name,
+      unit.unitNumber,
+      dto.tenantName,
+    );
 
-    // Notify the tenant in-app if their account exists
+    // Notify the tenant in-app if their account already exists.
     const tenantUser = await this.prisma.user.findUnique({
-      where: { phoneNumber: dto.phoneNumber },
+      where: { email: tenantEmail },
       select: { id: true },
     });
     if (tenantUser) {
@@ -142,7 +143,13 @@ export class InvitationsService {
       throw new ForbiddenException('Only users with TENANT role can accept invitations');
     }
 
-    if (user.phoneNumber !== invitation.phoneNumber) {
+    const invitationEmail = invitation.tenantEmail?.trim().toLowerCase();
+    const userEmail = user.email?.trim().toLowerCase();
+    if (invitationEmail) {
+      if (!userEmail || userEmail !== invitationEmail) {
+        throw new ForbiddenException('Invitation email does not match your account');
+      }
+    } else if (invitation.phoneNumber && user.phoneNumber !== invitation.phoneNumber) {
       throw new ForbiddenException('Invitation phone number does not match your account');
     }
 

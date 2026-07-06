@@ -155,10 +155,9 @@ export default function PropertiesPage() {
   });
 
   const [assignmentForm, setAssignmentForm] = useState({
-    tenantId: '',
     propertyId: '',
     unitId: '',
-    phoneNumber: '',
+    tenantEmail: '',
     expiresInHours: '72',
   });
   const [assignmentMessage, setAssignmentMessage] = useState<string | null>(null);
@@ -169,15 +168,12 @@ export default function PropertiesPage() {
   const hydrateWorkspace = (properties: PropertyRow[], users: LandlordRow[]) => {
     setRows(properties);
     const landlordRows = users.filter((u) => u.role === 'LANDLORD');
-    const tenantRows = users.filter((u) => u.role === 'TENANT');
     setLandlords(landlordRows);
-    setTenants(tenantRows);
+    setTenants(users.filter((u) => u.role === 'TENANT'));
 
     if (!selectedPropertyId && properties[0]) setSelectedPropertyId(properties[0].id);
     if (!propertyForm.landlordId && landlordRows[0])
       setPropertyForm((p) => ({ ...p, landlordId: landlordRows[0].id }));
-    if (!assignmentForm.tenantId && tenantRows[0])
-      setAssignmentForm((p) => ({ ...p, tenantId: tenantRows[0].id, phoneNumber: tenantRows[0].phoneNumber }));
     if (!assignmentForm.propertyId && properties[0]) {
       const firstUnit = properties[0].units.find((u) => u.status !== 'OCCUPIED') ?? properties[0].units[0];
       setAssignmentForm((p) => ({ ...p, propertyId: properties[0].id, unitId: firstUnit?.id ?? p.unitId }));
@@ -239,6 +235,7 @@ export default function PropertiesPage() {
       if (!session) return;
       await apiRequest('/properties', session.accessToken, { method: 'POST', body: JSON.stringify(propertyForm) });
       setPropertyForm((p) => ({ ...p, name: '', description: '', coverImageUrl: '', addressLine: '', city: '', state: '' }));
+      setAssignmentMessage(`Code ${invitation.code} was sent to ${invitation.tenantEmail ?? assignmentForm.tenantEmail} with app access instructions.`);
       await load();
       setShowAddPanel(false);
     } catch (e) {
@@ -362,15 +359,15 @@ export default function PropertiesPage() {
             : p,
         );
         saveDemoDataset(dataset);
-        setAssignmentMessage(`Code ${code} created. Share it with the tenant to link their apartment.`);
+        setAssignmentMessage(`Demo invite ${code} created for ${assignmentForm.tenantEmail}. The email would include app access instructions.`);
         hydrateWorkspace(dataset.properties as PropertyRow[], dataset.users as LandlordRow[]);
         return;
       }
       const session = getSession();
       if (!session) return;
-      const invitation = await apiRequest<{ code: string; expiresAt: string }>('/invitations', session.accessToken, {
+      const invitation = await apiRequest<{ code: string; expiresAt: string; tenantEmail?: string }>('/invitations', session.accessToken, {
         method: 'POST',
-        body: JSON.stringify({ propertyId: assignmentForm.propertyId, unitId: assignmentForm.unitId, phoneNumber: assignmentForm.phoneNumber, expiresInHours: Number(assignmentForm.expiresInHours || 72), sentVia: 'ADMIN_DASHBOARD' }),
+        body: JSON.stringify({ propertyId: assignmentForm.propertyId, unitId: assignmentForm.unitId, tenantEmail: assignmentForm.tenantEmail, expiresInHours: Number(assignmentForm.expiresInHours || 72), sentVia: 'ADMIN_DASHBOARD' }),
       });
       setAssignmentMessage(`Code ${invitation.code} created. Tenant opens app → Account → Link Apartment and enters this code.`);
       await load();
@@ -541,14 +538,11 @@ export default function PropertiesPage() {
       {/* ── Assign Room Panel ── */}
       <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="mb-3">
-          <h3 className="text-sm font-semibold text-gray-900">Send Invitation Code</h3>
-          <p className="text-xs text-gray-500 mt-0.5">Generate a code so a tenant can link their unit from the mobile app.</p>
+          <h3 className="text-sm font-semibold text-gray-900">Invite Tenant by Email</h3>
+          <p className="text-xs text-gray-500 mt-0.5">Enter only the tenant email. Tenant Pro emails the invite code and app access steps.</p>
         </div>
         <form onSubmit={submitAssignment} className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          <select value={assignmentForm.tenantId} onChange={(e) => { const t = tenants.find((x) => x.id === e.target.value); setAssignmentForm((p) => ({ ...p, tenantId: e.target.value, phoneNumber: t?.phoneNumber ?? p.phoneNumber })); }} className="tp-select" required>
-            <option value="">Tenant</option>
-            {tenants.map((t) => <option key={t.id} value={t.id}>{[t.firstName, t.lastName].filter(Boolean).join(' ') || t.phoneNumber}</option>)}
-          </select>
+          <input type="email" value={assignmentForm.tenantEmail} onChange={(e) => setAssignmentForm((p) => ({ ...p, tenantEmail: e.target.value }))} className="tp-input" placeholder="Tenant email" required />
           <select value={assignmentForm.propertyId} onChange={(e) => { const p = rows.find((x) => x.id === e.target.value); const u = p?.units.find((x) => x.status !== 'OCCUPIED') ?? p?.units[0]; setAssignmentForm((prev) => ({ ...prev, propertyId: e.target.value, unitId: u?.id ?? '' })); }} className="tp-select" required>
             <option value="">Property</option>
             {rows.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -557,7 +551,6 @@ export default function PropertiesPage() {
             <option value="">Unit</option>
             {assignmentUnits.map((u) => <option key={u.id} value={u.id}>{u.unitNumber} · KES {Number(u.rentAmount).toLocaleString()}</option>)}
           </select>
-          <input value={assignmentForm.phoneNumber} onChange={(e) => setAssignmentForm((p) => ({ ...p, phoneNumber: e.target.value }))} className="tp-input" placeholder="Tenant phone" required />
           <div className="flex gap-2">
             <input type="number" min="1" max="168" value={assignmentForm.expiresInHours} onChange={(e) => setAssignmentForm((p) => ({ ...p, expiresInHours: e.target.value }))} className="tp-input w-20" placeholder="Hrs" />
             <button type="submit" className="tp-primary-btn whitespace-nowrap flex-1">Send Code</button>
