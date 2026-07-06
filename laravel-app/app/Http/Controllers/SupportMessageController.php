@@ -11,23 +11,40 @@ class SupportMessageController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-        $query = SupportMessage::with('sender')
-            ->when($this->isTenant($user), fn($q) => $q->whereHas('conversation', fn($conversation) => $conversation->where('tenant_user_id', $user->id)))
-            ->when($request->conversation_id, fn($q) => $q->where('conversation_id', $request->conversation_id));
-        return response()->json($query->oldest()->get());
+        return response()->json(
+            $this->messagesForUser($request)
+                ->map(fn(SupportMessage $message) => $this->messagePayload($message))
+        );
     }
 
     public function store(Request $request)
     {
         $user = $request->user();
+        $request->merge([
+            'body' => $request->input('body', $request->input('text')),
+            'attachment_name' => $request->input('attachment_name', $request->input('attachmentName')),
+            'attachment_uri' => $request->input('attachment_uri', $request->input('attachmentUri')),
+        ]);
+        if (blank($request->input('body')) && filled($request->input('attachment_uri'))) {
+            $request->merge(['body' => 'Attachment shared']);
+        }
+
+        $topic = trim((string) $request->input('topic', 'General')) ?: 'General';
         $conversation = $request->conversation_id
             ? SupportConversation::find($request->conversation_id)
-            : null;
+            : SupportConversation::firstOrCreate(
+                [
+                    'tenant_user_id' => $user->id,
+                    'topic' => $topic,
+                    'is_open' => true,
+                ],
+                ['subject' => $topic]
+            );
 
         $request->merge([
+            'conversation_id' => $conversation?->id,
             'sender_id' => $request->input('sender_id', $user?->id),
-            'topic' => $request->input('topic', $conversation?->topic ?? 'Message'),
+            'topic' => $topic,
             'is_from_tenant' => $request->input('is_from_tenant', $this->isTenant($user)),
         ]);
 
@@ -37,7 +54,7 @@ class SupportMessageController extends Controller
             'topic' => 'required|string|max:255',
             'body' => 'required|string',
             'attachment_name' => 'nullable|string|max:255',
-            'attachment_uri' => 'nullable|url',
+            'attachment_uri' => 'nullable|string|max:2048',
             'is_from_tenant' => 'required|boolean',
         ]);
         abort_if($this->isTenant($user) && $data['sender_id'] !== $user->id, 403);
@@ -47,10 +64,8 @@ class SupportMessageController extends Controller
         SupportMessage::create($data);
 
         return response()->json(
-            SupportMessage::with('sender')
-                ->where('conversation_id', $data['conversation_id'])
-                ->oldest()
-                ->get(),
+            $this->messagesForUser($request)
+                ->map(fn(SupportMessage $message) => $this->messagePayload($message)),
             201
         );
     }
@@ -87,10 +102,41 @@ class SupportMessageController extends Controller
         $path = $data['file']->store('support-attachments', 'public');
 
         return response()->json([
-            'name' => $data['file']->getClientOriginalName(),
-            'url' => Storage::disk('public')->url($path),
-            'uri' => Storage::disk('public')->url($path),
+            'attachmentName' => $data['file']->getClientOriginalName(),
+            'attachmentUri' => Storage::disk('public')->url($path),
+            'fileName' => basename($path),
         ]);
+    }
+
+    private function messagesForUser(Request $request)
+    {
+        $user = $request->user();
+
+        return SupportMessage::with('sender')
+            ->when(
+                $this->isTenant($user),
+                fn($query) => $query->whereHas(
+                    'conversation',
+                    fn($conversation) => $conversation->where('tenant_user_id', $user->id)
+                )
+            )
+            ->when($request->conversation_id, fn($query) => $query->where('conversation_id', $request->conversation_id))
+            ->oldest()
+            ->get();
+    }
+
+    private function messagePayload(SupportMessage $message): array
+    {
+        return [
+            'id' => $message->id,
+            'topic' => $message->topic,
+            'message' => $message->body,
+            'isFromTenant' => (bool) $message->is_from_tenant,
+            'timestamp' => $message->created_at?->getTimestampMs() ?? 0,
+            'status' => $message->status,
+            'attachmentUri' => $message->attachment_uri,
+            'attachmentName' => $message->attachment_name,
+        ];
     }
 
     private function isTenant($user): bool
