@@ -7,7 +7,7 @@
     <form method="GET" style="display:flex;gap:8px;">
         <select name="status" style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;">
             <option value="">All Statuses</option>
-            @foreach(['OPEN','IN_PROGRESS','RESOLVED','CLOSED'] as $status)
+            @foreach(['OPEN','ACKNOWLEDGED','ASSIGNED','IN_PROGRESS','WAITING_TENANT','RESOLVED','CLOSED','CANCELLED'] as $status)
                 <option value="{{ $status }}" {{ request('status') === $status ? 'selected' : '' }}>{{ $status }}</option>
             @endforeach
         </select>
@@ -52,7 +52,7 @@
                 <td><a href="{{ route('admin.maintenance.show', $req) }}" class="btn btn-secondary">View</a></td>
             </tr>
             @empty
-            <tr><td colspan="7" style="color:#94a3b8;text-align:center;padding:24px;">No maintenance requests found.</td></tr>
+            <tr><td colspan="7" style="color:#94a3b8;text-align:center;padding:24px;">No maintenance requests yet.</td></tr>
             @endforelse
         </tbody>
     </table>

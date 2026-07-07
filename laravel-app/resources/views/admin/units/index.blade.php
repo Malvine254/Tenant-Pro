@@ -49,7 +49,12 @@
                                         </span>
                                     </td>
                                     <td>{{ $unit->tenant?->user?->name ?? 'Unassigned' }}</td>
-                                    <td><a href="{{ route('admin.properties.units.edit', [$property, $unit]) }}" class="btn btn-secondary">Edit</a></td>
+                                    <td>
+                                        <a href="{{ route('admin.properties.units.edit', [$property, $unit]) }}" class="btn btn-secondary">Edit</a>
+                                        @if($unit->status === 'AVAILABLE')
+                                            <a href="{{ route('admin.invitations.index', ['property_id' => $property->id, 'unit_id' => $unit->id]) }}" class="btn btn-primary">Invite Tenant</a>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

@@ -11,7 +11,10 @@ class Payment extends Model
 
     protected $appends = ['currency', 'currency_symbol', 'amount_formatted'];
 
-    protected $fillable = ['invoice_id', 'amount', 'method', 'reference', 'paid_at'];
+    protected $fillable = [
+        'invoice_id', 'amount', 'method', 'payment_phone', 'mpesa_receipt',
+        'status', 'checkout_request_id', 'reference', 'paid_at',
+    ];
 
     protected $casts = [
         'paid_at' => 'datetime',

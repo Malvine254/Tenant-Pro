@@ -318,7 +318,7 @@ class DeploymentToolsController extends Controller
 
         try {
             $roleName = $user->role?->name;
-            if ($roleName && strtoupper((string) $roleName) !== 'ADMIN') {
+            if ($roleName && !in_array(strtoupper((string) $roleName), ['SUPER_ADMIN', 'ADMIN'], true)) {
                 throw new HttpException(403, 'Only admin users can access deployment tools.');
             }
         } catch (HttpException $e) {

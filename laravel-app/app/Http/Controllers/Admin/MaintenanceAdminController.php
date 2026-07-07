@@ -35,7 +35,7 @@ class MaintenanceAdminController extends Controller
         abort_if($user?->role?->name === 'LANDLORD' && $maintenanceRequest->unit?->property?->landlord_id !== $user->id, 403);
 
         $data = $request->validate([
-            'status' => 'required|in:OPEN,IN_PROGRESS,RESOLVED,CLOSED',
+            'status' => 'required|in:OPEN,ACKNOWLEDGED,ASSIGNED,IN_PROGRESS,WAITING_TENANT,RESOLVED,CLOSED,CANCELLED',
             'assigned_to_id' => 'nullable|uuid|exists:users,id',
         ]);
         $previousStatus = $maintenanceRequest->status;

@@ -10,13 +10,15 @@ class Invitation extends Model
     use HasUuids;
 
     protected $fillable = [
-        'code', 'phone_number', 'property_id', 'unit_id', 'sent_by_id',
-        'status', 'expires_at', 'accepted_at', 'sent_via', 'metadata',
+        'invite_type', 'code', 'invitee_name', 'email', 'phone_number',
+        'business_name', 'message', 'property_id', 'unit_id', 'sent_by_id',
+        'status', 'expires_at', 'accepted_at', 'last_sent_at', 'sent_via', 'metadata',
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
         'accepted_at' => 'datetime',
+        'last_sent_at' => 'datetime',
         'metadata' => 'array',
     ];
 

@@ -6,18 +6,20 @@
     <a href="{{ route('admin.tenants.index') }}" style="color:#94a3b8;text-decoration:none;font-size:13px;">Tenants</a>
     <span style="color:#cbd5e1;">/</span>
     <span style="font-weight:600;">{{ $tenant->user->name }}</span>
-    @if($tenant->is_active)
-        <form method="POST" action="{{ route('admin.tenants.unassign', $tenant) }}" style="margin-left:auto;">
-            @csrf @method('PATCH')
-            <button type="submit" class="btn btn-danger" onclick="return confirm('Unassign this tenant and mark the unit available?')">Unassign Tenant</button>
-        </form>
-    @endif
 </div>
+
+@php
+    $outstandingBalance = $tenant->unit->invoices->sum(fn($invoice) => max(0, (float) $invoice->total_amount - (float) $invoice->paid_amount));
+@endphp
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
     <div class="card">
         <h3 style="font-size:13px;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;">Tenant Info</h3>
         <p style="font-size:14px;margin-bottom:5px;"><strong>Email:</strong> {{ $tenant->user->email }}</p>
+        <p style="font-size:14px;margin-bottom:5px;"><strong>M-Pesa details:</strong>
+            <span class="badge badge-gray">Tenant-managed in Android app</span>
+        </p>
+        <p style="font-size:12px;color:#64748b;margin-bottom:8px;">Landlords/admins do not edit tenant M-Pesa payment phone numbers from this portal.</p>
         <p style="font-size:14px;margin-bottom:5px;"><strong>Phone:</strong> {{ $tenant->user->phone_number ?? '—' }}</p>
         <p style="font-size:14px;margin-bottom:5px;"><strong>Status:</strong>
             <span class="badge {{ $tenant->is_active ? 'badge-green' : 'badge-gray' }}">{{ $tenant->is_active ? 'Active' : 'Inactive' }}</span>
@@ -34,6 +36,33 @@
         <p style="font-size:14px;margin-bottom:5px;"><strong>Rent:</strong> KES {{ number_format($tenant->unit->rent_amount, 2) }}</p>
     </div>
 </div>
+
+@if($tenant->is_active)
+<div class="card" style="margin-bottom:16px;border-color:#fecaca;background:#fff7f7;">
+    <h3 style="font-size:13px;color:#991b1b;margin-bottom:10px;text-transform:uppercase;">Close Tenancy / Move Out</h3>
+    <p style="font-size:13px;color:#64748b;margin-bottom:12px;">
+        Closing tenancy keeps the tenant history, invoices, and payments, then marks the unit vacant for a new invitation.
+        @if($outstandingBalance > 0)
+            <strong style="color:#dc2626;">Outstanding balance: KSh {{ number_format($outstandingBalance, 2) }}.</strong>
+        @else
+            <strong style="color:#16a34a;">No outstanding invoice balance found.</strong>
+        @endif
+    </p>
+    <form method="POST" action="{{ route('admin.tenants.unassign', $tenant) }}" style="display:grid;grid-template-columns:180px 1fr auto;gap:10px;align-items:end;">
+        @csrf @method('PATCH')
+        <div class="form-group" style="margin-bottom:0;">
+            <label>Move-out date</label>
+            <input type="date" name="move_out_date" value="{{ old('move_out_date', now()->toDateString()) }}" required>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+            <label>Reason, optional</label>
+            <input name="reason" value="{{ old('reason') }}" placeholder="e.g. tenant moved out">
+        </div>
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Close this tenancy and mark the unit vacant? This does not delete tenant history.')">Close Tenancy</button>
+    </form>
+    @error('move_out_date')<div class="form-error">{{ $message }}</div>@enderror
+</div>
+@endif
 
 <div class="card" style="margin-bottom:16px;">
     <h3 style="font-size:13px;color:#94a3b8;margin-bottom:12px;text-transform:uppercase;">Recent Invoices</h3>

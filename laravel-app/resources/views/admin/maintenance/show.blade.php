@@ -30,7 +30,7 @@
             <div class="form-group">
                 <label>Status</label>
                 <select name="status" required>
-                    @foreach(['OPEN','IN_PROGRESS','RESOLVED','CLOSED'] as $status)
+                    @foreach(['OPEN','ACKNOWLEDGED','ASSIGNED','IN_PROGRESS','WAITING_TENANT','RESOLVED','CLOSED','CANCELLED'] as $status)
                         <option value="{{ $status }}" {{ $maintenanceRequest->status === $status ? 'selected' : '' }}>{{ $status }}</option>
                     @endforeach
                 </select>

@@ -35,6 +35,10 @@
         .btn-primary { background: #1d4ed8; color: #fff; }
         .btn-danger { background: #dc2626; color: #fff; }
         .btn-secondary { background: #e2e8f0; color: #1e293b; }
+        .btn[disabled], button[disabled] { opacity: .55; cursor: not-allowed; }
+        .muted { color: #64748b; }
+        .empty-state { color:#64748b;text-align:center;padding:28px; }
+        .section-heading { font-size:13px;color:#64748b;margin-bottom:12px;text-transform:uppercase;letter-spacing:.04em; }
         .alert-success { background: #dcfce7; border: 1px solid #86efac; color: #166534; padding: 10px 14px; border-radius: 7px; margin-bottom: 16px; font-size: 14px; }
         .alert-error { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 10px 14px; border-radius: 7px; margin-bottom: 16px; font-size: 14px; }
         .form-group { margin-bottom: 16px; }
@@ -47,24 +51,34 @@
     </style>
 </head>
 <body>
+@php
+    $roleName = auth()->user()?->role?->name;
+    $isLandlord = $roleName === 'LANDLORD';
+    $isCaretaker = $roleName === 'CARETAKER';
+    $isPlatformAdmin = in_array($roleName, ['SUPER_ADMIN', 'ADMIN'], true);
+@endphp
 <div class="sidebar">
-    <div class="sidebar-logo">{{ auth()->user()?->role?->name === 'LANDLORD' ? 'Landlord Portal' : 'TenantPro Admin' }}</div>
+    <div class="sidebar-logo">{{ $isLandlord ? 'Landlord Portal' : 'TenantPro Admin' }}</div>
     <nav>
         <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a>
-        @if(auth()->user()?->role?->name !== 'LANDLORD')
+        @if($isPlatformAdmin)
             <a href="{{ route('admin.landlords.index') }}" class="{{ request()->routeIs('admin.landlords*') ? 'active' : '' }}">Landlords</a>
         @endif
-        <a href="{{ route('admin.properties.index') }}" class="{{ request()->routeIs('admin.properties*') ? 'active' : '' }}">Properties</a>
-        <a href="{{ route('admin.units.index') }}" class="{{ request()->routeIs('admin.units*') ? 'active' : '' }}">Units</a>
-        <a href="{{ route('admin.tenants.index') }}" class="{{ request()->routeIs('admin.tenants*') ? 'active' : '' }}">Tenants</a>
-        <a href="{{ route('admin.invitations.index') }}" class="{{ request()->routeIs('admin.invitations*') ? 'active' : '' }}">Invitations</a>
-        <a href="{{ route('admin.invoices.index') }}" class="{{ request()->routeIs('admin.invoices*') ? 'active' : '' }}">Invoices</a>
+        @unless($isCaretaker)
+            <a href="{{ route('admin.properties.index') }}" class="{{ request()->routeIs('admin.properties*') ? 'active' : '' }}">Properties</a>
+            <a href="{{ route('admin.units.index') }}" class="{{ request()->routeIs('admin.units*') ? 'active' : '' }}">Units</a>
+            <a href="{{ route('admin.tenants.index') }}" class="{{ request()->routeIs('admin.tenants*') ? 'active' : '' }}">Tenants</a>
+            <a href="{{ route('admin.invitations.index') }}" class="{{ request()->routeIs('admin.invitations*') ? 'active' : '' }}">{{ $isLandlord ? 'Tenant Invitations' : 'Invitations' }}</a>
+            <a href="{{ route('admin.invoices.index') }}" class="{{ request()->routeIs('admin.invoices*') ? 'active' : '' }}">Invoices</a>
+        @endunless
         <a href="{{ route('admin.maintenance.index') }}" class="{{ request()->routeIs('admin.maintenance*') ? 'active' : '' }}">Maintenance</a>
-        <a href="{{ route('admin.deployment-tools.index') }}" class="{{ request()->routeIs('admin.deployment-tools*') ? 'active' : '' }}">Deployment Tools</a>
+        @if($isPlatformAdmin)
+            <a href="{{ route('admin.deployment-tools.index') }}" class="{{ request()->routeIs('admin.deployment-tools*') ? 'active' : '' }}">Deployment Tools</a>
+        @endif
     </nav>
     <div class="sidebar-bottom">
         @auth
-            <form method="POST" action="{{ route('admin.logout') }}">
+            <form method="POST" action="/admin/logout">
                 @csrf
                 <button type="submit" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:13px;padding:0;">Logout ({{ auth()->user()->name }})</button>
             </form>

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -16,6 +18,8 @@ class LandlordAdminController extends Controller
 
         $landlords = User::withCount('properties')
             ->whereHas('role', fn ($query) => $query->where('name', 'LANDLORD'))
+            ->when($request->status === 'active', fn($query) => $query->where('is_active', true))
+            ->when($request->status === 'suspended', fn($query) => $query->where('is_active', false))
             ->when($request->search, fn ($query) => $query->where(function ($userQuery) use ($request) {
                 $userQuery->where('name', 'like', "%{$request->search}%")
                     ->orWhere('email', 'like', "%{$request->search}%")
@@ -24,6 +28,23 @@ class LandlordAdminController extends Controller
             ->orderBy('name')
             ->paginate(15)
             ->withQueryString();
+
+        $landlords->getCollection()->transform(function (User $landlord) {
+            $invoiceQuery = Invoice::whereHas('unit.property', fn($property) => $property->where('landlord_id', $landlord->id));
+            $paymentQuery = Payment::whereHas('invoice.unit.property', fn($property) => $property->where('landlord_id', $landlord->id));
+
+            $totalBilled = (float) (clone $invoiceQuery)->sum('total_amount');
+            $totalPaid = (float) (clone $invoiceQuery)->sum('paid_amount');
+
+            $landlord->units_count = \App\Models\Unit::whereHas('property', fn($property) => $property->where('landlord_id', $landlord->id))->count();
+            $landlord->tenants_count = \App\Models\Tenant::whereHas('unit.property', fn($property) => $property->where('landlord_id', $landlord->id))->where('is_active', true)->count();
+            $landlord->collected_this_month = (float) (clone $paymentQuery)
+                ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+                ->sum('amount');
+            $landlord->outstanding_balance = max(0, $totalBilled - $totalPaid);
+
+            return $landlord;
+        });
 
         return view('admin.landlords.index', compact('landlords'));
     }

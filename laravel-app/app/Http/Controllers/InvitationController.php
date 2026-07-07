@@ -25,7 +25,9 @@ class InvitationController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'phone_number' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'invitee_name' => 'nullable|string|max:160',
+            'phone_number' => 'nullable|string|max:20',
             'property_id' => 'required|uuid|exists:properties,id',
             'unit_id' => 'required|uuid|exists:units,id',
             'sent_via' => 'nullable|string',
@@ -35,11 +37,15 @@ class InvitationController extends Controller
         $unit = \App\Models\Unit::findOrFail($data['unit_id']);
         abort_if($this->isLandlord($request->user()) && $property->landlord_id !== $request->user()->id, 403);
         abort_if($unit->property_id !== $property->id, 422, 'The selected unit does not belong to this property.');
+        abort_if($unit->tenant()->where('is_active', true)->exists(), 422, 'This unit already has an active tenant.');
+        abort_if(empty($data['email']) && empty($data['phone_number']), 422, 'Provide an email address or phone number for the invitee.');
 
         $data['sent_by_id'] = $request->user()->id;
+        $data['invite_type'] = 'TENANT';
         $data['code'] = strtoupper(Str::random(8));
         $data['status'] = 'PENDING';
         $data['expires_at'] = now()->addDays(7);
+        $data['last_sent_at'] = now();
         return response()->json(Invitation::create($data)->load(['property', 'unit', 'sentBy']), 201);
     }
 
@@ -53,7 +59,7 @@ class InvitationController extends Controller
     {
         $this->authorizeInvitation($invitation);
         $data = $request->validate([
-            'status' => 'sometimes|in:PENDING,ACCEPTED,EXPIRED,REVOKED',
+            'status' => 'sometimes|in:PENDING,ACCEPTED,EXPIRED,CANCELLED,REVOKED',
             'accepted_at' => 'nullable|date',
         ]);
         if (isset($data['status']) && $data['status'] === 'ACCEPTED' && empty($data['accepted_at'])) {

@@ -1,9 +1,10 @@
 @extends('admin.layout')
-@section('page-title', 'Add Landlord')
+@section('page-title', 'Emergency Create Landlord')
 
 @section('content')
 <div style="max-width:600px;">
-    <h2 style="font-size:16px;font-weight:600;margin-bottom:16px;">New Landlord</h2>
+    <h2 style="font-size:16px;font-weight:600;margin-bottom:6px;">Emergency Create Landlord</h2>
+    <p style="font-size:13px;color:#64748b;margin-bottom:16px;">Preferred production flow: invite the landlord by email so they set their own password. Use this form only for admin correction.</p>
     <div class="card">
         <form method="POST" action="{{ route('admin.landlords.store') }}">
             @csrf
@@ -41,7 +42,8 @@
                 </div>
             </div>
             <div style="display:flex;gap:10px;">
-                <button type="submit" class="btn btn-primary">Save Landlord</button>
+                <button type="submit" class="btn btn-primary">Emergency Save Landlord</button>
+                <a href="{{ route('admin.invitations.index', ['type' => 'LANDLORD']) }}" class="btn btn-secondary">Use Email Invite</a>
                 <a href="{{ route('admin.landlords.index') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>

@@ -5,7 +5,7 @@
 <div style="max-width:380px;margin:60px auto;">
     <div class="card">
         <h2 style="margin-bottom:20px;font-size:18px;">Admin Login</h2>
-        <form method="POST" action="{{ route('admin.login.post') }}">
+        <form method="POST" action="{{ url()->current() }}">
             @csrf
             <div class="form-group">
                 <label>Email Address</label>

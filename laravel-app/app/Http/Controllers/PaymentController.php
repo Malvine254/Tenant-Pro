@@ -25,24 +25,31 @@ class PaymentController extends Controller
             'invoice_id' => 'required|uuid|exists:invoices,id',
             'amount' => 'required|numeric|min:0.01',
             'method' => 'nullable|string|max:50',
+            'payment_phone' => 'nullable|string|max:30',
+            'mpesa_receipt' => 'nullable|string|max:80',
+            'status' => 'nullable|in:PENDING,SUCCESSFUL,FAILED,CANCELLED,EXPIRED,REVERSED',
             'reference' => 'nullable|string|unique:payments,reference',
         ]);
         abort_if($this->isTenant($user) && !Invoice::where('id', $data['invoice_id'])->where('tenant_id', $user->id)->exists(), 403);
 
+        $data['status'] = $data['status'] ?? 'SUCCESSFUL';
         $payment = Payment::create($data);
 
-        // Update invoice paid_amount and status
         $invoice = Invoice::find($data['invoice_id']);
-        $invoice->paid_amount = $invoice->paid_amount + $data['amount'];
-        if ($invoice->paid_amount >= $invoice->total_amount) {
-            $invoice->status = 'PAID';
-            $invoice->paid_at = now();
-        } else {
-            $invoice->status = 'PARTIAL';
+        if ($payment->status === 'SUCCESSFUL') {
+            $invoice->paid_amount = $invoice->paid_amount + $data['amount'];
+            if ($invoice->paid_amount >= $invoice->total_amount) {
+                $invoice->status = 'PAID';
+                $invoice->paid_at = now();
+            } else {
+                $invoice->status = 'PARTIAL';
+            }
+            $invoice->save();
         }
-        $invoice->save();
 
-        app(TenantEmailService::class)->paymentReceived($payment->load('invoice.tenant', 'invoice.unit.property'));
+        if ($payment->status === 'SUCCESSFUL') {
+            app(TenantEmailService::class)->paymentReceived($payment->load('invoice.tenant', 'invoice.unit.property'));
+        }
 
         return response()->json($payment->load('invoice'), 201);
     }

@@ -178,10 +178,15 @@ class TenantAdminController extends Controller
             return back()->with('error', 'This tenant is already unassigned.');
         }
 
-        DB::transaction(function () use ($tenant) {
+        $data = $request->validate([
+            'move_out_date' => 'required|date',
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        DB::transaction(function () use ($tenant, $data) {
             $tenant->update([
                 'is_active' => false,
-                'move_out_date' => now()->toDateString(),
+                'move_out_date' => $data['move_out_date'],
             ]);
             $tenant->unit()->update(['status' => 'AVAILABLE']);
         });
@@ -192,7 +197,7 @@ class TenantAdminController extends Controller
             ->route('admin.tenants.index')
             ->with(
                 'success',
-                'Tenancy closed on '.now()->format('d M Y').' and the unit was marked available.'
+                'Tenancy closed on '.\Illuminate\Support\Carbon::parse($data['move_out_date'])->format('d M Y').' and the unit was marked available.'
                 .($emailSent ? ' Tenant was notified by email.' : ' Email notification could not be sent; check mail logs.')
             );
     }

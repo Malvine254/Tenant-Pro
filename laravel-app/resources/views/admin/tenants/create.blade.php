@@ -1,9 +1,10 @@
 @extends('admin.layout')
-@section('page-title', 'Add Tenant')
+@section('page-title', 'Emergency Create Tenant')
 
 @section('content')
 <div style="max-width:680px;">
-    <h2 style="font-size:16px;font-weight:600;margin-bottom:16px;">New Tenant</h2>
+    <h2 style="font-size:16px;font-weight:600;margin-bottom:6px;">Emergency Create Tenant</h2>
+    <p style="font-size:13px;color:#64748b;margin-bottom:16px;">Preferred production flow: invite the tenant to a vacant unit by email. The tenant should create/sign in and manage their own M-Pesa details in the Android app.</p>
     <div class="card">
         <form method="POST" action="{{ route('admin.tenants.store') }}">
             @csrf
@@ -89,7 +90,8 @@
                 </div>
             </div>
             <div style="display:flex;gap:10px;">
-                <button type="submit" class="btn btn-primary" {{ $units->isEmpty() ? 'disabled' : '' }}>Save Tenant</button>
+                <button type="submit" class="btn btn-primary" {{ $units->isEmpty() ? 'disabled' : '' }}>Emergency Save Tenant</button>
+                <a href="{{ route('admin.invitations.index') }}" class="btn btn-secondary">Use Email Invite</a>
                 <a href="{{ route('admin.tenants.index') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>

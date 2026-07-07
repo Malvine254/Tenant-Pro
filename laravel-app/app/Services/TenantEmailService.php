@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Mail\TenantProUpdateMail;
 use App\Models\Invoice;
+use App\Models\Invitation;
 use App\Models\MaintenanceRequest;
 use App\Models\Payment;
 use App\Models\Tenant;
@@ -14,6 +15,62 @@ use Throwable;
 
 class TenantEmailService
 {
+    public function landlordInvitation(Invitation $invitation): bool
+    {
+        $inviteUrl = $this->inviteUrl($invitation);
+
+        return $this->sendToAddress($invitation->email, $invitation->invitee_name, [
+            'subjectLine' => 'You have been invited to TenantPro',
+            'preheader' => 'Accept your Starmax TenantPro landlord invitation.',
+            'title' => 'Welcome to Starmax TenantPro',
+            'introLines' => [
+                'Hello '.$this->displayName($invitation->invitee_name).',',
+                'You have been invited to join TenantPro as a landlord. Accept the invitation to set up your access and start managing properties, units, rent, and maintenance.',
+                $invitation->message ?: 'TenantPro helps you manage property operations from one clean dashboard.',
+            ],
+            'details' => array_filter([
+                'Business name' => $invitation->business_name,
+                'Invitation code' => $invitation->code,
+                'Expires on' => $invitation->expires_at?->format('d M Y'),
+            ]),
+            'actionLabel' => 'Accept invitation',
+            'actionUrl' => $inviteUrl,
+            'footerText' => 'If you were not expecting this invitation, you can ignore this email.',
+        ]);
+    }
+
+    public function tenantInvitation(Invitation $invitation): bool
+    {
+        $invitation->loadMissing(['property', 'unit']);
+
+        return $this->sendToAddress($invitation->email, $invitation->invitee_name, [
+            'subjectLine' => 'You have been invited to join TenantPro',
+            'preheader' => 'Accept your TenantPro invitation and link your unit.',
+            'title' => 'You have a tenant invitation',
+            'introLines' => [
+                'Hello '.$this->displayName($invitation->invitee_name).',',
+                'You have been invited to join TenantPro for '.$invitation->property?->name.', Unit '.$invitation->unit?->unit_number.'.',
+                'Please accept the invitation, create your account or sign in, and complete your tenant profile from the TenantPro Android app. Your M-Pesa payment details remain yours to manage.',
+            ],
+            'details' => array_filter([
+                'Property' => $invitation->property?->name,
+                'Unit' => $invitation->unit?->unit_number,
+                'Invitation code' => $invitation->code,
+                'Move-in date' => data_get($invitation->metadata, 'move_in_date'),
+                'Monthly rent' => data_get($invitation->metadata, 'rent_amount')
+                    ? 'KSh '.number_format((float) data_get($invitation->metadata, 'rent_amount'), 2)
+                    : null,
+                'Deposit' => data_get($invitation->metadata, 'deposit_amount')
+                    ? 'KSh '.number_format((float) data_get($invitation->metadata, 'deposit_amount'), 2)
+                    : null,
+                'Expires on' => $invitation->expires_at?->format('d M Y'),
+            ]),
+            'actionLabel' => 'Accept invitation',
+            'actionUrl' => $this->inviteUrl($invitation),
+            'footerText' => 'Your landlord cannot edit your M-Pesa details. Add or update them yourself in the TenantPro app.',
+        ]);
+    }
+
     public function tenantAssigned(Tenant $tenant): bool
     {
         $tenant->loadMissing(['user', 'unit.property']);
@@ -103,6 +160,8 @@ class TenantEmailService
                 'Unit' => $invoice?->unit?->unit_number ?? 'Not specified',
                 'Amount paid' => 'KSh '.number_format((float) $payment->amount, 2),
                 'Payment method' => $payment->method ?: 'Not specified',
+                'Payment phone' => $payment->payment_phone ?: 'Not captured',
+                'M-Pesa receipt' => $payment->mpesa_receipt ?: 'Not captured',
                 'Reference' => $payment->reference ?: 'Not specified',
                 'Invoice balance' => $invoice?->balance_amount_formatted ?? 'Not specified',
             ],
@@ -145,13 +204,22 @@ class TenantEmailService
             return false;
         }
 
+        return $this->sendToAddress($user->email, $user->name, $payload, $user->id);
+    }
+
+    private function sendToAddress(?string $email, ?string $name, array $payload, ?string $userId = null): bool
+    {
+        if (!$email) {
+            return false;
+        }
+
         try {
-            Mail::to($user->email, $user->name)->send(new TenantProUpdateMail(...$payload));
+            Mail::to($email, $name)->send(new TenantProUpdateMail(...$payload));
             return true;
         } catch (Throwable $exception) {
             Log::error('TenantPro email update failed', [
-                'user_id' => $user->id,
-                'email' => $user->email,
+                'user_id' => $userId,
+                'email' => $email,
                 'subject' => $payload['subjectLine'] ?? null,
                 'error' => $exception->getMessage(),
             ]);
@@ -163,6 +231,16 @@ class TenantEmailService
     private function firstName(?User $user): string
     {
         return $user?->first_name ?: strtok((string) $user?->name, ' ') ?: 'there';
+    }
+
+    private function displayName(?string $name): string
+    {
+        return trim((string) $name) !== '' ? trim((string) $name) : 'there';
+    }
+
+    private function inviteUrl(Invitation $invitation): string
+    {
+        return rtrim(config('app.url'), '/').'/admin/login?invite='.$invitation->code;
     }
 
     private function invoicePeriod(Invoice $invoice): string
