@@ -125,15 +125,21 @@ class TenantAdminController extends Controller
         abort_if($this->isLandlord($admin) && $unit->property?->landlord_id !== $admin->id, 403);
         abort_if($unit->tenant()->where('is_active', true)->exists(), 422, 'This unit already has an active tenant.');
 
-        $tenant = Tenant::create([
-            'user_id' => $tenantUser->id,
-            'unit_id' => $unit->id,
-            'move_in_date' => $data['move_in_date'],
-            'move_out_date' => $data['move_out_date'] ?? null,
-            'is_active' => true,
-        ]);
+        $tenant = DB::transaction(function () use ($tenantUser, $unit, $data) {
+            $tenant = Tenant::updateOrCreate(
+                ['user_id' => $tenantUser->id],
+                [
+                    'unit_id' => $unit->id,
+                    'move_in_date' => $data['move_in_date'],
+                    'move_out_date' => $data['move_out_date'] ?? null,
+                    'is_active' => true,
+                ]
+            );
 
-        $unit->update(['status' => 'OCCUPIED']);
+            $unit->update(['status' => 'OCCUPIED']);
+
+            return $tenant;
+        });
 
         return redirect()
             ->route('admin.tenants.show', $tenant)
