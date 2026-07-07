@@ -95,9 +95,9 @@ class TenantAdminController extends Controller
             ->route('admin.tenants.show', $tenant)
             ->with(
                 'success',
-                app(TenantEmailService::class)->tenantAssigned($tenant)
-                    ? 'Tenant created, assigned to unit, and notified by email.'
-                    : 'Tenant created and assigned to unit. Email notification could not be sent; check mail logs.'
+                app(TenantEmailService::class)->tenantAccountCreated($tenant)
+                    ? 'Tenant created, assigned to unit, and onboarding email sent.'
+                    : 'Tenant created and assigned to unit. Onboarding email could not be sent; check mail logs.'
             );
     }
 

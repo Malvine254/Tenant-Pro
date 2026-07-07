@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(fn (Request $request) => route('admin.login'));
+        if (env('APP_ENV') === 'local') {
+            $middleware->validateCsrfTokens(except: [
+                'admin/login',
+            ]);
+        }
         $middleware->alias([
             'mobile.api.key' => EnsureMobileApiKey::class,
         ]);

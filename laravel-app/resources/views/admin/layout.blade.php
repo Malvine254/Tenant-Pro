@@ -7,13 +7,18 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; background: #f1f5f9; color: #1e293b; display: flex; min-height: 100vh; }
-        .sidebar { width: 220px; background: #0f172a; color: #cbd5e1; flex-shrink: 0; display: flex; flex-direction: column; }
+        .admin-shell { display:flex; min-height:100vh; width:100%; }
+        .sidebar { width: 220px; background: #0f172a; color: #cbd5e1; flex-shrink: 0; display: flex; flex-direction: column; z-index:40; }
         .sidebar-logo { padding: 20px 16px; font-size: 16px; font-weight: bold; color: #fff; border-bottom: 1px solid #1e293b; }
         .sidebar nav a { display: block; padding: 11px 20px; color: #94a3b8; text-decoration: none; font-size: 14px; transition: background .15s; }
         .sidebar nav a:hover, .sidebar nav a.active { background: #1e293b; color: #fff; }
         .sidebar-bottom { margin-top: auto; padding: 16px; border-top: 1px solid #1e293b; }
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .topbar { background: #fff; padding: 14px 24px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; }
+        .topbar-left { display:flex; align-items:center; gap:10px; min-width:0; }
+        .menu-toggle { display:none; width:38px; height:38px; border:1px solid #cbd5e1; border-radius:9px; background:#fff; color:#0f172a; font-size:20px; cursor:pointer; align-items:center; justify-content:center; }
+        .sidebar-close { display:none; margin-left:auto; background:#1e293b; color:#fff; border:0; border-radius:8px; padding:5px 9px; cursor:pointer; }
+        .sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(15,23,42,.48); z-index:30; }
         .content { flex: 1; padding: 24px; overflow-y: auto; }
         .page-title { font-size: 20px; font-weight: 600; margin-bottom: 20px; }
         .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; }
@@ -48,6 +53,32 @@
         .pagination { display: flex; gap: 6px; margin-top: 16px; flex-wrap: wrap; }
         .pagination a, .pagination span { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; text-decoration: none; color: #374151; }
         .pagination .active span { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
+        @media (max-width: 900px) {
+            body { display:block; }
+            .admin-shell { display:block; }
+            .sidebar { position:fixed; top:0; bottom:0; left:0; width:min(82vw, 300px); transform:translateX(-105%); transition:transform .2s ease; box-shadow:20px 0 50px rgba(15,23,42,.25); }
+            .sidebar.open { transform:translateX(0); }
+            .sidebar.open + .sidebar-backdrop { display:block; }
+            .sidebar-logo { display:flex; align-items:center; gap:10px; }
+            .sidebar-close { display:inline-block; }
+            .main { min-height:100vh; width:100%; }
+            .topbar { position:sticky; top:0; z-index:20; padding:10px 14px; }
+            .menu-toggle { display:inline-flex; flex-shrink:0; }
+            .topbar-left span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+            .content { padding:14px; }
+            .stat-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+            .stat { padding:12px; }
+            .stat-value { font-size:22px; }
+            .card { padding:14px; border-radius:9px; overflow-x:auto; }
+            table { min-width:680px; }
+            .form-group input, .form-group select, .form-group textarea { min-height:40px; }
+        }
+        @media (max-width: 560px) {
+            .stat-grid { grid-template-columns:1fr; }
+            .topbar { align-items:flex-start; gap:8px; }
+            .topbar > span:last-child { display:none; }
+            .content { padding:12px; }
+        }
     </style>
 </head>
 <body>
@@ -57,8 +88,12 @@
     $isCaretaker = $roleName === 'CARETAKER';
     $isPlatformAdmin = in_array($roleName, ['SUPER_ADMIN', 'ADMIN'], true);
 @endphp
-<div class="sidebar">
-    <div class="sidebar-logo">{{ $isLandlord ? 'Landlord Portal' : 'TenantPro Admin' }}</div>
+<div class="admin-shell">
+<aside class="sidebar" id="adminSidebar" aria-hidden="true">
+    <div class="sidebar-logo">
+        <span>{{ $isLandlord ? 'Landlord Portal' : 'TenantPro Admin' }}</span>
+        <button class="sidebar-close" type="button" data-close-menu aria-label="Close menu">×</button>
+    </div>
     <nav>
         <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a>
         @if($isPlatformAdmin)
@@ -86,10 +121,14 @@
             <a href="{{ url('/') }}" style="color:#94a3b8;text-decoration:none;font-size:13px;">Back to website</a>
         @endauth
     </div>
-</div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" data-close-menu></div>
 <div class="main">
     <div class="topbar">
-        <span style="font-weight:600;font-size:15px;">@yield('page-title', 'Dashboard')</span>
+        <div class="topbar-left">
+            <button class="menu-toggle" type="button" id="menuToggle" aria-controls="adminSidebar" aria-expanded="false" aria-label="Open menu">☰</button>
+            <span style="font-weight:600;font-size:15px;">@yield('page-title', 'Dashboard')</span>
+        </div>
         <span style="font-size:13px;color:#64748b;">{{ now()->format('D, d M Y') }}</span>
     </div>
     <div class="content">
@@ -102,5 +141,35 @@
         @yield('content')
     </div>
 </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.getElementById('adminSidebar');
+    const toggle = document.getElementById('menuToggle');
+    const closeButtons = document.querySelectorAll('[data-close-menu]');
+    if (!sidebar || !toggle) return;
+
+    const openMenu = () => {
+        sidebar.classList.add('open');
+        sidebar.setAttribute('aria-hidden', 'false');
+        toggle.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closeMenu = () => {
+        sidebar.classList.remove('open');
+        sidebar.setAttribute('aria-hidden', 'true');
+        toggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    };
+
+    toggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeMenu() : openMenu());
+    closeButtons.forEach(button => button.addEventListener('click', closeMenu));
+    sidebar.querySelectorAll('nav a').forEach(link => link.addEventListener('click', closeMenu));
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') closeMenu();
+    });
+});
+</script>
 </body>
 </html>

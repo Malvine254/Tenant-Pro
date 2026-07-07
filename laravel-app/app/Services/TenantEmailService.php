@@ -15,6 +15,32 @@ use Throwable;
 
 class TenantEmailService
 {
+    public function tenantAccountCreated(Tenant $tenant): bool
+    {
+        $tenant->loadMissing(['user', 'unit.property']);
+
+        return $this->send($tenant->user, [
+            'subjectLine' => 'Your TenantPro account is ready',
+            'preheader' => 'Your TenantPro account and apartment assignment are ready.',
+            'title' => 'Welcome to TenantPro',
+            'introLines' => [
+                'Hi '.$this->firstName($tenant->user).',',
+                'Your TenantPro account has been created and linked to your apartment. You can now sign in to view invoices, payments, maintenance, and property updates.',
+                'For security, your M-Pesa payment details are managed only by you from the TenantPro Android app. Your landlord cannot edit them from the admin portal.',
+            ],
+            'details' => [
+                'Login email' => $tenant->user?->email ?? 'Not specified',
+                'Property' => $tenant->unit?->property?->name ?? 'Not specified',
+                'Unit' => $tenant->unit?->unit_number ?? 'Not specified',
+                'Monthly rent' => $tenant->unit?->rent_amount_formatted ?? 'Not specified',
+                'Move-in date' => $tenant->move_in_date?->format('d M Y') ?? 'Not specified',
+            ],
+            'actionLabel' => 'Open TenantPro',
+            'actionUrl' => config('app.url'),
+            'footerText' => 'If you do not know your password, use Reset Password on the login screen to create a new one.',
+        ]);
+    }
+
     public function landlordInvitation(Invitation $invitation): bool
     {
         $inviteUrl = $this->inviteUrl($invitation);
@@ -215,6 +241,11 @@ class TenantEmailService
 
         try {
             Mail::to($email, $name)->send(new TenantProUpdateMail(...$payload));
+            Log::info('TenantPro email update sent', [
+                'user_id' => $userId,
+                'email' => $email,
+                'subject' => $payload['subjectLine'] ?? null,
+            ]);
             return true;
         } catch (Throwable $exception) {
             Log::error('TenantPro email update failed', [
