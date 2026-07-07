@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SupportMessage;
 use App\Models\SupportConversation;
+use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -61,7 +62,11 @@ class SupportMessageController extends Controller
         abort_if($this->isTenant($user) && !SupportConversation::where('id', $data['conversation_id'])->where('tenant_user_id', $user->id)->exists(), 403);
 
         $data['status'] = 'SENT';
-        SupportMessage::create($data);
+        $message = SupportMessage::create($data);
+
+        if ($this->isTenant($user)) {
+            app(TenantEmailService::class)->supportMessageReceived($message);
+        }
 
         return response()->json(
             $this->messagesForUser($request)

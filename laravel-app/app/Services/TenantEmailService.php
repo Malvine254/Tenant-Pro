@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\Invitation;
 use App\Models\MaintenanceRequest;
 use App\Models\Payment;
+use App\Models\SupportMessage;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
@@ -36,7 +37,7 @@ class TenantEmailService
                 'Move-in date' => $tenant->move_in_date?->format('d M Y') ?? 'Not specified',
             ],
             'actionLabel' => 'Open TenantPro',
-            'actionUrl' => config('app.url'),
+            'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'If you do not know your password, use Reset Password on the login screen to create a new one.',
         ]);
     }
@@ -92,7 +93,7 @@ class TenantEmailService
                 'Expires on' => $invitation->expires_at?->format('d M Y'),
             ]),
             'actionLabel' => 'Accept invitation',
-            'actionUrl' => $this->inviteUrl($invitation),
+            'actionUrl' => $this->tenantInviteUrl($invitation),
             'footerText' => 'Your landlord cannot edit your M-Pesa details. Add or update them yourself in the TenantPro app.',
         ]);
     }
@@ -117,7 +118,7 @@ class TenantEmailService
                 'Move-in date' => $tenant->move_in_date?->format('d M Y') ?? 'Not specified',
             ],
             'actionLabel' => 'Open TenantPro',
-            'actionUrl' => config('app.url'),
+            'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'If anything looks wrong, please contact your landlord or property manager.',
         ]);
     }
@@ -163,7 +164,7 @@ class TenantEmailService
                 'Due date' => $invoice->due_date?->format('d M Y') ?? 'Not specified',
             ],
             'actionLabel' => 'View invoice',
-            'actionUrl' => config('app.url'),
+            'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'Please pay before the due date to keep your account in good standing.',
         ]);
     }
@@ -192,7 +193,7 @@ class TenantEmailService
                 'Invoice balance' => $invoice?->balance_amount_formatted ?? 'Not specified',
             ],
             'actionLabel' => 'View payment',
-            'actionUrl' => config('app.url'),
+            'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'Keep this email as your payment confirmation.',
         ]);
     }
@@ -219,9 +220,66 @@ class TenantEmailService
                 'Resolved on' => $maintenanceRequest->resolved_at?->format('d M Y H:i'),
             ], fn($value) => $value !== null && $value !== ''),
             'actionLabel' => 'Open request',
-            'actionUrl' => config('app.url'),
+            'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'We will keep you updated as the request progresses.',
         ]);
+    }
+
+    public function supportMessageReceived(SupportMessage $message): int
+    {
+        $message->loadMissing([
+            'conversation.tenant.tenant.unit.property.landlord',
+            'sender',
+        ]);
+
+        $tenant = $message->conversation?->tenant;
+        $tenancy = $tenant?->tenant;
+        $unit = $tenancy?->unit;
+        $property = $unit?->property;
+
+        $recipients = collect();
+
+        if ($property?->landlord?->email) {
+            $recipients->push($property->landlord);
+        }
+
+        User::whereHas('role', fn($role) => $role->whereIn('name', ['SUPER_ADMIN', 'ADMIN']))
+            ->whereNotNull('email')
+            ->get()
+            ->each(fn(User $user) => $recipients->push($user));
+
+        $sent = 0;
+        foreach ($recipients->unique('email') as $recipient) {
+            $emailSent = $this->send($recipient, [
+                'subjectLine' => 'New tenant chat message',
+                'preheader' => 'A tenant has sent a new message from the TenantPro app.',
+                'title' => 'New tenant message',
+                'introLines' => [
+                    'Hello '.$this->firstName($recipient).',',
+                    'A tenant has sent a new chat message from the TenantPro Android app. The full tenant and apartment details are below.',
+                ],
+                'details' => [
+                    'Tenant name' => $tenant?->name ?? 'Unknown tenant',
+                    'Tenant email' => $tenant?->email ?? 'No email',
+                    'Tenant phone' => $tenant?->phone_number ?? 'No phone',
+                    'Apartment / Property' => $property?->name ?? 'Not linked',
+                    'Room / Unit' => $unit?->unit_number ? 'Unit '.$unit->unit_number : 'Not linked',
+                    'Floor' => $unit?->floor === null ? 'Not specified' : 'Floor '.$unit->floor,
+                    'Topic' => $message->topic,
+                    'Message' => $message->body,
+                    'Sent at' => $message->created_at?->format('d M Y H:i') ?? now()->format('d M Y H:i'),
+                ],
+                'actionLabel' => 'Open admin chat',
+                'actionUrl' => rtrim(config('app.url'), '/').'/admin/support?conversation_id='.$message->conversation_id,
+                'footerText' => 'Reply from the TenantPro admin portal so the tenant can see your response in the app.',
+            ]);
+
+            if ($emailSent) {
+                $sent++;
+            }
+        }
+
+        return $sent;
     }
 
     private function send(?User $user, array $payload): bool
@@ -272,6 +330,18 @@ class TenantEmailService
     private function inviteUrl(Invitation $invitation): string
     {
         return rtrim(config('app.url'), '/').'/admin/login?invite='.$invitation->code;
+    }
+
+    private function tenantInviteUrl(Invitation $invitation): string
+    {
+        $template = env('TENANT_APP_INVITE_URL', 'tenantpro://invite?code={code}');
+
+        return str_replace('{code}', urlencode($invitation->code), $template);
+    }
+
+    private function tenantAppUrl(): string
+    {
+        return env('TENANT_APP_URL', 'tenantpro://open');
     }
 
     private function invoicePeriod(Invoice $invoice): string

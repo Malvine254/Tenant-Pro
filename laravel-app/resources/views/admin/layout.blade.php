@@ -107,6 +107,9 @@
             <a href="{{ route('admin.invoices.index') }}" class="{{ request()->routeIs('admin.invoices*') ? 'active' : '' }}">Invoices</a>
         @endunless
         <a href="{{ route('admin.maintenance.index') }}" class="{{ request()->routeIs('admin.maintenance*') ? 'active' : '' }}">Maintenance</a>
+        @unless($isCaretaker)
+            <a href="{{ route('admin.support.index') }}" class="{{ request()->routeIs('admin.support*') ? 'active' : '' }}">Chat</a>
+        @endunless
         @if($isPlatformAdmin)
             <a href="{{ route('admin.deployment-tools.index') }}" class="{{ request()->routeIs('admin.deployment-tools*') ? 'active' : '' }}">Deployment Tools</a>
         @endif
