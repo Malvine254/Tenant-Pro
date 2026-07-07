@@ -8,6 +8,7 @@ use App\Models\Property;
 use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -92,7 +93,12 @@ class TenantAdminController extends Controller
 
         return redirect()
             ->route('admin.tenants.show', $tenant)
-            ->with('success', 'Tenant created and assigned to unit.');
+            ->with(
+                'success',
+                app(TenantEmailService::class)->tenantAssigned($tenant)
+                    ? 'Tenant created, assigned to unit, and notified by email.'
+                    : 'Tenant created and assigned to unit. Email notification could not be sent; check mail logs.'
+            );
     }
 
     public function assign(Request $request)
@@ -143,7 +149,12 @@ class TenantAdminController extends Controller
 
         return redirect()
             ->route('admin.tenants.show', $tenant)
-            ->with('success', 'Existing tenant account assigned to unit.');
+            ->with(
+                'success',
+                app(TenantEmailService::class)->tenantAssigned($tenant)
+                    ? 'Existing tenant account assigned to unit and notified by email.'
+                    : 'Existing tenant account assigned to unit. Email notification could not be sent; check mail logs.'
+            );
     }
 
     public function show(Tenant $tenant)
@@ -175,9 +186,15 @@ class TenantAdminController extends Controller
             $tenant->unit()->update(['status' => 'AVAILABLE']);
         });
 
+        $emailSent = app(TenantEmailService::class)->tenancyClosed($tenant->fresh(['user', 'unit.property']));
+
         return redirect()
             ->route('admin.tenants.index')
-            ->with('success', 'Tenancy closed on '.now()->format('d M Y').' and the unit was marked available.');
+            ->with(
+                'success',
+                'Tenancy closed on '.now()->format('d M Y').' and the unit was marked available.'
+                .($emailSent ? ' Tenant was notified by email.' : ' Email notification could not be sent; check mail logs.')
+            );
     }
 
     private function isLandlord(?User $user): bool

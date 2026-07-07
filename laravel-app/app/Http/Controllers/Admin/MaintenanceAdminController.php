@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MaintenanceRequest;
+use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
 
 class MaintenanceAdminController extends Controller
@@ -37,10 +38,17 @@ class MaintenanceAdminController extends Controller
             'status' => 'required|in:OPEN,IN_PROGRESS,RESOLVED,CLOSED',
             'assigned_to_id' => 'nullable|uuid|exists:users,id',
         ]);
+        $previousStatus = $maintenanceRequest->status;
+
         if ($data['status'] === 'RESOLVED') {
             $data['resolved_at'] = now();
         }
         $maintenanceRequest->update($data);
-        return redirect()->route('admin.maintenance.show', $maintenanceRequest)->with('success', 'Request updated.');
+
+        $emailSent = app(TenantEmailService::class)->maintenanceUpdated($maintenanceRequest->fresh(['tenant', 'unit.property', 'assignedTo']), $previousStatus);
+
+        return redirect()
+            ->route('admin.maintenance.show', $maintenanceRequest)
+            ->with('success', 'Request updated.'.($emailSent ? ' Tenant was notified by email.' : ' Email notification could not be sent; check mail logs.'));
     }
 }

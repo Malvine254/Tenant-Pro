@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\Invoice;
+use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -40,6 +41,8 @@ class PaymentController extends Controller
             $invoice->status = 'PARTIAL';
         }
         $invoice->save();
+
+        app(TenantEmailService::class)->paymentReceived($payment->load('invoice.tenant', 'invoice.unit.property'));
 
         return response()->json($payment->load('invoice'), 201);
     }
