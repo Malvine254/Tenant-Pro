@@ -135,8 +135,9 @@ export class InvoicesService {
   }
 
   async createUtilityBill(actorUserId: string, actorRole: RoleName, dto: CreateBillDto) {
-    if (dto.billingType !== BillingType.WATER && dto.billingType !== BillingType.GARBAGE) {
-      throw new BadRequestException('Only WATER and GARBAGE bills can be created manually');
+    const allowedTypes = [BillingType.RENT, BillingType.WATER, BillingType.GARBAGE, BillingType.ELECTRIC, BillingType.OTHER];
+    if (!allowedTypes.includes(dto.billingType)) {
+      throw new BadRequestException('Unsupported billing type');
     }
 
     const tenant = await this.assertTenantAccess(actorUserId, actorRole, dto.tenantId);

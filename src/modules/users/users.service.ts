@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NotificationType, Prisma, RoleName } from '@prisma/client';
+import { BillingType, InvoiceStatus, NotificationType, Prisma, RoleName } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { promises as fs } from 'fs';
 import { join } from 'path';
@@ -758,6 +758,37 @@ export class UsersService {
       where: { id: unitId },
       data: { status: 'OCCUPIED' },
     });
+
+    const currentMonth = new Date().getMonth() + 1;
+    const currentYear = new Date().getFullYear();
+    const invoiceExists = await this.prisma.invoice.findFirst({
+      where: {
+        tenantId: tenant.id,
+        billingType: BillingType.RENT,
+        periodMonth: currentMonth,
+        periodYear: currentYear,
+      },
+    });
+
+    if (!invoiceExists) {
+      const dueDate = new Date(currentYear, currentMonth - 1, 5, 23, 59, 59);
+      await this.prisma.invoice.create({
+        data: {
+          tenantId: tenant.id,
+          userId: tenant.userId,
+          unitId: tenant.unitId,
+          billingType: BillingType.RENT,
+          periodMonth: currentMonth,
+          periodYear: currentYear,
+          issueDate: new Date(),
+          dueDate,
+          amount: unit.rentAmount,
+          penaltyAmount: 0,
+          totalAmount: unit.rentAmount,
+          status: InvoiceStatus.PENDING,
+        },
+      });
+    }
 
     void this.notificationsService.createNotification(
       targetUserId,

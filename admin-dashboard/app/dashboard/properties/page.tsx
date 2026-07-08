@@ -235,7 +235,7 @@ export default function PropertiesPage() {
       if (!session) return;
       await apiRequest('/properties', session.accessToken, { method: 'POST', body: JSON.stringify(propertyForm) });
       setPropertyForm((p) => ({ ...p, name: '', description: '', coverImageUrl: '', addressLine: '', city: '', state: '' }));
-      setAssignmentMessage(`Code ${invitation.code} was sent to ${invitation.tenantEmail ?? assignmentForm.tenantEmail} with app access instructions.`);
+      setAssignmentMessage('Property created successfully. You can now add units and assign tenants from the panel below.');
       await load();
       setShowAddPanel(false);
     } catch (e) {
@@ -277,7 +277,7 @@ export default function PropertiesPage() {
   const startEditProperty = (property: PropertyRow) => {
     setEditingPropertyId(property.id);
     setPropertyEditForm({ landlordId: property.landlordId, name: property.name, description: property.description ?? '', coverImageUrl: property.coverImageUrl ?? '', addressLine: property.addressLine, city: property.city, state: property.state ?? '', country: property.country });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   };
 
   const submitEditProperty = async (event: FormEvent) => {
@@ -313,7 +313,7 @@ export default function PropertiesPage() {
   const startEditUnit = (unit: UnitRow) => {
     setEditingUnitId(unit.id);
     setUnitEditForm({ unitNumber: unit.unitNumber, floor: unit.floor ?? '', rentAmount: String(unit.rentAmount), status: unit.status, imageUrls: (unit.imageUrls ?? []).join('\n') });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   };
 
   const submitEditUnit = async (event: FormEvent) => {

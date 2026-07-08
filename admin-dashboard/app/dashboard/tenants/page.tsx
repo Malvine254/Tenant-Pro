@@ -262,7 +262,10 @@ export default function TenantsPage() {
 
               {/* Current assignments */}
               <div>
-                <h4 className="mb-2 text-sm font-semibold text-gray-700">Current Assignments</h4>
+                <div className="mb-2 flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-gray-700">Current Assignments</h4>
+                  <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-medium text-indigo-700">Multiple units allowed</span>
+                </div>
                 {unitsLoading ? (
                   <p className="text-sm text-gray-400">Loading…</p>
                 ) : tenantUnits.length === 0 ? (
@@ -295,7 +298,8 @@ export default function TenantsPage() {
               {/* Assign new unit */}
               {!isDemoMode ? (
                 <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4 space-y-3">
-                  <h4 className="text-sm font-semibold text-indigo-700">Assign a Unit</h4>
+                  <h4 className="text-sm font-semibold text-indigo-700">Assign another unit</h4>
+                  <p className="text-xs text-indigo-600">A tenant can now hold multiple active unit assignments when needed.</p>
 
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-600">Property</label>

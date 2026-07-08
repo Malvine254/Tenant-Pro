@@ -16,8 +16,7 @@ const navSections = [
     items: [
       { href: '/dashboard/properties', label: 'Property Management', icon: '⌂' },
       { href: '/dashboard/invoices', label: 'Invoices & Billing', icon: '◪' },
-      { href: '/dashboard/maintenance', label: 'Maintenance Ops', icon: '⚒' },
-      { href: '/dashboard/messages', label: 'One-on-One Chat', icon: '✉' },
+      { href: '/dashboard/messages', label: 'Operations Hub', icon: '✉' },
     ],
   },
   {
@@ -73,11 +72,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     key={href}
                     href={href}
                     onClick={onClose}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
-                      active
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${active ? 'bg-slate-900 text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'}`}
                   >
                     <span className="text-xs opacity-80">{item.icon}</span>
                     <span>{item.label}</span>
@@ -115,24 +110,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       </aside>
 
       <div
-        className={`fixed inset-0 z-40 bg-black/40 transition-opacity lg:hidden ${
-          isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
-        }`}
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity lg:hidden ${isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
         onClick={onClose}
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[86vw] overflow-y-auto border-r border-gray-200 bg-white/95 p-5 shadow-xl backdrop-blur transition-transform duration-200 lg:hidden ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[86vw] overflow-y-auto border-r border-gray-200 bg-white/95 p-5 shadow-xl backdrop-blur transition-transform duration-200 lg:hidden ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-900">Navigation</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100"
-          >
+          <button type="button" onClick={onClose} className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100">
             Close
           </button>
         </div>
