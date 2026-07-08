@@ -2,14 +2,14 @@
 @section('page-title', 'Tenants')
 
 @section('content')
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+<div class="admin-page-header">
     <div>
-        <h2 style="font-size:16px;font-weight:600;">Tenants</h2>
-        <p style="font-size:13px;color:#64748b;margin-top:4px;">Invite tenants to vacant units. Direct tenant creation is kept only for emergency admin correction.</p>
+        <h2>Tenants</h2>
+        <p>Invite tenants, link registered accounts to vacant units, and review tenancy status from one place.</p>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-        <form method="GET" style="display:flex;gap:8px;">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name or email..." style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;width:220px;">
+    <div class="admin-actions">
+        <form method="GET" class="admin-filter">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name or email...">
             <button type="submit" class="btn btn-secondary">Search</button>
         </form>
         <a href="{{ route('admin.invitations.index') }}" class="btn btn-primary">Invite Tenant</a>
@@ -20,6 +20,7 @@
     </div>
 </div>
 <div class="card">
+    <div class="table-scroll">
     <table>
         <thead>
             <tr>
@@ -57,21 +58,25 @@
                 <td><a href="{{ route('admin.tenants.show', $tenant) }}" class="btn btn-secondary">View</a></td>
             </tr>
             @empty
-            <tr><td colspan="9" style="color:#94a3b8;text-align:center;padding:24px;">No tenants yet. Invite a tenant to a vacant unit.</td></tr>
+            <tr><td colspan="9" class="empty-state">No tenants yet. Invite a tenant to a vacant unit.</td></tr>
             @endforelse
         </tbody>
     </table>
+    </div>
     <div class="pagination">{{ $tenants->links() }}</div>
 </div>
 
 <div class="card" style="margin-top:18px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div class="admin-page-header" style="margin-bottom:12px;">
         <div>
-            <h3 style="font-size:13px;color:#64748b;text-transform:uppercase;">Unassigned Tenant Accounts</h3>
-            <div style="font-size:12px;color:#94a3b8;margin-top:4px;">Accounts registered from the Android app but not yet assigned to a unit.</div>
+            <h2 style="font-size:17px;">Unassigned Tenant Accounts</h2>
+            <p>Accounts registered from the Android app but not yet assigned to a unit.</p>
         </div>
-        <a href="{{ route('admin.invitations.index') }}" class="btn btn-primary">Invite Tenant to Unit</a>
+        <div class="admin-actions">
+            <a href="{{ route('admin.invitations.index') }}" class="btn btn-primary">Invite Tenant to Unit</a>
+        </div>
     </div>
+    <div class="table-scroll">
     <table>
         <thead>
             <tr>
@@ -96,9 +101,10 @@
                 <td><a href="{{ route('admin.tenants.assign', ['user_id' => $tenantUser->id]) }}" class="btn btn-secondary">Link to Unit</a></td>
             </tr>
             @empty
-            <tr><td colspan="5" style="color:#94a3b8;text-align:center;padding:20px;">No unassigned tenant accounts.</td></tr>
+            <tr><td colspan="5" class="empty-state">No unassigned tenant accounts.</td></tr>
             @endforelse
         </tbody>
     </table>
+    </div>
 </div>
 @endsection

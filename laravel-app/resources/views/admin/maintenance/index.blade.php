@@ -2,16 +2,19 @@
 @section('page-title', 'Maintenance')
 
 @section('content')
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-    <h2 style="font-size:16px;font-weight:600;">Maintenance Requests</h2>
-    <form method="GET" style="display:flex;gap:8px;">
-        <select name="status" style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;">
+<div class="admin-page-header">
+    <div>
+        <h2>Maintenance Requests</h2>
+        <p>Track tenant-reported repairs by priority, status, apartment, and assigned workflow.</p>
+    </div>
+    <form method="GET" class="admin-filter">
+        <select name="status">
             <option value="">All Statuses</option>
             @foreach(['OPEN','ACKNOWLEDGED','ASSIGNED','IN_PROGRESS','WAITING_TENANT','RESOLVED','CLOSED','CANCELLED'] as $status)
                 <option value="{{ $status }}" {{ request('status') === $status ? 'selected' : '' }}>{{ $status }}</option>
             @endforeach
         </select>
-        <select name="priority" style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;">
+        <select name="priority">
             <option value="">All Priorities</option>
             @foreach(['LOW','MEDIUM','HIGH','URGENT'] as $priority)
                 <option value="{{ $priority }}" {{ request('priority') === $priority ? 'selected' : '' }}>{{ $priority }}</option>
@@ -22,6 +25,7 @@
 </div>
 
 <div class="card">
+    <div class="table-scroll">
     <table>
         <thead>
             <tr>
@@ -52,10 +56,11 @@
                 <td><a href="{{ route('admin.maintenance.show', $req) }}" class="btn btn-secondary">View</a></td>
             </tr>
             @empty
-            <tr><td colspan="7" style="color:#94a3b8;text-align:center;padding:24px;">No maintenance requests yet.</td></tr>
+            <tr><td colspan="7" class="empty-state">No maintenance requests yet.</td></tr>
             @endforelse
         </tbody>
     </table>
+    </div>
     <div class="pagination">{{ $requests->links() }}</div>
 </div>
 @endsection

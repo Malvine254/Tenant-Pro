@@ -2,17 +2,19 @@
 @section('page-title', 'Units')
 
 @section('content')
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+<div class="admin-page-header">
     <div>
-        <h2 style="font-size:18px;font-weight:600;">Your Units</h2>
-        <p style="font-size:13px;color:#64748b;margin-top:4px;">Select a floor to expand and manage its units.</p>
+        <h2>Your Units</h2>
+        <p>Select a floor to expand and manage units without creating one long table.</p>
     </div>
-    <a href="{{ route('admin.properties.create') }}" class="btn btn-secondary">+ Add Property</a>
+    <div class="admin-actions">
+        <a href="{{ route('admin.properties.create') }}" class="btn btn-secondary">+ Add Property</a>
+    </div>
 </div>
 
 @forelse($properties as $property)
     <div class="card" style="margin-bottom:16px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;">
+        <div class="admin-page-header" style="margin-bottom:14px;">
             <div>
                 <a href="{{ route('admin.properties.show', $property) }}" style="font-size:16px;font-weight:600;color:#1d4ed8;text-decoration:none;">
                     {{ $property->name }}
@@ -21,19 +23,21 @@
                     {{ $property->city }} · {{ $property->units->count() }} {{ Str::plural('unit', $property->units->count()) }}
                 </div>
             </div>
-            <a href="{{ route('admin.properties.units.create', $property) }}" class="btn btn-primary">+ Add Unit</a>
+            <div class="admin-actions">
+                <a href="{{ route('admin.properties.units.create', $property) }}" class="btn btn-primary">+ Add Unit</a>
+            </div>
         </div>
 
         @forelse($property->units->groupBy(fn($unit) => $unit->floor === null ? 'Unassigned floor' : 'Floor '.$unit->floor) as $floorLabel => $floorUnits)
-            <details style="border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px;overflow:hidden;">
-                <summary style="cursor:pointer;padding:13px 15px;background:#f8fafc;font-weight:600;display:flex;justify-content:space-between;align-items:center;">
+            <details>
+                <summary>
                     <span>{{ $floorLabel }}</span>
                     <span style="font-size:12px;color:#64748b;font-weight:normal;">
                         {{ $floorUnits->count() }} {{ Str::plural('unit', $floorUnits->count()) }}
                         · {{ $floorUnits->where('status', 'AVAILABLE')->count() }} available
                     </span>
                 </summary>
-                <div style="overflow-x:auto;">
+                <div class="table-scroll">
                     <table>
                         <thead>
                             <tr><th>Unit</th><th>Monthly Rent</th><th>Status</th><th>Tenant</th><th>Actions</th></tr>

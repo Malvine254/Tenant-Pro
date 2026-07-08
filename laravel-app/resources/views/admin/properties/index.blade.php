@@ -2,15 +2,18 @@
 @section('page-title', 'Properties')
 
 @section('content')
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+<div class="admin-page-header">
     <div>
-        <h2 style="font-size:16px;font-weight:600;">Properties</h2>
-        <p style="font-size:13px;color:#64748b;margin-top:4px;">Track occupancy and expected rent by property.</p>
+        <h2>Properties</h2>
+        <p>Track occupancy, vacant units, landlords, and expected rent by property.</p>
     </div>
-    <a href="{{ route('admin.properties.create') }}" class="btn btn-primary">+ Add Property</a>
+    <div class="admin-actions">
+        <a href="{{ route('admin.properties.create') }}" class="btn btn-primary">+ Add Property</a>
+    </div>
 </div>
 
 <div class="card">
+    <div class="table-scroll">
     <table>
         <thead>
             <tr>
@@ -44,10 +47,11 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="8" style="color:#94a3b8;text-align:center;padding:24px;">No properties yet. Add your first property to begin.</td></tr>
+            <tr><td colspan="8" class="empty-state">No properties yet. Add your first property to begin.</td></tr>
             @endforelse
         </tbody>
     </table>
+    </div>
     <div class="pagination">{{ $properties->links() }}</div>
 </div>
 @endsection

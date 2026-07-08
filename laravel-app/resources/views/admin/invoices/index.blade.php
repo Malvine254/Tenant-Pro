@@ -2,10 +2,13 @@
 @section('page-title', 'Invoices')
 
 @section('content')
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-    <h2 style="font-size:16px;font-weight:600;">Invoice Management</h2>
-    <form method="GET" style="display:flex;gap:8px;">
-        <select name="status" style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;">
+<div class="admin-page-header">
+    <div>
+        <h2>Invoice Management</h2>
+        <p>Review rent billing, payment status, due dates, and outstanding balances.</p>
+    </div>
+    <form method="GET" class="admin-filter">
+        <select name="status">
             <option value="">All Statuses</option>
             @foreach(['PENDING','PARTIAL','PAID','OVERDUE','CANCELLED'] as $status)
                 <option value="{{ $status }}" {{ request('status') === $status ? 'selected' : '' }}>{{ $status }}</option>
@@ -15,6 +18,7 @@
     </form>
 </div>
 <div class="card">
+    <div class="table-scroll">
     <table>
         <thead>
             <tr>
@@ -47,10 +51,11 @@
                 <td><a href="{{ route('admin.invoices.show', $invoice) }}" class="btn btn-secondary">View</a></td>
             </tr>
             @empty
-            <tr><td colspan="8" style="color:#94a3b8;text-align:center;padding:24px;">No invoices found.</td></tr>
+            <tr><td colspan="8" class="empty-state">No invoices found.</td></tr>
             @endforelse
         </tbody>
     </table>
+    </div>
     <div class="pagination">{{ $invoices->links() }}</div>
 </div>
 @endsection

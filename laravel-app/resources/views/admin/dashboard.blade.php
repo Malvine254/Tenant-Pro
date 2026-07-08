@@ -1,5 +1,5 @@
 @extends('admin.layout')
-@section('page-title', $isLandlord ? 'Landlord Operations Dashboard' : 'Platform Operations Dashboard')
+@section('page-title', $isLandlord ? 'Landlord Dashboard' : 'Operations Dashboard')
 
 @section('content')
 @php
@@ -7,7 +7,7 @@
     $pointCount = max(1, $monthlyRevenue->count());
     $trendPoints = $monthlyRevenue->values()->map(function ($month, $index) use ($pointCount, $maxRevenue) {
         $x = $pointCount === 1 ? 50 : ($index / max(1, $pointCount - 1)) * 100;
-        $y = 88 - (((float) $month['amount'] / $maxRevenue) * 68);
+        $y = 86 - (((float) $month['amount'] / $maxRevenue) * 64);
         return round($x, 2).','.round($y, 2);
     })->implode(' ');
     $trendAreaPoints = '0,100 '.$trendPoints.' 100,100';
@@ -16,189 +16,211 @@
     $occupiedPct = min(100, max(0, ((int) $stats['occupied_units'] / $totalUnits) * 100));
     $vacantPct = min(100, max(0, ((int) $stats['vacant_units'] / $totalUnits) * 100));
     $pendingPct = min(100, max(0, ((int) $stats['pending_tenant_invites'] / $totalUnits) * 100));
-    $renovationPct = 0;
+
+    $kpis = collect([
+        ['label' => 'Rent this month', 'value' => 'KSh '.number_format($stats['collected_this_month'], 2), 'tone' => 'green', 'hint' => 'Current month collection'],
+        ['label' => 'Outstanding', 'value' => 'KSh '.number_format($stats['outstanding'], 2), 'tone' => 'red', 'hint' => $stats['overdue_invoices'].' overdue invoices'],
+        ['label' => 'Occupancy', 'value' => $stats['occupancy_rate'].'%', 'tone' => 'blue', 'hint' => $stats['occupied_units'].' of '.$stats['total_units'].' units occupied'],
+        ['label' => 'Open maintenance', 'value' => $stats['open_maintenance'], 'tone' => 'amber', 'hint' => 'Requests needing attention'],
+    ]);
+
+    $quickStats = collect([
+        !$isLandlord ? ['label' => 'Landlords', 'value' => $stats['total_landlords']] : null,
+        ['label' => 'Properties', 'value' => $stats['total_properties']],
+        ['label' => 'Active tenants', 'value' => $stats['total_tenants']],
+        ['label' => 'Vacant units', 'value' => $stats['vacant_units']],
+        ['label' => 'Pending invites', 'value' => $stats['pending_invites']],
+        ['label' => 'Total collected', 'value' => 'KSh '.number_format($stats['total_paid'], 0)],
+    ])->filter();
 
     $maintenanceCounts = [
         'New' => $maintenanceStatus->firstWhere('label', 'OPEN')['count'] ?? 0,
-        'In Progress' => $maintenanceStatus->firstWhere('label', 'IN PROGRESS')['count'] ?? 0,
-        'Awaiting Parts' => $maintenanceStatus->firstWhere('label', 'WAITING TENANT')['count'] ?? 0,
+        'In progress' => $maintenanceStatus->firstWhere('label', 'IN PROGRESS')['count'] ?? 0,
+        'Awaiting' => $maintenanceStatus->firstWhere('label', 'WAITING TENANT')['count'] ?? 0,
         'Closed' => $maintenanceStatus->firstWhere('label', 'CLOSED')['count'] ?? 0,
     ];
 
-    $metricCards = collect([
-        !$isLandlord ? ['label' => 'Total Landlords', 'value' => $stats['total_landlords'], 'tone' => 'blue', 'icon' => '👤'] : null,
-        ['label' => 'Pending Invites', 'value' => $stats['pending_invites'], 'tone' => 'amber', 'icon' => '⏱'],
-        ['label' => 'Total Properties', 'value' => $stats['total_properties'], 'tone' => 'blue', 'icon' => '▦'],
-        ['label' => 'Current Occupancy', 'value' => $stats['occupancy_rate'].'%', 'tone' => 'blue', 'icon' => '◒'],
-        ['label' => 'Rent (This Month)', 'value' => 'KSh '.number_format($stats['collected_this_month'], 2), 'tone' => 'green solid', 'icon' => '💵'],
-        ['label' => 'Rent (Total Collected)', 'value' => 'KSh '.number_format($stats['total_paid'], 2), 'tone' => 'green', 'icon' => '💳'],
-        ['label' => 'Outstanding Balance', 'value' => 'KSh '.number_format($stats['outstanding'], 2), 'tone' => 'red', 'icon' => '▰'],
-        ['label' => 'Active Tenants', 'value' => $stats['total_tenants'], 'tone' => 'teal', 'icon' => '👥'],
-        ['label' => 'Vacant Units', 'value' => $stats['vacant_units'], 'tone' => 'teal', 'icon' => '□'],
-        ['label' => 'Pending Invites (Tenant)', 'value' => $stats['pending_tenant_invites'], 'tone' => 'purple', 'icon' => '⏱'],
-        ['label' => 'Overdue Invoices', 'value' => $stats['overdue_invoices'], 'tone' => 'red', 'icon' => '▤'],
-        ['label' => 'Open Maintenance', 'value' => $stats['open_maintenance'], 'tone' => 'amber', 'icon' => '!'],
-    ])->filter();
-
     $statusClass = [
-        'PAID' => 'dash-text-green',
-        'PENDING' => 'dash-text-amber',
-        'PARTIAL' => 'dash-text-blue',
-        'OVERDUE' => 'dash-text-red',
-        'CANCELLED' => 'dash-text-muted',
+        'PAID' => 'badge-green',
+        'PENDING' => 'badge-yellow',
+        'PARTIAL' => 'badge-blue',
+        'OVERDUE' => 'badge-red',
+        'CANCELLED' => 'badge-gray',
     ];
 @endphp
 
 <style>
-    .dash-wrap { margin:-6px -4px 0; }
-    .dash-metrics {
+    .ops-dashboard { margin:-2px -2px 0; }
+    .ops-hero {
         display:grid;
-        grid-template-columns:repeat(6, minmax(118px, 1fr));
+        grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);
+        gap:16px;
+        margin-bottom:16px;
+    }
+    .ops-hero-card {
+        background:linear-gradient(135deg,#0f172a,#1e3a8a);
+        color:#fff;
+        border-radius:18px;
+        padding:22px;
+        box-shadow:0 18px 36px rgba(15,23,42,.16);
+        overflow:hidden;
+        position:relative;
+    }
+    .ops-hero-card::after {
+        content:"";
+        position:absolute;
+        width:220px;
+        height:220px;
+        border-radius:999px;
+        background:rgba(96,165,250,.18);
+        right:-80px;
+        top:-90px;
+    }
+    .ops-eyebrow { font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#bfdbfe;margin-bottom:7px; }
+    .ops-title { font-size:26px;font-weight:900;letter-spacing:-.05em;position:relative;z-index:1; }
+    .ops-subtitle { color:#cbd5e1;font-size:13px;line-height:1.6;margin-top:8px;max-width:650px;position:relative;z-index:1; }
+    .ops-kpis {
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:10px;
+    }
+    .ops-kpi {
+        background:#fff;
+        border:1px solid #dbe4ef;
+        border-radius:16px;
+        padding:14px;
+        box-shadow:0 10px 24px rgba(15,23,42,.06);
+    }
+    .ops-kpi span { display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#64748b;margin-bottom:7px; }
+    .ops-kpi strong { display:block;font-size:23px;line-height:1;font-weight:900;letter-spacing:-.05em; }
+    .ops-kpi small { display:block;color:#64748b;font-size:12px;margin-top:8px; }
+    .ops-tone-green strong { color:#15803d; }
+    .ops-tone-red strong { color:#b91c1c; }
+    .ops-tone-blue strong { color:#2563eb; }
+    .ops-tone-amber strong { color:#b7791f; }
+    .ops-stat-strip {
+        display:grid;
+        grid-template-columns:repeat(6,minmax(110px,1fr));
         gap:10px;
         margin-bottom:16px;
     }
-    .dash-metric {
-        min-height:68px;
+    .ops-stat {
         background:#fff;
-        border:1px solid #d7dee8;
-        border-radius:10px;
-        padding:10px 11px;
-        box-shadow:0 6px 14px rgba(15,23,42,.08);
+        border:1px solid #dbe4ef;
+        border-radius:14px;
+        padding:12px 13px;
+        box-shadow:0 8px 18px rgba(15,23,42,.05);
+    }
+    .ops-stat span { display:block;font-size:11px;color:#64748b;margin-bottom:5px; }
+    .ops-stat strong { font-size:19px;font-weight:900;letter-spacing:-.04em; }
+    .ops-main-grid {
+        display:grid;
+        grid-template-columns:minmax(0,1.45fr) minmax(320px,.8fr);
+        gap:16px;
+        margin-bottom:16px;
+    }
+    .ops-panel {
+        background:#fff;
+        border:1px solid #dbe4ef;
+        border-radius:16px;
+        padding:17px;
+        box-shadow:0 10px 24px rgba(15,23,42,.06);
+        overflow:hidden;
+    }
+    .ops-panel-head {
         display:flex;
         align-items:center;
         justify-content:space-between;
         gap:10px;
-    }
-    .dash-metric.solid {
-        background:linear-gradient(135deg,#2e9662,#238456);
-        color:#fff;
-        border-color:#238456;
-    }
-    .dash-metric-label { font-size:11px; color:#111827; margin-bottom:5px; }
-    .dash-metric.solid .dash-metric-label { color:#d9fbe8; }
-    .dash-metric-value { font-size:20px; line-height:1; font-weight:800; letter-spacing:-.03em; }
-    .dash-metric-icon {
-        width:27px;height:27px;border-radius:8px;
-        display:flex;align-items:center;justify-content:center;
-        font-size:15px;background:#eef2f7;opacity:.95;flex:0 0 auto;
-    }
-    .dash-tone-blue { color:#1d4ed8; }
-    .dash-tone-green { color:#15803d; }
-    .dash-tone-red { color:#b91c1c; }
-    .dash-tone-amber { color:#b7791f; }
-    .dash-tone-teal { color:#0f766e; }
-    .dash-tone-purple { color:#7e22ce; }
-    .dash-text-green { color:#15803d; }
-    .dash-text-red { color:#b91c1c; }
-    .dash-text-amber { color:#b7791f; }
-    .dash-text-blue { color:#1d4ed8; }
-    .dash-text-muted { color:#64748b; }
-    .dash-grid {
-        display:grid;
-        grid-template-columns:minmax(0,1.35fr) minmax(340px,.95fr);
-        gap:16px;
-        margin-bottom:16px;
-    }
-    .dash-panel {
-        background:#fff;
-        border:1px solid #d7dee8;
-        border-radius:12px;
-        padding:18px 18px 14px;
-        box-shadow:0 8px 18px rgba(15,23,42,.08);
-        overflow:hidden;
-    }
-    .dash-panel-title {
-        font-size:13px;
-        font-weight:800;
-        color:#111827;
-        text-transform:uppercase;
         margin-bottom:12px;
     }
+    .ops-panel-title { font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:#0f172a; }
+    .ops-panel-note { font-size:12px;color:#64748b; }
     .trend-chart {
         position:relative;
-        height:170px;
+        height:230px;
+        border-radius:14px;
         background:
-            linear-gradient(to bottom, rgba(148,163,184,.25) 1px, transparent 1px) 0 18px / 100% 44px,
+            linear-gradient(to bottom, rgba(148,163,184,.24) 1px, transparent 1px) 0 22px / 100% 48px,
             linear-gradient(180deg,#fff,#f8fafc);
-        border-bottom:1px solid #d7dee8;
+        border:1px solid #eef2f7;
+        overflow:hidden;
     }
     .trend-chart svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
-    .trend-labels { display:flex; justify-content:space-between; padding-top:8px; font-size:12px; color:#334155; }
-    .trend-legend { position:absolute; top:2px; right:8px; font-size:12px; color:#111827; display:flex; align-items:center; gap:6px; }
-    .legend-dot { width:9px; height:9px; border-radius:3px; background:#1d4ed8; display:inline-block; }
-    .portfolio-bars {
-        height:145px;
-        display:grid;
-        grid-template-columns:repeat(4, 1fr);
-        align-items:end;
-        gap:18px;
-        padding:14px 18px 0 18px;
-        border-bottom:1px solid #d7dee8;
-        background:linear-gradient(to bottom, rgba(148,163,184,.22) 1px, transparent 1px) 0 20px / 100% 42px;
+    .trend-labels { display:flex;justify-content:space-between;padding:9px 4px 0;font-size:12px;color:#64748b; }
+    .health-stack { display:grid; gap:12px; }
+    .health-row { display:grid;grid-template-columns:94px 1fr 44px;gap:9px;align-items:center;font-size:12px;color:#334155; }
+    .health-track { height:10px;background:#eef2f7;border-radius:999px;overflow:hidden; }
+    .health-fill { height:100%;border-radius:999px; }
+    .maintenance-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:13px; }
+    .maintenance-box { border:1px solid #e2e8f0;border-radius:12px;padding:10px;text-align:center;background:#f8fafc; }
+    .maintenance-box span { display:block;font-size:11px;color:#64748b;margin-bottom:4px; }
+    .maintenance-box strong { font-size:18px;letter-spacing:-.04em; }
+    .ops-table-grid { display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:16px; }
+    @media (max-width:1200px) {
+        .ops-stat-strip { grid-template-columns:repeat(3,minmax(0,1fr)); }
+        .ops-hero { grid-template-columns:1fr; }
     }
-    .portfolio-bar { display:flex; flex-direction:column; align-items:center; justify-content:end; gap:8px; height:100%; }
-    .bar-column { width:44px; height:112px; background:#cbd5e1; display:flex; align-items:end; border-radius:2px 2px 0 0; overflow:hidden; }
-    .bar-fill { width:100%; min-height:3px; }
-    .portfolio-labels { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; padding:8px 18px 0; font-size:11px; text-align:center; color:#111827; }
-    .portfolio-summary { display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px; }
-    .portfolio-legend { display:grid; grid-template-columns:1fr; gap:4px; font-size:11px; margin-top:8px; }
-    .dash-table th { padding:8px 10px; font-size:12px; color:#111827; background:#f8fafc; border-bottom:1px solid #d7dee8; text-transform:none; }
-    .dash-table td { padding:8px 10px; font-size:13px; }
-    .maintenance-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:12px; }
-    .maintenance-chip { text-align:center; }
-    .maintenance-chip span { display:block; font-size:12px; color:#111827; margin-bottom:4px; }
-    .maintenance-chip strong { font-size:18px; }
-    @media (max-width: 1250px) {
-        .dash-metrics { grid-template-columns:repeat(4, minmax(118px, 1fr)); }
+    @media (max-width:900px) {
+        .ops-main-grid,.ops-table-grid { grid-template-columns:1fr; }
+        .ops-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
-    @media (max-width: 980px) {
-        .dash-grid { grid-template-columns:1fr; }
-        .dash-metrics { grid-template-columns:repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 560px) {
-        .dash-metrics { grid-template-columns:1fr; }
-        .dash-metric { min-height:66px; }
-        .maintenance-strip { grid-template-columns:repeat(2,1fr); }
+    @media (max-width:560px) {
+        .ops-kpis,.ops-stat-strip,.maintenance-grid { grid-template-columns:1fr; }
+        .ops-title { font-size:22px; }
     }
 </style>
 
-<div class="dash-wrap">
-    <div class="dash-metrics">
-        @foreach($metricCards as $card)
-            @php
-                $parts = explode(' ', $card['tone']);
-                $tone = $parts[0];
-                $solid = in_array('solid', $parts, true);
-            @endphp
-            <div class="dash-metric {{ $solid ? 'solid' : '' }}">
-                <div>
-                    <div class="dash-metric-label">{{ $card['label'] }}</div>
-                    <div class="dash-metric-value {{ $solid ? '' : 'dash-tone-'.$tone }}">{{ $card['value'] }}</div>
+<div class="ops-dashboard">
+    <div class="ops-hero">
+        <div class="ops-hero-card">
+            <div class="ops-eyebrow">{{ $isLandlord ? 'Your rental portfolio' : 'Platform operations' }}</div>
+            <div class="ops-title">Today’s rental health at a glance</div>
+            <p class="ops-subtitle">
+                Track rent collection, occupancy, invitations, invoices, and maintenance without crowding the page with too many cards.
+            </p>
+        </div>
+        <div class="ops-kpis">
+            @foreach($kpis as $kpi)
+                <div class="ops-kpi ops-tone-{{ $kpi['tone'] }}">
+                    <span>{{ $kpi['label'] }}</span>
+                    <strong>{{ $kpi['value'] }}</strong>
+                    <small>{{ $kpi['hint'] }}</small>
                 </div>
-                <div class="dash-metric-icon {{ $solid ? '' : 'dash-tone-'.$tone }}">{{ $card['icon'] }}</div>
+            @endforeach
+        </div>
+    </div>
+
+    <div class="ops-stat-strip">
+        @foreach($quickStats as $stat)
+            <div class="ops-stat">
+                <span>{{ $stat['label'] }}</span>
+                <strong>{{ $stat['value'] }}</strong>
             </div>
         @endforeach
     </div>
 
-    <div class="dash-grid">
-        <div class="dash-panel">
-            <div class="dash-panel-title">Monthly Rent Collection Trend</div>
+    <div class="ops-main-grid">
+        <div class="ops-panel">
+            <div class="ops-panel-head">
+                <div class="ops-panel-title">Monthly rent collection</div>
+                <div class="ops-panel-note">Last {{ $monthlyRevenue->count() }} months</div>
+            </div>
             <div class="trend-chart">
-                <div class="trend-legend"><span class="legend-dot"></span> Rent Collected</div>
                 <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                     <defs>
                         <linearGradient id="rentArea" x1="0" x2="1" y1="0" y2="1">
-                            <stop offset="0%" stop-color="#0ea5e9" stop-opacity=".38" />
-                            <stop offset="55%" stop-color="#6366f1" stop-opacity=".24" />
-                            <stop offset="100%" stop-color="#9333ea" stop-opacity=".12" />
+                            <stop offset="0%" stop-color="#38bdf8" stop-opacity=".42" />
+                            <stop offset="60%" stop-color="#2563eb" stop-opacity=".20" />
+                            <stop offset="100%" stop-color="#9333ea" stop-opacity=".10" />
                         </linearGradient>
                     </defs>
                     <polygon points="{{ $trendAreaPoints }}" fill="url(#rentArea)" />
-                    <polyline points="{{ $trendPoints }}" fill="none" stroke="#2563eb" stroke-width="1.8" vector-effect="non-scaling-stroke" />
+                    <polyline points="{{ $trendPoints }}" fill="none" stroke="#2563eb" stroke-width="2.1" vector-effect="non-scaling-stroke" />
                     @foreach($monthlyRevenue->values() as $index => $month)
                         @php
                             $x = $pointCount === 1 ? 50 : ($index / max(1, $pointCount - 1)) * 100;
-                            $y = 88 - (((float) $month['amount'] / $maxRevenue) * 68);
+                            $y = 86 - (((float) $month['amount'] / $maxRevenue) * 64);
                         @endphp
                         <circle cx="{{ $x }}" cy="{{ $y }}" r="1.8" fill="#fff" stroke="#2563eb" stroke-width=".9" vector-effect="non-scaling-stroke" />
                     @endforeach
@@ -211,80 +233,88 @@
             </div>
         </div>
 
-        <div class="dash-panel">
-            <div class="dash-panel-title">Portfolio Health</div>
-            <div class="portfolio-summary">
-                <span>Occupied Units: {{ $stats['occupied_units'] }}/{{ $stats['total_units'] }}</span>
-                <span>Total Units: {{ $stats['total_units'] }}</span>
+        <div class="ops-panel">
+            <div class="ops-panel-head">
+                <div class="ops-panel-title">Portfolio health</div>
+                <div class="ops-panel-note">{{ $stats['total_units'] }} total units</div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 120px;gap:10px;align-items:start;">
-                <div>
-                    <div class="portfolio-bars">
-                        <div class="portfolio-bar"><div class="bar-column"><div class="bar-fill" style="height:{{ $occupiedPct }}%;background:#2563eb;"></div></div></div>
-                        <div class="portfolio-bar"><div class="bar-column"><div class="bar-fill" style="height:{{ $vacantPct }}%;background:#94a3b8;"></div></div></div>
-                        <div class="portfolio-bar"><div class="bar-column"><div class="bar-fill" style="height:{{ $pendingPct }}%;background:#f59e0b;"></div></div></div>
-                        <div class="portfolio-bar"><div class="bar-column"><div class="bar-fill" style="height:{{ $renovationPct }}%;background:#b91c1c;"></div></div></div>
-                    </div>
-                    <div class="portfolio-labels">
-                        <span>Occupied</span><span>Vacant</span><span>Pending</span><span>Under</span>
-                    </div>
+            <div class="health-stack">
+                <div class="health-row">
+                    <span>Occupied</span>
+                    <div class="health-track"><div class="health-fill" style="width:{{ $occupiedPct }}%;background:#2563eb;"></div></div>
+                    <strong>{{ $stats['occupied_units'] }}</strong>
                 </div>
-                <div class="portfolio-legend">
-                    <strong>Unit Status</strong>
-                    <span><i class="legend-dot" style="background:#2563eb;"></i> Occupied</span>
-                    <span><i class="legend-dot" style="background:#94a3b8;"></i> Vacant</span>
-                    <span><i class="legend-dot" style="background:#f59e0b;"></i> Pending Tenant</span>
-                    <span><i class="legend-dot" style="background:#b91c1c;"></i> Under Renovation</span>
+                <div class="health-row">
+                    <span>Vacant</span>
+                    <div class="health-track"><div class="health-fill" style="width:{{ $vacantPct }}%;background:#14b8a6;"></div></div>
+                    <strong>{{ $stats['vacant_units'] }}</strong>
                 </div>
+                <div class="health-row">
+                    <span>Pending</span>
+                    <div class="health-track"><div class="health-fill" style="width:{{ $pendingPct }}%;background:#f59e0b;"></div></div>
+                    <strong>{{ $stats['pending_tenant_invites'] }}</strong>
+                </div>
+            </div>
+            <div style="height:1px;background:#e2e8f0;margin:16px 0;"></div>
+            <div class="ops-panel-title" style="margin-bottom:10px;">Maintenance</div>
+            <div class="maintenance-grid">
+                @foreach($maintenanceCounts as $label => $count)
+                    <div class="maintenance-box">
+                        <span>{{ $label }}</span>
+                        <strong>{{ $count }}</strong>
+                    </div>
+                @endforeach
             </div>
         </div>
     </div>
 
-    <div class="dash-grid">
-        <div class="dash-panel">
-            <div class="dash-panel-title">Recent Invoices</div>
-            <table class="dash-table">
-                <thead><tr><th>Tenant</th><th>Property</th><th>Amount KSh</th><th>Status</th><th>Due Date</th></tr></thead>
-                <tbody>
-                    @forelse($recentInvoices as $invoice)
-                        <tr>
-                            <td>{{ $invoice->tenant?->name ?? '-' }}</td>
-                            <td>{{ $invoice->unit?->property?->name ?? '-' }} / {{ $invoice->unit?->unit_number ?? '-' }}</td>
-                            <td>{{ number_format((float) $invoice->total_amount, 2) }}</td>
-                            <td class="{{ $statusClass[$invoice->status] ?? 'dash-text-muted' }}">{{ ucfirst(strtolower(str_replace('_',' ', $invoice->status))) }}</td>
-                            <td>{{ $invoice->due_date?->format('d/m/Y') ?? '-' }}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="5" class="empty-state">No invoices yet.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+    <div class="ops-table-grid">
+        <div class="ops-panel">
+            <div class="ops-panel-head">
+                <div class="ops-panel-title">Recent invoices</div>
+                <a href="{{ route('admin.invoices.index') }}" class="btn btn-secondary">View all</a>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead><tr><th>Tenant</th><th>Property</th><th>Amount</th><th>Status</th><th>Due</th></tr></thead>
+                    <tbody>
+                        @forelse($recentInvoices as $invoice)
+                            <tr>
+                                <td>{{ $invoice->tenant?->name ?? '-' }}</td>
+                                <td>{{ $invoice->unit?->property?->name ?? '-' }} / {{ $invoice->unit?->unit_number ?? '-' }}</td>
+                                <td>KSh {{ number_format((float) $invoice->total_amount, 2) }}</td>
+                                <td><span class="badge {{ $statusClass[$invoice->status] ?? 'badge-gray' }}">{{ ucfirst(strtolower(str_replace('_',' ', $invoice->status))) }}</span></td>
+                                <td>{{ $invoice->due_date?->format('d M Y') ?? '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="5" class="empty-state">No invoices yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="dash-panel">
-            <div class="dash-panel-title">Maintenance Status</div>
-            <div class="maintenance-strip">
-                @foreach($maintenanceCounts as $label => $count)
-                    <div class="maintenance-chip">
-                        <span>{{ $label }}</span>
-                        <strong class="{{ $label === 'New' ? 'dash-text-red' : ($label === 'Awaiting Parts' || $label === 'Closed' ? 'dash-text-green' : 'dash-text-amber') }}">{{ $count }}</strong>
-                    </div>
-                @endforeach
+        <div class="ops-panel">
+            <div class="ops-panel-head">
+                <div class="ops-panel-title">Recent maintenance</div>
+                <a href="{{ route('admin.maintenance.index') }}" class="btn btn-secondary">View all</a>
             </div>
-            <table class="dash-table">
-                <thead><tr><th>Issue</th><th>Apartment / Room</th><th>Status</th></tr></thead>
-                <tbody>
-                    @forelse($recentMaintenance as $request)
-                        <tr>
-                            <td>{{ $request->title }}</td>
-                            <td>{{ $request->unit?->property?->name ?? '-' }} / {{ $request->unit?->unit_number ?? '-' }}</td>
-                            <td>{{ str_replace('_', ' ', ucfirst(strtolower($request->status))) }}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="3" class="empty-state">No maintenance requests yet.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+            <div class="table-scroll">
+                <table>
+                    <thead><tr><th>Issue</th><th>Room</th><th>Status</th></tr></thead>
+                    <tbody>
+                        @forelse($recentMaintenance as $request)
+                            <tr>
+                                <td>{{ $request->title }}</td>
+                                <td>{{ $request->unit?->property?->name ?? '-' }} / {{ $request->unit?->unit_number ?? '-' }}</td>
+                                <td><span class="badge badge-gray">{{ str_replace('_', ' ', ucfirst(strtolower($request->status))) }}</span></td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="3" class="empty-state">No maintenance requests yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

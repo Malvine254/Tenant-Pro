@@ -12,31 +12,31 @@
     ];
 @endphp
 
-<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:16px;">
+<div class="admin-page-header">
     <div>
-        <h2 style="font-size:18px;font-weight:600;">{{ $isLandlord ? 'Invite tenants to vacant units' : 'Landlord and tenant invitations' }}</h2>
-        <p style="font-size:13px;color:#64748b;margin-top:4px;max-width:760px;">
+        <h2>{{ $isLandlord ? 'Invite tenants to vacant units' : 'Landlord and tenant invitations' }}</h2>
+        <p>
             {{ $isLandlord
                 ? 'Tenants receive an email invite, accept it, create/sign in to their account, and manage their own M-Pesa details in the Android app.'
                 : 'Use email invitations for real onboarding. Platform admins can invite landlords; landlords invite tenants to vacant units.' }}
         </p>
     </div>
-    <form method="GET" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <form method="GET" class="admin-filter">
         @unless($isLandlord)
-            <select name="type" style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;">
+            <select name="type">
                 <option value="">All types</option>
                 @foreach(['LANDLORD', 'TENANT'] as $type)
                     <option value="{{ $type }}" {{ request('type') === $type ? 'selected' : '' }}>{{ ucfirst(strtolower($type)) }}</option>
                 @endforeach
             </select>
         @endunless
-        <select name="status" style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;">
+        <select name="status">
             <option value="">All statuses</option>
             @foreach(['PENDING', 'ACCEPTED', 'EXPIRED', 'CANCELLED', 'REVOKED'] as $status)
                 <option value="{{ $status }}" {{ request('status') === $status ? 'selected' : '' }}>{{ $status }}</option>
             @endforeach
         </select>
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search invitee..." style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;width:190px;">
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search invitee...">
         <button type="submit" class="btn btn-secondary">Filter</button>
     </form>
 </div>

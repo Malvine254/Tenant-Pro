@@ -10,25 +10,25 @@
     $latestMessage = fn($conversation) => $conversation->messages->first();
 @endphp
 
-<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px;">
+<div class="admin-page-header">
     <div>
-        <h2 style="font-size:18px;font-weight:600;">Tenant Chat Inbox</h2>
-        <p style="font-size:13px;color:#64748b;margin-top:4px;">
+        <h2>Tenant Chat Inbox</h2>
+        <p>
             View messages sent from the Android app with tenant email, apartment/property, and room/unit details.
         </p>
     </div>
-    <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap;">
-        <select name="status" style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;">
+    <form method="GET" class="admin-filter">
+        <select name="status">
             <option value="">All chats</option>
             <option value="open" {{ request('status') === 'open' ? 'selected' : '' }}>Open</option>
             <option value="closed" {{ request('status') === 'closed' ? 'selected' : '' }}>Closed</option>
         </select>
-        <input name="search" value="{{ request('search') }}" placeholder="Search tenant, email, topic..." style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;min-width:240px;">
+        <input name="search" value="{{ request('search') }}" placeholder="Search tenant, email, topic...">
         <button class="btn btn-secondary" type="submit">Filter</button>
     </form>
 </div>
 
-<div style="display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start;">
+<div class="support-grid" style="display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start;">
     <div class="card" style="padding:0;overflow:hidden;">
         <div style="padding:14px 16px;border-bottom:1px solid #e2e8f0;">
             <h3 class="section-heading" style="margin-bottom:0;">Conversations</h3>
@@ -147,10 +147,10 @@
 
 <style>
 @media (max-width: 980px) {
-    .content > div[style*="grid-template-columns:360px"] {
+    .support-grid {
         display:block !important;
     }
-    .content > div[style*="grid-template-columns:360px"] > .card {
+    .support-grid > .card {
         margin-bottom:14px;
     }
 }
