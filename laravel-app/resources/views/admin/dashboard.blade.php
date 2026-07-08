@@ -53,17 +53,17 @@
     .dash-wrap { margin:-6px -4px 0; }
     .dash-metrics {
         display:grid;
-        grid-template-columns:repeat(6, minmax(138px, 1fr));
-        gap:14px;
-        margin-bottom:18px;
+        grid-template-columns:repeat(6, minmax(118px, 1fr));
+        gap:10px;
+        margin-bottom:16px;
     }
     .dash-metric {
-        min-height:86px;
+        min-height:68px;
         background:#fff;
         border:1px solid #d7dee8;
-        border-radius:12px;
-        padding:13px 14px;
-        box-shadow:0 8px 18px rgba(15,23,42,.10);
+        border-radius:10px;
+        padding:10px 11px;
+        box-shadow:0 6px 14px rgba(15,23,42,.08);
         display:flex;
         align-items:center;
         justify-content:space-between;
@@ -74,13 +74,13 @@
         color:#fff;
         border-color:#238456;
     }
-    .dash-metric-label { font-size:12px; color:#111827; margin-bottom:6px; }
+    .dash-metric-label { font-size:11px; color:#111827; margin-bottom:5px; }
     .dash-metric.solid .dash-metric-label { color:#d9fbe8; }
-    .dash-metric-value { font-size:25px; line-height:1; font-weight:800; letter-spacing:-.03em; }
+    .dash-metric-value { font-size:20px; line-height:1; font-weight:800; letter-spacing:-.03em; }
     .dash-metric-icon {
-        width:32px;height:32px;border-radius:10px;
+        width:27px;height:27px;border-radius:8px;
         display:flex;align-items:center;justify-content:center;
-        font-size:18px;background:#eef2f7;opacity:.95;flex:0 0 auto;
+        font-size:15px;background:#eef2f7;opacity:.95;flex:0 0 auto;
     }
     .dash-tone-blue { color:#1d4ed8; }
     .dash-tone-green { color:#15803d; }
@@ -149,7 +149,7 @@
     .maintenance-chip span { display:block; font-size:12px; color:#111827; margin-bottom:4px; }
     .maintenance-chip strong { font-size:18px; }
     @media (max-width: 1250px) {
-        .dash-metrics { grid-template-columns:repeat(4, minmax(138px, 1fr)); }
+        .dash-metrics { grid-template-columns:repeat(4, minmax(118px, 1fr)); }
     }
     @media (max-width: 980px) {
         .dash-grid { grid-template-columns:1fr; }
@@ -157,7 +157,7 @@
     }
     @media (max-width: 560px) {
         .dash-metrics { grid-template-columns:1fr; }
-        .dash-metric { min-height:78px; }
+        .dash-metric { min-height:66px; }
         .maintenance-strip { grid-template-columns:repeat(2,1fr); }
     }
 </style>
