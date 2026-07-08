@@ -60,6 +60,44 @@ export class InvoicesService {
     throw new ForbiddenException('Role is not permitted for invoice access');
   }
 
+  private async ensureCurrentMonthRentInvoice(tenantId: string, userId: string, unitId: string, rentAmount: number | { toNumber(): number }) {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+    const existing = await this.prisma.invoice.findFirst({
+      where: {
+        tenantId,
+        billingType: BillingType.RENT,
+        periodMonth: month,
+        periodYear: year,
+      },
+    });
+
+    if (existing) {
+      return existing;
+    }
+
+    const dueDate = new Date(year, month - 1, 5, 23, 59, 59);
+    const normalizedRentAmount = typeof rentAmount === 'number' ? rentAmount : Number(rentAmount.toNumber());
+
+    return this.prisma.invoice.create({
+      data: {
+        tenantId,
+        userId,
+        unitId,
+        billingType: BillingType.RENT,
+        periodMonth: month,
+        periodYear: year,
+        issueDate: now,
+        dueDate,
+        amount: normalizedRentAmount,
+        penaltyAmount: 0,
+        totalAmount: normalizedRentAmount,
+        status: InvoiceStatus.PENDING,
+      },
+    });
+  }
+
   async generateMonthlyRentInvoices(
     actorUserId: string,
     actorRole: RoleName,
@@ -246,6 +284,19 @@ export class InvoicesService {
           : {
               userId: actorUserId,
             };
+
+    if (actorRole === RoleName.TENANT) {
+      const activeTenancies = await this.prisma.tenant.findMany({
+        where: { userId: actorUserId, isActive: true },
+        include: { unit: true },
+      });
+
+      await Promise.all(
+        activeTenancies.map((tenancy) =>
+          this.ensureCurrentMonthRentInvoice(tenancy.id, actorUserId, tenancy.unitId, tenancy.unit.rentAmount),
+        ),
+      );
+    }
 
     return this.prisma.invoice.findMany({
       where,
