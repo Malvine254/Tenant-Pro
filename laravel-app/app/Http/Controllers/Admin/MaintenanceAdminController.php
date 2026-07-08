@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MaintenanceRequest;
+use App\Services\TenantAppNotificationService;
 use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
 
@@ -45,7 +46,15 @@ class MaintenanceAdminController extends Controller
         }
         $maintenanceRequest->update($data);
 
-        $emailSent = app(TenantEmailService::class)->maintenanceUpdated($maintenanceRequest->fresh(['tenant', 'unit.property', 'assignedTo']), $previousStatus);
+        $freshRequest = $maintenanceRequest->fresh(['tenant', 'unit.property', 'assignedTo']);
+        $emailSent = app(TenantEmailService::class)->maintenanceUpdated($freshRequest, $previousStatus);
+        app(TenantAppNotificationService::class)->notify(
+            $freshRequest->tenant,
+            'MAINTENANCE_UPDATED',
+            'Maintenance updated',
+            'Your maintenance request "'.$freshRequest->title.'" is now '.$freshRequest->status.'.',
+            ['maintenance_request_id' => $freshRequest->id, 'status' => $freshRequest->status]
+        );
 
         return redirect()
             ->route('admin.maintenance.show', $maintenanceRequest)

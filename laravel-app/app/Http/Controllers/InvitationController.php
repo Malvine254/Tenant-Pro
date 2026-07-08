@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Invitation;
 use App\Models\Tenant;
+use App\Services\TenantAppNotificationService;
+use App\Services\TenantBillingService;
+use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -89,8 +92,8 @@ class InvitationController extends Controller
             return response()->json(['message' => 'This unit already has an active tenant.'], 422);
         }
 
-        DB::transaction(function () use ($request, $invitation) {
-            Tenant::updateOrCreate(
+        $tenant = DB::transaction(function () use ($request, $invitation) {
+            $tenant = Tenant::updateOrCreate(
                 ['user_id' => $request->user()->id],
                 [
                     'unit_id' => $invitation->unit_id,
@@ -101,7 +104,17 @@ class InvitationController extends Controller
             );
             $invitation->unit->update(['status' => 'OCCUPIED']);
             $invitation->update(['status' => 'ACCEPTED', 'accepted_at' => now()]);
+
+            return $tenant;
         });
+
+        $tenant = $tenant->fresh(['user', 'unit.property']);
+        $invoice = app(TenantBillingService::class)->createInitialRentInvoice($tenant);
+        app(TenantAppNotificationService::class)->tenantAssigned($tenant);
+        if ($invoice->wasRecentlyCreated) {
+            app(TenantAppNotificationService::class)->invoiceCreated($invoice);
+            app(TenantEmailService::class)->invoiceCreated($invoice);
+        }
 
         return response()->json(['message' => 'Invitation accepted and unit linked.']);
     }

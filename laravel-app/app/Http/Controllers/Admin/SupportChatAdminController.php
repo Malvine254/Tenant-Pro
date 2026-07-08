@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SupportConversation;
 use App\Models\SupportMessage;
 use App\Models\User;
+use App\Services\TenantAppNotificationService;
 use Illuminate\Http\Request;
 
 class SupportChatAdminController extends Controller
@@ -70,7 +71,7 @@ class SupportChatAdminController extends Controller
             'body' => 'required|string|max:5000',
         ]);
 
-        SupportMessage::create([
+        $message = SupportMessage::create([
             'conversation_id' => $supportConversation->id,
             'sender_id' => $request->user()->id,
             'topic' => $supportConversation->topic ?: 'General',
@@ -80,6 +81,12 @@ class SupportChatAdminController extends Controller
         ]);
 
         $supportConversation->update(['is_open' => true]);
+        $supportConversation->loadMissing('tenant');
+        app(TenantAppNotificationService::class)->supportReply(
+            $supportConversation->tenant,
+            $supportConversation->topic ?: 'Support',
+            $message->body
+        );
 
         return redirect()
             ->route('admin.support.index', ['conversation_id' => $supportConversation->id])

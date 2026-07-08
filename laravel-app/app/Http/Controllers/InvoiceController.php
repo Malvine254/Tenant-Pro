@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
+use App\Services\TenantAppNotificationService;
 use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
 
@@ -37,6 +38,7 @@ class InvoiceController extends Controller
         $data['paid_amount'] = 0;
         $data['status'] = 'PENDING';
         $invoice = Invoice::create($data)->load(['tenant', 'unit.property']);
+        app(TenantAppNotificationService::class)->invoiceCreated($invoice);
         app(TenantEmailService::class)->invoiceCreated($invoice);
 
         return response()->json($invoice, 201);

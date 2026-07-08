@@ -8,6 +8,8 @@ use App\Models\Property;
 use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\TenantAppNotificationService;
+use App\Services\TenantBillingService;
 use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -91,13 +93,21 @@ class TenantAdminController extends Controller
             return $tenant;
         });
 
+        $tenant = $tenant->fresh(['user', 'unit.property']);
+        $invoice = app(TenantBillingService::class)->createInitialRentInvoice($tenant);
+        app(TenantAppNotificationService::class)->tenantAssigned($tenant);
+        if ($invoice->wasRecentlyCreated) {
+            app(TenantAppNotificationService::class)->invoiceCreated($invoice);
+            app(TenantEmailService::class)->invoiceCreated($invoice);
+        }
+
         return redirect()
             ->route('admin.tenants.show', $tenant)
             ->with(
                 'success',
                 app(TenantEmailService::class)->tenantAccountCreated($tenant)
-                    ? 'Tenant created, assigned to unit, and onboarding email sent.'
-                    : 'Tenant created and assigned to unit. Onboarding email could not be sent; check mail logs.'
+                    ? 'Tenant created, assigned to unit, invoice generated, and onboarding email sent.'
+                    : 'Tenant created, assigned to unit, and invoice generated. Onboarding email could not be sent; check mail logs.'
             );
     }
 
@@ -147,13 +157,21 @@ class TenantAdminController extends Controller
             return $tenant;
         });
 
+        $tenant = $tenant->fresh(['user', 'unit.property']);
+        $invoice = app(TenantBillingService::class)->createInitialRentInvoice($tenant);
+        app(TenantAppNotificationService::class)->tenantAssigned($tenant);
+        if ($invoice->wasRecentlyCreated) {
+            app(TenantAppNotificationService::class)->invoiceCreated($invoice);
+            app(TenantEmailService::class)->invoiceCreated($invoice);
+        }
+
         return redirect()
             ->route('admin.tenants.show', $tenant)
             ->with(
                 'success',
                 app(TenantEmailService::class)->tenantAssigned($tenant)
-                    ? 'Existing tenant account assigned to unit and notified by email.'
-                    : 'Existing tenant account assigned to unit. Email notification could not be sent; check mail logs.'
+                    ? 'Existing tenant account assigned to unit, invoice generated, and notified by email.'
+                    : 'Existing tenant account assigned to unit and invoice generated. Email notification could not be sent; check mail logs.'
             );
     }
 

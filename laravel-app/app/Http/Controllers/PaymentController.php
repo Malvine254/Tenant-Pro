@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\Invoice;
+use App\Services\TenantAppNotificationService;
 use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
 
@@ -49,6 +50,7 @@ class PaymentController extends Controller
 
         if ($payment->status === 'SUCCESSFUL') {
             app(TenantEmailService::class)->paymentReceived($payment->load('invoice.tenant', 'invoice.unit.property'));
+            app(TenantAppNotificationService::class)->paymentReceived($payment);
         }
 
         return response()->json($payment->load('invoice'), 201);
