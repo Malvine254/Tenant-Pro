@@ -2,6 +2,9 @@
 @section('page-title', 'Tenants')
 
 @section('content')
+<style>
+.tenant-person{display:flex;align-items:center;gap:10px}.tenant-avatar{width:38px;height:38px;flex:0 0 38px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:linear-gradient(135deg,#7656d8,#4f46e5);color:#fff;font-size:12px;font-weight:800}.tenant-avatar img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
+</style>
 <div class="admin-page-header">
     <div>
         <h2>Tenants</h2>
@@ -38,7 +41,11 @@
         <tbody>
             @forelse($tenants as $tenant)
             <tr>
-                <td>{{ $tenant->user->name }}</td>
+                <td><div class="tenant-person">
+                    @php $tenantInitials = collect(explode(' ', trim($tenant->user->name)))->filter()->take(2)->map(fn($part) => strtoupper(substr($part, 0, 1)))->implode(''); @endphp
+                    <span class="tenant-avatar">@if($tenant->user->profile_image_url)<img src="{{ str_starts_with($tenant->user->profile_image_url, 'http') ? $tenant->user->profile_image_url : asset(ltrim($tenant->user->profile_image_url, '/')) }}" alt="{{ $tenant->user->name }}">@else{{ $tenantInitials ?: 'T' }}@endif</span>
+                    <span>{{ $tenant->user->name }}</span>
+                </div></td>
                 <td style="color:#64748b;font-size:13px;">{{ $tenant->user->email }}</td>
                 <td>{{ $tenant->unit->unit_number }}</td>
                 <td>{{ $tenant->unit->property->name ?? '—' }}</td>
@@ -90,7 +97,11 @@
         <tbody>
             @forelse($unassignedTenantUsers as $tenantUser)
             <tr>
-                <td>{{ $tenantUser->name }}</td>
+                <td><div class="tenant-person">
+                    @php $userInitials = collect(explode(' ', trim($tenantUser->name)))->filter()->take(2)->map(fn($part) => strtoupper(substr($part, 0, 1)))->implode(''); @endphp
+                    <span class="tenant-avatar">@if($tenantUser->profile_image_url)<img src="{{ str_starts_with($tenantUser->profile_image_url, 'http') ? $tenantUser->profile_image_url : asset(ltrim($tenantUser->profile_image_url, '/')) }}" alt="{{ $tenantUser->name }}">@else{{ $userInitials ?: 'T' }}@endif</span>
+                    <span>{{ $tenantUser->name }}</span>
+                </div></td>
                 <td style="color:#64748b;font-size:13px;">{{ $tenantUser->email }}</td>
                 <td>{{ $tenantUser->phone_number ?? '-' }}</td>
                 <td>

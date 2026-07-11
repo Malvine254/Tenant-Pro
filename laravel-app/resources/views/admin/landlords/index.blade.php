@@ -140,7 +140,7 @@
     .landlord-avatar {
         width:38px;
         height:38px;
-        border-radius:12px;
+        border-radius:50%;
         display:flex;
         align-items:center;
         justify-content:center;
@@ -150,7 +150,9 @@
         background:linear-gradient(135deg,#2563eb,#0f766e);
         flex:0 0 auto;
         box-shadow:0 8px 16px rgba(37,99,235,.18);
+        overflow:hidden;
     }
+    .landlord-avatar img { width:100%;height:100%;display:block;object-fit:cover;border-radius:50%; }
     .landlord-name {
         font-size:14px;
         font-weight:800;
@@ -300,7 +302,13 @@
                         <tr>
                             <td>
                                 <div class="landlord-person">
-                                    <div class="landlord-avatar">{{ strtoupper($initials ?: 'L') }}</div>
+                                    <div class="landlord-avatar">
+                                        @if($landlord->profile_image_url)
+                                            <img src="{{ str_starts_with($landlord->profile_image_url, 'http') ? $landlord->profile_image_url : asset(ltrim($landlord->profile_image_url, '/')) }}" alt="{{ $landlord->name }}">
+                                        @else
+                                            {{ strtoupper($initials ?: 'L') }}
+                                        @endif
+                                    </div>
                                     <div>
                                         <div class="landlord-name">{{ $landlord->name }}</div>
                                         <div class="landlord-email">{{ $landlord->email }}</div>

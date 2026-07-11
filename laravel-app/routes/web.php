@@ -10,7 +10,6 @@ use App\Http\Controllers\Admin\MaintenanceAdminController;
 use App\Http\Controllers\Admin\DeploymentToolsController;
 use App\Http\Controllers\Admin\PropertyUnitAdminController;
 use App\Http\Controllers\Admin\InvitationAdminController;
-use App\Http\Controllers\Admin\SupportChatAdminController;
 use App\Http\Controllers\SiteController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -74,9 +73,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 		Route::get('/maintenance', [MaintenanceAdminController::class, 'index'])->name('maintenance.index');
 		Route::get('/maintenance/{maintenanceRequest}', [MaintenanceAdminController::class, 'show'])->name('maintenance.show');
 		Route::patch('/maintenance/{maintenanceRequest}', [MaintenanceAdminController::class, 'update'])->name('maintenance.update');
-		Route::get('/support', [SupportChatAdminController::class, 'index'])->name('support.index');
-		Route::post('/support/{supportConversation}/reply', [SupportChatAdminController::class, 'reply'])->name('support.reply');
-		Route::patch('/support/{supportConversation}/toggle', [SupportChatAdminController::class, 'toggle'])->name('support.toggle');
 		Route::get('/deployment-tools', [DeploymentToolsController::class, 'index'])->name('deployment-tools.index');
 		Route::post('/deployment-tools', [DeploymentToolsController::class, 'run'])->name('deployment-tools.run');
 	});
