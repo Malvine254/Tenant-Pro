@@ -270,7 +270,7 @@ class TenantEmailService
                     'Sent at' => $message->created_at?->format('d M Y H:i') ?? now()->format('d M Y H:i'),
                 ],
                 'actionLabel' => 'Open admin chat',
-                'actionUrl' => rtrim(config('app.url'), '/').'/admin/maintenance',
+                'actionUrl' => rtrim(config('app.url'), '/').'/admin/chats?conversation_id='.$message->conversation_id,
                 'footerText' => 'Reply from the TenantPro admin portal so the tenant can see your response in the app.',
             ]);
 

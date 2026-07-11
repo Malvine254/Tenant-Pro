@@ -151,7 +151,7 @@
             <a href="{{ route('admin.invitations.index') }}" class="{{ request()->routeIs('admin.invitations*') ? 'active' : '' }}">{{ $isLandlord ? 'Tenant Invitations' : 'Invitations' }}</a>
             <a href="{{ route('admin.invoices.index') }}" class="{{ request()->routeIs('admin.invoices*') ? 'active' : '' }}">Invoices</a>
         @endunless
-        <a href="{{ route('admin.maintenance.index') }}" class="{{ request()->routeIs('admin.maintenance*') ? 'active' : '' }}">Maintenance</a>
+        <a href="{{ route('admin.chats.index') }}" class="{{ request()->routeIs('admin.chats*') ? 'active' : '' }}">Chats</a>
         @unless($isCaretaker)
         @endunless
         @if($isPlatformAdmin)
