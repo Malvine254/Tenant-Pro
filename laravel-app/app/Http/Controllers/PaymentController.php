@@ -118,6 +118,52 @@ class PaymentController extends Controller
             'paid_at' => null,
         ]);
 
+        if (
+            config('services.mpesa.environment') === 'sandbox'
+            && filter_var(config('services.mpesa.simulate'), FILTER_VALIDATE_BOOL)
+        ) {
+            $checkoutId = 'SIM-'.strtoupper((string) \Illuminate\Support\Str::uuid());
+            $receipt = 'SIM'.strtoupper(substr(str_replace('-', '', (string) \Illuminate\Support\Str::uuid()), 0, 10));
+
+            DB::transaction(function () use ($payment, $invoice, $checkoutId, $receipt) {
+                $lockedPayment = Payment::whereKey($payment->id)->lockForUpdate()->firstOrFail();
+                $lockedInvoice = Invoice::whereKey($invoice->id)->lockForUpdate()->firstOrFail();
+
+                $lockedPayment->update([
+                    'status' => 'SUCCESSFUL',
+                    'checkout_request_id' => $checkoutId,
+                    'reference' => $checkoutId,
+                    'mpesa_receipt' => $receipt,
+                    'paid_at' => now(),
+                ]);
+                $lockedPayment->transactions()->create([
+                    'amount' => $lockedPayment->amount,
+                    'type' => 'MPESA_SIMULATION',
+                    'description' => 'Sandbox simulation receipt '.$receipt,
+                ]);
+
+                $lockedInvoice->paid_amount = min(
+                    (float) $lockedInvoice->total_amount,
+                    (float) $lockedInvoice->paid_amount + (float) $lockedPayment->amount
+                );
+                $lockedInvoice->status = (float) $lockedInvoice->paid_amount >= (float) $lockedInvoice->total_amount
+                    ? 'PAID'
+                    : 'PARTIAL';
+                $lockedInvoice->paid_at = $lockedInvoice->status === 'PAID' ? now() : null;
+                $lockedInvoice->save();
+            });
+
+            $this->sendPaymentNotifications($payment->id);
+
+            return response()->json([
+                'message' => 'Sandbox payment simulation completed successfully.',
+                'paymentId' => $payment->id,
+                'checkoutRequestId' => $checkoutId,
+                'customerMessage' => 'Simulated payment completed.',
+                'simulated' => true,
+            ]);
+        }
+
         try {
             $result = $mpesa->stkPush(
                 $data['phone_number'],
@@ -204,18 +250,7 @@ class PaymentController extends Controller
         });
 
         if ($notifyPaymentId) {
-            $payment = Payment::with('invoice.tenant', 'invoice.unit.property')->find($notifyPaymentId);
-            try {
-                app(TenantEmailService::class)->paymentReceived($payment);
-                app(TenantAppNotificationService::class)->paymentReceived($payment);
-            } catch (\Throwable $error) {
-                // Payment settlement must remain successful even when a secondary
-                // email or push provider is temporarily unavailable.
-                Log::error('Payment notification failed', [
-                    'payment_id' => $notifyPaymentId,
-                    'error' => $error->getMessage(),
-                ]);
-            }
+            $this->sendPaymentNotifications($notifyPaymentId);
         }
 
         return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
@@ -232,5 +267,21 @@ class PaymentController extends Controller
             ->where('unit_id', $unitId)
             ->where('is_active', true)
             ->exists();
+    }
+
+    private function sendPaymentNotifications(string $paymentId): void
+    {
+        $payment = Payment::with('invoice.tenant', 'invoice.unit.property')->find($paymentId);
+        if (! $payment) return;
+
+        try {
+            app(TenantEmailService::class)->paymentReceived($payment);
+            app(TenantAppNotificationService::class)->paymentReceived($payment);
+        } catch (\Throwable $error) {
+            Log::error('Payment notification failed', [
+                'payment_id' => $paymentId,
+                'error' => $error->getMessage(),
+            ]);
+        }
     }
 }
