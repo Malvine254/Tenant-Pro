@@ -26,6 +26,9 @@ Route::get('/health', fn () => response()->json([
 	'timestamp' => now()->toISOString(),
 ]));
 
+// Safaricom cannot provide the mobile API key or a user access token.
+Route::post('/payments/mpesa/callback', [PaymentController::class, 'mpesaCallback']);
+
 Route::middleware('mobile.api.key')->group(function () {
 	// Public auth routes
 	Route::post('/auth/register', [AuthController::class, 'register']);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
@@ -412,35 +413,49 @@ class AuthController extends Controller
         if ($tenant && !$tenant->is_active) {
             $tenant = null;
         }
-        $unit = $tenant?->relationLoaded('unit') ? $tenant->unit : null;
-        $property = $unit?->relationLoaded('property') ? $unit->property : null;
 
-        $tenantProfile = $tenant ? [
-            'id' => $tenant->id,
-            'userId' => $tenant->user_id,
-            'unitId' => $tenant->unit_id,
-            'moveInDate' => $tenant->move_in_date?->toDateString(),
-            'moveOutDate' => $tenant->move_out_date?->toDateString(),
-            'isActive' => $tenant->is_active,
-            'unit' => $unit ? [
-                'id' => $unit->id,
-                'unitNumber' => $unit->unit_number,
-                'floor' => $unit->floor,
-                'rentAmount' => $unit->rent_amount,
-                'rentAmountFormatted' => $unit->rent_amount_formatted,
-                'currency' => $unit->currency,
-                'currencySymbol' => $unit->currency_symbol,
-                'status' => $unit->status,
-                'property' => $property ? [
-                    'id' => $property->id,
-                    'name' => $property->name,
-                    'addressLine' => $property->address_line,
-                    'city' => $property->city,
-                    'state' => $property->state,
-                    'country' => $property->country,
+        $tenancies = Tenant::with(['unit.property'])
+            ->where('user_id', $user->id)
+            ->where('is_active', true)
+            ->get();
+
+        if ($tenancies->isEmpty() && $tenant) {
+            $tenancies = collect([$tenant->loadMissing('unit.property')]);
+        }
+
+        $tenantProfiles = $tenancies->map(function (Tenant $tenant) {
+            $unit = $tenant->unit;
+            $property = $unit?->property;
+
+            return [
+                'id' => $tenant->id,
+                'userId' => $tenant->user_id,
+                'unitId' => $tenant->unit_id,
+                'moveInDate' => $tenant->move_in_date?->toDateString(),
+                'moveOutDate' => $tenant->move_out_date?->toDateString(),
+                'isActive' => $tenant->is_active,
+                'unit' => $unit ? [
+                    'id' => $unit->id,
+                    'unitNumber' => $unit->unit_number,
+                    'floor' => $unit->floor,
+                    'rentAmount' => $unit->rent_amount,
+                    'rentAmountFormatted' => $unit->rent_amount_formatted,
+                    'currency' => $unit->currency,
+                    'currencySymbol' => $unit->currency_symbol,
+                    'status' => $unit->status,
+                    'property' => $property ? [
+                        'id' => $property->id,
+                        'name' => $property->name,
+                        'addressLine' => $property->address_line,
+                        'city' => $property->city,
+                        'state' => $property->state,
+                        'country' => $property->country,
+                    ] : null,
                 ] : null,
-            ] : null,
-        ] : null;
+            ];
+        })->values();
+
+        $tenantProfile = $tenantProfiles->first();
 
         return [
             'id' => $user->id,
@@ -459,7 +474,7 @@ class AuthController extends Controller
             'currencySymbol' => 'KSh',
             'tenant' => $tenantProfile,
             'tenantProfile' => $tenantProfile,
-            'tenantProfiles' => $tenantProfile ? [$tenantProfile] : [],
+            'tenantProfiles' => $tenantProfiles,
         ];
     }
 }

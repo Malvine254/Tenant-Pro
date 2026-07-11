@@ -653,6 +653,7 @@ export class UsersService {
       include: {
         role: true,
         tenantProfiles: {
+          where: { isActive: true },
           include: {
             unit: {
               include: {
@@ -682,12 +683,12 @@ export class UsersService {
     }
 
     const profiles = user.tenantProfiles.map((t) => this.mapTenantProfile(t));
-    const activeProfile = profiles.find((p) => p.isActive) ?? profiles[0] ?? null;
+    const activeProfile = profiles[0] ?? null;
 
     return {
       ...this.toUserResponse(user),
       tenantProfile: activeProfile,   // backward-compat: first active profile
-      tenantProfiles: profiles,        // full list
+      tenantProfiles: profiles,        // active assignments only
     };
   }
 
