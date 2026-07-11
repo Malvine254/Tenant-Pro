@@ -45,4 +45,9 @@ return [
         'simulate' => env('MPESA_SIMULATE', false),
     ],
 
+    'firebase' => [
+        'credentials' => env('FIREBASE_CREDENTIALS'),
+        'credentials_json' => env('FIREBASE_CREDENTIALS_JSON'),
+    ],
+
 ];

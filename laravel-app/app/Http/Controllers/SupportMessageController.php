@@ -7,6 +7,7 @@ use App\Models\SupportConversation;
 use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class SupportMessageController extends Controller
 {
@@ -25,6 +26,7 @@ class SupportMessageController extends Controller
             'body' => $request->input('body', $request->input('text')),
             'attachment_name' => $request->input('attachment_name', $request->input('attachmentName')),
             'attachment_uri' => $request->input('attachment_uri', $request->input('attachmentUri')),
+            'client_message_id' => $request->input('client_message_id', $request->input('clientMessageId')),
         ]);
         if (blank($request->input('body')) && filled($request->input('attachment_uri'))) {
             $request->merge(['body' => 'Attachment shared']);
@@ -57,12 +59,21 @@ class SupportMessageController extends Controller
             'attachment_name' => 'nullable|string|max:255',
             'attachment_uri' => 'nullable|string|max:2048',
             'is_from_tenant' => 'required|boolean',
+            'client_message_id' => 'nullable|uuid',
         ]);
         abort_if($this->isTenant($user) && $data['sender_id'] !== $user->id, 403);
         abort_if($this->isTenant($user) && !SupportConversation::where('id', $data['conversation_id'])->where('tenant_user_id', $user->id)->exists(), 403);
 
         $data['status'] = 'SENT';
-        $message = SupportMessage::create($data);
+        $data['message_type'] = $request->input('message_type', filled($data['attachment_uri'] ?? null) ? 'document' : 'text');
+        $data['attachment_mime_type'] = $request->input('attachment_mime_type');
+        $data['attachment_size'] = $request->input('attachment_size');
+        $message = filled($data['client_message_id'] ?? null)
+            ? SupportMessage::firstOrCreate([
+                'sender_id' => $data['sender_id'],
+                'client_message_id' => $data['client_message_id'],
+            ], $data)
+            : SupportMessage::create($data);
 
         if ($this->isTenant($user)) {
             app(TenantEmailService::class)->supportMessageReceived($message);
@@ -95,6 +106,11 @@ class SupportMessageController extends Controller
 
     public function destroy(SupportMessage $supportMessage)
     {
+        abort_unless($supportMessage->sender_id === request()->user()?->id, 403);
+        if ($supportMessage->attachment_uri) {
+            $path = Str::after($supportMessage->attachment_uri, '/storage/');
+            if ($path !== $supportMessage->attachment_uri) Storage::disk('public')->delete($path);
+        }
         $supportMessage->delete();
         return response()->json(null, 204);
     }
@@ -102,7 +118,7 @@ class SupportMessageController extends Controller
     public function upload(Request $request)
     {
         $data = $request->validate([
-            'file' => 'required|file|max:10240|mimes:jpg,jpeg,png,webp,pdf,doc,docx',
+            'file' => 'required|file|max:20480|mimetypes:image/jpeg,image/png,image/webp,application/pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,audio/mpeg,audio/mp4,audio/ogg,audio/webm',
         ]);
         $path = $data['file']->store('support-attachments', 'public');
 
@@ -110,6 +126,9 @@ class SupportMessageController extends Controller
             'attachmentName' => $data['file']->getClientOriginalName(),
             'attachmentUri' => Storage::disk('public')->url($path),
             'fileName' => basename($path),
+            'attachmentMimeType' => $data['file']->getMimeType(),
+            'attachmentSize' => $data['file']->getSize(),
+            'messageType' => str_starts_with($data['file']->getMimeType(), 'image/') ? 'image' : (str_starts_with($data['file']->getMimeType(), 'audio/') ? 'audio' : 'document'),
         ]);
     }
 
@@ -141,6 +160,12 @@ class SupportMessageController extends Controller
             'status' => $message->status,
             'attachmentUri' => $message->attachment_uri,
             'attachmentName' => $message->attachment_name,
+            'messageType' => $message->message_type,
+            'attachmentMimeType' => $message->attachment_mime_type,
+            'attachmentSize' => $message->attachment_size,
+            'thumbnailUrl' => $message->thumbnail_url,
+            'duration' => $message->duration,
+            'uploadStatus' => $message->upload_status,
         ];
     }
 

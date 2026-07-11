@@ -8,6 +8,7 @@ use App\Models\SupportMessage;
 use App\Models\User;
 use App\Services\TenantAppNotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SupportChatAdminController extends Controller
 {
@@ -68,14 +69,26 @@ class SupportChatAdminController extends Controller
         $this->authorizeConversation($request->user(), $supportConversation);
 
         $data = $request->validate([
-            'body' => 'required|string|max:5000',
+            'body' => 'nullable|required_without:file|string|max:5000',
+            'file' => 'nullable|required_without:body|file|max:20480|mimetypes:image/jpeg,image/png,image/webp,application/pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,audio/mpeg,audio/mp4,audio/ogg,audio/webm',
+            'client_message_id' => 'nullable|uuid',
         ]);
+
+        $file = $data['file'] ?? null;
+        $path = $file?->store('support-attachments', 'public');
+        $mime = $file?->getMimeType();
 
         $message = SupportMessage::create([
             'conversation_id' => $supportConversation->id,
             'sender_id' => $request->user()->id,
             'topic' => $supportConversation->topic ?: 'General',
-            'body' => $data['body'],
+            'body' => trim((string) ($data['body'] ?? '')),
+            'client_message_id' => $data['client_message_id'] ?? null,
+            'message_type' => $file ? (str_starts_with($mime, 'image/') ? 'image' : (str_starts_with($mime, 'audio/') ? 'audio' : 'document')) : 'text',
+            'attachment_name' => $file?->getClientOriginalName(),
+            'attachment_uri' => $path ? Storage::disk('public')->url($path) : null,
+            'attachment_mime_type' => $mime,
+            'attachment_size' => $file?->getSize(),
             'is_from_tenant' => false,
             'status' => 'SENT',
         ]);
@@ -85,9 +98,11 @@ class SupportChatAdminController extends Controller
         app(TenantAppNotificationService::class)->supportReply(
             $supportConversation->tenant,
             $supportConversation->topic ?: 'Support',
-            $message->body
+            $message->body,
+            $supportConversation->id
         );
 
+        if ($request->expectsJson()) return response()->json(['ok' => true, 'message' => $message->fresh('sender')], 201);
         return redirect()
             ->route('admin.support.index', ['conversation_id' => $supportConversation->id])
             ->with('success', 'Reply sent.');
@@ -104,6 +119,7 @@ class SupportChatAdminController extends Controller
 
         $supportConversation->update(['is_open' => (bool) $data['is_open']]);
 
+        if ($request->expectsJson()) return response()->json(['ok' => true, 'is_open' => $supportConversation->is_open]);
         return redirect()
             ->route('admin.support.index', ['conversation_id' => $supportConversation->id])
             ->with('success', (bool) $data['is_open'] ? 'Chat reopened.' : 'Chat closed.');
