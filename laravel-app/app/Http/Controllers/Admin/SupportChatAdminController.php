@@ -65,6 +65,7 @@ class SupportChatAdminController extends Controller
     public function state(Request $request, SupportConversation $supportConversation)
     {
         $this->authorizeConversation($request->user(), $supportConversation);
+        Cache::put('chat:admin:online', now()->timestamp, now()->addSeconds(45));
         $tenantId = $supportConversation->tenant_user_id;
         return response()->json([
             'online' => Cache::has('chat:online:'.$tenantId),
