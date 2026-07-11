@@ -8,6 +8,7 @@ use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class SupportMessageController extends Controller
 {
@@ -130,6 +131,21 @@ class SupportMessageController extends Controller
             'attachmentSize' => $data['file']->getSize(),
             'messageType' => str_starts_with($data['file']->getMimeType(), 'image/') ? 'image' : (str_starts_with($data['file']->getMimeType(), 'audio/') ? 'audio' : 'document'),
         ]);
+    }
+
+    public function heartbeat(Request $request)
+    {
+        Cache::put('chat:online:'.$request->user()->id, now()->timestamp, now()->addSeconds(45));
+        return response()->json(['ok' => true]);
+    }
+
+    public function typing(Request $request)
+    {
+        $data = $request->validate(['typing' => 'required|boolean']);
+        $key = 'chat:typing:'.$request->user()->id;
+        $data['typing'] ? Cache::put($key, true, now()->addSeconds(4)) : Cache::forget($key);
+        Cache::put('chat:online:'.$request->user()->id, now()->timestamp, now()->addSeconds(45));
+        return response()->json(['ok' => true]);
     }
 
     private function messagesForUser(Request $request)

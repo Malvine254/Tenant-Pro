@@ -16,6 +16,7 @@ $media=fn($url)=>str_starts_with((string)$url,'http')?$url:asset(ltrim((string)$
 .composer .send{grid-column:3!important;grid-row:1!important}
 .composer .selected-file{grid-column:1/4;grid-row:2;padding-left:3px}
 @media(max-width:760px){.composer{grid-template-columns:minmax(0,1fr) 40px 40px;padding:9px;gap:6px}.composer .icon-btn{width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important}}
+body.admin-chat-page{overflow:hidden}.admin-chat-page .content{overflow:hidden;padding:14px}.chat-shell{height:calc(100dvh - 92px);min-height:0;grid-template-columns:300px minmax(0,1fr);border-radius:16px}.chat-main{min-height:0}.stream{min-height:0}.presence{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:10px;color:#64748b}.presence-dot{width:7px;height:7px;border-radius:50%;background:#94a3b8}.presence.online{color:#16845b}.presence.online .presence-dot{background:#20b97b;box-shadow:0 0 0 3px #20b97b20}.typing{height:14px;color:#6d4ad9;font-size:10px;font-weight:700;visibility:hidden}.typing.show{visibility:visible}@media(max-width:700px){.chat-shell{grid-template-columns:105px minmax(0,1fr);height:calc(100dvh - 84px)}}
 </style>
 <div class="chat-shell" id="chatShell">
  <aside class="chat-sidebar"><form class="chat-search" method="GET"><input name="search" value="{{ request('search') }}" placeholder="Search chats"></form><div class="chat-list">
@@ -34,4 +35,20 @@ $media=fn($url)=>str_starts_with((string)$url,'http')?$url:asset(ltrim((string)$
 <script>
 document.addEventListener('DOMContentLoaded',()=>{const stream=document.querySelector('#stream');if(stream)stream.scrollTop=stream.scrollHeight;const form=document.querySelector('#composer');if(!form)return;const input=form.querySelector('textarea'),file=document.querySelector('#file'),name=document.querySelector('#fileName'),send=form.querySelector('.send');document.querySelector('#attach').onclick=()=>file.click();file.onchange=()=>{const f=file.files[0];if(f&&f.size>20*1024*1024){file.value='';alert('File must be 20 MB or smaller.');return}name.hidden=!f;name.textContent=f?f.name:''};input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});form.addEventListener('submit',async e=>{e.preventDefault();if(!input.value.trim()&&!file.files.length)return;send.disabled=true;try{const r=await fetch(form.action,{method:'POST',body:new FormData(form),headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}});if(!r.ok)throw new Error();location.reload()}catch(_){alert('Message could not be sent. Please try again.')}finally{send.disabled=false}})});
 </script>
+@if($selectedConversation)
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ document.body.classList.add('admin-chat-page');
+ const headerCopy=document.querySelector('.chat-head>div');
+ if(!headerCopy)return;
+ const presence=document.createElement('div');presence.className='presence';presence.innerHTML='<i class="presence-dot"></i><span>Offline</span>';
+ const typing=document.createElement('div');typing.className='typing';typing.textContent=@json(($selectedConversation->tenant?->name??'Tenant').' is typing…');
+ headerCopy.append(presence,typing);
+ const refresh=async()=>{try{const response=await fetch(@json(route('admin.chats.state',$selectedConversation)),{headers:{Accept:'application/json'},cache:'no-store'});if(!response.ok)return;const state=await response.json();presence.classList.toggle('online',state.online);presence.querySelector('span').textContent=state.online?'Online':'Offline';typing.classList.toggle('show',state.typing)}catch(_){presence.classList.remove('online');presence.querySelector('span').textContent='Offline'}};
+ refresh();window.setInterval(refresh,2000);
+});
+</script>
+@else
+<script>document.addEventListener('DOMContentLoaded',()=>document.body.classList.add('admin-chat-page'));</script>
+@endif
 @endsection

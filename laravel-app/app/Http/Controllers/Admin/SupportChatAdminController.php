@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\TenantAppNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class SupportChatAdminController extends Controller
 {
@@ -59,6 +60,16 @@ class SupportChatAdminController extends Controller
         $data = $request->validate(['is_open' => 'required|boolean']);
         $supportConversation->update(['is_open' => $data['is_open']]);
         return response()->json(['ok' => true, 'is_open' => $supportConversation->is_open]);
+    }
+
+    public function state(Request $request, SupportConversation $supportConversation)
+    {
+        $this->authorizeConversation($request->user(), $supportConversation);
+        $tenantId = $supportConversation->tenant_user_id;
+        return response()->json([
+            'online' => Cache::has('chat:online:'.$tenantId),
+            'typing' => Cache::has('chat:typing:'.$tenantId),
+        ]);
     }
 
     private function scoped(?User $user)
