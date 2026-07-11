@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
+use App\Models\Tenant;
 use App\Services\TenantAppNotificationService;
 use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
@@ -13,7 +14,15 @@ class InvoiceController extends Controller
     {
         $user = $request->user();
         $query = Invoice::with(['tenant', 'unit.property'])
-            ->when($this->isTenant($user), fn($q) => $q->where('tenant_id', $user->id))
+            ->when($this->isTenant($user), fn($q) => $q
+                ->where('tenant_id', $user->id)
+                ->whereExists(function ($activeTenancy) use ($user) {
+                    $activeTenancy->selectRaw('1')
+                        ->from('tenants')
+                        ->whereColumn('tenants.unit_id', 'invoices.unit_id')
+                        ->where('tenants.user_id', $user->id)
+                        ->where('tenants.is_active', true);
+                }))
             ->when($request->tenant_id, fn($q) => $q->where('tenant_id', $request->tenant_id))
             ->when($request->unit_id, fn($q) => $q->where('unit_id', $request->unit_id))
             ->when($request->status, fn($q) => $q->where('status', $request->status));
@@ -48,6 +57,7 @@ class InvoiceController extends Controller
     {
         $user = request()->user();
         abort_if($this->isTenant($user) && $invoice->tenant_id !== $user->id, 403);
+        abort_if($this->isTenant($user) && ! $this->hasActiveTenancy($user->id, $invoice->unit_id), 404);
 
         return response()->json($invoice->load(['tenant', 'unit.property', 'payments']));
     }
@@ -75,5 +85,13 @@ class InvoiceController extends Controller
     private function isTenant($user): bool
     {
         return $user?->role?->name === 'TENANT';
+    }
+
+    private function hasActiveTenancy(string $userId, string $unitId): bool
+    {
+        return Tenant::where('user_id', $userId)
+            ->where('unit_id', $unitId)
+            ->where('is_active', true)
+            ->exists();
     }
 }

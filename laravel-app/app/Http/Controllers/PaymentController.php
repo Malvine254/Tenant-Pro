@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\Invoice;
+use App\Models\Tenant;
 use App\Services\TenantAppNotificationService;
 use App\Services\TenantEmailService;
 use App\Services\MpesaService;
@@ -76,6 +77,10 @@ class PaymentController extends Controller
     public function forInvoice(Request $request, Invoice $invoice)
     {
         abort_if($this->isTenant($request->user()) && $invoice->tenant_id !== $request->user()->id, 403);
+        abort_if(
+            $this->isTenant($request->user()) && ! $this->hasActiveTenancy($request->user()->id, $invoice->unit_id),
+            404
+        );
         return response()->json($invoice->payments()->with('transactions')->latest()->get());
     }
 
@@ -93,6 +98,11 @@ class PaymentController extends Controller
 
         $invoice = Invoice::findOrFail($data['invoice_id']);
         abort_if($this->isTenant($request->user()) && $invoice->tenant_id !== $request->user()->id, 403);
+        abort_if(
+            $this->isTenant($request->user()) && ! $this->hasActiveTenancy($request->user()->id, $invoice->unit_id),
+            422,
+            'This invoice belongs to an inactive tenancy.'
+        );
         abort_if(in_array($invoice->status, ['PAID', 'CANCELLED'], true), 422, 'This invoice cannot be paid.');
 
         $balance = round((float) $invoice->total_amount - (float) $invoice->paid_amount, 2);
@@ -214,5 +224,13 @@ class PaymentController extends Controller
     private function isTenant($user): bool
     {
         return $user?->role?->name === 'TENANT';
+    }
+
+    private function hasActiveTenancy(string $userId, string $unitId): bool
+    {
+        return Tenant::where('user_id', $userId)
+            ->where('unit_id', $unitId)
+            ->where('is_active', true)
+            ->exists();
     }
 }

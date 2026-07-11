@@ -13,6 +13,14 @@ use App\Http\Controllers\Admin\InvitationAdminController;
 use App\Http\Controllers\Admin\SupportChatAdminController;
 use App\Http\Controllers\SiteController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+
+Route::get('/invite', function (Request $request) {
+    $code = strtoupper(trim((string) $request->query('code')));
+    abort_if($code === '' || ! preg_match('/^[A-Z0-9]+$/', $code), 404);
+
+    return redirect()->away('tenantpro://invite?code='.urlencode($code));
+})->name('tenant.invite.open');
 
 // Send the app subdomain straight to the Laravel admin area.
 Route::redirect('/', '/admin');

@@ -41,6 +41,7 @@ class User extends Authenticatable
     public function role() { return $this->belongsTo(Role::class); }
     public function properties() { return $this->hasMany(Property::class, 'landlord_id'); }
     public function tenant() { return $this->hasOne(Tenant::class); }
+    public function tenancies() { return $this->hasMany(Tenant::class); }
     public function invoices() { return $this->hasMany(Invoice::class, 'user_id'); }
     public function maintenanceRequests() { return $this->hasMany(MaintenanceRequest::class, 'tenant_id'); }
     public function appNotifications() { return $this->hasMany(Notification::class); }

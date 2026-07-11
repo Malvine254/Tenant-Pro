@@ -49,7 +49,15 @@ class InvitationController extends Controller
         $data['status'] = 'PENDING';
         $data['expires_at'] = now()->addDays(7);
         $data['last_sent_at'] = now();
-        return response()->json(Invitation::create($data)->load(['property', 'unit', 'sentBy']), 201);
+        $invitation = Invitation::create($data)->load(['property', 'unit', 'sentBy']);
+        $emailSent = empty($invitation->email)
+            ? false
+            : app(TenantEmailService::class)->tenantInvitation($invitation);
+
+        return response()->json([
+            ...$invitation->toArray(),
+            'email_sent' => $emailSent,
+        ], 201);
     }
 
     public function show(Invitation $invitation)
@@ -94,9 +102,11 @@ class InvitationController extends Controller
 
         $tenant = DB::transaction(function () use ($request, $invitation) {
             $tenant = Tenant::updateOrCreate(
-                ['user_id' => $request->user()->id],
                 [
+                    'user_id' => $request->user()->id,
                     'unit_id' => $invitation->unit_id,
+                ],
+                [
                     'move_in_date' => now()->toDateString(),
                     'move_out_date' => null,
                     'is_active' => true,

@@ -334,7 +334,10 @@ class TenantEmailService
 
     private function tenantInviteUrl(Invitation $invitation): string
     {
-        $template = env('TENANT_APP_INVITE_URL', 'tenantpro://invite?code={code}');
+        $template = env(
+            'TENANT_APP_INVITE_URL',
+            rtrim(config('app.url'), '/').'/invite?code={code}'
+        );
 
         return str_replace('{code}', urlencode($invitation->code), $template);
     }
