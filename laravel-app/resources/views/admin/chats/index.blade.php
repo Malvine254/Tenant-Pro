@@ -48,10 +48,12 @@ document.addEventListener('DOMContentLoaded',()=>{
  if(!input)return;
  const url=@json(route('admin.chats.typing',$selectedConversation));
  const token=document.querySelector('#composer input[name="_token"]')?.value;
- let stopTimer=null,lastState=false;
+ let stopTimer=null,lastState=false,lastPublishedAt=0;
  const publish=async typing=>{
-   if(lastState===typing)return;
+   const now=Date.now();
+   if(lastState===typing&&(!typing||now-lastPublishedAt<1000))return;
    lastState=typing;
+   lastPublishedAt=now;
    try{await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':token,'X-Requested-With':'XMLHttpRequest'},body:JSON.stringify({typing})})}catch(_){}
  };
  const handleTyping=()=>{
