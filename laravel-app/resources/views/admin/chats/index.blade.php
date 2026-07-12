@@ -27,7 +27,12 @@ body.admin-chat-page{overflow:hidden}.admin-chat-page .content{overflow:hidden;p
  <main class="chat-main">@if($selectedConversation) @php $u=$selectedConversation->tenant;$unit=$u?->tenant?->unit; @endphp
  <header class="chat-head"><span class="avatar">@if($u?->profile_image_url)<img src="{{ $media($u->profile_image_url) }}" alt="">@else{{ $initials($u?->name) }}@endif</span><div><h3>{{ $u?->name??'Unknown tenant' }}</h3><p>{{ ucfirst(strtolower($u?->role?->name??'Tenant')) }} · {{ $unit?->property?->name??'No property' }} · Unit {{ $unit?->unit_number??'-' }}</p></div></header>
  <div class="stream" id="stream">@foreach($selectedConversation->messages->sortBy('created_at') as $m) @php $sender=$m->sender;$url=$m->attachment_uri?$media($m->attachment_uri):null; @endphp
- <div class="row {{ $m->is_from_tenant?'':'mine' }}">@if($m->is_from_tenant)<span class="avatar">@if($sender?->profile_image_url)<img src="{{ $media($sender->profile_image_url) }}" alt="">@else{{ $initials($sender?->name) }}@endif</span>@endif<div class="bubble">@if($m->body)<div>{{ $m->body }}</div>@endif @if($url) @if($m->message_type==='image'||str_starts_with((string)$m->attachment_mime_type,'image/'))<a href="{{ $url }}" target="_blank"><img src="{{ $url }}" alt="{{ $m->attachment_name }}"></a>@else<a class="file" href="{{ $url }}" target="_blank">📎 {{ $m->attachment_name??'Open attachment' }}</a>@endif @endif<div class="meta">{{ $m->created_at?->format('H:i') }} · {{ $m->status }}</div></div></div>
+ @php
+   $visibleBody = trim((string) $m->body) !== '' && strcasecmp(trim((string) $m->body), 'Attachment shared') !== 0;
+   $extension = strtolower(pathinfo(parse_url((string) $m->attachment_uri, PHP_URL_PATH) ?: (string) $m->attachment_name, PATHINFO_EXTENSION));
+   $isImage = $m->message_type === 'image' || str_starts_with((string) $m->attachment_mime_type, 'image/') || in_array($extension, ['jpg','jpeg','png','gif','webp'], true);
+ @endphp
+ <div class="row {{ $m->is_from_tenant?'':'mine' }}">@if($m->is_from_tenant)<span class="avatar">@if($sender?->profile_image_url)<img src="{{ $media($sender->profile_image_url) }}" alt="">@else{{ $initials($sender?->name) }}@endif</span>@endif<div class="bubble">@if($visibleBody)<div>{{ $m->body }}</div>@endif @if($url) @if($isImage)<img src="{{ $url }}" alt="{{ $m->attachment_name ?: 'Shared image' }}" loading="lazy">@else<a class="file" href="{{ $url }}" target="_blank" rel="noopener">📎 {{ $m->attachment_name??'Open attachment' }}</a>@endif @endif<div class="meta">{{ $m->created_at?->format('H:i') }} · {{ $m->status }}</div></div></div>
  @endforeach</div>
  <form class="composer" id="composer" action="{{ route('admin.chats.reply',$selectedConversation) }}" method="POST" enctype="multipart/form-data">@csrf<input id="file" name="file" type="file" hidden accept="image/*,.pdf,.doc,.docx,.txt,audio/*"><button class="icon-btn attach" type="button" id="attach" aria-label="Attach file">+</button><textarea name="body" placeholder="Write a message…" maxlength="5000"></textarea><button class="icon-btn send" type="submit" aria-label="Send">➤</button><span class="selected-file" id="fileName" hidden></span></form>
  @else<div class="empty"><strong>Select a chat</strong><p>Choose a tenant conversation.</p></div>@endif</main>
@@ -46,6 +51,30 @@ document.addEventListener('DOMContentLoaded',()=>{
  headerCopy.append(presence,typing);
  const refresh=async()=>{try{const response=await fetch(@json(route('admin.chats.state',$selectedConversation)),{headers:{Accept:'application/json'},cache:'no-store'});if(!response.ok)return;const state=await response.json();presence.classList.toggle('online',state.online);presence.querySelector('span').textContent=state.online?'Online':'Offline';typing.classList.toggle('show',state.typing)}catch(_){presence.classList.remove('online');presence.querySelector('span').textContent='Offline'}};
  refresh();window.setInterval(refresh,2000);
+
+ // Incremental live sync: update only the messages and conversation list.
+ // This keeps the fixed chat workspace mounted and never reloads the page.
+ let syncing=false;
+ const syncChat=async()=>{
+   if(syncing||document.hidden)return;
+   syncing=true;
+   try{
+     const response=await fetch(window.location.href,{headers:{'X-Requested-With':'XMLHttpRequest'},cache:'no-store'});
+     if(!response.ok)return;
+     const doc=new DOMParser().parseFromString(await response.text(),'text/html');
+     const currentStream=document.querySelector('#stream'),nextStream=doc.querySelector('#stream');
+     if(currentStream&&nextStream&&currentStream.innerHTML!==nextStream.innerHTML){
+       const nearBottom=currentStream.scrollHeight-currentStream.scrollTop-currentStream.clientHeight<100;
+       currentStream.innerHTML=nextStream.innerHTML;
+       if(nearBottom)currentStream.scrollTop=currentStream.scrollHeight;
+     }
+     const currentList=document.querySelector('.chat-list'),nextList=doc.querySelector('.chat-list');
+     if(currentList&&nextList&&currentList.innerHTML!==nextList.innerHTML)currentList.innerHTML=nextList.innerHTML;
+   }catch(_){/* Keep the current chat usable during temporary disconnects. */}
+   finally{syncing=false}
+ };
+ window.setInterval(syncChat,2000);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden){refresh();syncChat()}});
 });
 </script>
 @else
