@@ -20,16 +20,19 @@
             --amber:#b7791f;
             --shadow:0 12px 28px rgba(15,23,42,.07);
         }
-        body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
-        .admin-shell { display:flex; min-height:100vh; width:100%; }
-        .sidebar { width: 224px; background: linear-gradient(180deg,#0b1220,#111827); color: #cbd5e1; flex-shrink: 0; display: flex; flex-direction: column; z-index:40; box-shadow:10px 0 30px rgba(15,23,42,.08); }
+        body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--text); height:100vh; overflow:hidden; }
+        .admin-shell { min-height:100vh; height:100vh; width:100%; }
+        .sidebar { position:fixed; inset:0 auto 0 0; width: 224px; height:100vh; background: linear-gradient(180deg,#0b1220,#111827); color: #cbd5e1; display: flex; flex-direction: column; z-index:40; box-shadow:10px 0 30px rgba(15,23,42,.08); }
         .sidebar-logo { padding: 18px 16px; font-size: 15px; font-weight: 800; color: #fff; border-bottom: 1px solid rgba(148,163,184,.16); letter-spacing:-.02em; }
-        .sidebar nav { padding:10px 8px; }
-        .sidebar nav a { display: block; padding: 10px 12px; margin-bottom:3px; color: #a7b2c2; text-decoration: none; font-size: 13px; transition: background .15s, color .15s, transform .15s; border-radius:10px; }
+        .sidebar nav { padding:12px 9px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#334155 transparent; }
+        .sidebar nav a { display:flex; align-items:center; gap:11px; min-height:42px; padding: 9px 11px; margin-bottom:4px; color: #a7b2c2; text-decoration: none; font-size: 13px; font-weight:650; transition: background .15s, color .15s, transform .15s; border-radius:11px; }
+        .nav-icon { width:19px;height:19px;flex:0 0 19px;display:grid;place-items:center;color:#718096;transition:color .15s; }
+        .nav-icon svg { width:19px;height:19px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round; }
         .sidebar nav a:hover, .sidebar nav a.active { background: rgba(37,99,235,.18); color: #fff; }
+        .sidebar nav a:hover .nav-icon,.sidebar nav a.active .nav-icon{color:#93c5fd}
         .sidebar nav a.active { box-shadow:inset 3px 0 0 #60a5fa; }
         .sidebar-bottom { margin-top: auto; padding: 16px; border-top: 1px solid #1e293b; }
-        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .main { margin-left:224px; width:calc(100% - 224px); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
         .topbar { background: rgba(255,255,255,.92); backdrop-filter: blur(14px); padding: 13px 24px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
         .topbar-left { display:flex; align-items:center; gap:10px; min-width:0; }
         .menu-toggle { display:none; width:38px; height:38px; border:1px solid #cbd5e1; border-radius:9px; background:#fff; color:#0f172a; font-size:20px; cursor:pointer; align-items:center; justify-content:center; }
@@ -98,6 +101,7 @@
             .sidebar-logo { display:flex; align-items:center; gap:10px; }
             .sidebar-close { display:inline-block; }
             .main { min-height:100vh; width:100%; }
+            .main { margin-left:0; height:100vh; }
             .topbar { position:sticky; top:0; z-index:20; padding:10px 14px; }
             .menu-toggle { display:inline-flex; flex-shrink:0; }
             .topbar-left span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -140,22 +144,22 @@
         <button class="sidebar-close" type="button" data-close-menu aria-label="Close menu">×</button>
     </div>
     <nav>
-        <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a>
+        <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10M9 20v-6h6v6"/></svg></i><span>Dashboard</span></a>
         @if($isPlatformAdmin)
-            <a href="{{ route('admin.landlords.index') }}" class="{{ request()->routeIs('admin.landlords*') ? 'active' : '' }}">Landlords</a>
+            <a href="{{ route('admin.landlords.index') }}" class="{{ request()->routeIs('admin.landlords*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></i><span>Landlords</span></a>
         @endif
         @unless($isCaretaker)
-            <a href="{{ route('admin.properties.index') }}" class="{{ request()->routeIs('admin.properties*') ? 'active' : '' }}">Properties</a>
-            <a href="{{ route('admin.units.index') }}" class="{{ request()->routeIs('admin.units*') ? 'active' : '' }}">Units</a>
-            <a href="{{ route('admin.tenants.index') }}" class="{{ request()->routeIs('admin.tenants*') ? 'active' : '' }}">Tenants</a>
-            <a href="{{ route('admin.invitations.index') }}" class="{{ request()->routeIs('admin.invitations*') ? 'active' : '' }}">{{ $isLandlord ? 'Tenant Invitations' : 'Invitations' }}</a>
-            <a href="{{ route('admin.invoices.index') }}" class="{{ request()->routeIs('admin.invoices*') ? 'active' : '' }}">Invoices</a>
+            <a href="{{ route('admin.properties.index') }}" class="{{ request()->routeIs('admin.properties*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h2m4 0h2M8 11h2m4 0h2M9 21v-5h6v5"/></svg></i><span>Properties</span></a>
+            <a href="{{ route('admin.units.index') }}" class="{{ request()->routeIs('admin.units*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 21V5l8-3 8 3v16M4 9h16M9 21v-5h6v5"/></svg></i><span>Units</span></a>
+            <a href="{{ route('admin.tenants.index') }}" class="{{ request()->routeIs('admin.tenants*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2m1-12a4 4 0 0 1 0 8m2 4v-2a7 7 0 0 0-3-5.8"/></svg></i><span>Tenants</span></a>
+            <a href="{{ route('admin.invitations.index') }}" class="{{ request()->routeIs('admin.invitations*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></i><span>{{ $isLandlord ? 'Tenant Invitations' : 'Invitations' }}</span></a>
+            <a href="{{ route('admin.invoices.index') }}" class="{{ request()->routeIs('admin.invoices*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6m-6 4h6m-6 4h4"/></svg></i><span>Invoices</span></a>
         @endunless
-        <a href="{{ route('admin.chats.index') }}" class="{{ request()->routeIs('admin.chats*') ? 'active' : '' }}">Chats</a>
+        <a href="{{ route('admin.chats.index') }}" class="{{ request()->routeIs('admin.chats*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 9h8m-8 4h5"/></svg></i><span>Chats</span></a>
         @unless($isCaretaker)
         @endunless
         @if($isPlatformAdmin)
-            <a href="{{ route('admin.deployment-tools.index') }}" class="{{ request()->routeIs('admin.deployment-tools*') ? 'active' : '' }}">Deployment Tools</a>
+            <a href="{{ route('admin.deployment-tools.index') }}" class="{{ request()->routeIs('admin.deployment-tools*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5 5L3 18l3 3 6.7-6.7a4 4 0 0 0 5-5l-3 3-3-3z"/></svg></i><span>Deployment Tools</span></a>
         @endif
     </nav>
     <div class="sidebar-bottom">
