@@ -43,6 +43,30 @@ document.addEventListener('DOMContentLoaded',()=>{const stream=document.querySel
 @if($selectedConversation)
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
+ const input=document.querySelector('#composer textarea');
+ if(!input)return;
+ const url=@json(route('admin.chats.typing',$selectedConversation));
+ const token=document.querySelector('#composer input[name="_token"]')?.value;
+ let stopTimer=null,lastState=false;
+ const publish=async typing=>{
+   if(lastState===typing)return;
+   lastState=typing;
+   try{await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':token,'X-Requested-With':'XMLHttpRequest'},body:JSON.stringify({typing})})}catch(_){}
+ };
+ const handleTyping=()=>{
+   const active=input.value.trim().length>0;
+   publish(active);
+   clearTimeout(stopTimer);
+   if(active)stopTimer=setTimeout(()=>publish(false),2500);
+ };
+ input.addEventListener('input',handleTyping);
+ input.addEventListener('keyup',handleTyping);
+ document.querySelector('#composer')?.addEventListener('submit',()=>publish(false));
+ window.addEventListener('pagehide',()=>{if(lastState)navigator.sendBeacon(url,new Blob([JSON.stringify({typing:false,_token:token})],{type:'application/json'}))});
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
  document.body.classList.add('admin-chat-page');
  const headerCopy=document.querySelector('.chat-head>div');
  if(!headerCopy)return;

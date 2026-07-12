@@ -136,7 +136,11 @@ class SupportMessageController extends Controller
     public function heartbeat(Request $request)
     {
         Cache::put('chat:online:'.$request->user()->id, now()->timestamp, now()->addSeconds(45));
-        return response()->json(['ok' => true, 'adminOnline' => Cache::has('chat:admin:online')]);
+        return response()->json([
+            'ok' => true,
+            'adminOnline' => Cache::has('chat:admin:online'),
+            'adminTyping' => Cache::has('chat:admin:typing'),
+        ]);
     }
 
     public function typing(Request $request)

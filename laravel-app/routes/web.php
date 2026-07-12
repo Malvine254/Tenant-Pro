@@ -74,6 +74,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 		Route::post('/chats/{supportConversation}/reply', [SupportChatAdminController::class, 'reply'])->name('chats.reply');
 		Route::patch('/chats/{supportConversation}/toggle', [SupportChatAdminController::class, 'toggle'])->name('chats.toggle');
 		Route::get('/chats/{supportConversation}/state', [SupportChatAdminController::class, 'state'])->name('chats.state');
+		Route::post('/chats/{supportConversation}/typing', [SupportChatAdminController::class, 'typing'])->name('chats.typing');
 		Route::get('/deployment-tools', [DeploymentToolsController::class, 'index'])->name('deployment-tools.index');
 		Route::post('/deployment-tools', [DeploymentToolsController::class, 'run'])->name('deployment-tools.run');
 	});

@@ -73,6 +73,16 @@ class SupportChatAdminController extends Controller
         ]);
     }
 
+    public function typing(Request $request, SupportConversation $supportConversation)
+    {
+        $this->authorizeConversation($request->user(), $supportConversation);
+        $data = $request->validate(['typing' => 'required|boolean']);
+        $key = 'chat:admin:typing';
+        $data['typing'] ? Cache::put($key, true, now()->addSeconds(4)) : Cache::forget($key);
+        Cache::put('chat:admin:online', now()->timestamp, now()->addSeconds(45));
+        return response()->json(['ok' => true]);
+    }
+
     private function scoped(?User $user)
     {
         return SupportConversation::query()->when($user?->role?->name === 'LANDLORD', fn ($q) => $q->whereHas('tenant.tenant.unit.property', fn ($p) => $p->where('landlord_id', $user->id)));
