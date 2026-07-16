@@ -44,6 +44,14 @@ Set `DEPLOYMENT_TOOL_TOKEN` in `.env` to protect this page.
    - `../vendor/autoload.php` -> `../laravel/vendor/autoload.php`
    - `../bootstrap/app.php` -> `../laravel/bootstrap/app.php`
 5. Copy `laravel/.env` to `laravel/.env` on server and set production values.
+   The app subdomain must use clean public URLs:
+   ```dotenv
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_URL=https://app.starmaxltd.com
+   SESSION_DOMAIN=app.starmaxltd.com
+   SESSION_SECURE_COOKIE=true
+   ```
 6. Ensure `laravel/storage` and `laravel/bootstrap/cache` are writable (755/775 depending on host policy).
 
 ## 3. Run Database Migrations on Host

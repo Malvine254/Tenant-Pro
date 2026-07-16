@@ -1,5 +1,11 @@
 RewriteEngine On
 
+# If a visitor reaches the internal Laravel public directory directly, send
+# them to the equivalent clean public URL. THE_REQUEST is unchanged by the
+# internal rewrite below, so this cannot create a redirect loop.
+RewriteCond %{THE_REQUEST} \s/+laravel-app/public/([^?\s]*) [NC]
+RewriteRule ^laravel-app/public/(.*)$ /$1 [R=301,L,NE]
+
 # Keep Let's Encrypt validation working
 RewriteRule ^\.well-known/ - [L]
 
