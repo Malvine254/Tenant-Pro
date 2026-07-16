@@ -42,7 +42,10 @@ return [
         'shortcode' => env('MPESA_SHORTCODE', '174379'),
         'passkey' => env('MPESA_PASSKEY'),
         'callback_url' => env('MPESA_CALLBACK_URL'),
-        'simulate' => env('MPESA_SIMULATE', false),
+        // Sandbox defaults to local completion so development does not depend
+        // on Daraja availability. Production can never enter the simulation
+        // branch because PaymentController also requires environment=sandbox.
+        'simulate' => env('MPESA_SIMULATE', true),
     ],
 
     'firebase' => [

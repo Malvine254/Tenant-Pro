@@ -171,10 +171,22 @@ class TenantEmailService
 
     public function paymentReceived(Payment $payment): bool
     {
-        $payment->loadMissing(['invoice.tenant', 'invoice.unit.property']);
+        $payment->loadMissing(['invoice.tenant', 'invoice.unit.property.landlord']);
         $invoice = $payment->invoice;
 
-        return $this->send($invoice?->tenant, [
+        $details = [
+            'Property' => $invoice?->unit?->property?->name ?? 'Not specified',
+            'Unit' => $invoice?->unit?->unit_number ?? 'Not specified',
+            'Amount paid' => 'KSh '.number_format((float) $payment->amount, 2),
+            'Payment method' => $payment->method ?: 'Not specified',
+            'Payment phone' => $payment->payment_phone ?: 'Not captured',
+            'M-Pesa receipt' => $payment->mpesa_receipt ?: 'Not captured',
+            'Reference' => $payment->reference ?: 'Not specified',
+            'Invoice balance' => $invoice?->balance_amount_formatted ?? 'Not specified',
+            'Paid at' => $payment->paid_at?->format('d M Y H:i') ?? now()->format('d M Y H:i'),
+        ];
+
+        $tenantSent = $this->send($invoice?->tenant, [
             'subjectLine' => 'Payment received',
             'preheader' => 'Your rent payment has been recorded.',
             'title' => 'Payment received successfully',
@@ -182,20 +194,38 @@ class TenantEmailService
                 'Hi '.$this->firstName($invoice?->tenant).',',
                 'We have recorded your payment. Here are the details.',
             ],
-            'details' => [
-                'Property' => $invoice?->unit?->property?->name ?? 'Not specified',
-                'Unit' => $invoice?->unit?->unit_number ?? 'Not specified',
-                'Amount paid' => 'KSh '.number_format((float) $payment->amount, 2),
-                'Payment method' => $payment->method ?: 'Not specified',
-                'Payment phone' => $payment->payment_phone ?: 'Not captured',
-                'M-Pesa receipt' => $payment->mpesa_receipt ?: 'Not captured',
-                'Reference' => $payment->reference ?: 'Not specified',
-                'Invoice balance' => $invoice?->balance_amount_formatted ?? 'Not specified',
-            ],
+            'details' => $details,
             'actionLabel' => 'View payment',
             'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'Keep this email as your payment confirmation.',
         ]);
+
+        $stakeholders = collect([$invoice?->unit?->property?->landlord])
+            ->merge(User::query()
+                ->where('is_active', true)
+                ->whereHas('role', fn ($query) => $query->whereIn('name', ['ADMIN', 'SUPER_ADMIN']))
+                ->get())
+            ->filter(fn ($user) => $user?->email)
+            ->reject(fn ($user) => $user->id === $invoice?->tenant?->id)
+            ->unique('email');
+
+        foreach ($stakeholders as $recipient) {
+            $this->send($recipient, [
+                'subjectLine' => 'Tenant payment confirmed',
+                'preheader' => 'A tenant payment has been completed and recorded.',
+                'title' => 'Payment confirmation',
+                'introLines' => [
+                    'Hi '.$this->firstName($recipient).',',
+                    ($invoice?->tenant?->name ?? 'A tenant').' has completed a payment. The invoice and receipt details are below.',
+                ],
+                'details' => ['Tenant' => $invoice?->tenant?->name ?? 'Not specified'] + $details,
+                'actionLabel' => 'View invoices',
+                'actionUrl' => rtrim(config('app.url'), '/').'/admin/invoices',
+                'footerText' => 'This confirmation was generated automatically by TenantPro.',
+            ]);
+        }
+
+        return $tenantSent;
     }
 
     public function maintenanceUpdated(MaintenanceRequest $maintenanceRequest, ?string $previousStatus = null): bool

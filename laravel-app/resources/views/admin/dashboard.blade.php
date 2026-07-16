@@ -297,7 +297,7 @@
         <div class="ops-panel">
             <div class="ops-panel-head">
                 <div class="ops-panel-title">Recent maintenance</div>
-                <a href="{{ route('admin.maintenance.index') }}" class="btn btn-secondary">View all</a>
+                <a href="{{ route('admin.chats.index') }}" class="btn btn-secondary">Open chats</a>
             </div>
             <div class="table-scroll">
                 <table>
