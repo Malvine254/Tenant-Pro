@@ -10,6 +10,52 @@ export class NotificationsService {
     private readonly firebase: FirebaseService,
   ) {}
 
+  private toPushData(
+    type: NotificationType,
+    notificationId: string,
+    title: string,
+    message: string,
+    metadata?: Prisma.InputJsonValue,
+  ): Record<string, string> {
+    const payload: Record<string, string> = {
+      type,
+      title,
+      body: message,
+      notificationId,
+      notification_id: notificationId,
+      destination: 'NOTIFICATIONS',
+    };
+
+    if (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) {
+      const data = metadata as Record<string, unknown>;
+
+      Object.entries(data).forEach(([key, value]) => {
+        if (value === null || value === undefined) return;
+        payload[key] = String(value);
+      });
+
+      if (typeof data.conversationId === 'string') {
+        payload.conversation_id = data.conversationId;
+        payload.destination = 'CHAT';
+      }
+      if (typeof data.invoiceId === 'string') {
+        payload.invoice_id = data.invoiceId;
+        payload.destination = type === NotificationType.PAYMENT ? 'PAYMENTS' : 'INVOICES';
+      }
+      if (typeof data.paymentId === 'string') {
+        payload.payment_id = data.paymentId;
+        payload.destination = 'PAYMENTS';
+      }
+      if (typeof data.requestId === 'string') {
+        payload.request_id = data.requestId;
+        payload.maintenance_request_id = data.requestId;
+        payload.destination = 'MAINTENANCE';
+      }
+    }
+
+    return payload;
+  }
+
   async createNotification(
     userId: string,
     type: NotificationType,
@@ -32,10 +78,12 @@ export class NotificationsService {
       .findUnique({ where: { id: userId }, select: { fcmToken: true } })
       .then((user) => {
         if (user?.fcmToken) {
-          return this.firebase.sendPush(user.fcmToken, title, message, {
-            type,
-            notificationId: notification.id,
-          });
+          return this.firebase.sendPush(
+            user.fcmToken,
+            title,
+            message,
+            this.toPushData(type, notification.id, title, message, metadata),
+          );
         }
       })
       .catch(() => {/* non-critical */});

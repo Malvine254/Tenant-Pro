@@ -28,7 +28,11 @@ type DemoResponse = {
   expiresAt: string;
 };
 
-type TabKey = 'signin' | 'register' | 'verify' | 'demo';
+type MessageResponse = {
+  message: string;
+};
+
+type TabKey = 'signin' | 'register' | 'verify' | 'forgot' | 'reset' | 'demo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -53,6 +57,7 @@ export default function LoginPage() {
     email: '',
     phoneNumber: '',
     password: '',
+    confirmPassword: '',
     role: 'LANDLORD',
   });
 
@@ -61,10 +66,31 @@ export default function LoginPage() {
     email: '',
   });
 
+  const [forgotForm, setForgotForm] = useState({ email: '' });
+  const [resetForm, setResetForm] = useState({
+    email: '',
+    code: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
+
   const pageTitle = useMemo(
     () => (isDemoRequest ? 'Request demo access' : 'Sign in to Starmax'),
     [isDemoRequest],
   );
+
+  const normalizedRegisterEmail = registerForm.email.trim().toLowerCase();
+  const normalizedForgotEmail = forgotForm.email.trim().toLowerCase();
+  const normalizedResetEmail = resetForm.email.trim().toLowerCase();
+  const registerPasswordsMatch =
+    registerForm.confirmPassword.length === 0 || registerForm.password === registerForm.confirmPassword;
+  const resetPasswordsMatch =
+    resetForm.confirmPassword.length === 0 || resetForm.newPassword === resetForm.confirmPassword;
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -100,6 +126,11 @@ export default function LoginPage() {
 
   const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (registerForm.password !== registerForm.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setMessage(null);
@@ -109,7 +140,7 @@ export default function LoginPage() {
         method: 'POST',
         body: JSON.stringify({
           ...registerForm,
-          email: registerForm.email.trim().toLowerCase(),
+          email: normalizedRegisterEmail,
           phoneNumber: registerForm.phoneNumber.trim() || undefined,
         }),
       });
@@ -119,6 +150,60 @@ export default function LoginPage() {
       setMessage(response.message);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Unable to create your account.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const response = await apiRequest<MessageResponse>('/auth/forgot-password', undefined, {
+        method: 'POST',
+        body: JSON.stringify({ email: normalizedForgotEmail }),
+      });
+
+      setResetForm((current) => ({ ...current, email: normalizedForgotEmail }));
+      setActiveTab('reset');
+      setMessage(response.message || 'Reset code sent. Check your email.');
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Unable to send reset code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (resetForm.newPassword !== resetForm.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const response = await apiRequest<MessageResponse>('/auth/reset-password', undefined, {
+        method: 'POST',
+        body: JSON.stringify({
+          email: normalizedResetEmail,
+          code: resetForm.code.trim(),
+          newPassword: resetForm.newPassword,
+        }),
+      });
+
+      setLoginForm((current) => ({ ...current, email: normalizedResetEmail, password: '' }));
+      setActiveTab('signin');
+      setResetForm({ email: normalizedResetEmail, code: '', newPassword: '', confirmPassword: '' });
+      setMessage(response.message || 'Password reset successful. You can now sign in.');
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Unable to reset password.');
     } finally {
       setLoading(false);
     }
@@ -223,8 +308,10 @@ export default function LoginPage() {
             {[
               { key: 'signin', label: 'Sign in' },
               { key: 'register', label: 'Create account' },
+              { key: 'forgot', label: 'Reset password' },
               { key: 'demo', label: 'Request demo' },
               ...(pendingVerificationEmail ? [{ key: 'verify', label: 'Verify email' }] : []),
+              ...(resetForm.email ? [{ key: 'reset', label: 'Enter reset code' }] : []),
             ].map((tab) => {
               const active = activeTab === tab.key;
               return (
@@ -261,16 +348,31 @@ export default function LoginPage() {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-zinc-800">Password</label>
-                <input
-                  type="password"
-                  className="tp-input"
-                  autoComplete="current-password"
-                  suppressHydrationWarning
-                  value={loginForm.password}
-                  onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
-                  placeholder="Enter your password"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showLoginPassword ? 'text' : 'password'}
+                    className="tp-input tp-input-with-affordance"
+                    autoComplete="current-password"
+                    suppressHydrationWarning
+                    value={loginForm.password}
+                    onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
+                    placeholder="Enter your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword((current) => !current)}
+                    className="absolute inset-y-0 right-3 text-xs font-semibold text-zinc-500 transition hover:text-zinc-900"
+                  >
+                    {showLoginPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="tp-field-note">Use the same email address you verified for your workspace.</p>
+                <button type="button" onClick={() => setActiveTab('forgot')} className="tp-inline-link">
+                  Forgot password?
+                </button>
               </div>
               <button type="submit" disabled={loading} className="tp-primary-btn disabled:opacity-60">
                 {loading ? 'Signing in...' : isDemoRequest ? 'Enter demo workspace' : 'Sign in'}
@@ -310,11 +412,140 @@ export default function LoginPage() {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-zinc-800">Password</label>
-                <input type="password" className="tp-input" suppressHydrationWarning value={registerForm.password} onChange={(event) => setRegisterForm((current) => ({ ...current, password: event.target.value }))} minLength={6} required />
+                <div className="relative">
+                  <input type={showRegisterPassword ? 'text' : 'password'} className="tp-input tp-input-with-affordance" suppressHydrationWarning value={registerForm.password} onChange={(event) => setRegisterForm((current) => ({ ...current, password: event.target.value }))} minLength={8} required />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterPassword((current) => !current)}
+                    className="absolute inset-y-0 right-3 text-xs font-semibold text-zinc-500 transition hover:text-zinc-900"
+                  >
+                    {showRegisterPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                <p className="mt-2 tp-field-note">Use at least 8 characters for a production-ready account password.</p>
               </div>
-              <button type="submit" disabled={loading} className="tp-primary-btn disabled:opacity-60">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-800">Confirm password</label>
+                <div className="relative">
+                  <input type={showRegisterConfirmPassword ? 'text' : 'password'} className="tp-input tp-input-with-affordance" suppressHydrationWarning value={registerForm.confirmPassword} onChange={(event) => setRegisterForm((current) => ({ ...current, confirmPassword: event.target.value }))} minLength={8} required />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterConfirmPassword((current) => !current)}
+                    className="absolute inset-y-0 right-3 text-xs font-semibold text-zinc-500 transition hover:text-zinc-900"
+                  >
+                    {showRegisterConfirmPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                {!registerPasswordsMatch ? <p className="mt-2 tp-field-error">Passwords must match before the account can be created.</p> : null}
+              </div>
+              <button type="submit" disabled={loading || !registerPasswordsMatch || registerForm.password.length < 8} className="tp-primary-btn disabled:opacity-60">
                 {loading ? 'Creating account...' : 'Create account & send verification'}
               </button>
+            </form>
+          ) : null}
+
+          {activeTab === 'forgot' ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4" suppressHydrationWarning>
+              <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Enter the email tied to your account and we&apos;ll send a one-time reset code.
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-800">Account email</label>
+                <input
+                  type="email"
+                  className="tp-input"
+                  suppressHydrationWarning
+                  value={forgotForm.email}
+                  onChange={(event) => setForgotForm({ email: event.target.value })}
+                  required
+                />
+              </div>
+              <button type="submit" disabled={loading} className="tp-primary-btn disabled:opacity-60">
+                {loading ? 'Sending reset code...' : 'Send reset code'}
+              </button>
+            </form>
+          ) : null}
+
+          {activeTab === 'reset' ? (
+            <form onSubmit={handleResetPassword} className="space-y-4" suppressHydrationWarning>
+              <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+                Use the code from your inbox to set a new password.
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-800">Email</label>
+                <input
+                  type="email"
+                  className="tp-input"
+                  suppressHydrationWarning
+                  value={resetForm.email}
+                  onChange={(event) => setResetForm((current) => ({ ...current, email: event.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-800">Reset code</label>
+                <input
+                  className="tp-input"
+                  suppressHydrationWarning
+                  value={resetForm.code}
+                  onChange={(event) => setResetForm((current) => ({ ...current, code: event.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="6-digit code"
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-800">New password</label>
+                <div className="relative">
+                  <input
+                    type={showResetPassword ? 'text' : 'password'}
+                    className="tp-input tp-input-with-affordance"
+                    suppressHydrationWarning
+                    value={resetForm.newPassword}
+                    onChange={(event) => setResetForm((current) => ({ ...current, newPassword: event.target.value }))}
+                    minLength={8}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowResetPassword((current) => !current)}
+                    className="absolute inset-y-0 right-3 text-xs font-semibold text-zinc-500 transition hover:text-zinc-900"
+                  >
+                    {showResetPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-800">Confirm new password</label>
+                <div className="relative">
+                  <input
+                    type={showResetConfirmPassword ? 'text' : 'password'}
+                    className="tp-input tp-input-with-affordance"
+                    suppressHydrationWarning
+                    value={resetForm.confirmPassword}
+                    onChange={(event) => setResetForm((current) => ({ ...current, confirmPassword: event.target.value }))}
+                    minLength={8}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowResetConfirmPassword((current) => !current)}
+                    className="absolute inset-y-0 right-3 text-xs font-semibold text-zinc-500 transition hover:text-zinc-900"
+                  >
+                    {showResetConfirmPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                {!resetPasswordsMatch ? <p className="mt-2 tp-field-error">Passwords must match before reset can continue.</p> : null}
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button type="submit" disabled={loading || !resetPasswordsMatch || resetForm.newPassword.length < 8} className="tp-primary-btn disabled:opacity-60 sm:w-auto sm:px-5">
+                  {loading ? 'Resetting password...' : 'Reset password'}
+                </button>
+                <button type="button" onClick={() => setActiveTab('signin')} className="tp-secondary-btn sm:w-auto sm:px-5">
+                  Back to sign in
+                </button>
+              </div>
             </form>
           ) : null}
 

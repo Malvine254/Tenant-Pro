@@ -20,6 +20,7 @@ COPY prisma ./prisma
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=build /app/dist ./dist
+COPY firebase-service-account.json ./firebase-service-account.json
 
 RUN mkdir -p uploads
 
