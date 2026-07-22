@@ -53,10 +53,11 @@
 
             <div style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:9px;padding:12px 14px;">
                 <p style="font-size:12px;color:#475569;">
-                    <strong>Build instructions:</strong><br>
-                    1. Navigate to the tenant-app directory<br>
-                    2. Run: <code style="background:#fff;padding:2px 6px;border-radius:4px;font-size:11px;">./gradlew build</code><br>
-                    3. The APK will be generated at: <code style="background:#fff;padding:2px 6px;border-radius:4px;font-size:11px;">tenant-app/app/build/outputs/apk/debug/app-debug.apk</code>
+                    <strong>📱 How to update the APK:</strong><br>
+                    1. Build the Android app: <code style="background:#fff;padding:2px 6px;border-radius:4px;font-size:11px;">cd tenant-app && ./gradlew assembleDebug</code><br>
+                    2. Copy to downloads folder: <code style="background:#fff;padding:2px 6px;border-radius:4px;font-size:11px;">copy tenant-app\app\build\outputs\apk\debug\app-debug.apk laravel-app\public\downloads\</code><br>
+                    3. Commit and push to GitHub<br>
+                    4. The APK will be available on the server after deployment
                 </p>
             </div>
         @endif

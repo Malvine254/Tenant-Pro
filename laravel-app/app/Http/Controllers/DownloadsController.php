@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class DownloadsController extends Controller
 {
@@ -12,7 +11,7 @@ class DownloadsController extends Controller
      */
     public function index()
     {
-        $apkPath = base_path('../../tenant-app/app/build/outputs/apk/debug/app-debug.apk');
+        $apkPath = public_path('downloads/app-debug.apk');
         $apkExists = file_exists($apkPath);
         $apkSize = $apkExists ? filesize($apkPath) : null;
 
@@ -27,10 +26,10 @@ class DownloadsController extends Controller
      */
     public function downloadApk()
     {
-        $apkPath = base_path('../../tenant-app/app/build/outputs/apk/debug/app-debug.apk');
+        $apkPath = public_path('downloads/app-debug.apk');
 
         if (!file_exists($apkPath)) {
-            abort(404, 'APK file not found. Please ensure the app has been built.');
+            abort(404, 'APK file not found. Please contact support.');
         }
 
         return response()->download($apkPath, 'TenantPro-App.apk');
@@ -41,7 +40,7 @@ class DownloadsController extends Controller
      */
     public function publicDownloadApk()
     {
-        $apkPath = base_path('../../tenant-app/app/build/outputs/apk/debug/app-debug.apk');
+        $apkPath = public_path('downloads/app-debug.apk');
 
         if (!file_exists($apkPath)) {
             abort(404, 'APK file not found');
