@@ -23,7 +23,13 @@ Route::get('/invite', function (Request $request) {
 })->name('tenant.invite.open');
 
 // Public download endpoint (no auth required)
-Route::get('/download/apk', [DownloadsController::class, 'publicDownloadApk'])->name('downloads.apk.public');
+Route::get('/download/apk', function () {
+    $filePath = public_path('downloads/app-debug.apk');
+    if (!file_exists($filePath)) {
+        abort(404, 'APK file not found');
+    }
+    return response()->download($filePath, 'TenantPro-App.apk');
+})->name('downloads.apk.public');
 
 // Send the app subdomain straight to the Laravel admin area.
 Route::redirect('/', '/admin');
@@ -82,6 +88,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 		Route::get('/deployment-tools', [DeploymentToolsController::class, 'index'])->name('deployment-tools.index');
 		Route::post('/deployment-tools', [DeploymentToolsController::class, 'run'])->name('deployment-tools.run');
 		Route::get('/downloads', [DownloadsController::class, 'index'])->name('downloads.index');
-		Route::get('/downloads/apk/download', [DownloadsController::class, 'downloadApk'])->name('downloads.apk.download');
+		Route::get('/downloads/apk/download', function () {
+			$filePath = public_path('downloads/app-debug.apk');
+			if (!file_exists($filePath)) {
+				abort(404, 'APK file not found');
+			}
+			return response()->download($filePath, 'TenantPro-App.apk');
+		})->name('downloads.apk.download');
 	});
 });

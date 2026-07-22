@@ -24,10 +24,10 @@
             </div>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                <a href="{{ route('admin.downloads.apk.download') }}" class="btn btn-primary" style="text-decoration:none;">
+                <a href="{{ asset('downloads/app-debug.apk') }}" class="btn btn-primary" download>
                     📱 Download APK (Admin)
                 </a>
-                <a href="{{ route('downloads.apk.public') }}" class="btn btn-secondary" style="text-decoration:none;" target="_blank">
+                <a href="{{ asset('downloads/app-debug.apk') }}" class="btn btn-secondary" download target="_blank">
                     🔗 Public Link
                 </a>
             </div>
@@ -35,10 +35,10 @@
             <div style="background:#f8fafc;border:1px solid #dbe4ef;border-radius:9px;padding:12px 14px;margin-top:14px;">
                 <p style="font-size:12px;color:#64748b;margin-bottom:6px;font-weight:600;">Public Download Link:</p>
                 <p style="font-size:13px;word-break:break-all;color:#475569;font-family:monospace;background:#fff;padding:8px;border-radius:6px;border:1px solid #e2e8f0;">
-                    {{ route('downloads.apk.public') }}
+                    {{ asset('downloads/app-debug.apk') }}
                 </p>
                 <p style="font-size:12px;color:#64748b;margin-top:8px;">
-                    Share this link with users who want to download the app without needing to log in.
+                    Share this link with users who want to download the app without needing to log in. The file can be accessed directly from this URL.
                 </p>
             </div>
         @else
