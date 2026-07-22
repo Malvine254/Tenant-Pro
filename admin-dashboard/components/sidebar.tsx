@@ -32,6 +32,12 @@ const navSections = [
       { href: '/dashboard/content', label: 'Content Manager', icon: '✎' },
     ],
   },
+  {
+    title: 'Admin Tools',
+    items: [
+      { href: '/admin/downloads', label: 'Mobile App Download', icon: '↓' },
+    ],
+  },
 ];
 
 type SidebarProps = {
