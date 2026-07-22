@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\SupportChatAdminController;
 use App\Http\Controllers\Admin\DeploymentToolsController;
 use App\Http\Controllers\Admin\PropertyUnitAdminController;
 use App\Http\Controllers\Admin\InvitationAdminController;
+use App\Http\Controllers\DownloadsController;
 use App\Http\Controllers\SiteController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -20,6 +21,9 @@ Route::get('/invite', function (Request $request) {
 
     return redirect()->away('tenantpro://invite?code='.urlencode($code));
 })->name('tenant.invite.open');
+
+// Public download endpoint (no auth required)
+Route::get('/download/apk', [DownloadsController::class, 'publicDownloadApk'])->name('downloads.apk.public');
 
 // Send the app subdomain straight to the Laravel admin area.
 Route::redirect('/', '/admin');
@@ -77,5 +81,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 		Route::post('/chats/{supportConversation}/typing', [SupportChatAdminController::class, 'typing'])->name('chats.typing');
 		Route::get('/deployment-tools', [DeploymentToolsController::class, 'index'])->name('deployment-tools.index');
 		Route::post('/deployment-tools', [DeploymentToolsController::class, 'run'])->name('deployment-tools.run');
+		Route::get('/downloads', [DownloadsController::class, 'index'])->name('downloads.index');
+		Route::get('/downloads/apk/download', [DownloadsController::class, 'downloadApk'])->name('downloads.apk.download');
 	});
 });
