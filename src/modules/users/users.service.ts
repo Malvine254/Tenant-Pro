@@ -595,6 +595,14 @@ export class UsersService {
     };
   }) {
     const landlord = tenancy.unit.property.landlord ?? null;
+    const unitImageUrls = Array.isArray(tenancy.unit.imageUrls)
+      ? (tenancy.unit.imageUrls as string[])
+          .filter((url) => typeof url === 'string')
+          .map((url) => url.trim())
+          .filter(Boolean)
+      : [];
+    const displayImageUrl = unitImageUrls[0] ?? tenancy.unit.property.coverImageUrl ?? null;
+
     return {
       id: tenancy.id,
       moveInDate: tenancy.moveInDate,
@@ -607,7 +615,8 @@ export class UsersService {
         rentAmount: typeof tenancy.unit.rentAmount === 'number'
           ? tenancy.unit.rentAmount
           : Number(tenancy.unit.rentAmount),
-        imageUrls: (tenancy.unit.imageUrls as string[] | null) ?? [],
+        imageUrls: unitImageUrls,
+        displayImageUrl,
         property: {
           id: tenancy.unit.property.id,
           name: tenancy.unit.property.name,

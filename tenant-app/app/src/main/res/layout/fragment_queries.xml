@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@color/surface"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp">
+
+        <TextView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_circle_primary"
+            android:gravity="center"
+            android:text="PM"
+            android:textColor="@color/on_primary"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Property Manager"
+                android:textColor="@color/on_surface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:id="@+id/viewManagerPresence"
+                    android:layout_width="7dp"
+                    android:layout_height="7dp"
+                    android:layout_marginEnd="5dp"
+                    android:background="@drawable/bg_circle_success" />
+
+                <TextView
+                    android:id="@+id/tvManagerPresence"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Offline"
+                    android:textColor="@color/on_surface_variant"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilQueryTopic"
+            style="@style/Theme.TenantPro.TextInputLayout.Search"
+            android:layout_width="126dp"
+            android:layout_height="44dp"
+            app:endIconMode="dropdown_menu">
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/actQueryTopic"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:ellipsize="end"
+                android:inputType="none"
+                android:maxLines="1"
+                android:paddingHorizontal="10dp"
+                android:textColor="@color/on_surface"
+                android:textSize="12sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/outline_variant" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/surface">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvChats"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="6dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="12dp" />
+
+        <TextView
+            android:id="@+id/tvEmptyChats"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:padding="24dp"
+            android:text="@string/queries_empty_chat"
+            android:textColor="@color/on_surface_variant"
+            android:textSize="13sp"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tvManagerTypingIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="48dp"
+        android:layout_marginBottom="5dp"
+        android:background="@drawable/bg_chat_input"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="7dp"
+        android:text="Property Manager is typing…"
+        android:textColor="@color/secondary"
+        android:textSize="11sp"
+        android:textStyle="italic"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface"
+        android:elevation="8dp"
+        android:orientation="vertical"
+        android:paddingHorizontal="10dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="8dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/layoutAttachmentPreview"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_marginBottom="6dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="@color/secondary_light"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/info_border"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="12dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_file"
+                    android:tint="@color/secondary" />
+
+                <TextView
+                    android:id="@+id/tvAttachmentPreview"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    android:ellipsize="middle"
+                    android:singleLine="true"
+                    android:textColor="@color/on_surface"
+                    android:textSize="12sp" />
+
+                <ImageButton
+                    android:id="@+id/btnClearAttachment"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Remove attachment"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_close_small"
+                    android:tint="@color/on_surface_variant" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:layout_weight="1"
+                app:cardBackgroundColor="@color/surface_variant"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/outline_variant"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="6dp">
+
+                    <ImageButton
+                        android:id="@+id/btnAttachment"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="Attach file"
+                        android:padding="9dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_attachment"
+                        android:tint="@color/on_surface_variant" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilQueryMessage"
+                        style="@style/Theme.TenantPro.TextInputLayout.Search"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:layout_weight="1"
+                        app:hintEnabled="false"
+                        app:boxStrokeWidth="0dp"
+                        app:boxStrokeWidthFocused="0dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etQueryMessage"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="top|start"
+                            android:minHeight="48dp"
+                            android:paddingTop="12dp"
+                            android:paddingBottom="10dp"
+                            android:background="@android:color/transparent"
+                            android:imeOptions="actionSend"
+                            android:inputType="textCapSentences|textMultiLine"
+                            android:hint="@string/query_message_hint_chat"
+                            android:maxLines="6"
+                            android:minLines="1"
+                            android:textColor="@color/on_surface"
+                            android:textColorHint="@color/on_surface_variant"
+                            android:textSize="13sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <ImageButton
+                        android:id="@+id/btnImageAttachment"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="Attach image"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_camera"
+                        android:tint="@color/on_surface_variant" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <ImageButton
+                android:id="@+id/btnSendMessage"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_circle_secondary"
+                android:contentDescription="Send message"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_send"
+                android:tint="@color/on_secondary" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

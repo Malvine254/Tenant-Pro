@@ -85,6 +85,14 @@ function unitImg(unit: UnitRow, property: PropertyRow, index: number): string {
   return mediaUrl(raw) || UNIT_IMGS[index % UNIT_IMGS.length] || FALLBACK_UNIT_IMG;
 }
 
+function firstImageFromMultiline(value: string): string | null {
+  const first = value
+    .split('\n')
+    .map((line) => line.trim())
+    .find((line) => line.length > 0);
+  return first ?? null;
+}
+
 function occupantName(user: OccupantUser): string {
   return [user.firstName, user.lastName].filter(Boolean).join(' ') || user.phoneNumber;
 }
@@ -427,6 +435,21 @@ export default function PropertiesPage() {
                 <input value={propertyEditForm.name} onChange={(e) => setPropertyEditForm({ ...propertyEditForm, name: e.target.value })} className="tp-input" placeholder="Property name" required />
                 <input value={propertyEditForm.coverImageUrl} onChange={(e) => setPropertyEditForm({ ...propertyEditForm, coverImageUrl: e.target.value })} className="tp-input" placeholder="Cover image URL" />
               </div>
+              <div className="-mt-1 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPropertyEditForm({ ...propertyEditForm, coverImageUrl: FALLBACK_COVER })}
+                  className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                >
+                  Use placeholder cover
+                </button>
+                <p className="text-xs text-gray-500">Tip: Use a horizontal image for best results.</p>
+              </div>
+              <img
+                src={mediaUrl(propertyEditForm.coverImageUrl) || FALLBACK_COVER}
+                alt="Property cover preview"
+                className="h-28 w-full rounded-xl border border-gray-200 object-cover"
+              />
               <textarea value={propertyEditForm.description} onChange={(e) => setPropertyEditForm({ ...propertyEditForm, description: e.target.value })} className="tp-textarea" rows={2} placeholder="Description" />
               <input value={propertyEditForm.addressLine} onChange={(e) => setPropertyEditForm({ ...propertyEditForm, addressLine: e.target.value })} className="tp-input" placeholder="Address" required />
               <div className="grid gap-3 md:grid-cols-3">
@@ -464,6 +487,21 @@ export default function PropertiesPage() {
                 </select>
               </div>
               <textarea value={unitEditForm.imageUrls} onChange={(e) => setUnitEditForm({ ...unitEditForm, imageUrls: e.target.value })} className="tp-textarea" rows={3} placeholder="Room photo URLs, one per line" />
+              <div className="-mt-1 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setUnitEditForm({ ...unitEditForm, imageUrls: FALLBACK_UNIT_IMG })}
+                  className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                >
+                  Use placeholder room photo
+                </button>
+                <p className="text-xs text-gray-500">Enter one URL per line. The first image is used as the default room photo.</p>
+              </div>
+              <img
+                src={mediaUrl(firstImageFromMultiline(unitEditForm.imageUrls)) || FALLBACK_UNIT_IMG}
+                alt="Unit photo preview"
+                className="h-28 w-full rounded-xl border border-gray-200 object-cover"
+              />
               <button type="submit" className="tp-primary-btn">Save Unit</button>
             </form>
           ) : (
@@ -490,6 +528,21 @@ export default function PropertiesPage() {
                     <input value={propertyForm.name} onChange={(e) => setPropertyForm({ ...propertyForm, name: e.target.value })} className="tp-input" placeholder="Property name" required />
                     <input value={propertyForm.coverImageUrl} onChange={(e) => setPropertyForm({ ...propertyForm, coverImageUrl: e.target.value })} className="tp-input" placeholder="Cover image URL" />
                   </div>
+                  <div className="-mt-1 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPropertyForm({ ...propertyForm, coverImageUrl: FALLBACK_COVER })}
+                      className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                    >
+                      Use placeholder cover
+                    </button>
+                    <p className="text-xs text-gray-500">You can paste any public URL and preview it before saving.</p>
+                  </div>
+                  <img
+                    src={mediaUrl(propertyForm.coverImageUrl) || FALLBACK_COVER}
+                    alt="Property cover preview"
+                    className="h-28 w-full rounded-xl border border-gray-200 object-cover"
+                  />
                   <textarea value={propertyForm.description} onChange={(e) => setPropertyForm({ ...propertyForm, description: e.target.value })} className="tp-textarea" rows={2} placeholder="Description (optional)" />
                   <input value={propertyForm.addressLine} onChange={(e) => setPropertyForm({ ...propertyForm, addressLine: e.target.value })} className="tp-input" placeholder="Address" required />
                   <div className="grid gap-3 md:grid-cols-3">
@@ -527,6 +580,21 @@ export default function PropertiesPage() {
                     </select>
                   </div>
                   <textarea value={unitForm.imageUrls} onChange={(e) => setUnitForm({ ...unitForm, imageUrls: e.target.value })} className="tp-textarea" rows={3} placeholder="Room photo URLs, one per line" />
+                  <div className="-mt-1 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setUnitForm({ ...unitForm, imageUrls: FALLBACK_UNIT_IMG })}
+                      className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                    >
+                      Use placeholder room photo
+                    </button>
+                    <p className="text-xs text-gray-500">Room photo is optional. We will use a placeholder when left empty.</p>
+                  </div>
+                  <img
+                    src={mediaUrl(firstImageFromMultiline(unitForm.imageUrls)) || FALLBACK_UNIT_IMG}
+                    alt="Unit photo preview"
+                    className="h-28 w-full rounded-xl border border-gray-200 object-cover"
+                  />
                   <button type="submit" className="tp-primary-btn">Add Unit</button>
                 </form>
               )}

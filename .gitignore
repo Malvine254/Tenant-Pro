@@ -18,8 +18,10 @@ storage/logs/
 *.7z
 *.rar
 
-# Android app is being kept out of this repo for now
-tenant-app/
+# Android app source is part of this repo. Keep local machine files and secrets out.
+tenant-app/.gradle/
+tenant-app/local.properties
+tenant-app/**/.idea/
 
 # environment files
 .env

@@ -22,6 +22,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { AssignRoleDto } from './dto/assign-role.dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { SaveDeviceTokenDto } from './dto/save-device-token.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserIdParamDto } from './dto/user-id-param.dto';
@@ -110,7 +111,7 @@ export class UsersController {
 
   @Post('device-token')
   @Roles(RoleName.LANDLORD, RoleName.TENANT, RoleName.ADMIN, RoleName.CARETAKER)
-  saveDeviceToken(@Req() req: AuthenticatedRequest, @Body() body: { token: string }) {
+  saveDeviceToken(@Req() req: AuthenticatedRequest, @Body() body: SaveDeviceTokenDto) {
     return this.usersService.saveDeviceToken(req.user.userId, body.token);
   }
 
