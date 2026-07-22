@@ -43,8 +43,6 @@ dist/
 build/
 **/dist/
 **/build/
-.next/
-**/.next/
 coverage/
 **/coverage/
 *.tsbuildinfo

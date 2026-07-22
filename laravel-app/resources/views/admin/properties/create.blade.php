@@ -5,7 +5,7 @@
 <div style="max-width:600px;">
     <h2 style="font-size:16px;font-weight:600;margin-bottom:16px;">New Property</h2>
     <div class="card">
-        <form method="POST" action="{{ route('admin.properties.store') }}">
+        <form method="POST" action="{{ route('admin.properties.store') }}" enctype="multipart/form-data">
             @csrf
             <div class="form-group">
                 <label>Landlord</label>
@@ -33,6 +33,14 @@
                 <label>Description</label>
                 <textarea name="description" rows="3">{{ old('description') }}</textarea>
             </div>
+
+            <div class="form-group">
+                <label>Property Cover Image</label>
+                <input type="file" name="cover_image" accept="image/*" style="padding:8px;">
+                <small style="color:#64748b;">JPG, PNG up to 5MB</small>
+                @error('cover_image')<div class="form-error">{{ $message }}</div>@enderror
+            </div>
+
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div class="form-group">
                     <label>Address Line</label>

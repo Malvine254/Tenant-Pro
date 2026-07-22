@@ -5,7 +5,7 @@
 <div style="max-width:600px;">
     <h2 style="font-size:16px;font-weight:600;margin-bottom:16px;">Edit: {{ $property->name }}</h2>
     <div class="card">
-        <form method="POST" action="{{ route('admin.properties.update', $property) }}">
+        <form method="POST" action="{{ route('admin.properties.update', $property) }}" enctype="multipart/form-data">
             @csrf @method('PUT')
             <div class="form-group">
                 <label>Landlord</label>
@@ -27,6 +27,17 @@
             <div class="form-group">
                 <label>Description</label>
                 <textarea name="description" rows="3">{{ old('description', $property->description) }}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Property Cover Image</label>
+                @if($property->cover_image_url)
+                    <div style="margin-bottom:10px;">
+                        <img src="{{ $property->cover_image_url }}" style="max-width:200px;height:auto;border-radius:4px;">
+                    </div>
+                @endif
+                <input type="file" name="cover_image" accept="image/*" style="padding:8px;">
+                <small style="color:#64748b;">JPG, PNG up to 5MB</small>
+                @error('cover_image')<div class="form-error">{{ $message }}</div>@enderror
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div class="form-group">

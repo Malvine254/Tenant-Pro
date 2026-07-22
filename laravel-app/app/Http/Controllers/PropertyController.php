@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Property;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PropertyController extends Controller
 {
@@ -26,12 +27,20 @@ class PropertyController extends Controller
             'landlord_id' => 'required|uuid|exists:users,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'cover_image_url' => 'nullable|url',
             'address_line' => 'required|string|max:255',
             'city' => 'required|string|max:100',
             'state' => 'nullable|string|max:100',
             'country' => 'nullable|string|max:100',
         ]);
+
+        // Handle file upload
+        if ($request->hasFile('cover_image')) {
+            $data['cover_image_url'] = $this->storePropertyImage($request->file('cover_image'));
+        }
+        unset($data['cover_image']);
+
         $property = Property::create($data);
         return response()->json($property->load('landlord'), 201);
     }
@@ -50,20 +59,56 @@ class PropertyController extends Controller
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
+            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'cover_image_url' => 'nullable|url',
             'address_line' => 'sometimes|string|max:255',
             'city' => 'sometimes|string|max:100',
             'state' => 'nullable|string|max:100',
             'country' => 'nullable|string|max:100',
         ]);
+
+        // Handle file upload - delete old image if new one is uploaded
+        if ($request->hasFile('cover_image')) {
+            if ($property->cover_image_url) {
+                $this->deletePropertyImage($property->cover_image_url);
+            }
+            $data['cover_image_url'] = $this->storePropertyImage($request->file('cover_image'));
+        }
+        unset($data['cover_image']);
+
         $property->update($data);
         return response()->json($property->load('landlord'));
     }
 
     public function destroy(Property $property)
     {
+        // Clean up image when property is deleted
+        if ($property->cover_image_url) {
+            $this->deletePropertyImage($property->cover_image_url);
+        }
         $property->delete();
         return response()->json(null, 204);
+    }
+
+    /**
+     * Store a property image and return its URL
+     */
+    private function storePropertyImage($file)
+    {
+        $path = Storage::disk('public')->put('properties', $file);
+        return asset('storage/' . $path);
+    }
+
+    /**
+     * Delete a property image from storage
+     */
+    private function deletePropertyImage($imageUrl)
+    {
+        // Extract path from URL
+        if (strpos($imageUrl, 'storage/') !== false) {
+            $path = str_replace(asset('storage/'), '', $imageUrl);
+            Storage::disk('public')->delete($path);
+        }
     }
 
     private function isTenant($user): bool

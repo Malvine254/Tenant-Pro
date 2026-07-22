@@ -16,7 +16,6 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { SupportModule } from './modules/support/support.module';
 import { FirebaseModule } from './modules/firebase/firebase.module';
 import { HealthController } from './health.controller';
-import { DownloadsModule } from './modules/downloads/downloads.module';
 
 @Module({
   imports: [
@@ -36,7 +35,6 @@ import { DownloadsModule } from './modules/downloads/downloads.module';
     NotificationsModule,
     SupportModule,
     RemindersModule,
-    DownloadsModule,
   ],
   controllers: [HealthController],
 })
