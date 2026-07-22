@@ -67,6 +67,41 @@ export default function Home() {
         </div>
       </Reveal>
 
+      <Reveal as="section" className="border-b border-zinc-200 bg-gradient-to-br from-blue-50 to-indigo-50" delay={110}>
+        <div className="mx-auto max-w-4xl px-6 py-16 sm:py-24">
+          <div className="text-center">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl flex items-center justify-center mb-6">
+              <span className="text-3xl font-bold text-white">TP</span>
+            </div>
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-600 mb-3">Get The App</p>
+            <h2 className="text-4xl sm:text-5xl font-bold text-zinc-950 mb-4">Download Tenant Pro Today</h2>
+            <p className="text-lg text-zinc-600 mb-8 max-w-2xl mx-auto">
+              Manage your tenancy on the go. Pay invoices, track payments, submit maintenance requests, and stay connected with your landlord—all from your Android device.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-8">
+              <a
+                href="/api/downloads/apk"
+                download="tenant-pro-app.apk"
+                className="rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                Download APK
+              </a>
+              <Link
+                href="/download"
+                className="rounded-full border border-blue-600 px-6 py-3 text-sm font-semibold text-blue-600 transition hover:border-blue-700 hover:text-blue-700"
+              >
+                View Details
+              </Link>
+            </div>
+
+            <p className="text-xs text-zinc-600">
+              📱 Android 6.0+ | 💾 ~45 MB | 🔒 Secure
+            </p>
+          </div>
+        </div>
+      </Reveal>
+
       <Reveal as="section" className="border-y border-zinc-200 bg-zinc-50" delay={120}>
         <div className="mx-auto max-w-6xl px-6 py-16">
           <div className="mb-8 max-w-2xl">

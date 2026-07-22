@@ -33,9 +33,9 @@ const navSections = [
     ],
   },
   {
-    title: 'Admin Tools',
+    title: 'Tools',
     items: [
-      { href: '/admin/downloads', label: 'Mobile App Download', icon: '↓' },
+      { href: '/admin/downloads', label: 'Mobile App Download', icon: '📱' },
     ],
   },
 ];
