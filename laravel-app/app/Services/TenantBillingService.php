@@ -8,6 +8,12 @@ use Illuminate\Support\Carbon;
 
 class TenantBillingService
 {
+    public function __construct(
+        private readonly TenantAppNotificationService $appNotificationService,
+        private readonly TenantEmailService $emailService,
+    ) {
+    }
+
     public function createInitialRentInvoice(Tenant $tenant): Invoice
     {
         $tenant->loadMissing(['user', 'unit.property']);
@@ -37,5 +43,142 @@ class TenantBillingService
                 'paid_at' => null,
             ]
         )->load(['tenant', 'unit.property']);
+    }
+
+    public function syncMonthlyRentForActiveTenancies(?Carbon $asOf = null): array
+    {
+        $asOf = ($asOf ?: now())->copy()->startOfDay();
+        $tenants = Tenant::query()
+            ->with(['user', 'unit.property'])
+            ->where('is_active', true)
+            ->get();
+
+        $generated = 0;
+        foreach ($tenants as $tenant) {
+            $generated += $this->syncTenantMonthlyRentInvoices($tenant, $asOf);
+        }
+
+        return [
+            'tenanciesProcessed' => $tenants->count(),
+            'invoicesGenerated' => $generated,
+        ];
+    }
+
+    public function syncMonthlyRentForTenantUnit(string $tenantUserId, string $unitId, ?Carbon $asOf = null): int
+    {
+        $tenant = Tenant::query()
+            ->with(['user', 'unit.property'])
+            ->where('is_active', true)
+            ->where('user_id', $tenantUserId)
+            ->where('unit_id', $unitId)
+            ->first();
+
+        if (! $tenant) {
+            return 0;
+        }
+
+        return $this->syncTenantMonthlyRentInvoices($tenant, ($asOf ?: now())->copy()->startOfDay());
+    }
+
+    private function syncTenantMonthlyRentInvoices(Tenant $tenant, Carbon $asOf): int
+    {
+        $tenant->loadMissing(['user', 'unit.property']);
+
+        $amount = (float) ($tenant->unit?->rent_amount ?? 0);
+        if ($amount <= 0) {
+            return 0;
+        }
+
+        $rentInvoices = Invoice::query()
+            ->where('tenant_id', $tenant->user_id)
+            ->where('unit_id', $tenant->unit_id)
+            ->where('billing_type', 'RENT')
+            ->where('status', '!=', 'CANCELLED');
+
+        $latestRentInvoice = (clone $rentInvoices)
+            ->orderByDesc('due_date')
+            ->orderByDesc('created_at')
+            ->first();
+
+        if (! $latestRentInvoice) {
+            $initial = $this->createInitialRentInvoice($tenant);
+            if ($initial->wasRecentlyCreated) {
+                $this->appNotificationService->invoiceCreated($initial);
+                $this->emailService->invoiceCreated($initial);
+                return 1;
+            }
+
+            return 0;
+        }
+
+        $nextDueDate = $this->resolveNextDueDate($tenant, $latestRentInvoice);
+        if (! $nextDueDate) {
+            return 0;
+        }
+
+        $cutoff = $asOf->copy()->addMonth()->endOfDay();
+        $created = 0;
+
+        while ($nextDueDate->lte($cutoff)) {
+            $periodMonth = (int) $nextDueDate->month;
+            $periodYear = (int) $nextDueDate->year;
+
+            $invoice = Invoice::firstOrCreate(
+                [
+                    'tenant_id' => $tenant->user_id,
+                    'user_id' => $tenant->user_id,
+                    'unit_id' => $tenant->unit_id,
+                    'billing_type' => 'RENT',
+                    'period_month' => $periodMonth,
+                    'period_year' => $periodYear,
+                ],
+                [
+                    'issue_date' => $asOf->toDateString(),
+                    'due_date' => $nextDueDate->toDateString(),
+                    'amount' => $amount,
+                    'penalty_amount' => 0,
+                    'total_amount' => $amount,
+                    'paid_amount' => 0,
+                    'status' => 'PENDING',
+                    'paid_at' => null,
+                ]
+            )->load(['tenant', 'unit.property']);
+
+            if ($invoice->wasRecentlyCreated) {
+                $this->appNotificationService->invoiceCreated($invoice);
+                $this->emailService->invoiceCreated($invoice);
+                $created++;
+            }
+
+            $nextDueDate = $nextDueDate->copy()->addMonth();
+        }
+
+        return $created;
+    }
+
+    private function resolveNextDueDate(Tenant $tenant, Invoice $latestRentInvoice): ?Carbon
+    {
+        $lastPaidRentInvoice = Invoice::query()
+            ->where('tenant_id', $tenant->user_id)
+            ->where('unit_id', $tenant->unit_id)
+            ->where('billing_type', 'RENT')
+            ->where('status', 'PAID')
+            ->whereNotNull('paid_at')
+            ->orderByDesc('paid_at')
+            ->first();
+
+        if ($lastPaidRentInvoice?->paid_at) {
+            return Carbon::parse($lastPaidRentInvoice->paid_at)->startOfDay()->addMonth();
+        }
+
+        if ($latestRentInvoice->due_date) {
+            return Carbon::parse($latestRentInvoice->due_date)->startOfDay()->addMonth();
+        }
+
+        if ($tenant->move_in_date) {
+            return Carbon::parse($tenant->move_in_date)->startOfDay()->addDays(7);
+        }
+
+        return null;
     }
 }

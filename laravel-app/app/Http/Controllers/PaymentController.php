@@ -6,6 +6,7 @@ use App\Models\Payment;
 use App\Models\Invoice;
 use App\Models\Tenant;
 use App\Services\TenantAppNotificationService;
+use App\Services\TenantBillingService;
 use App\Services\TenantEmailService;
 use App\Services\MpesaService;
 use Illuminate\Http\Request;
@@ -55,6 +56,9 @@ class PaymentController extends Controller
         if ($payment->status === 'SUCCESSFUL') {
             app(TenantEmailService::class)->paymentReceived($payment->load('invoice.tenant', 'invoice.unit.property'));
             app(TenantAppNotificationService::class)->paymentReceived($payment);
+            if (strtoupper((string) $invoice->billing_type) === 'RENT') {
+                app(TenantBillingService::class)->syncMonthlyRentForTenantUnit($invoice->tenant_id, $invoice->unit_id);
+            }
         }
 
         return response()->json($payment->load('invoice'), 201);
@@ -274,6 +278,12 @@ class PaymentController extends Controller
         $payment = Payment::with('invoice.tenant', 'invoice.unit.property')->find($paymentId);
         if (! $payment) return;
 
+        $generatedInvoices = 0;
+        if (strtoupper((string) $payment->invoice?->billing_type) === 'RENT' && $payment->invoice) {
+            $generatedInvoices = app(TenantBillingService::class)
+                ->syncMonthlyRentForTenantUnit($payment->invoice->tenant_id, $payment->invoice->unit_id);
+        }
+
         try {
             app(TenantEmailService::class)->paymentReceived($payment);
             app(TenantAppNotificationService::class)->paymentReceived($payment);
@@ -281,6 +291,7 @@ class PaymentController extends Controller
             Log::error('Payment notification failed', [
                 'payment_id' => $paymentId,
                 'error' => $error->getMessage(),
+                'generated_invoices' => $generatedInvoices,
             ]);
         }
     }

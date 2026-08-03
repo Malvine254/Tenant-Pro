@@ -309,6 +309,7 @@ Seed command: `npx prisma db seed`
 - Password reset via OTP
 - JWT + RBAC security
 - Scheduled payment reminders (cron)
+- Monthly recurring rent invoice generation anchored to each tenant-unit's last successful rent payment date
 - Admin user management
 - Modern Material 3 UI (Android) — gradient auth screens, semantic stat cards, slide animations
 
@@ -362,4 +363,4 @@ These integrations are identified but not yet built. Prioritize in future sessio
 
 ---
 
-*Last updated: 2026-04-28 — Multi-unit support: tenants can hold multiple unit assignments; Prisma Tenant model now uses composite unique (userId, unitId); getProfile returns tenantProfiles[]; admin can assign/remove units via new endpoints; Android rental screen shows list of all assigned units.*
+*Last updated: 2026-08-03 — Monthly rent due now derives from each tenant-unit's last successful rent payment date, with recurring invoice generation integrated into daily reminders and payment-success flow. Multi-unit support remains active (composite unique on userId+unitId, getProfile returns tenantProfiles[], admin can assign/remove units, Android rental screen lists all assigned units).* 

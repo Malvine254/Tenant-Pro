@@ -12,7 +12,8 @@ Artisan::command('inspire', function () {
 Artisan::command('tenantpro:send-rent-reminders', function (RentReminderService $service) {
     $result = $service->runDailyReminders();
     $this->info(sprintf(
-        'Rent reminders done. Considered: %d, Sent: %d, Skipped: %d',
+        'Rent reminders done. Generated: %d, Considered: %d, Sent: %d, Skipped: %d',
+        $result['generated'] ?? 0,
         $result['invoicesConsidered'] ?? 0,
         $result['sent'] ?? 0,
         $result['skipped'] ?? 0,

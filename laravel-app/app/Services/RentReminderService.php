@@ -11,12 +11,14 @@ class RentReminderService
     public function __construct(
         private readonly TenantEmailService $emailService,
         private readonly TenantAppNotificationService $appNotificationService,
+        private readonly TenantBillingService $tenantBillingService,
     ) {
     }
 
     public function runDailyReminders(): array
     {
         $today = Carbon::today();
+        $billingSync = $this->tenantBillingService->syncMonthlyRentForActiveTenancies($today);
         /** @var \Illuminate\Database\Eloquent\Collection<int, Invoice> $invoices */
         $invoices = Invoice::query()
             ->with(['tenant', 'unit.property'])
@@ -135,11 +137,13 @@ class RentReminderService
 
         Log::info('Rent reminder job completed', [
             'invoices_considered' => $invoices->count(),
+            'generated' => $billingSync['invoicesGenerated'] ?? 0,
             'sent' => $sent,
             'skipped' => $skipped,
         ]);
 
         return [
+            'generated' => $billingSync['invoicesGenerated'] ?? 0,
             'invoicesConsidered' => $invoices->count(),
             'sent' => $sent,
             'skipped' => $skipped,
