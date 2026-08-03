@@ -33,7 +33,6 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.navigation.NavigationView
 import com.tenantpro.app.databinding.ActivityMainBinding
 import com.tenantpro.app.ui.auth.LoginViewModel
-import com.tenantpro.app.ui.notifications.NotificationsViewModel
 import com.tenantpro.app.utils.DataStoreManager
 import com.tenantpro.app.utils.SessionManager
 import com.tenantpro.app.utils.toAbsoluteAssetUrl
@@ -51,7 +50,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navController: NavController
     private lateinit var appBarConfiguration: AppBarConfiguration
     private val loginViewModel: LoginViewModel by viewModels()
-    private val notificationsViewModel: NotificationsViewModel by viewModels()
     private var pendingInvitationCode: String? = null
     private var pendingNotificationDestination: String? = null
     private var pendingNotificationEntityId: String? = null
@@ -241,7 +239,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        notificationsViewModel.startPolling()
     }
 
     override fun onResume() {
@@ -259,7 +256,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        notificationsViewModel.stopPolling()
         super.onStop()
     }
 

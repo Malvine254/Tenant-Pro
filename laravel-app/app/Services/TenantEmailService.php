@@ -16,6 +16,62 @@ use Throwable;
 
 class TenantEmailService
 {
+    public function sendRentDueReminder(Invoice $invoice, int $daysUntilDue): bool
+    {
+        $invoice->loadMissing(['tenant', 'unit.property']);
+
+        return $this->send($invoice->tenant, [
+            'subjectLine' => $daysUntilDue === 0 ? 'Rent due today' : 'Upcoming rent due reminder',
+            'preheader' => $daysUntilDue === 0
+                ? 'Your rent payment is due today.'
+                : 'Your rent payment due date is approaching.',
+            'title' => $daysUntilDue === 0 ? 'Rent due today' : 'Upcoming rent reminder',
+            'introLines' => [
+                'Hi '.$this->firstName($invoice->tenant).',',
+                $daysUntilDue === 0
+                    ? 'This is a reminder that your rent payment is due today.'
+                    : 'This is a reminder that your rent payment is due in '.$daysUntilDue.' day'.($daysUntilDue === 1 ? '' : 's').'.',
+            ],
+            'details' => [
+                'Property' => $invoice->unit?->property?->name ?? 'Not specified',
+                'Unit' => $invoice->unit?->unit_number ?? 'Not specified',
+                'Due date' => $invoice->due_date ? date('d M Y', strtotime((string) $invoice->due_date)) : 'Not specified',
+                'Amount due' => $invoice->balance_amount_formatted,
+                'Billing period' => $this->invoicePeriod($invoice),
+            ],
+            'actionLabel' => 'Open TenantPro app',
+            'actionUrl' => $this->tenantAppUrl(),
+            'footerText' => 'This is a periodic reminder. You will not receive duplicate reminders for the same reminder interval.',
+        ]);
+    }
+
+    public function sendRentOverdueReminder(Invoice $invoice, int $daysOverdue): bool
+    {
+        $invoice->loadMissing(['tenant', 'unit.property']);
+
+        return $this->send($invoice->tenant, [
+            'subjectLine' => 'Overdue rent reminder',
+            'preheader' => 'Your rent payment is overdue.',
+            'title' => 'Overdue rent reminder',
+            'introLines' => [
+                'Hi '.$this->firstName($invoice->tenant).',',
+                'Your rent payment is currently overdue by '.$daysOverdue.' day'.($daysOverdue === 1 ? '' : 's').'.',
+                'Please clear the balance to keep your account in good standing.',
+            ],
+            'details' => [
+                'Property' => $invoice->unit?->property?->name ?? 'Not specified',
+                'Unit' => $invoice->unit?->unit_number ?? 'Not specified',
+                'Original due date' => $invoice->due_date ? date('d M Y', strtotime((string) $invoice->due_date)) : 'Not specified',
+                'Days overdue' => (string) $daysOverdue,
+                'Outstanding balance' => $invoice->balance_amount_formatted,
+                'Billing period' => $this->invoicePeriod($invoice),
+            ],
+            'actionLabel' => 'Open TenantPro app',
+            'actionUrl' => $this->tenantAppUrl(),
+            'footerText' => 'This is a periodic reminder to help avoid too-frequent notifications while keeping you updated.',
+        ]);
+    }
+
     public function tenantAccountCreated(Tenant $tenant): bool
     {
         $tenant->loadMissing(['user', 'unit.property']);
@@ -34,7 +90,9 @@ class TenantEmailService
                 'Property' => $tenant->unit?->property?->name ?? 'Not specified',
                 'Unit' => $tenant->unit?->unit_number ?? 'Not specified',
                 'Monthly rent' => $tenant->unit?->rent_amount_formatted ?? 'Not specified',
-                'Move-in date' => $tenant->move_in_date?->format('d M Y') ?? 'Not specified',
+                'Move-in date' => $tenant->move_in_date
+                    ? date('d M Y', strtotime((string) $tenant->move_in_date))
+                    : 'Not specified',
             ],
             'actionLabel' => 'Open TenantPro',
             'actionUrl' => $this->tenantAppUrl(),
@@ -66,35 +124,54 @@ class TenantEmailService
         ]);
     }
 
-    public function tenantInvitation(Invitation $invitation): bool
+    public function tenantInvitation(Invitation $invitation, array $options = []): bool
     {
         $invitation->loadMissing(['property', 'unit']);
 
+        $loginEmail = strtolower(trim((string) ($options['loginEmail'] ?? $invitation->email ?? '')));
+        $temporaryPassword = (string) ($options['temporaryPassword'] ?? '');
+        $firstTimeSetup = (bool) ($options['firstTimeSetup'] ?? false);
+        $downloadUrl = $this->tenantAppDownloadUrl();
+
+        $details = array_filter([
+            'Property' => $invitation->property?->name,
+            'Unit' => $invitation->unit?->unit_number,
+            'Invitation code' => $invitation->code,
+            'Login email' => $loginEmail ?: null,
+            'Temporary password' => $temporaryPassword !== '' ? $temporaryPassword : null,
+            'Move-in date' => data_get($invitation->metadata, 'move_in_date'),
+            'Monthly rent' => data_get($invitation->metadata, 'rent_amount')
+                ? 'KSh '.number_format((float) data_get($invitation->metadata, 'rent_amount'), 2)
+                : null,
+            'Deposit' => data_get($invitation->metadata, 'deposit_amount')
+                ? 'KSh '.number_format((float) data_get($invitation->metadata, 'deposit_amount'), 2)
+                : null,
+            'Expires on' => $invitation->expires_at?->format('d M Y'),
+            'Android app download' => $downloadUrl,
+        ]);
+
+        $introLines = [
+            'Hello '.$this->displayName($invitation->invitee_name).',',
+            'You have been invited to join TenantPro for '.$invitation->property?->name.', Unit '.$invitation->unit?->unit_number.'.',
+            $firstTimeSetup
+                ? 'Your tenant login has been prepared. Use the login email and temporary password below, then change your password after your first successful sign-in.'
+                : 'Use your existing TenantPro account. If you do not remember your password, use Reset Password on the app login screen.',
+            'Open the invitation instructions link, install the Android app if needed, then sign in and accept your invitation code from Account -> Accept Invitation.',
+        ];
+
+        $footerText = $firstTimeSetup
+            ? 'For security, change your temporary password after first login. Your landlord cannot edit your M-Pesa details.'
+            : 'If you cannot sign in, use Reset Password in the app. Your landlord cannot edit your M-Pesa details.';
+
         return $this->sendToAddress($invitation->email, $invitation->invitee_name, [
             'subjectLine' => 'You have been invited to join TenantPro',
-            'preheader' => 'Accept your TenantPro invitation and link your unit.',
+            'preheader' => 'Open app onboarding instructions and accept your TenantPro invitation.',
             'title' => 'You have a tenant invitation',
-            'introLines' => [
-                'Hello '.$this->displayName($invitation->invitee_name).',',
-                'You have been invited to join TenantPro for '.$invitation->property?->name.', Unit '.$invitation->unit?->unit_number.'.',
-                'Please accept the invitation, create your account or sign in, and complete your tenant profile from the TenantPro Android app. Your M-Pesa payment details remain yours to manage.',
-            ],
-            'details' => array_filter([
-                'Property' => $invitation->property?->name,
-                'Unit' => $invitation->unit?->unit_number,
-                'Invitation code' => $invitation->code,
-                'Move-in date' => data_get($invitation->metadata, 'move_in_date'),
-                'Monthly rent' => data_get($invitation->metadata, 'rent_amount')
-                    ? 'KSh '.number_format((float) data_get($invitation->metadata, 'rent_amount'), 2)
-                    : null,
-                'Deposit' => data_get($invitation->metadata, 'deposit_amount')
-                    ? 'KSh '.number_format((float) data_get($invitation->metadata, 'deposit_amount'), 2)
-                    : null,
-                'Expires on' => $invitation->expires_at?->format('d M Y'),
-            ]),
-            'actionLabel' => 'Accept invitation',
+            'introLines' => $introLines,
+            'details' => $details,
+            'actionLabel' => 'Open invitation instructions',
             'actionUrl' => $this->tenantInviteUrl($invitation),
-            'footerText' => 'Your landlord cannot edit your M-Pesa details. Add or update them yourself in the TenantPro app.',
+            'footerText' => $footerText,
         ]);
     }
 
@@ -115,7 +192,9 @@ class TenantEmailService
                 'Unit' => $tenant->unit?->unit_number ?? 'Not specified',
                 'Floor' => $tenant->unit?->floor === null ? 'Not specified' : 'Floor '.$tenant->unit->floor,
                 'Monthly rent' => $tenant->unit?->rent_amount_formatted ?? 'Not specified',
-                'Move-in date' => $tenant->move_in_date?->format('d M Y') ?? 'Not specified',
+                'Move-in date' => $tenant->move_in_date
+                    ? date('d M Y', strtotime((string) $tenant->move_in_date))
+                    : 'Not specified',
             ],
             'actionLabel' => 'Open TenantPro',
             'actionUrl' => $this->tenantAppUrl(),
@@ -138,7 +217,9 @@ class TenantEmailService
             'details' => [
                 'Property' => $tenant->unit?->property?->name ?? 'Not specified',
                 'Unit' => $tenant->unit?->unit_number ?? 'Not specified',
-                'Closing date' => $tenant->move_out_date?->format('d M Y') ?? now()->format('d M Y'),
+                'Closing date' => $tenant->move_out_date
+                    ? date('d M Y', strtotime((string) $tenant->move_out_date))
+                    : now()->format('d M Y'),
             ],
             'footerText' => 'Thank you for using TenantPro.',
         ]);
@@ -161,7 +242,9 @@ class TenantEmailService
                 'Unit' => $invoice->unit?->unit_number ?? 'Not specified',
                 'Billing period' => $this->invoicePeriod($invoice),
                 'Amount due' => $invoice->total_amount_formatted,
-                'Due date' => $invoice->due_date?->format('d M Y') ?? 'Not specified',
+                'Due date' => $invoice->due_date
+                    ? date('d M Y', strtotime((string) $invoice->due_date))
+                    : 'Not specified',
             ],
             'actionLabel' => 'View invoice',
             'actionUrl' => $this->tenantAppUrl(),
@@ -375,6 +458,11 @@ class TenantEmailService
     private function tenantAppUrl(): string
     {
         return env('TENANT_APP_URL', 'tenantpro://open');
+    }
+
+    private function tenantAppDownloadUrl(): string
+    {
+        return env('TENANT_APP_DOWNLOAD_URL', rtrim(config('app.url'), '/').'/download/apk');
     }
 
     private function invoicePeriod(Invoice $invoice): string

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Tenant;
+use App\Services\LandlordSubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +16,11 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private readonly LandlordSubscriptionService $subscriptionService,
+    ) {
+    }
+
     public function register(Request $request)
     {
         $firstName = (string) $request->input('first_name', $request->input('firstName', ''));
@@ -43,6 +49,11 @@ class AuthController extends Controller
         ]);
 
         $roleName = $data['role_name'] ?? 'TENANT';
+        if (!in_array($roleName, ['TENANT', 'LANDLORD'], true)) {
+            throw ValidationException::withMessages([
+                'role_name' => ['Only TENANT and LANDLORD self-registration is allowed.'],
+            ]);
+        }
         $role = Role::where('name', $roleName)->first();
 
         $user = User::create([
@@ -55,6 +66,10 @@ class AuthController extends Controller
             'role_id' => $role?->id,
             'is_active' => true,
         ]);
+
+        if ($roleName === 'LANDLORD') {
+            $this->subscriptionService->initializeTrial($user);
+        }
 
         $this->sendEmailOtp($user);
 

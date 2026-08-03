@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Invitation;
 use App\Models\Property;
+use App\Models\Role;
 use App\Models\Unit;
+use App\Models\User;
 use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -70,17 +72,23 @@ class InvitationAdminController extends Controller
 
         $property = Property::findOrFail($data['property_id']);
         $unit = Unit::with('tenant')->findOrFail($data['unit_id']);
+        $normalizedEmail = strtolower(trim($data['email']));
+
+        [$loginUser, $temporaryPassword, $firstTimeSetup] = $this->prepareTenantLogin(
+            $normalizedEmail,
+            (string) ($data['invitee_name'] ?? '')
+        );
 
         abort_if($unit->property_id !== $property->id, 422, 'The selected unit does not belong to this property.');
         abort_if($user?->role?->name === 'LANDLORD' && $property->landlord_id !== $user->id, 403);
         abort_if($unit->tenant()->where('is_active', true)->exists(), 422, 'This unit is already occupied.');
 
-        $invitation = DB::transaction(function () use ($request, $data, $unit) {
+        $invitation = DB::transaction(function () use ($request, $data, $unit, $normalizedEmail, $firstTimeSetup) {
             return Invitation::create([
                 'invite_type' => 'TENANT',
                 'code' => $this->uniqueCode(),
                 'invitee_name' => $data['invitee_name'] ?? null,
-                'email' => strtolower($data['email']),
+                'email' => $normalizedEmail,
                 'phone_number' => $data['phone_number'] ?? null,
                 'message' => $data['message'] ?? null,
                 'property_id' => $data['property_id'],
@@ -94,11 +102,16 @@ class InvitationAdminController extends Controller
                     'move_in_date' => $data['move_in_date'] ?? null,
                     'rent_amount' => $data['rent_amount'] ?? $unit->rent_amount,
                     'deposit_amount' => $data['deposit_amount'] ?? null,
+                    'first_time_setup' => $firstTimeSetup,
                 ],
             ]);
         });
 
-        $emailSent = app(TenantEmailService::class)->tenantInvitation($invitation);
+        $emailSent = app(TenantEmailService::class)->tenantInvitation($invitation, [
+            'loginEmail' => $loginUser->email,
+            'temporaryPassword' => $temporaryPassword,
+            'firstTimeSetup' => $firstTimeSetup,
+        ]);
 
         return back()->with(
             'success',
@@ -106,6 +119,70 @@ class InvitationAdminController extends Controller
                 ? 'Tenant invitation sent by email.'
                 : 'Tenant invitation saved, but email could not be sent. Check mail logs.'
         );
+    }
+
+    private function prepareTenantLogin(string $email, string $inviteeName): array
+    {
+        $tenantRole = Role::query()->firstOrCreate(
+            ['name' => 'TENANT'],
+            ['description' => 'Tenant user']
+        );
+
+        /** @var User|null $existingUser */
+        $existingUser = User::query()
+            ->with('role')
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->first();
+
+        if ($existingUser) {
+            $existingRole = $existingUser->role?->name;
+            if ($existingRole && !in_array($existingRole, ['TENANT', 'ADMIN', 'SUPER_ADMIN'], true)) {
+                abort(422, 'The invite email already belongs to a non-tenant account. Use another email.');
+            }
+
+            $updates = [];
+            if (!$existingUser->role_id) {
+                $updates['role_id'] = $tenantRole->id;
+            }
+            if (!$existingUser->is_active) {
+                $updates['is_active'] = true;
+            }
+            if (!$existingUser->email_verified_at) {
+                $updates['email_verified_at'] = now();
+            }
+            if (blank($existingUser->name) && trim($inviteeName) !== '') {
+                $updates['name'] = trim($inviteeName);
+            }
+
+            if (!empty($updates)) {
+                $existingUser->update($updates);
+            }
+
+            return [$existingUser->fresh(), null, false];
+        }
+
+        $temporaryPassword = $this->generateTemporaryPassword();
+        $cleanName = trim($inviteeName);
+        $firstName = $cleanName !== '' ? strtok($cleanName, ' ') : null;
+        $lastName = $cleanName !== '' ? trim((string) substr($cleanName, strlen((string) $firstName))) : null;
+
+        $newUser = User::query()->create([
+            'name' => $cleanName !== '' ? $cleanName : 'Tenant User',
+            'first_name' => $firstName ?: null,
+            'last_name' => $lastName !== '' ? $lastName : null,
+            'email' => $email,
+            'password' => $temporaryPassword,
+            'role_id' => $tenantRole->id,
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        return [$newUser, $temporaryPassword, true];
+    }
+
+    private function generateTemporaryPassword(): string
+    {
+        return 'Tp!'.strtoupper(Str::random(2)).Str::random(6).random_int(10, 99);
     }
 
     public function storeLandlord(Request $request)

@@ -157,9 +157,16 @@
     .maintenance-box span { display:block;font-size:11px;color:#64748b;margin-bottom:4px; }
     .maintenance-box strong { font-size:18px;letter-spacing:-.04em; }
     .ops-table-grid { display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:16px; }
+    .ops-chart-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:16px; }
+    .ops-chart-card canvas { width:100% !important;height:240px !important; }
+    .ops-subscription-grid { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px; }
+    .ops-subscription-pill { border:1px solid #dbe4ef;border-radius:12px;padding:10px;background:#f8fafc; }
+    .ops-subscription-pill span { display:block;font-size:11px;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em; }
+    .ops-subscription-pill strong { font-size:20px;font-weight:900;letter-spacing:-.04em; }
     @media (max-width:1200px) {
         .ops-stat-strip { grid-template-columns:repeat(3,minmax(0,1fr)); }
         .ops-hero { grid-template-columns:1fr; }
+        .ops-chart-grid { grid-template-columns:1fr; }
     }
     @media (max-width:900px) {
         .ops-main-grid,.ops-table-grid { grid-template-columns:1fr; }
@@ -172,6 +179,13 @@
 </style>
 
 <div class="ops-dashboard">
+    @if($isLandlord && !empty($landlordAccess['message']))
+        <div class="card" style="margin-bottom:14px;border-color:{{ $landlordAccess['status'] === 'past_due' ? '#fecaca' : '#bfdbfe' }};background:{{ $landlordAccess['status'] === 'past_due' ? '#fff7f7' : '#f8fbff' }};">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:{{ $landlordAccess['status'] === 'past_due' ? '#b91c1c' : '#1d4ed8' }};margin-bottom:6px;">Service access update</div>
+            <div style="font-size:14px;color:#334155;">{{ $landlordAccess['message'] }}</div>
+        </div>
+    @endif
+
     <div class="ops-hero">
         <div class="ops-hero-card">
             <div class="ops-eyebrow">{{ $isLandlord ? 'Your rental portfolio' : 'Platform operations' }}</div>
@@ -317,5 +331,161 @@
             </div>
         </div>
     </div>
+
+    <div class="ops-chart-grid">
+        <div class="ops-panel ops-chart-card">
+            <div class="ops-panel-head">
+                <div class="ops-panel-title">Revenue trend</div>
+                <div class="ops-panel-note">Interactive monthly line</div>
+            </div>
+            <canvas id="revenueTrendChart"></canvas>
+        </div>
+
+        <div class="ops-panel ops-chart-card">
+            <div class="ops-panel-head">
+                <div class="ops-panel-title">Invoice mix</div>
+                <div class="ops-panel-note">Paid vs open balances</div>
+            </div>
+            <canvas id="invoiceMixChart"></canvas>
+        </div>
+
+        <div class="ops-panel ops-chart-card">
+            <div class="ops-panel-head">
+                <div class="ops-panel-title">Maintenance flow</div>
+                <div class="ops-panel-note">Request resolution pipeline</div>
+            </div>
+            <canvas id="maintenanceChart"></canvas>
+        </div>
+    </div>
+
+    @unless($isLandlord)
+        <div class="ops-panel" style="margin-bottom:16px;">
+            <div class="ops-panel-head">
+                <div class="ops-panel-title">Landlord subscription lifecycle</div>
+                <div class="ops-panel-note">1 month free trial then paid service</div>
+            </div>
+            <div class="ops-subscription-grid">
+                <div class="ops-subscription-pill"><span>Trial</span><strong style="color:#1d4ed8;">{{ $landlordSubscription['trial'] ?? 0 }}</strong></div>
+                <div class="ops-subscription-pill"><span>Active Paid</span><strong style="color:#15803d;">{{ $landlordSubscription['active'] ?? 0 }}</strong></div>
+                <div class="ops-subscription-pill"><span>Past Due</span><strong style="color:#b91c1c;">{{ $landlordSubscription['past_due'] ?? 0 }}</strong></div>
+                <div class="ops-subscription-pill"><span>Not Required</span><strong style="color:#475569;">{{ $landlordSubscription['not_required'] ?? 0 }}</strong></div>
+            </div>
+        </div>
+    @endunless
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(() => {
+    const payload = @json($chartSeries);
+    const labels = payload.monthlyRevenueLabels || [];
+    const revenue = payload.monthlyRevenueValues || [];
+
+    const baseOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    boxWidth: 12,
+                    boxHeight: 12,
+                    usePointStyle: true,
+                    color: '#334155',
+                    font: { size: 11, weight: '600' },
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: { color: 'rgba(148,163,184,.16)' },
+                ticks: { color: '#475569', font: { size: 11 } },
+            },
+            y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(148,163,184,.16)' },
+                ticks: { color: '#475569', font: { size: 11 } },
+            }
+        }
+    };
+
+    const revenueCtx = document.getElementById('revenueTrendChart');
+    if (revenueCtx) {
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Revenue (KSh)',
+                    data: revenue,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, .14)',
+                    borderWidth: 3,
+                    tension: .35,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#1d4ed8',
+                }]
+            },
+            options: baseOptions,
+        });
+    }
+
+    const invoiceCtx = document.getElementById('invoiceMixChart');
+    if (invoiceCtx) {
+        new Chart(invoiceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: payload.invoiceStatusLabels || [],
+                datasets: [{
+                    data: payload.invoiceStatusValues || [],
+                    backgroundColor: ['#f59e0b', '#0ea5e9', '#16a34a', '#dc2626'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2,
+                    hoverOffset: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '58%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 11,
+                            boxHeight: 11,
+                            color: '#334155',
+                            font: { size: 11, weight: '600' },
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const maintenanceCtx = document.getElementById('maintenanceChart');
+    if (maintenanceCtx) {
+        new Chart(maintenanceCtx, {
+            type: 'bar',
+            data: {
+                labels: payload.maintenanceStatusLabels || [],
+                datasets: [{
+                    label: 'Requests',
+                    data: payload.maintenanceStatusValues || [],
+                    backgroundColor: ['#1d4ed8', '#f59e0b', '#16a34a', '#475569'],
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                ...baseOptions,
+                plugins: {
+                    ...baseOptions.plugins,
+                    legend: { display: false },
+                },
+            },
+        });
+    }
+})();
+</script>
 @endsection

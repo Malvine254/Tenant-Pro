@@ -21,7 +21,10 @@ class User extends Authenticatable
         'name', 'email', 'password', 'first_name', 'last_name',
         'phone_number', 'profile_image_url', 'emergency_contact_name',
         'emergency_contact_phone', 'bio', 'is_active', 'role_id',
-        'fcm_token',
+        'fcm_token', 'requires_subscription', 'billing_status',
+        'trial_started_at', 'trial_ends_at', 'service_paid_until',
+        'subscription_started_at', 'subscription_last_paid_at',
+        'monthly_service_fee',
     ];
 
     protected $hidden = [
@@ -35,6 +38,13 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'requires_subscription' => 'boolean',
+            'trial_started_at' => 'datetime',
+            'trial_ends_at' => 'datetime',
+            'service_paid_until' => 'datetime',
+            'subscription_started_at' => 'datetime',
+            'subscription_last_paid_at' => 'datetime',
+            'monthly_service_fee' => 'decimal:2',
         ];
     }
 
@@ -46,4 +56,26 @@ class User extends Authenticatable
     public function maintenanceRequests() { return $this->hasMany(MaintenanceRequest::class, 'tenant_id'); }
     public function appNotifications() { return $this->hasMany(Notification::class); }
     public function supportConversations() { return $this->hasMany(SupportConversation::class, 'tenant_user_id'); }
+
+    public function isLandlord(): bool
+    {
+        return $this->role?->name === 'LANDLORD';
+    }
+
+    public function hasActiveServiceAccess(): bool
+    {
+        if (!$this->isLandlord()) {
+            return true;
+        }
+
+        if (!$this->requires_subscription) {
+            return true;
+        }
+
+        if ($this->service_paid_until && $this->service_paid_until->isFuture()) {
+            return true;
+        }
+
+        return $this->trial_ends_at && $this->trial_ends_at->isFuture();
+    }
 }

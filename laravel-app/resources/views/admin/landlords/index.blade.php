@@ -288,6 +288,7 @@
                         <th>Landlord</th>
                         <th>Phone</th>
                         <th>Portfolio</th>
+                        <th>Subscription</th>
                         <th>Collected This Month</th>
                         <th>Outstanding</th>
                         <th>Status</th>
@@ -325,6 +326,21 @@
                                     <span class="landlord-pill">{{ $landlord->tenants_count }} tenants</span>
                                 </div>
                             </td>
+                            <td>
+                                @php
+                                    $billingTone = match($landlord->billing_status) {
+                                        'active' => 'badge-green',
+                                        'trial' => 'badge-blue',
+                                        'past_due' => 'badge-red',
+                                        default => 'badge-gray',
+                                    };
+                                @endphp
+                                <div class="landlord-muted" style="display:grid;gap:5px;">
+                                    <span class="badge {{ $billingTone }}">{{ strtoupper(str_replace('_', ' ', $landlord->billing_status ?? 'not_required')) }}</span>
+                                    <span>Trial ends: {{ $landlord->trial_ends_at?->format('d M Y') ?? '-' }}</span>
+                                    <span>Paid until: {{ $landlord->service_paid_until?->format('d M Y') ?? '-' }}</span>
+                                </div>
+                            </td>
                             <td><span class="landlord-money">KSh {{ number_format($landlord->collected_this_month, 2) }}</span></td>
                             <td><span class="landlord-money red">KSh {{ number_format($landlord->outstanding_balance, 2) }}</span></td>
                             <td>
@@ -335,6 +351,13 @@
                             <td>
                                 <div class="landlord-row-actions">
                                     <a href="{{ route('admin.landlords.edit', $landlord) }}" class="btn btn-secondary">Edit</a>
+                                    <form method="POST" action="{{ route('admin.landlords.payments.record', $landlord) }}">
+                                        @csrf
+                                        <input type="hidden" name="months" value="1">
+                                        <button type="submit" class="btn btn-primary" onclick="return confirm('Record one month service payment for this landlord?')">
+                                            Mark Paid +1M
+                                        </button>
+                                    </form>
                                     <form method="POST" action="{{ route('admin.landlords.status', $landlord) }}">
                                         @csrf @method('PATCH')
                                         <input type="hidden" name="is_active" value="{{ $landlord->is_active ? 0 : 1 }}">

@@ -169,10 +169,10 @@ class HomeViewModel @Inject constructor(
                         result.data
                     }
                     val outstanding = invoices
-                        .filter { it.status in setOf("PENDING", "PARTIAL", "OVERDUE") }
+                        .filter { it.statusCode() in setOf("PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID", "OVERDUE") }
                         .sumOf { it.effectiveBalance() }
-                    val pending  = invoices.count { it.status == "PENDING" || it.status == "PARTIAL" }
-                    val overdue  = invoices.count { it.status == "OVERDUE" }
+                    val pending  = invoices.count { it.statusCode() in setOf("PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID") }
+                    val overdue  = invoices.count { it.statusCode() == "OVERDUE" }
                     val paid     = invoices.sumOf { it.paidAmount }
                     val propUnit = invoices.firstOrNull()?.unit?.let { u ->
                         listOfNotNull(u.property?.name, u.unitName).joinToString(" · ")
@@ -212,8 +212,9 @@ class HomeViewModel @Inject constructor(
                         .takeIf { it > 0.0 }
                         ?: rent
 
-                    val thisMonthInvoices = invoices.filter { inv ->
+                    val dueAndOverdueInvoices = invoices.filter { inv ->
                         try {
+                            val isOverdue = inv.statusCode() == "OVERDUE"
                             val periodMatches =
                                 inv.periodYear == thisYear && inv.periodMonth == thisMonth + 1
                             val dueDateMatches = inv.dueDate?.take(10)?.let { dateStr ->
@@ -221,30 +222,12 @@ class HomeViewModel @Inject constructor(
                                 cal.time = date
                                 cal.get(Calendar.YEAR) == thisYear && cal.get(Calendar.MONTH) == thisMonth
                             } ?: false
-                            periodMatches || dueDateMatches
+                            isOverdue || periodMatches || dueDateMatches
                         } catch (_: Exception) { false }
                     }
 
-                    val fallbackBillItems = if (thisMonthInvoices.isEmpty() && rentAmount > 0.0) {
-                        listOf(
-                            BillItem(
-                                id = "fallback-rent",
-                                billingType = "RENT",
-                                amount = rentAmount,
-                                paidAmount = 0.0,
-                                balance = rentAmount,
-                                dueDate = null,
-                                period = "$currentMonth",
-                                status = "PENDING",
-                                description = "Rent for $currentMonth"
-                            )
-                        )
-                    } else {
-                        emptyList()
-                    }
-
-                    val invoiceBillItems = thisMonthInvoices
-                        .filter { it.status != "CANCELLED" }
+                    val invoiceBillItems = dueAndOverdueInvoices
+                        .filter { it.statusCode() != "CANCELLED" }
                         .map { inv ->
                             BillItem(
                                 id = inv.id,
@@ -259,12 +242,12 @@ class HomeViewModel @Inject constructor(
                             )
                         }
 
-                    val billItems = (invoiceBillItems + fallbackBillItems)
-                        .filter { it.status != "CANCELLED" }
+                    val billItems = invoiceBillItems
+                        .filter { it.status.uppercase(Locale.ROOT) != "CANCELLED" }
                         .sortedBy { when (it.billingType.uppercase()) { "RENT" -> 0; "WATER" -> 1; "GARBAGE" -> 2; else -> 3 } }
 
                     val totalDueThisMonth = billItems
-                        .filter { it.status in setOf("PENDING", "PARTIAL", "OVERDUE") }
+                        .filter { it.status.uppercase(Locale.ROOT) in setOf("PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID", "OVERDUE") }
                         .sumOf { it.balance }
 
                     _summaryState.value = Resource.Success(
@@ -346,3 +329,5 @@ class HomeViewModel @Inject constructor(
         }
     }
 }
+
+private fun Invoice.statusCode(): String = status.uppercase(Locale.ROOT)

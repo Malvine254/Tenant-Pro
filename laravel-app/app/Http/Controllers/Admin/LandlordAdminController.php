@@ -7,11 +7,17 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\LandlordSubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class LandlordAdminController extends Controller
 {
+    public function __construct(
+        private readonly LandlordSubscriptionService $subscriptionService,
+    ) {
+    }
+
     public function index(Request $request)
     {
         abort_if($this->isLandlord($request->user()), 403);
@@ -84,6 +90,8 @@ class LandlordAdminController extends Controller
             'is_active' => true,
         ]);
 
+        $this->subscriptionService->initializeTrial($user);
+
         return redirect()
             ->route('admin.properties.create', ['landlord_id' => $user->id])
             ->with('success', 'Landlord created. You can now assign a property to them.');
@@ -141,6 +149,20 @@ class LandlordAdminController extends Controller
         $landlord->update(['is_active' => (bool) $data['is_active']]);
 
         return back()->with('success', 'Landlord status updated.');
+    }
+
+    public function recordPayment(Request $request, User $landlord)
+    {
+        abort_if($this->isLandlord($request->user()), 403);
+        abort_unless($this->isLandlord($landlord), 404);
+
+        $data = $request->validate([
+            'months' => 'required|integer|min:1|max:24',
+        ]);
+
+        $this->subscriptionService->recordPayment($landlord, (int) $data['months']);
+
+        return back()->with('success', 'Subscription payment recorded for '.$data['months'].' month(s).');
     }
 
     private function isLandlord(?User $user): bool

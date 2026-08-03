@@ -14,9 +14,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $demoAccountsEnabled = (bool) env('DEMO_ACCOUNTS_ENABLED', app()->environment('local', 'testing'));
+
         $this->call([
             RoleSeeder::class,
             AdminUserSeeder::class,
         ]);
+
+        if ($demoAccountsEnabled) {
+            $this->call([
+                'Database\\Seeders\\DemoAccountsSeeder',
+            ]);
+        }
     }
 }

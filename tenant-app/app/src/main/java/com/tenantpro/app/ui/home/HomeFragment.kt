@@ -60,12 +60,15 @@ class HomeFragment : Fragment() {
         binding.swipeRefresh.setOnRefreshListener { viewModel.loadSummary() }
 
         binding.tvViewAll.setOnClickListener {
-            findNavController().navigate(R.id.invoicesFragment)
+            openInvoices(openOnly = false)
         }
 
         binding.btnPayAll.setOnClickListener {
-            findNavController().navigate(R.id.invoicesFragment)
+            openInvoices(openOnly = true)
         }
+
+        binding.tvTotalDue.setOnClickListener { openInvoices(openOnly = true) }
+        binding.tvBillCount.setOnClickListener { openInvoices(openOnly = true) }
 
         observeOfflineBanner()
 
@@ -248,7 +251,7 @@ class HomeFragment : Fragment() {
 
             // Pay button
             row.btnPayBill.setOnClickListener {
-                findNavController().navigate(R.id.invoicesFragment)
+                openInvoices(openOnly = true)
             }
             // Outline color matching bill type
             row.btnPayBill.setStrokeColorResource(
@@ -274,9 +277,16 @@ class HomeFragment : Fragment() {
                 setPadding(12.dp(), 10.dp(), 12.dp(), 14.dp())
                 isClickable = true
                 isFocusable = true
-                setOnClickListener { findNavController().navigate(R.id.invoicesFragment) }
+                setOnClickListener { openInvoices(openOnly = true) }
             })
         }
+    }
+
+    private fun openInvoices(openOnly: Boolean) {
+        val bundle = Bundle().apply {
+            if (openOnly) putString("initialFilter", "OPEN")
+        }
+        findNavController().navigate(R.id.invoicesFragment, bundle)
     }
 
     private data class BillStyle(

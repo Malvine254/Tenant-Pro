@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.firstOrNull
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+import java.net.ConnectException
+import java.net.UnknownHostException
 import java.time.Instant
 
 class NotificationSyncWorker(
@@ -32,7 +34,11 @@ class NotificationSyncWorker(
             syncNotifications(api, dataStore)
             syncSupportReplies(api, dataStore)
             Result.success()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            if (e is ConnectException || e is UnknownHostException) {
+                // Local server may be offline temporarily; avoid rapid retry storms.
+                return Result.success()
+            }
             Result.retry()
         }
     }

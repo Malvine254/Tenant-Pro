@@ -46,6 +46,13 @@ import java.util.Locale
 @AndroidEntryPoint
 class InvoicesFragment : Fragment() {
 
+    companion object {
+        private const val ARG_INITIAL_FILTER = "initialFilter"
+        private const val FILTER_OPEN = "OPEN"
+        private const val FILTER_PAID = "PAID"
+        private const val FILTER_OVERDUE = "OVERDUE"
+    }
+
     private var _binding: FragmentInvoicesBinding? = null
     private val binding get() = _binding!!
     private val viewModel: InvoicesViewModel by viewModels()
@@ -100,6 +107,7 @@ class InvoicesFragment : Fragment() {
         setupSortToggle()
         setupChipFilters()
         setupPagination()
+        applyInitialFilterFromArgs()
         observeInvoices()
     }
 
@@ -138,13 +146,23 @@ class InvoicesFragment : Fragment() {
     private fun setupChipFilters() {
         binding.chipGroupFilter.setOnCheckedStateChangeListener { _, checkedIds ->
             selectedStatusFilter = when {
-                checkedIds.contains(R.id.chipPending)   -> "PENDING"
-                checkedIds.contains(R.id.chipOverdue)   -> "OVERDUE"
-                checkedIds.contains(R.id.chipPaid)      -> "PAID"
+                checkedIds.contains(R.id.chipPending)   -> FILTER_OPEN
+                checkedIds.contains(R.id.chipOverdue)   -> FILTER_OVERDUE
+                checkedIds.contains(R.id.chipPaid)      -> FILTER_PAID
                 else -> null
             }
             applyFilters(resetPage = true)
         }
+    }
+
+    private fun applyInitialFilterFromArgs() {
+        when (arguments?.getString(ARG_INITIAL_FILTER)?.uppercase(Locale.ROOT)) {
+            FILTER_OPEN -> binding.chipGroupFilter.check(R.id.chipPending)
+            FILTER_PAID -> binding.chipGroupFilter.check(R.id.chipPaid)
+            FILTER_OVERDUE -> binding.chipGroupFilter.check(R.id.chipOverdue)
+            else -> binding.chipGroupFilter.check(R.id.chipAll)
+        }
+        arguments?.remove(ARG_INITIAL_FILTER)
     }
 
     // ── Pagination ───────────────────────────────────────────────────────────
@@ -196,10 +214,8 @@ class InvoicesFragment : Fragment() {
 
     private fun updateSummaryCards(invoices: List<Invoice>) {
         val paid = invoices.filter { it.status.uppercase() == "PAID" }
-        val pending = invoices.filter {
-            it.status.uppercase() == "PENDING" || it.status.uppercase() == "OVERDUE"
-        }
-        val overdue = invoices.filter { it.status.uppercase() == "OVERDUE" }
+        val pending = invoices.filter { isOpenStatus(it.status) }
+        val overdue = invoices.filter { it.statusCode() == FILTER_OVERDUE }
 
         binding.tvPaidAmount.text = paid.sumOf { it.paidAmount }.toKes()
         binding.tvPaidCount.text  = "Paid"
@@ -226,8 +242,12 @@ class InvoicesFragment : Fragment() {
                 billing.contains(search) || status.contains(search)
         }
 
-        val chipFiltered = if (selectedStatusFilter == null) searched
-        else searched.filter { it.status.uppercase() == selectedStatusFilter }
+        val chipFiltered = when (selectedStatusFilter) {
+            FILTER_OPEN -> searched.filter { isOpenStatus(it.status) }
+            FILTER_PAID -> searched.filter { it.statusCode() == FILTER_PAID }
+            FILTER_OVERDUE -> searched.filter { it.statusCode() == FILTER_OVERDUE }
+            else -> searched
+        }
 
         filteredList = if (sortByDateAscending) {
             chipFiltered.sortedWith(
@@ -270,11 +290,19 @@ class InvoicesFragment : Fragment() {
     private fun totalPages(): Int =
         if (filteredList.isEmpty()) 1 else ((filteredList.size - 1) / pageSize) + 1
 
-    private fun statusPriority(status: String): Int = when (status.uppercase()) {
-        "PENDING" -> 0
-        "OVERDUE" -> 1
-        else      -> 2
+    private fun statusPriority(status: String): Int = when (statusCode(status)) {
+        FILTER_OVERDUE -> 0
+        "PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID" -> 1
+        FILTER_PAID -> 2
+        else -> 3
     }
+
+    private fun isOpenStatus(status: String): Boolean =
+        statusCode(status) in setOf("PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID", FILTER_OVERDUE)
+
+    private fun statusCode(status: String): String = status.uppercase(Locale.ROOT)
+
+    private fun Invoice.statusCode(): String = statusCode(status)
 
     // ── Detail dialog ─────────────────────────────────────────────────────────
 

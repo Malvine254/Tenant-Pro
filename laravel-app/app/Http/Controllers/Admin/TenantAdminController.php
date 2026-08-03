@@ -20,7 +20,18 @@ class TenantAdminController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $tenants = Tenant::with(['user', 'unit.property'])
+        $tenants = Tenant::with([
+            'user',
+            'unit.property',
+            'user.tenancies' => function ($tenancyQuery) use ($user) {
+                $tenancyQuery->where('is_active', true)
+                    ->with(['unit.property'])
+                    ->when(
+                        $this->isLandlord($user),
+                        fn($query) => $query->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id))
+                    );
+            },
+        ])
             ->when($this->isLandlord($user), fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id)))
             ->when($request->search, fn($q) => $q->whereHas('user', function ($u) use ($request) {
                 $u->where('name', 'like', "%{$request->search}%")
@@ -113,7 +124,7 @@ class TenantAdminController extends Controller
 
     public function assign(Request $request)
     {
-        $tenantUsers = $this->unassignedTenantUsers($request)->get();
+        $tenantUsers = $this->tenantUsersForAssignment($request)->get();
         $units = $this->availableUnits($request);
         $properties = $this->assignableProperties($request);
 
@@ -134,7 +145,6 @@ class TenantAdminController extends Controller
         $tenantUser = User::where('id', $data['user_id'])
             ->whereHas('role', fn($role) => $role->where('name', 'TENANT'))
             ->firstOrFail();
-        abort_if($tenantUser->tenant()->where('is_active', true)->exists(), 422, 'This tenant already has an active unit assignment.');
 
         $unit = Unit::with('property')->findOrFail($data['unit_id']);
         abort_if($unit->property_id !== $data['property_id'], 422, 'The selected unit does not belong to this property.');
@@ -142,10 +152,17 @@ class TenantAdminController extends Controller
         abort_if($unit->tenant()->where('is_active', true)->exists(), 422, 'This unit already has an active tenant.');
 
         $tenant = DB::transaction(function () use ($tenantUser, $unit, $data) {
+            $existingTenancy = Tenant::where('user_id', $tenantUser->id)
+                ->where('unit_id', $unit->id)
+                ->first();
+
+            if ($existingTenancy?->is_active) {
+                abort(422, 'This tenant already has an active assignment for the selected unit.');
+            }
+
             $tenant = Tenant::updateOrCreate(
-                ['user_id' => $tenantUser->id],
+                ['user_id' => $tenantUser->id, 'unit_id' => $unit->id],
                 [
-                    'unit_id' => $unit->id,
                     'move_in_date' => $data['move_in_date'],
                     'move_out_date' => $data['move_out_date'] ?? null,
                     'is_active' => true,
@@ -181,7 +198,17 @@ class TenantAdminController extends Controller
         abort_if($this->isLandlord($user) && $tenant->unit?->property?->landlord_id !== $user->id, 403);
 
         $tenant->load(['user', 'unit.property', 'unit.invoices', 'unit.maintenanceRequests']);
-        return view('admin.tenants.show', compact('tenant'));
+        $allTenancies = Tenant::with(['unit.property'])
+            ->where('user_id', $tenant->user_id)
+            ->where('is_active', true)
+            ->when(
+                $this->isLandlord($user),
+                fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id))
+            )
+            ->orderByDesc('move_in_date')
+            ->get();
+
+        return view('admin.tenants.show', compact('tenant', 'allTenancies'));
     }
 
     public function unassign(Request $request, Tenant $tenant)
@@ -255,7 +282,19 @@ class TenantAdminController extends Controller
     {
         return User::with('role')
             ->whereHas('role', fn($role) => $role->where('name', 'TENANT'))
-            ->whereDoesntHave('tenant', fn($tenant) => $tenant->where('is_active', true))
+            ->whereDoesntHave('tenancies', fn($tenant) => $tenant->where('is_active', true))
+            ->when($request->search, fn($query) => $query->where(function ($userQuery) use ($request) {
+                $userQuery->where('name', 'like', "%{$request->search}%")
+                    ->orWhere('email', 'like', "%{$request->search}%")
+                    ->orWhere('phone_number', 'like', "%{$request->search}%");
+            }))
+            ->orderBy('name');
+    }
+
+    private function tenantUsersForAssignment(Request $request)
+    {
+        return User::with('role')
+            ->whereHas('role', fn($role) => $role->where('name', 'TENANT'))
             ->when($request->search, fn($query) => $query->where(function ($userQuery) use ($request) {
                 $userQuery->where('name', 'like', "%{$request->search}%")
                     ->orWhere('email', 'like', "%{$request->search}%")

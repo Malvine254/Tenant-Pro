@@ -19,7 +19,14 @@ Route::get('/invite', function (Request $request) {
     $code = strtoupper(trim((string) $request->query('code')));
     abort_if($code === '' || ! preg_match('/^[A-Z0-9]+$/', $code), 404);
 
-    return redirect()->away('tenantpro://invite?code='.urlencode($code));
+	$downloadUrl = env('TENANT_APP_DOWNLOAD_URL', rtrim(config('app.url'), '/').'/download/apk');
+	$deepLink = 'tenantpro://invite?code='.urlencode($code);
+
+	return view('site.invite-app', [
+		'code' => $code,
+		'downloadUrl' => $downloadUrl,
+		'deepLink' => $deepLink,
+	]);
 })->name('tenant.invite.open');
 
 // Public download endpoint (no auth required)
@@ -55,10 +62,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
 	Route::post('/logout', [AuthAdminController::class, 'logout'])->name('logout');
 
 	// Protected admin routes
-	Route::middleware(['auth'])->group(function () {
+	Route::middleware(['auth', 'admin.role:SUPER_ADMIN,ADMIN,LANDLORD'])->group(function () {
 		Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-		Route::patch('/landlords/{landlord}/status', [LandlordAdminController::class, 'updateStatus'])->name('landlords.status');
-		Route::resource('/landlords', LandlordAdminController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+
+		Route::middleware('admin.role:SUPER_ADMIN,ADMIN')->group(function () {
+			Route::patch('/landlords/{landlord}/status', [LandlordAdminController::class, 'updateStatus'])->name('landlords.status');
+			Route::post('/landlords/{landlord}/payments', [LandlordAdminController::class, 'recordPayment'])->name('landlords.payments.record');
+			Route::resource('/landlords', LandlordAdminController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+			Route::get('/deployment-tools', [DeploymentToolsController::class, 'index'])->name('deployment-tools.index');
+			Route::post('/deployment-tools', [DeploymentToolsController::class, 'run'])->name('deployment-tools.run');
+		});
+
 		Route::get('/units', [PropertyUnitAdminController::class, 'index'])->name('units.index');
 		Route::get('/properties/{property}/units/create', [PropertyUnitAdminController::class, 'create'])->name('properties.units.create');
 		Route::post('/properties/{property}/units', [PropertyUnitAdminController::class, 'store'])->name('properties.units.store');
@@ -85,8 +99,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 		Route::patch('/chats/{supportConversation}/toggle', [SupportChatAdminController::class, 'toggle'])->name('chats.toggle');
 		Route::get('/chats/{supportConversation}/state', [SupportChatAdminController::class, 'state'])->name('chats.state');
 		Route::post('/chats/{supportConversation}/typing', [SupportChatAdminController::class, 'typing'])->name('chats.typing');
-		Route::get('/deployment-tools', [DeploymentToolsController::class, 'index'])->name('deployment-tools.index');
-		Route::post('/deployment-tools', [DeploymentToolsController::class, 'run'])->name('deployment-tools.run');
 		Route::get('/downloads', [DownloadsController::class, 'index'])->name('downloads.index');
 		Route::get('/downloads/apk/download', function () {
 			$filePath = public_path('downloads/app-debug.apk');

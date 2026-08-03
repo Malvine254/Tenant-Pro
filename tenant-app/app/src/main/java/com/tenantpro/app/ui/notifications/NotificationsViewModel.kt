@@ -52,7 +52,7 @@ class NotificationsViewModel @Inject constructor(
                     pollingJob = null
                     break
                 }
-                loadNotifications(emitErrors = false, notifyDevice = true)
+                loadNotifications(emitErrors = false, notifyDevice = true, showLoading = false)
                 delay(POLLING_INTERVAL_MS)
             }
         }
@@ -63,7 +63,11 @@ class NotificationsViewModel @Inject constructor(
         pollingJob = null
     }
 
-    fun loadNotifications(emitErrors: Boolean = true, notifyDevice: Boolean = true) {
+    fun loadNotifications(
+        emitErrors: Boolean = true,
+        notifyDevice: Boolean = true,
+        showLoading: Boolean = true,
+    ) {
         viewModelScope.launch {
             if (dataStoreManager.accessToken.firstOrNull().isNullOrBlank()) {
                 stopPolling()
@@ -71,12 +75,14 @@ class NotificationsViewModel @Inject constructor(
                 return@launch
             }
 
-            _loading.value = true
+            if (showLoading) _loading.value = true
             when (val result = repository.getNotifications()) {
                 is Resource.Success -> {
                     // FCM is the single device-alert source. Polling only refreshes the inbox.
                     handleDeviceAlerts(result.data, false)
-                    _items.value = result.data
+                    if (_items.value != result.data) {
+                        _items.value = result.data
+                    }
                 }
                 is Resource.Error -> {
                     if (result.message.contains("session has expired", ignoreCase = true)) {
@@ -87,7 +93,7 @@ class NotificationsViewModel @Inject constructor(
                 }
                 Resource.Loading -> Unit
             }
-            _loading.value = false
+            if (showLoading) _loading.value = false
         }
     }
 
@@ -153,6 +159,6 @@ class NotificationsViewModel @Inject constructor(
     }
 
     companion object {
-        private const val POLLING_INTERVAL_MS = 5_000L
+        private const val POLLING_INTERVAL_MS = 30_000L
     }
 }

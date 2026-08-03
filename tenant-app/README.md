@@ -77,7 +77,7 @@ backend.port=3000
 
 **For Android Emulator:**
 ```properties
-backend.host=127.0.0.1  # Used with adb reverse tcp:3000 tcp:3000
+backend.host=10.0.2.2
 backend.port=3000
 ```
 

@@ -16,6 +16,7 @@ import com.tenantpro.app.utils.toBillingLabel
 import com.tenantpro.app.utils.toDisplayDate
 import com.tenantpro.app.utils.toKes
 import com.tenantpro.app.utils.toStatusLabel
+import java.util.Locale
 
 class InvoiceAdapter(
     private val onPayClick: (Invoice) -> Unit,
@@ -36,6 +37,7 @@ class InvoiceAdapter(
             val effectiveTotal = invoice.effectiveTotalAmount()
             val remaining = invoice.effectiveBalance()
             val displayPeriod = invoice.displayPeriod()
+            val statusCode = invoice.status.uppercase(Locale.ROOT)
 
             val typeColor = when (invoice.billingType.uppercase()) {
                 "RENT" -> Color.parseColor("#2563EB")
@@ -72,22 +74,41 @@ class InvoiceAdapter(
                 invoice.unit?.unitName
             ).joinToString(" · ").ifBlank { "—" }
             binding.tvAmount.text = effectiveTotal.toKes()
+            binding.tvBalance.text = "Balance ${remaining.toKes()}"
+            binding.tvBalance.visibility = if (remaining > 0) View.VISIBLE else View.GONE
             binding.tvPaid.text = "Paid ${invoice.paidAmount.toKes()}"
             binding.tvDue.text = "Due ${invoice.dueDate.toDisplayDate()}"
             binding.tvStatus.text = invoice.status.toStatusLabel()
 
-            val (badgeBg, badgeTextColor) = when (invoice.status.uppercase()) {
+            val (badgeBg, badgeTextColor, accentColor) = when (statusCode) {
                 "PAID" -> Pair(R.drawable.bg_badge_green, R.color.badge_green_text)
                 "OVERDUE" -> Pair(R.drawable.bg_badge_red, R.color.badge_red_text)
                 "CANCELLED" -> Pair(R.drawable.bg_badge_gray, R.color.badge_gray_text)
                 else -> Pair(R.drawable.bg_badge_yellow, R.color.badge_yellow_text)
+            }.let { pair ->
+                val accent = when (statusCode) {
+                    "PAID" -> R.color.success
+                    "OVERDUE" -> R.color.error
+                    "CANCELLED" -> R.color.on_surface_variant
+                    else -> R.color.warning
+                }
+                Triple(pair.first, pair.second, accent)
             }
             binding.tvStatus.setBackgroundResource(badgeBg)
             binding.tvStatus.setTextColor(
                 ContextCompat.getColor(binding.tvStatus.context, badgeTextColor)
             )
+            binding.viewStatusAccent.setBackgroundColor(
+                ContextCompat.getColor(binding.viewStatusAccent.context, accentColor)
+            )
+            binding.tvDue.setTextColor(
+                ContextCompat.getColor(
+                    binding.tvDue.context,
+                    if (statusCode == "PAID") R.color.success else R.color.error
+                )
+            )
 
-            val canPay = invoice.status.uppercase() in setOf(
+            val canPay = statusCode in setOf(
                 "PENDING",
                 "UNPAID",
                 "PARTIAL",

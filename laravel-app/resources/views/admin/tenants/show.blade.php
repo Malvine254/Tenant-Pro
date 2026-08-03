@@ -37,6 +37,29 @@
     </div>
 </div>
 
+<div class="card" style="margin-bottom:16px;">
+    <h3 style="font-size:13px;color:#94a3b8;margin-bottom:12px;text-transform:uppercase;">Active Unit Assignments</h3>
+    <table>
+        <thead><tr><th>Unit</th><th>Property</th><th>Move-in</th><th>Status</th></tr></thead>
+        <tbody>
+            @forelse(($allTenancies ?? collect()) as $assignment)
+            <tr>
+                <td>{{ $assignment->unit?->unit_number ?? '—' }}</td>
+                <td>{{ $assignment->unit?->property?->name ?? '—' }}</td>
+                <td style="font-size:13px;">{{ $assignment->move_in_date?->format('d M Y') }}</td>
+                <td>
+                    <span class="badge {{ $assignment->is_active ? 'badge-green' : 'badge-gray' }}">
+                        {{ $assignment->is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                </td>
+            </tr>
+            @empty
+            <tr><td colspan="4" style="color:#94a3b8;">No active assignments found.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
 @if($tenant->is_active)
 <div class="card" style="margin-bottom:16px;border-color:#fecaca;background:#fff7f7;">
     <h3 style="font-size:13px;color:#991b1b;margin-bottom:10px;text-transform:uppercase;">Close Tenancy / Move Out</h3>

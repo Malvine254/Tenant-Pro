@@ -17,11 +17,14 @@ if [ "$TARGET" = "auto" ]; then
 fi
 
 if [ "$TARGET" = "emulator" ]; then
-    NETWORK_IP="127.0.0.1"
-    echo "✅ Using emulator localhost with adb reverse: $NETWORK_IP"
+    NETWORK_IP="10.0.2.2"
+    echo "✅ Using emulator host loopback mapping: $NETWORK_IP"
     if command -v adb >/dev/null 2>&1; then
-        adb reverse tcp:3000 tcp:3000 >/dev/null 2>&1
-        echo "✅ ADB reverse enabled for tcp:3000"
+        if adb reverse tcp:3000 tcp:3000 >/dev/null 2>&1; then
+            echo "✅ ADB reverse enabled for tcp:3000"
+        else
+            echo "⚠️  ADB reverse unavailable (continuing with 10.0.2.2 fallback)."
+        fi
     fi
 else
     echo "🔍 Detecting your network IP address for physical device..."
@@ -59,6 +62,13 @@ if [ -f "$LOCAL_PROPS" ]; then
         echo "# The app will automatically use this IP address to connect to your backend" >> "$LOCAL_PROPS"
         echo "backend.host=$NETWORK_IP" >> "$LOCAL_PROPS"
         echo "backend.port=3000" >> "$LOCAL_PROPS"
+    fi
+
+    if grep -q "^backend.baseUrl=" "$LOCAL_PROPS"; then
+        sed -i.bak "s|^backend.baseUrl=.*|backend.baseUrl=http\\://$NETWORK_IP\\:3000/api/|" "$LOCAL_PROPS"
+        rm "${LOCAL_PROPS}.bak" 2>/dev/null
+    else
+        echo "backend.baseUrl=http\\://$NETWORK_IP\\:3000/api/" >> "$LOCAL_PROPS"
     fi
     
     echo "✅ Updated local.properties with IP: $NETWORK_IP"

@@ -4,7 +4,7 @@
 @section('content')
 <div style="max-width:680px;">
     <h2 style="font-size:16px;font-weight:600;margin-bottom:6px;">Link Existing Tenant Account</h2>
-    <p style="font-size:13px;color:#64748b;margin-bottom:16px;">Use this only when a tenant already registered in the Android app. For normal onboarding, send an email invitation.</p>
+    <p style="font-size:13px;color:#64748b;margin-bottom:16px;">Use this for tenants already registered in the Android app. You can assign additional units to the same tenant account.</p>
     <div class="card">
         <form method="POST" action="{{ route('admin.tenants.assign.store') }}">
             @csrf
@@ -19,7 +19,7 @@
                     @endforeach
                 </select>
                 @if($tenantUsers->isEmpty())
-                    <div class="form-error">No unassigned tenant accounts found. Invite the tenant by email so they can register or sign in from the Android app.</div>
+                    <div class="form-error">No tenant accounts found yet. Invite the tenant by email so they can register or sign in from the Android app.</div>
                 @endif
                 @error('user_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>

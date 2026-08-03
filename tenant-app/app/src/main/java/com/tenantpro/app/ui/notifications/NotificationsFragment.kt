@@ -40,7 +40,9 @@ class NotificationsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnRefreshNotifications.setOnClickListener { viewModel.loadNotifications() }
+        binding.btnRefreshNotifications.setOnClickListener {
+            viewModel.loadNotifications(showLoading = true)
+        }
         binding.btnMarkAllRead.setOnClickListener { viewModel.markAllRead() }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -103,6 +105,16 @@ class NotificationsFragment : Fragment() {
         return listOf(prettyType, item.createdAt)
             .filter { it.isNotBlank() }
             .joinToString(" • ")
+    }
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.startPolling()
+    }
+
+    override fun onStop() {
+        viewModel.stopPolling()
+        super.onStop()
     }
 
     override fun onDestroyView() {

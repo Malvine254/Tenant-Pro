@@ -15,7 +15,7 @@ Write-Host "  Tenant Pro - Update Backend IP" -ForegroundColor Cyan
 Write-Host "=======================================" -ForegroundColor Cyan
 Write-Host ""
 
-$backendHost = "127.0.0.1"
+$backendHost = "10.0.2.2"
 $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 
 if ($Target -eq "auto") {
@@ -32,12 +32,16 @@ if ($Target -eq "auto") {
 }
 
 if ($Target -eq "emulator") {
-    Write-Host "Using emulator localhost with adb reverse: 127.0.0.1" -ForegroundColor Green
+    Write-Host "Using emulator host loopback mapping: 10.0.2.2" -ForegroundColor Green
     if (Test-Path $adb) {
         & $adb reverse tcp:3000 tcp:3000 | Out-Null
-        Write-Host "ADB reverse enabled for tcp:3000" -ForegroundColor Green
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "ADB reverse enabled for tcp:3000" -ForegroundColor Green
+        } else {
+            Write-Host "ADB reverse not available (continuing with 10.0.2.2 fallback)." -ForegroundColor Yellow
+        }
     } else {
-        Write-Host "ADB not found. Install Android SDK platform-tools or use -Target device." -ForegroundColor Yellow
+        Write-Host "ADB not found. Continuing with 10.0.2.2 host mapping." -ForegroundColor Yellow
     }
     Write-Host ""
 } else {
@@ -88,6 +92,8 @@ foreach ($line in $content) {
     if ($line -match "^backend\.host=") {
         $newContent += "backend.host=$backendHost"
         $ipUpdated = $true
+    } elseif ($line -match "^backend\.baseUrl=") {
+        $newContent += "backend.baseUrl=http\://$backendHost\:3000/api/"
     } else {
         $newContent += $line
     }
@@ -100,6 +106,10 @@ if (-not $ipUpdated) {
     $newContent += "# The app will automatically use this IP address"
     $newContent += "backend.host=$backendHost"
     $newContent += "backend.port=3000"
+}
+
+if (-not ($newContent | Where-Object { $_ -match "^backend\.baseUrl=" })) {
+    $newContent += "backend.baseUrl=http\://$backendHost\:3000/api/"
 }
 
 # Write back to file

@@ -3,11 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\LandlordSubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthAdminController extends Controller
 {
+    public function __construct(
+        private readonly LandlordSubscriptionService $subscriptionService,
+    ) {
+    }
+
     public function showLogin()
     {
         if (Auth::check()) {
@@ -33,6 +39,29 @@ class AuthAdminController extends Controller
                 return back()
                     ->withErrors(['email' => 'This account does not have access to the admin portal.'])
                     ->onlyInput('email');
+            }
+
+            if (!Auth::user()?->is_active) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()
+                    ->withErrors(['email' => 'This account is inactive. Contact a system administrator.'])
+                    ->onlyInput('email');
+            }
+
+            if ($role === 'LANDLORD') {
+                $evaluation = $this->subscriptionService->evaluate(Auth::user());
+                if (!$evaluation['allowed']) {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    return back()
+                        ->withErrors(['email' => $evaluation['message']])
+                        ->onlyInput('email');
+                }
             }
 
             $request->session()->regenerate();

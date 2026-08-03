@@ -11,14 +11,23 @@ use App\Models\Property;
 use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\LandlordSubscriptionService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private readonly LandlordSubscriptionService $subscriptionService,
+    ) {
+    }
+
     public function index()
     {
         $user = request()->user();
         $isLandlord = $user?->role?->name === 'LANDLORD';
+        $landlordAccess = $isLandlord
+            ? $this->subscriptionService->evaluate($user)
+            : ['allowed' => true, 'status' => 'not_required', 'message' => null];
 
         $propertiesQuery = Property::query()
             ->when($isLandlord, fn($q) => $q->where('landlord_id', $user->id));
@@ -97,6 +106,33 @@ class DashboardController extends Controller
         $recentPayments = (clone $paymentsQuery)->with(['invoice.tenant', 'invoice.unit.property'])->latest()->limit(5)->get();
         $recentInvitations = (clone $invitationsQuery)->with(['property', 'unit', 'sentBy'])->latest()->limit(5)->get();
 
+        $landlordSubscription = [
+            'trial' => 0,
+            'active' => 0,
+            'past_due' => 0,
+            'not_required' => 0,
+        ];
+
+        if (!$isLandlord) {
+            $landlordSubscription = [
+                'trial' => (clone $landlordsQuery)->where('billing_status', 'trial')->count(),
+                'active' => (clone $landlordsQuery)->where('billing_status', 'active')->count(),
+                'past_due' => (clone $landlordsQuery)->where('billing_status', 'past_due')->count(),
+                'not_required' => (clone $landlordsQuery)->where(function ($q) {
+                    $q->whereNull('billing_status')->orWhere('billing_status', 'not_required');
+                })->count(),
+            ];
+        }
+
+        $chartSeries = [
+            'monthlyRevenueLabels' => $monthlyRevenue->pluck('label')->values()->all(),
+            'monthlyRevenueValues' => $monthlyRevenue->pluck('amount')->values()->all(),
+            'invoiceStatusLabels' => $invoiceStatus->pluck('label')->values()->all(),
+            'invoiceStatusValues' => $invoiceStatus->pluck('count')->values()->all(),
+            'maintenanceStatusLabels' => $maintenanceStatus->pluck('label')->values()->all(),
+            'maintenanceStatusValues' => $maintenanceStatus->pluck('count')->values()->all(),
+        ];
+
         return view('admin.dashboard', compact(
             'stats',
             'monthlyRevenue',
@@ -106,7 +142,10 @@ class DashboardController extends Controller
             'recentMaintenance',
             'recentPayments',
             'recentInvitations',
-            'isLandlord'
+            'isLandlord',
+            'landlordSubscription',
+            'chartSeries',
+            'landlordAccess'
         ));
     }
 }

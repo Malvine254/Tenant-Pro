@@ -15,15 +15,15 @@ if (localPropertiesFile.exists()) {
     localPropertiesFile.inputStream().use { localProperties.load(it) }
 }
 
-// Get backend configuration. By default, use the hosted production API unless overridden in local.properties.
+// Get backend configuration. Prefer explicit host/port for local testing.
 val defaultBaseUrl = "https://app.starmaxltd.com/api/"
 val backendHost = localProperties.getProperty("backend.host")
 val backendPort = localProperties.getProperty("backend.port")
 val baseUrl = localProperties.getProperty("backend.baseUrl")
-    ?: if (!backendHost.isNullOrBlank() && !backendPort.isNullOrBlank()) {
+if (!backendHost.isNullOrBlank() && !backendPort.isNullOrBlank()) {
         "http://$backendHost:$backendPort/api/"
     } else {
-        defaultBaseUrl
+        baseUrl ?: defaultBaseUrl
     }
 val mobileApiKey = localProperties.getProperty("mobile.apiKey", "")
 

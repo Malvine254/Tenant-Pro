@@ -23,6 +23,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputEditText
@@ -284,10 +285,15 @@ class AccountSettingsFragment : Fragment() {
             hint = label
             setText(value)
             textSize = 14f
-            setTextColor(ContextCompat.getColor(requireContext(), R.color.on_surface))
-            setHintTextColor(ContextCompat.getColor(requireContext(), R.color.on_surface_variant))
+            setTextColor(themedColor(com.google.android.material.R.attr.colorOnSurface, R.color.on_surface))
+            setHintTextColor(
+                themedColor(
+                    com.google.android.material.R.attr.colorOnSurfaceVariant,
+                    R.color.on_surface_variant
+                )
+            )
             backgroundTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(requireContext(), R.color.primary)
+                themedColor(com.google.android.material.R.attr.colorPrimary, R.color.primary)
             )
             selectAll()
         }
@@ -297,7 +303,12 @@ class AccountSettingsFragment : Fragment() {
             hint = label
             setPadding(0, 6, 0, 6)
             boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
-            setBoxBackgroundColorResource(R.color.surface)
+            setBoxBackgroundColor(
+                themedColor(
+                    com.google.android.material.R.attr.colorSurfaceContainerHigh,
+                    R.color.surface
+                )
+            )
             setBoxStrokeColorStateList(dialogStrokeColors())
             hintTextColor = dialogHintColors()
             setHelperTextColor(dialogHintColors())
@@ -308,8 +319,8 @@ class AccountSettingsFragment : Fragment() {
         ContextThemeWrapper(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
 
     private fun dialogStrokeColors(): ColorStateList {
-        val primary = ContextCompat.getColor(requireContext(), R.color.primary)
-        val outline = ContextCompat.getColor(requireContext(), R.color.outline_variant)
+        val primary = themedColor(com.google.android.material.R.attr.colorPrimary, R.color.primary)
+        val outline = themedColor(com.google.android.material.R.attr.colorOutline, R.color.outline_variant)
         return ColorStateList(
             arrayOf(
                 intArrayOf(android.R.attr.state_focused),
@@ -321,8 +332,11 @@ class AccountSettingsFragment : Fragment() {
 
     private fun dialogHintColors(): ColorStateList =
         ColorStateList.valueOf(
-            ContextCompat.getColor(requireContext(), R.color.on_surface_variant)
+            themedColor(com.google.android.material.R.attr.colorOnSurfaceVariant, R.color.on_surface_variant)
         )
+
+    private fun themedColor(attr: Int, fallbackRes: Int): Int =
+        MaterialColors.getColor(requireContext(), attr, ContextCompat.getColor(requireContext(), fallbackRes))
 
     private fun persistReadPermission(uri: Uri) {
         val resolver = requireContext().contentResolver

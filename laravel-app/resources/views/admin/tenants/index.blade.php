@@ -29,7 +29,7 @@
             <tr>
                 <th>Name</th>
                 <th>Email</th>
-                <th>Unit</th>
+                <th>Units</th>
                 <th>Property</th>
                 <th>Move-in</th>
                 <th>M-Pesa Details</th>
@@ -47,8 +47,34 @@
                     <span>{{ $tenant->user->name }}</span>
                 </div></td>
                 <td style="color:#64748b;font-size:13px;">{{ $tenant->user->email }}</td>
-                <td>{{ $tenant->unit->unit_number }}</td>
-                <td>{{ $tenant->unit->property->name ?? '—' }}</td>
+                <td>
+                    @php
+                        $activeUnits = $tenant->user->tenancies
+                            ->filter(fn($tenancy) => $tenancy->is_active && $tenancy->unit)
+                            ->map(fn($tenancy) => $tenancy->unit->unit_number)
+                            ->unique()
+                            ->values();
+                    @endphp
+                    @if($activeUnits->isNotEmpty())
+                        {{ $activeUnits->join(', ') }}
+                    @else
+                        {{ $tenant->unit->unit_number }}
+                    @endif
+                </td>
+                <td>
+                    @php
+                        $activeProperties = $tenant->user->tenancies
+                            ->filter(fn($tenancy) => $tenancy->is_active && $tenancy->unit?->property)
+                            ->map(fn($tenancy) => $tenancy->unit->property->name)
+                            ->unique()
+                            ->values();
+                    @endphp
+                    @if($activeProperties->isNotEmpty())
+                        {{ $activeProperties->join(', ') }}
+                    @else
+                        {{ $tenant->unit->property->name ?? '—' }}
+                    @endif
+                </td>
                 <td style="font-size:13px;">{{ $tenant->move_in_date?->format('d M Y') }}</td>
                 <td>
                     <span class="badge badge-gray">Tenant-managed</span>
