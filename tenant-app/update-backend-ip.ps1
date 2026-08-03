@@ -2,6 +2,8 @@ param(
     [ValidateSet("auto", "emulator", "device")]
     [string]$Target = "auto",
 
+    [int]$Port = 0,
+
     [switch]$Install
 )
 
@@ -16,7 +18,21 @@ Write-Host "=======================================" -ForegroundColor Cyan
 Write-Host ""
 
 $backendHost = "10.0.2.2"
+$backendPort = 3000
 $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
+
+if ($Port -gt 0) {
+    $backendPort = $Port
+} else {
+    $candidatePorts = @(3000, 8000)
+    foreach ($candidate in $candidatePorts) {
+        $listener = Get-NetTCPConnection -LocalPort $candidate -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($listener) {
+            $backendPort = $candidate
+            break
+        }
+    }
+}
 
 if ($Target -eq "auto") {
     $Target = "device"
@@ -34,9 +50,9 @@ if ($Target -eq "auto") {
 if ($Target -eq "emulator") {
     Write-Host "Using emulator host loopback mapping: 10.0.2.2" -ForegroundColor Green
     if (Test-Path $adb) {
-        & $adb reverse tcp:3000 tcp:3000 | Out-Null
+        & $adb reverse tcp:$backendPort tcp:$backendPort | Out-Null
         if ($LASTEXITCODE -eq 0) {
-            Write-Host "ADB reverse enabled for tcp:3000" -ForegroundColor Green
+            Write-Host "ADB reverse enabled for tcp:$backendPort" -ForegroundColor Green
         } else {
             Write-Host "ADB reverse not available (continuing with 10.0.2.2 fallback)." -ForegroundColor Yellow
         }
@@ -92,8 +108,10 @@ foreach ($line in $content) {
     if ($line -match "^backend\.host=") {
         $newContent += "backend.host=$backendHost"
         $ipUpdated = $true
+    } elseif ($line -match "^backend\.port=") {
+        $newContent += "backend.port=$backendPort"
     } elseif ($line -match "^backend\.baseUrl=") {
-        $newContent += "backend.baseUrl=http\://$backendHost\:3000/api/"
+        $newContent += "backend.baseUrl=http\://$backendHost\:$backendPort/api/"
     } else {
         $newContent += $line
     }
@@ -105,11 +123,11 @@ if (-not $ipUpdated) {
     $newContent += "# Backend API Configuration"
     $newContent += "# The app will automatically use this IP address"
     $newContent += "backend.host=$backendHost"
-    $newContent += "backend.port=3000"
+    $newContent += "backend.port=$backendPort"
 }
 
 if (-not ($newContent | Where-Object { $_ -match "^backend\.baseUrl=" })) {
-    $newContent += "backend.baseUrl=http\://$backendHost\:3000/api/"
+    $newContent += "backend.baseUrl=http\://$backendHost\:$backendPort/api/"
 }
 
 # Write back to file
@@ -117,8 +135,8 @@ $newContent | Set-Content $localPropsPath -Encoding UTF8
 
 Write-Host "SUCCESS: Updated local.properties" -ForegroundColor Green
 Write-Host "Backend Host: $backendHost" -ForegroundColor Cyan
-Write-Host "Backend Port: 3000" -ForegroundColor Cyan
-Write-Host "Full URL: http://${backendHost}:3000/api/" -ForegroundColor Cyan
+Write-Host "Backend Port: $backendPort" -ForegroundColor Cyan
+Write-Host "Full URL: http://${backendHost}:${backendPort}/api/" -ForegroundColor Cyan
 Write-Host ""
 
 if ($Install) {

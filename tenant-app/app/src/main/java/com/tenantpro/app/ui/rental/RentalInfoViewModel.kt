@@ -80,6 +80,30 @@ class RentalInfoViewModel @Inject constructor(
             when (val invoiceResult = invoiceRepository.getInvoices()) {
                 is Resource.Success -> {
                     val invoices = invoiceResult.data
+                    if (units.isEmpty()) {
+                        units = invoices
+                            .mapNotNull { it.unit }
+                            .distinctBy { it.id }
+                            .map { unit ->
+                                val property = unit.property
+                                val address = listOfNotNull(
+                                    property?.addressLine,
+                                    property?.city
+                                ).joinToString(", ")
+                                RentalUnitItem(
+                                    tenancyId = "invoice-${unit.id}",
+                                    propertyName = property?.name ?: "—",
+                                    unitNumber = unit.unitName.ifBlank { "—" },
+                                    floor = unit.floor,
+                                    rentAmountText = unit.rentAmount?.toKes(),
+                                    moveInDate = "—",
+                                    address = address.ifBlank { "—" },
+                                    apartmentImageUrl = unit.displayImageUrl
+                                        ?: unit.imageUrls?.firstOrNull()
+                                        ?: property?.coverImageUrl,
+                                )
+                            }
+                    }
                     val total = invoices
                         .filter { it.status == "PENDING" || it.status == "OVERDUE" }
                         .sumOf { it.effectiveBalance() }

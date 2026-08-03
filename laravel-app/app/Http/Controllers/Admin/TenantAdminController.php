@@ -20,30 +20,40 @@ class TenantAdminController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $tenants = Tenant::with([
-            'user',
-            'unit.property',
-            'user.tenancies' => function ($tenancyQuery) use ($user) {
+        $tenantUsers = User::query()
+            ->with([
+                'role',
+                'tenancies' => function ($tenancyQuery) use ($user) {
+                    $tenancyQuery->where('is_active', true)
+                        ->with(['unit.property'])
+                        ->when(
+                            $this->isLandlord($user),
+                            fn($query) => $query->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id))
+                        )
+                        ->orderByDesc('move_in_date');
+                },
+            ])
+            ->whereHas('role', fn($role) => $role->where('name', 'TENANT'))
+            ->whereHas('tenancies', function ($tenancyQuery) use ($user) {
                 $tenancyQuery->where('is_active', true)
-                    ->with(['unit.property'])
                     ->when(
                         $this->isLandlord($user),
                         fn($query) => $query->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id))
                     );
-            },
-        ])
-            ->when($this->isLandlord($user), fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id)))
-            ->when($request->search, fn($q) => $q->whereHas('user', function ($u) use ($request) {
-                $u->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('email', 'like', "%{$request->search}%");
+            })
+            ->when($request->search, fn($query) => $query->where(function ($userQuery) use ($request) {
+                $userQuery->where('name', 'like', "%{$request->search}%")
+                    ->orWhere('email', 'like', "%{$request->search}%")
+                    ->orWhere('phone_number', 'like', "%{$request->search}%");
             }))
-            ->latest()->paginate(15);
+            ->orderBy('name')
+            ->paginate(15);
 
         $unassignedTenantUsers = $this->unassignedTenantUsers($request)
             ->limit(10)
             ->get();
 
-        return view('admin.tenants.index', compact('tenants', 'unassignedTenantUsers'));
+        return view('admin.tenants.index', compact('tenantUsers', 'unassignedTenantUsers'));
     }
 
     public function create(Request $request)

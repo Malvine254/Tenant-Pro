@@ -136,12 +136,16 @@ class LoginFragment : Fragment() {
             val hasBiometricSession = viewModel.hasSavedBiometricSession()
             val canAuthenticate = canAuthenticateWithBiometric()
 
+            if (!enabled) {
+                binding.btnBiometricLogin.visibility = View.GONE
+                return@launch
+            }
+
             binding.btnBiometricLogin.visibility = View.VISIBLE
             binding.btnBiometricLogin.isEnabled = enabled && hasBiometricSession && canAuthenticate
             binding.btnBiometricLogin.text = when {
                 enabled && hasBiometricSession && canAuthenticate -> "Unlock with biometric"
                 !canAuthenticate -> "Set phone lock for biometric"
-                !enabled -> "Enable biometric in Settings"
                 else -> "Sign in once to use biometric"
             }
         }

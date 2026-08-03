@@ -28,6 +28,7 @@ class DataStoreManager @Inject constructor(
         private val KEY_EMERGENCY_CONTACT = stringPreferencesKey("emergency_contact")
         private val KEY_PROFILE_BIO = stringPreferencesKey("profile_bio")
         private val KEY_QUERY_CHAT_HISTORY = stringPreferencesKey("query_chat_history")
+        private val KEY_PENDING_SUPPORT_QUEUE = stringPreferencesKey("pending_support_queue")
         private val KEY_LAST_NOTIFICATION_CHECKPOINT = stringPreferencesKey("last_notification_checkpoint")
         private val KEY_LAST_SUPPORT_REPLY_CHECKPOINT = stringPreferencesKey("last_support_reply_checkpoint")
         private val KEY_NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
@@ -60,6 +61,9 @@ class DataStoreManager @Inject constructor(
 
     val queryChatHistoryJson: Flow<String?> = context.dataStore.data
         .map { it[KEY_QUERY_CHAT_HISTORY] }
+
+    val pendingSupportQueueJson: Flow<String?> = context.dataStore.data
+        .map { it[KEY_PENDING_SUPPORT_QUEUE] }
 
     val lastNotificationCheckpoint: Flow<String?> = context.dataStore.data
         .map { it[KEY_LAST_NOTIFICATION_CHECKPOINT] }
@@ -119,6 +123,12 @@ class DataStoreManager @Inject constructor(
         }
     }
 
+    suspend fun savePendingSupportQueue(json: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_PENDING_SUPPORT_QUEUE] = json
+        }
+    }
+
     suspend fun saveLastNotificationCheckpoint(value: Long) {
         context.dataStore.edit { prefs ->
             prefs[KEY_LAST_NOTIFICATION_CHECKPOINT] = value.toString()
@@ -147,6 +157,21 @@ class DataStoreManager @Inject constructor(
         context.dataStore.edit { prefs ->
             prefs[KEY_BIOMETRIC_LOCK_ENABLED] = enabled
             if (!enabled) {
+                prefs.remove(KEY_BIOMETRIC_SESSION_TOKEN)
+            }
+        }
+    }
+
+    suspend fun saveSettingsPreferences(
+        notificationsEnabled: Boolean,
+        emailNotificationsEnabled: Boolean,
+        biometricLockEnabled: Boolean
+    ) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_NOTIFICATIONS_ENABLED] = notificationsEnabled
+            prefs[KEY_EMAIL_NOTIFICATIONS_ENABLED] = emailNotificationsEnabled
+            prefs[KEY_BIOMETRIC_LOCK_ENABLED] = biometricLockEnabled
+            if (!biometricLockEnabled) {
                 prefs.remove(KEY_BIOMETRIC_SESSION_TOKEN)
             }
         }

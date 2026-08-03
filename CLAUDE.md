@@ -303,11 +303,13 @@ Seed command: `npx prisma db seed`
 - Payment history per invoice
 - Maintenance request lifecycle (submit → assign → resolve)
 - Support conversation system with file attachments
+- Offline support message queue on Android with automatic resend when internet returns
 - In-app notifications with read/unread state
 - Analytics: revenue, occupancy, balances, monthly trends
 - Email OTP authentication
 - Password reset via OTP
 - JWT + RBAC security
+- App settings persistence in backend (`users.app_settings`) for cross-install restore (notifications/email/biometric preferences)
 - Scheduled payment reminders (cron)
 - Monthly recurring rent invoice generation anchored to each tenant-unit's last successful rent payment date
 - Admin user management
@@ -363,4 +365,4 @@ These integrations are identified but not yet built. Prioritize in future sessio
 
 ---
 
-*Last updated: 2026-08-03 — Monthly rent due now derives from each tenant-unit's last successful rent payment date, with recurring invoice generation integrated into daily reminders and payment-success flow. Multi-unit support remains active (composite unique on userId+unitId, getProfile returns tenantProfiles[], admin can assign/remove units, Android rental screen lists all assigned units).* 
+*Last updated: 2026-08-03 — Added durable app settings sync (DB-backed), offline support-message queue + auto-resend on reconnect, and stronger Android unit display fallback when profile tenancies are temporarily empty. Monthly rent due remains anchored to each tenant-unit's last successful rent payment date with recurring generation in reminders/payment flows. Multi-unit support remains active (composite unique on userId+unitId, getProfile returns tenantProfiles[], admin can assign/remove units, Android rental screen lists all assigned units).* 

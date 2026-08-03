@@ -4,6 +4,18 @@
 # detects the active LAN IP for a physical Android device.
 
 TARGET="${1:-auto}"
+PORT="${2:-auto}"
+BACKEND_PORT="3000"
+
+if [ "$PORT" != "auto" ] && [ -n "$PORT" ]; then
+    BACKEND_PORT="$PORT"
+elif command -v lsof >/dev/null 2>&1; then
+    if lsof -iTCP:3000 -sTCP:LISTEN -Pn >/dev/null 2>&1; then
+        BACKEND_PORT="3000"
+    elif lsof -iTCP:8000 -sTCP:LISTEN -Pn >/dev/null 2>&1; then
+        BACKEND_PORT="8000"
+    fi
+fi
 
 if [ "$TARGET" = "auto" ]; then
     TARGET="device"
@@ -20,8 +32,8 @@ if [ "$TARGET" = "emulator" ]; then
     NETWORK_IP="10.0.2.2"
     echo "✅ Using emulator host loopback mapping: $NETWORK_IP"
     if command -v adb >/dev/null 2>&1; then
-        if adb reverse tcp:3000 tcp:3000 >/dev/null 2>&1; then
-            echo "✅ ADB reverse enabled for tcp:3000"
+        if adb reverse tcp:$BACKEND_PORT tcp:$BACKEND_PORT >/dev/null 2>&1; then
+            echo "✅ ADB reverse enabled for tcp:$BACKEND_PORT"
         else
             echo "⚠️  ADB reverse unavailable (continuing with 10.0.2.2 fallback)."
         fi
@@ -61,14 +73,18 @@ if [ -f "$LOCAL_PROPS" ]; then
         echo "# Backend API Configuration" >> "$LOCAL_PROPS"
         echo "# The app will automatically use this IP address to connect to your backend" >> "$LOCAL_PROPS"
         echo "backend.host=$NETWORK_IP" >> "$LOCAL_PROPS"
-        echo "backend.port=3000" >> "$LOCAL_PROPS"
+        echo "backend.port=$BACKEND_PORT" >> "$LOCAL_PROPS"
     fi
 
     if grep -q "^backend.baseUrl=" "$LOCAL_PROPS"; then
-        sed -i.bak "s|^backend.baseUrl=.*|backend.baseUrl=http\\://$NETWORK_IP\\:3000/api/|" "$LOCAL_PROPS"
+        sed -i.bak "s|^backend.baseUrl=.*|backend.baseUrl=http\\://$NETWORK_IP\\:$BACKEND_PORT/api/|" "$LOCAL_PROPS"
         rm "${LOCAL_PROPS}.bak" 2>/dev/null
     else
-        echo "backend.baseUrl=http\\://$NETWORK_IP\\:3000/api/" >> "$LOCAL_PROPS"
+        echo "backend.baseUrl=http\\://$NETWORK_IP\\:$BACKEND_PORT/api/" >> "$LOCAL_PROPS"
+    fi
+    if grep -q "^backend.port=" "$LOCAL_PROPS"; then
+        sed -i.bak "s/^backend.port=.*/backend.port=$BACKEND_PORT/" "$LOCAL_PROPS"
+        rm "${LOCAL_PROPS}.bak" 2>/dev/null
     fi
     
     echo "✅ Updated local.properties with IP: $NETWORK_IP"
@@ -77,7 +93,7 @@ if [ -f "$LOCAL_PROPS" ]; then
     echo "   1. In Android Studio, click: File → Sync Project with Gradle Files"
     echo "   2. Rebuild and run your app"
     echo ""
-    echo "🌐 Your app will now connect to: http://$NETWORK_IP:3000/api/"
+    echo "🌐 Your app will now connect to: http://$NETWORK_IP:$BACKEND_PORT/api/"
 else
     echo "❌ local.properties file not found at: $LOCAL_PROPS"
     exit 1

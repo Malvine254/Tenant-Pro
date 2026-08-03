@@ -361,12 +361,12 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json($this->userPayload($request->user()->load(['role', 'tenant.unit.property'])));
+        return response()->json($this->userPayload($request->user()->load(['role', 'tenancies.unit.property'])));
     }
 
     public function profile(Request $request)
     {
-        return response()->json($this->userPayload($request->user()->load(['role', 'tenant.unit.property'])));
+        return response()->json($this->userPayload($request->user()->load(['role', 'tenancies.unit.property'])));
     }
 
     public function updateProfile(Request $request)
@@ -378,6 +378,7 @@ class AuthController extends Controller
             'profile_image_url' => $request->input('profile_image_url', $request->input('profileImageUrl')),
             'emergency_contact_name' => $request->input('emergency_contact_name', $request->input('emergencyContactName')),
             'emergency_contact_phone' => $request->input('emergency_contact_phone', $request->input('emergencyContactPhone')),
+            'app_settings' => $request->input('app_settings', $request->input('appSettings')),
         ]);
 
         $user = $request->user();
@@ -389,6 +390,10 @@ class AuthController extends Controller
             'emergency_contact_name' => 'nullable|string|max:255',
             'emergency_contact_phone' => 'nullable|string|max:30',
             'bio' => 'nullable|string|max:5000',
+            'app_settings' => 'nullable|array',
+            'app_settings.notificationsEnabled' => 'sometimes|boolean',
+            'app_settings.emailNotificationsEnabled' => 'sometimes|boolean',
+            'app_settings.biometricLockEnabled' => 'sometimes|boolean',
         ]);
 
         if (array_key_exists('first_name', $data) || array_key_exists('last_name', $data)) {
@@ -396,7 +401,7 @@ class AuthController extends Controller
         }
 
         $user->update($data);
-        return response()->json($this->userPayload($user->fresh()->load(['role', 'tenant.unit.property'])));
+        return response()->json($this->userPayload($user->fresh()->load(['role', 'tenancies.unit.property'])));
     }
 
     public function uploadProfileImage(Request $request)
@@ -406,7 +411,7 @@ class AuthController extends Controller
         $url = Storage::disk('public')->url($path);
         $request->user()->update(['profile_image_url' => $url]);
 
-        return response()->json($this->userPayload($request->user()->fresh()->load(['role', 'tenant.unit.property'])));
+        return response()->json($this->userPayload($request->user()->fresh()->load(['role', 'tenancies.unit.property'])));
     }
 
     public function saveDeviceToken(Request $request)
@@ -429,10 +434,12 @@ class AuthController extends Controller
             $tenant = null;
         }
 
-        $tenancies = Tenant::with(['unit.property'])
-            ->where('user_id', $user->id)
-            ->where('is_active', true)
-            ->get();
+        $tenancies = $user->relationLoaded('tenancies')
+            ? $user->tenancies->filter(fn ($tenancy) => (bool) $tenancy->is_active)->values()
+            : Tenant::with(['unit.property'])
+                ->where('user_id', $user->id)
+                ->where('is_active', true)
+                ->get();
 
         if ($tenancies->isEmpty() && $tenant) {
             $tenancies = collect([$tenant->loadMissing('unit.property')]);
@@ -446,8 +453,8 @@ class AuthController extends Controller
                 'id' => $tenant->id,
                 'userId' => $tenant->user_id,
                 'unitId' => $tenant->unit_id,
-                'moveInDate' => $tenant->move_in_date?->toDateString(),
-                'moveOutDate' => $tenant->move_out_date?->toDateString(),
+                'moveInDate' => $tenant->move_in_date ? date('Y-m-d', strtotime((string) $tenant->move_in_date)) : null,
+                'moveOutDate' => $tenant->move_out_date ? date('Y-m-d', strtotime((string) $tenant->move_out_date)) : null,
                 'isActive' => $tenant->is_active,
                 'unit' => $unit ? [
                     'id' => $unit->id,
@@ -471,6 +478,7 @@ class AuthController extends Controller
         })->values();
 
         $tenantProfile = $tenantProfiles->first();
+        $appSettings = is_array($user->app_settings) ? $user->app_settings : [];
 
         return [
             'id' => $user->id,
@@ -490,6 +498,11 @@ class AuthController extends Controller
             'tenant' => $tenantProfile,
             'tenantProfile' => $tenantProfile,
             'tenantProfiles' => $tenantProfiles,
+            'appSettings' => [
+                'notificationsEnabled' => (bool) ($appSettings['notificationsEnabled'] ?? true),
+                'emailNotificationsEnabled' => (bool) ($appSettings['emailNotificationsEnabled'] ?? true),
+                'biometricLockEnabled' => (bool) ($appSettings['biometricLockEnabled'] ?? false),
+            ],
         ];
     }
 }

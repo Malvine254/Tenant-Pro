@@ -19,12 +19,15 @@ if (localPropertiesFile.exists()) {
 val defaultBaseUrl = "https://app.starmaxltd.com/api/"
 val backendHost = localProperties.getProperty("backend.host")
 val backendPort = localProperties.getProperty("backend.port")
-val baseUrl = localProperties.getProperty("backend.baseUrl")
-if (!backendHost.isNullOrBlank() && !backendPort.isNullOrBlank()) {
-        "http://$backendHost:$backendPort/api/"
-    } else {
-        baseUrl ?: defaultBaseUrl
-    }
+val configuredBaseUrl = localProperties.getProperty("backend.baseUrl")
+val forceOnline = localProperties.getProperty("backend.useOnline", "false").toBoolean()
+val baseUrl = if (forceOnline) {
+    configuredBaseUrl ?: defaultBaseUrl
+} else if (!backendHost.isNullOrBlank() && !backendPort.isNullOrBlank()) {
+    "http://$backendHost:$backendPort/api/"
+} else {
+    configuredBaseUrl ?: defaultBaseUrl
+}
 val mobileApiKey = localProperties.getProperty("mobile.apiKey", "")
 
 android {

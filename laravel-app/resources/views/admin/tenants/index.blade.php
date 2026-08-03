@@ -4,6 +4,7 @@
 @section('content')
 <style>
 .tenant-person{display:flex;align-items:center;gap:10px}.tenant-avatar{width:38px;height:38px;flex:0 0 38px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:linear-gradient(135deg,#7656d8,#4f46e5);color:#fff;font-size:12px;font-weight:800}.tenant-avatar img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
+.tenancy-nested-wrap{padding:0!important;background:#f8fafc}.tenancy-nested{width:100%;border-collapse:collapse}.tenancy-nested th,.tenancy-nested td{padding:10px 12px;border-top:1px solid #e2e8f0;font-size:13px;text-align:left;vertical-align:middle}.tenancy-nested thead th{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#64748b;background:#f1f5f9}.tenancy-summary{font-size:12px;color:#64748b}.tenant-parent-row td{background:#fff}
 </style>
 <div class="admin-page-header">
     <div>
@@ -27,76 +28,104 @@
     <table>
         <thead>
             <tr>
-                <th>Name</th>
+                <th>Tenant</th>
                 <th>Email</th>
-                <th>Units</th>
-                <th>Property</th>
-                <th>Move-in</th>
-                <th>M-Pesa Details</th>
-                <th>Closing date</th>
+                <th>Phone</th>
+                <th>Active units</th>
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($tenants as $tenant)
-            <tr>
+            @forelse($tenantUsers as $tenantUser)
+            @php
+                $activeTenancies = $tenantUser->tenancies
+                    ->filter(fn($tenancy) => $tenancy->is_active && $tenancy->unit)
+                    ->values();
+                $activeUnits = $activeTenancies
+                    ->map(fn($tenancy) => $tenancy->unit->unit_number)
+                    ->unique()
+                    ->values();
+            @endphp
+            <tr class="tenant-parent-row">
                 <td><div class="tenant-person">
-                    @php $tenantInitials = collect(explode(' ', trim($tenant->user->name)))->filter()->take(2)->map(fn($part) => strtoupper(substr($part, 0, 1)))->implode(''); @endphp
-                    <span class="tenant-avatar">@if($tenant->user->profile_image_url)<img src="{{ str_starts_with($tenant->user->profile_image_url, 'http') ? $tenant->user->profile_image_url : asset(ltrim($tenant->user->profile_image_url, '/')) }}" alt="{{ $tenant->user->name }}">@else{{ $tenantInitials ?: 'T' }}@endif</span>
-                    <span>{{ $tenant->user->name }}</span>
+                    @php $tenantInitials = collect(explode(' ', trim($tenantUser->name)))->filter()->take(2)->map(fn($part) => strtoupper(substr($part, 0, 1)))->implode(''); @endphp
+                    <span class="tenant-avatar">@if($tenantUser->profile_image_url)<img src="{{ str_starts_with($tenantUser->profile_image_url, 'http') ? $tenantUser->profile_image_url : asset(ltrim($tenantUser->profile_image_url, '/')) }}" alt="{{ $tenantUser->name }}">@else{{ $tenantInitials ?: 'T' }}@endif</span>
+                    <div>
+                        <div>{{ $tenantUser->name }}</div>
+                        <div class="tenancy-summary">{{ $activeTenancies->count() }} active {{ $activeTenancies->count() === 1 ? 'tenancy' : 'tenancies' }}</div>
+                    </div>
                 </div></td>
-                <td style="color:#64748b;font-size:13px;">{{ $tenant->user->email }}</td>
+                <td style="color:#64748b;font-size:13px;">{{ $tenantUser->email }}</td>
+                <td>{{ $tenantUser->phone_number ?? '-' }}</td>
                 <td>
-                    @php
-                        $activeUnits = $tenant->user->tenancies
-                            ->filter(fn($tenancy) => $tenancy->is_active && $tenancy->unit)
-                            ->map(fn($tenancy) => $tenancy->unit->unit_number)
-                            ->unique()
-                            ->values();
-                    @endphp
                     @if($activeUnits->isNotEmpty())
                         {{ $activeUnits->join(', ') }}
                     @else
-                        {{ $tenant->unit->unit_number }}
+                        -
                     @endif
                 </td>
                 <td>
-                    @php
-                        $activeProperties = $tenant->user->tenancies
-                            ->filter(fn($tenancy) => $tenancy->is_active && $tenancy->unit?->property)
-                            ->map(fn($tenancy) => $tenancy->unit->property->name)
-                            ->unique()
-                            ->values();
-                    @endphp
-                    @if($activeProperties->isNotEmpty())
-                        {{ $activeProperties->join(', ') }}
-                    @else
-                        {{ $tenant->unit->property->name ?? '—' }}
-                    @endif
-                </td>
-                <td style="font-size:13px;">{{ $tenant->move_in_date?->format('d M Y') }}</td>
-                <td>
-                    <span class="badge badge-gray">Tenant-managed</span>
-                    <div style="font-size:11px;color:#94a3b8;margin-top:3px;">Not edited in admin</div>
-                </td>
-                <td style="font-size:13px;">
-                    {{ $tenant->move_out_date?->format('d M Y') ?? ($tenant->is_active ? 'Active tenancy' : '—') }}
-                </td>
-                <td>
-                    <span class="badge {{ $tenant->is_active ? 'badge-green' : 'badge-gray' }}">
-                        {{ $tenant->is_active ? 'Active' : 'Inactive' }}
+                    <span class="badge {{ $tenantUser->is_active ? 'badge-green' : 'badge-gray' }}">
+                        {{ $tenantUser->is_active ? 'Active account' : 'Inactive account' }}
                     </span>
                 </td>
-                <td><a href="{{ route('admin.tenants.show', $tenant) }}" class="btn btn-secondary">View</a></td>
+                <td>
+                    @if($activeTenancies->isNotEmpty())
+                        <a href="{{ route('admin.tenants.show', $activeTenancies->first()) }}" class="btn btn-secondary">View</a>
+                    @else
+                        <span style="color:#94a3b8;font-size:12px;">No active unit</span>
+                    @endif
+                </td>
+            </tr>
+            <tr>
+                <td colspan="6" class="tenancy-nested-wrap">
+                    <table class="tenancy-nested">
+                        <thead>
+                            <tr>
+                                <th>Unit</th>
+                                <th>Property</th>
+                                <th>Move-in</th>
+                                <th>M-Pesa Details</th>
+                                <th>Closing date</th>
+                                <th>Status</th>
+                                <th>Tenancy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($activeTenancies as $tenancy)
+                            <tr>
+                                <td>{{ $tenancy->unit->unit_number }}</td>
+                                <td>{{ $tenancy->unit?->property?->name ?? '—' }}</td>
+                                <td>{{ $tenancy->move_in_date?->format('d M Y') ?? '—' }}</td>
+                                <td>
+                                    <span class="badge badge-gray">Tenant-managed</span>
+                                    <div style="font-size:11px;color:#94a3b8;margin-top:3px;">Not edited in admin</div>
+                                </td>
+                                <td>{{ $tenancy->move_out_date?->format('d M Y') ?? 'Active tenancy' }}</td>
+                                <td>
+                                    <span class="badge {{ $tenancy->is_active ? 'badge-green' : 'badge-gray' }}">
+                                        {{ $tenancy->is_active ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td><a href="{{ route('admin.tenants.show', $tenancy) }}" class="btn btn-secondary">Open</a></td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="empty-state">No active tenancy rows for this tenant.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </td>
             </tr>
             @empty
-            <tr><td colspan="9" class="empty-state">No tenants yet. Invite a tenant to a vacant unit.</td></tr>
+            <tr><td colspan="6" class="empty-state">No tenants yet. Invite a tenant to a vacant unit.</td></tr>
             @endforelse
         </tbody>
     </table>
     </div>
-    <div class="pagination">{{ $tenants->links() }}</div>
+    <div class="pagination">{{ $tenantUsers->links() }}</div>
 </div>
 
 <div class="card" style="margin-top:18px;">

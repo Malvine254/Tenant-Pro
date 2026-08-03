@@ -201,7 +201,11 @@ class HomeViewModel @Inject constructor(
                         }
                     // A successful profile response is authoritative. Falling back to
                     // historical invoice units here made revoked tenancies reappear.
-                    val displayUnits = if (profileLoaded) profileUnits else invoiceUnits
+                    val displayUnits = when {
+                        profileLoaded && profileUnits.isNotEmpty() -> profileUnits
+                        invoiceUnits.isNotEmpty() -> invoiceUnits
+                        else -> profileUnits
+                    }
                     val displayUnitLabel = when (displayUnits.size) {
                         0 -> propUnit
                         1 -> propUnit

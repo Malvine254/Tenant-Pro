@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.tenantpro.app.data.model.SupportMessageDto
 import com.tenantpro.app.data.repository.TenantFeatureRepository
 import com.tenantpro.app.utils.DataStoreManager
+import com.tenantpro.app.utils.NetworkConnectivityObserver
 import com.tenantpro.app.utils.Resource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,6 +34,7 @@ import kotlin.random.Random
 class QueriesViewModel @Inject constructor(
     private val dataStoreManager: DataStoreManager,
     private val repository: TenantFeatureRepository,
+    private val connectivity: NetworkConnectivityObserver,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -88,6 +90,14 @@ class QueriesViewModel @Inject constructor(
         viewModelScope.launch {
             loadMessages(showCached = true, emitErrors = true)
         }
+
+        viewModelScope.launch {
+            connectivity.isConnected.collect { connected ->
+                if (connected) {
+                    flushPendingQueue()
+                }
+            }
+        }
     }
 
     fun selectTopic(topic: String) {
@@ -140,6 +150,7 @@ class QueriesViewModel @Inject constructor(
 
         viewModelScope.launch {
             _sending.value = true
+            val clientMessageId = java.util.UUID.randomUUID().toString()
 
             // Upload file first to get a server-side path
             var serverUri: String? = null
@@ -151,7 +162,20 @@ class QueriesViewModel @Inject constructor(
                         serverName = upload.data.attachmentName
                     }
                     is Resource.Error -> {
-                        _events.emit("Upload failed: ${upload.message}")
+                        queueOfflineMessage(
+                            QueryChatMessage(
+                                id = generateId(),
+                                topic = topic,
+                                message = message.ifBlank { "Attachment shared" },
+                                isFromTenant = true,
+                                timestamp = System.currentTimeMillis(),
+                                status = "Queued",
+                                clientMessageId = clientMessageId,
+                                attachmentName = attachmentName,
+                                localAttachmentUri = attachmentUri.toString()
+                            )
+                        )
+                        _events.emit("Offline: queued message with attachment. Will resend automatically.")
                         _sending.value = false
                         return@launch
                     }
@@ -166,34 +190,30 @@ class QueriesViewModel @Inject constructor(
                 isFromTenant = true,
                 timestamp = System.currentTimeMillis(),
                 status = "Sending",
+                clientMessageId = clientMessageId,
                 attachmentUri = serverUri,
-                attachmentName = serverName
+                attachmentName = serverName,
+                localAttachmentUri = attachmentUri?.toString()
             )
 
             val updated = (_messages.value + outbound).takeLast(300)
             _messages.value = updated
             persist(updated)
 
-            when (val result = repository.sendSupportMessage(topic, message, serverUri, serverName)) {
+            when (val result = repository.sendSupportMessage(topic, message, serverUri, serverName, clientMessageId)) {
                 is Resource.Success -> {
                     val mapped = result.data.toChatMessages()
                     _messages.value = mapped
                     persist(mapped)
+                    removeQueuedMessage(clientMessageId)
                 }
                 is Resource.Error -> {
-                    delay(400)
-                    val fallbackReply = QueryChatMessage(
-                        id = generateId(),
-                        topic = topic,
-                        message = supportReply(topic),
-                        isFromTenant = false,
-                        timestamp = System.currentTimeMillis(),
-                        status = "Queued offline"
-                    )
-                    val withReply = (_messages.value.dropLast(1) + outbound.copy(status = "Queued") + fallbackReply).takeLast(300)
+                    val queued = outbound.copy(status = "Queued")
+                    queueOfflineMessage(queued)
+                    val withReply = (_messages.value.dropLast(1) + queued).takeLast(300)
                     _messages.value = withReply
                     persist(withReply)
-                    _events.emit(result.message)
+                    _events.emit("Offline: message queued. Will resend when internet returns.")
                 }
                 Resource.Loading -> Unit
             }
@@ -204,6 +224,65 @@ class QueriesViewModel @Inject constructor(
 
     private suspend fun persist(list: List<QueryChatMessage>) {
         dataStoreManager.saveQueryChatHistory(toJson(list))
+    }
+
+    private suspend fun flushPendingQueue() {
+        val queue = parseMessages(dataStoreManager.pendingSupportQueueJson.firstOrNull()).toMutableList()
+        if (queue.isEmpty()) return
+
+        var changed = false
+        val iterator = queue.iterator()
+        while (iterator.hasNext()) {
+            val queued = iterator.next()
+            var serverUri = queued.attachmentUri
+            var serverName = queued.attachmentName
+
+            if (serverUri.isNullOrBlank() && !queued.localAttachmentUri.isNullOrBlank()) {
+                val localUri = Uri.parse(queued.localAttachmentUri)
+                when (val upload = repository.uploadSupportFile(localUri, context)) {
+                    is Resource.Success -> {
+                        serverUri = upload.data.attachmentUri
+                        serverName = upload.data.attachmentName
+                    }
+                    is Resource.Error -> continue
+                    Resource.Loading -> continue
+                }
+            }
+
+            when (repository.sendSupportMessage(
+                topic = queued.topic,
+                text = queued.message,
+                attachmentUri = serverUri,
+                attachmentName = serverName,
+                clientMessageId = queued.clientMessageId
+            )) {
+                is Resource.Success -> {
+                    iterator.remove()
+                    changed = true
+                }
+                is Resource.Error, Resource.Loading -> continue
+            }
+        }
+
+        if (changed) {
+            dataStoreManager.savePendingSupportQueue(toJson(queue))
+            loadMessages(showCached = false, emitErrors = false)
+        }
+    }
+
+    private suspend fun queueOfflineMessage(message: QueryChatMessage) {
+        val existingQueue = parseMessages(dataStoreManager.pendingSupportQueueJson.firstOrNull()).toMutableList()
+        existingQueue.removeAll { it.clientMessageId != null && it.clientMessageId == message.clientMessageId }
+        existingQueue.add(message)
+        dataStoreManager.savePendingSupportQueue(toJson(existingQueue.takeLast(100)))
+    }
+
+    private suspend fun removeQueuedMessage(clientMessageId: String?) {
+        if (clientMessageId.isNullOrBlank()) return
+        val existingQueue = parseMessages(dataStoreManager.pendingSupportQueueJson.firstOrNull()).toMutableList()
+        if (existingQueue.removeAll { it.clientMessageId == clientMessageId }) {
+            dataStoreManager.savePendingSupportQueue(toJson(existingQueue))
+        }
     }
 
     private fun parseMessages(json: String?): List<QueryChatMessage> {
@@ -221,8 +300,10 @@ class QueriesViewModel @Inject constructor(
                             isFromTenant = obj.optBoolean("isFromTenant", true),
                             timestamp = obj.optLong("timestamp", 0L),
                             status = obj.optString("status", "Sent"),
+                            clientMessageId = obj.optString("clientMessageId", "").ifBlank { null },
                             attachmentUri = obj.optString("attachmentUri", "").ifBlank { null },
-                            attachmentName = obj.optString("attachmentName", "").ifBlank { null }
+                            attachmentName = obj.optString("attachmentName", "").ifBlank { null },
+                            localAttachmentUri = obj.optString("localAttachmentUri", "").ifBlank { null }
                         )
                     )
                 }
@@ -243,8 +324,10 @@ class QueriesViewModel @Inject constructor(
                     put("isFromTenant", item.isFromTenant)
                     put("timestamp", item.timestamp)
                     put("status", item.status)
+                    item.clientMessageId?.let { put("clientMessageId", it) }
                     item.attachmentUri?.let { put("attachmentUri", it) }
                     item.attachmentName?.let { put("attachmentName", it) }
+                    item.localAttachmentUri?.let { put("localAttachmentUri", it) }
                 }
             )
         }
@@ -259,20 +342,10 @@ class QueriesViewModel @Inject constructor(
             isFromTenant = it.isFromTenant,
             timestamp = it.timestamp,
             status = it.status,
+            clientMessageId = null,
             attachmentUri = it.attachmentUri,
             attachmentName = it.attachmentName
         )
-    }
-
-    private fun supportReply(topic: String): String {
-        return when (topic) {
-            "Maintenance" -> "Thanks for raising this. Maintenance has been notified and will update you shortly."
-            "Billing" -> "We received your billing request. We are reviewing the invoice details and will respond soon."
-            "Lease" -> "Your lease question is logged. Property management will share guidance in this thread."
-            "Security" -> "Security concern noted. The team has been alerted and will follow up quickly."
-            "Utilities" -> "Utilities request received. We are checking meter and service records now."
-            else -> "Thanks for your message. Support has received it and will reply here shortly."
-        }
     }
 
     private fun generateId(): String = "m_${System.currentTimeMillis()}_${Random.nextInt(1000, 9999)}"

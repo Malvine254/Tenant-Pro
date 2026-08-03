@@ -267,15 +267,41 @@ class AccountSettingsViewModel @Inject constructor(
 
     fun setNotificationsEnabled(enabled: Boolean) {
         viewModelScope.launch {
-            dataStoreManager.saveNotificationsEnabled(enabled)
-            _events.emit(if (enabled) "Notifications enabled" else "Notifications muted")
+            val current = uiState.value
+            when (val result = authRepository.updateAppSettings(
+                notificationsEnabled = enabled,
+                emailNotificationsEnabled = current.emailNotificationsEnabled,
+                biometricLockEnabled = current.biometricLockEnabled
+            )) {
+                is Resource.Success -> {
+                    _events.emit(if (enabled) "Notifications enabled" else "Notifications muted")
+                }
+                is Resource.Error -> {
+                    dataStoreManager.saveNotificationsEnabled(enabled)
+                    _events.emit("${result.message} (saved on this device)")
+                }
+                Resource.Loading -> Unit
+            }
         }
     }
 
     fun setEmailNotificationsEnabled(enabled: Boolean) {
         viewModelScope.launch {
-            dataStoreManager.saveEmailNotificationsEnabled(enabled)
-            _events.emit(if (enabled) "Email notifications enabled" else "Email notifications disabled")
+            val current = uiState.value
+            when (val result = authRepository.updateAppSettings(
+                notificationsEnabled = current.notificationsEnabled,
+                emailNotificationsEnabled = enabled,
+                biometricLockEnabled = current.biometricLockEnabled
+            )) {
+                is Resource.Success -> {
+                    _events.emit(if (enabled) "Email notifications enabled" else "Email notifications disabled")
+                }
+                is Resource.Error -> {
+                    dataStoreManager.saveEmailNotificationsEnabled(enabled)
+                    _events.emit("${result.message} (saved on this device)")
+                }
+                Resource.Loading -> Unit
+            }
         }
     }
 
@@ -287,11 +313,27 @@ class AccountSettingsViewModel @Inject constructor(
                 return@launch
             }
 
-            dataStoreManager.saveBiometricLockEnabled(enabled)
-            if (enabled) {
-                dataStoreManager.saveCurrentSessionForBiometric()
+            val current = uiState.value
+            when (val result = authRepository.updateAppSettings(
+                notificationsEnabled = current.notificationsEnabled,
+                emailNotificationsEnabled = current.emailNotificationsEnabled,
+                biometricLockEnabled = enabled
+            )) {
+                is Resource.Success -> {
+                    if (enabled) {
+                        dataStoreManager.saveCurrentSessionForBiometric()
+                    }
+                    _events.emit(if (enabled) "Biometric login enabled" else "Biometric login disabled")
+                }
+                is Resource.Error -> {
+                    dataStoreManager.saveBiometricLockEnabled(enabled)
+                    if (enabled) {
+                        dataStoreManager.saveCurrentSessionForBiometric()
+                    }
+                    _events.emit("${result.message} (saved on this device)")
+                }
+                Resource.Loading -> Unit
             }
-            _events.emit(if (enabled) "Biometric login enabled" else "Biometric login disabled")
         }
     }
 
