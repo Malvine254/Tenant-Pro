@@ -39,7 +39,7 @@ class TenantAppNotificationService
             'unit_id' => $invoice->unit_id,
             'property_id' => $invoice->unit?->property_id,
             'amount' => (float) $invoice->total_amount,
-            'due_date' => $invoice->due_date?->toDateString(),
+            'due_date' => $invoice->due_date ? date('Y-m-d', strtotime((string) $invoice->due_date)) : null,
         ]);
     }
 
@@ -83,12 +83,14 @@ class TenantAppNotificationService
         ]);
 
         if ($user->fcm_token) {
+            $highPriority = $this->isHighPriority($type, $title, $body);
             app(FirebasePushService::class)->send($user->fcm_token, $title, $body, [
                 'type' => $type,
                 'notification_id' => $notification->id,
+                'notification_destination' => $this->destination($type),
                 'destination' => $this->destination($type),
                 ...collect($metadata)->mapWithKeys(fn ($value, $key) => [$key => is_scalar($value) ? (string) $value : json_encode($value)])->all(),
-            ]);
+            ], $highPriority, 'tenantpro_default');
         }
 
         return $notification;
@@ -104,5 +106,19 @@ class TenantAppNotificationService
             'TENANCY_ASSIGNED' => 'RENTAL',
             default => 'NOTIFICATIONS',
         };
+    }
+
+    private function isHighPriority(string $type, string $title, string $body): bool
+    {
+        $normalizedType = strtoupper($type);
+        $combined = strtolower($title.' '.$body);
+
+        if (in_array($normalizedType, ['SUPPORT_REPLY', 'MAINTENANCE', 'PAYMENT_RECEIVED'], true)) {
+            return true;
+        }
+
+        return str_contains($combined, 'overdue')
+            || str_contains($combined, 'urgent')
+            || str_contains($combined, 'failed');
     }
 }

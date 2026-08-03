@@ -338,8 +338,14 @@ class MainActivity : AppCompatActivity() {
     private fun readNotificationDestination(intent: Intent?) {
         pendingNotificationDestination = intent?.getStringExtra(EXTRA_NOTIFICATION_DESTINATION)
             ?.takeIf { it.isNotBlank() }
+            ?: intent?.getStringExtra("destination")?.takeIf { it.isNotBlank() }
+            ?: intent?.getStringExtra("notification_destination")?.takeIf { it.isNotBlank() }
         pendingNotificationEntityId = intent?.getStringExtra(EXTRA_NOTIFICATION_ENTITY_ID)
             ?.takeIf { it.isNotBlank() }
+            ?: intent?.getStringExtra("conversation_id")?.takeIf { it.isNotBlank() }
+            ?: intent?.getStringExtra("invoice_id")?.takeIf { it.isNotBlank() }
+            ?: intent?.getStringExtra("payment_id")?.takeIf { it.isNotBlank() }
+            ?: intent?.getStringExtra("maintenance_request_id")?.takeIf { it.isNotBlank() }
     }
 
     private fun handlePendingNotificationNavigation() {

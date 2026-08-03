@@ -112,21 +112,42 @@
                 </select>
                 @error('unit_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>
+            <div class="form-group">
+                <label>Select existing tenant account</label>
+                <select id="tenantInviteUser" name="tenant_user_id">
+                    <option value="">- Select tenant user (optional) -</option>
+                    @foreach($tenantUsers as $tenantUser)
+                        <option
+                            value="{{ $tenantUser->id }}"
+                            data-name="{{ $tenantUser->name }}"
+                            data-email="{{ $tenantUser->email }}"
+                            data-phone="{{ $tenantUser->phone_number }}"
+                            {{ old('tenant_user_id') === $tenantUser->id ? 'selected' : '' }}
+                        >
+                            {{ $tenantUser->name ?: 'Unnamed Tenant' }} | {{ $tenantUser->email }}{{ $tenantUser->phone_number ? ' | ' . $tenantUser->phone_number : '' }}
+                        </option>
+                    @endforeach
+                </select>
+                <p style="font-size:12px;color:#64748b;margin-top:6px;">
+                    Selecting a tenant auto-fills name, email, and phone.
+                </p>
+                @error('tenant_user_id')<div class="form-error">{{ $message }}</div>@enderror
+            </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div class="form-group">
                     <label>Tenant name, optional</label>
-                    <input name="invitee_name" value="{{ old('invitee_name') }}">
+                    <input id="tenantInviteName" name="invitee_name" value="{{ old('invitee_name') }}">
                 </div>
                 <div class="form-group">
                     <label>Tenant email</label>
-                    <input type="email" name="email" value="{{ old('email') }}" required>
+                    <input id="tenantInviteEmail" type="email" name="email" value="{{ old('email') }}" required>
                     @error('email')<div class="form-error">{{ $message }}</div>@enderror
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div class="form-group">
                     <label>Tenant phone, optional</label>
-                    <input name="phone_number" value="{{ old('phone_number') }}">
+                    <input id="tenantInvitePhone" name="phone_number" value="{{ old('phone_number') }}">
                 </div>
                 <div class="form-group">
                     <label>Move-in date, optional</label>
@@ -224,6 +245,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const property = document.getElementById('tenantInviteProperty');
     const unit = document.getElementById('tenantInviteUnit');
     const rent = document.getElementById('tenantInviteRent');
+    const tenantUser = document.getElementById('tenantInviteUser');
+    const tenantName = document.getElementById('tenantInviteName');
+    const tenantEmail = document.getElementById('tenantInviteEmail');
+    const tenantPhone = document.getElementById('tenantInvitePhone');
     if (!property || !unit) return;
 
     const filterUnits = () => {
@@ -245,9 +270,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     rent?.addEventListener('input', () => rent.dataset.autofilled = '0');
+
+    const autofillTenant = () => {
+        if (!tenantUser) return;
+        const selected = tenantUser.selectedOptions[0];
+        if (!selected || !selected.value) return;
+
+        if (tenantName && !tenantName.value) tenantName.value = selected.dataset.name || '';
+        if (tenantEmail && !tenantEmail.value) tenantEmail.value = selected.dataset.email || '';
+        if (tenantPhone && !tenantPhone.value) tenantPhone.value = selected.dataset.phone || '';
+    };
+
+    tenantUser?.addEventListener('change', autofillTenant);
     property.addEventListener('change', filterUnits);
     unit.addEventListener('change', syncRent);
     filterUnits();
+    autofillTenant();
 });
 </script>
 @endsection

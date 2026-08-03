@@ -49,7 +49,21 @@ class InvitationAdminController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.invitations.index', compact('invitations', 'properties', 'isLandlord'));
+        $tenantUsers = User::query()
+            ->whereHas('role', fn($role) => $role->where('name', 'TENANT'))
+            ->whereNotNull('email')
+            ->when(
+                $isLandlord,
+                fn($query) => $query->where(function ($tenantQuery) use ($user) {
+                    $tenantQuery
+                        ->whereDoesntHave('tenancies', fn($tenancies) => $tenancies->where('is_active', true))
+                        ->orWhereHas('tenancies.unit.property', fn($property) => $property->where('landlord_id', $user->id));
+                })
+            )
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'phone_number']);
+
+        return view('admin.invitations.index', compact('invitations', 'properties', 'tenantUsers', 'isLandlord'));
     }
 
     public function storeTenant(Request $request)
@@ -60,6 +74,7 @@ class InvitationAdminController extends Controller
         $data = $request->validate([
             'property_id' => 'required|uuid|exists:properties,id',
             'unit_id' => 'required|uuid|exists:units,id',
+            'tenant_user_id' => 'nullable|uuid|exists:users,id',
             'invitee_name' => 'nullable|string|max:160',
             'email' => 'required|email|max:255',
             'phone_number' => 'nullable|string|max:30',
@@ -72,7 +87,22 @@ class InvitationAdminController extends Controller
 
         $property = Property::findOrFail($data['property_id']);
         $unit = Unit::with('tenant')->findOrFail($data['unit_id']);
-        $normalizedEmail = strtolower(trim($data['email']));
+
+        $selectedTenant = null;
+        if (!empty($data['tenant_user_id'])) {
+            $selectedTenant = User::query()
+                ->with('role')
+                ->findOrFail($data['tenant_user_id']);
+
+            abort_if($selectedTenant->role?->name !== 'TENANT', 422, 'Selected user must be a tenant account.');
+            abort_if(blank($selectedTenant->email), 422, 'Selected tenant does not have an email address.');
+
+            $data['email'] = $selectedTenant->email;
+            $data['phone_number'] = $data['phone_number'] ?: $selectedTenant->phone_number;
+            $data['invitee_name'] = $data['invitee_name'] ?: $selectedTenant->name;
+        }
+
+        $normalizedEmail = strtolower(trim((string) $data['email']));
 
         [$loginUser, $temporaryPassword, $firstTimeSetup] = $this->prepareTenantLogin(
             $normalizedEmail,

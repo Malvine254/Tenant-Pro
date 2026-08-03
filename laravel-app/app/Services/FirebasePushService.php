@@ -9,7 +9,14 @@ use Throwable;
 
 class FirebasePushService
 {
-    public function send(string $deviceToken, string $title, string $body, array $data = []): bool
+    public function send(
+        string $deviceToken,
+        string $title,
+        string $body,
+        array $data = [],
+        bool $highPriority = true,
+        string $channelId = 'tenantpro_default'
+    ): bool
     {
         try {
             $credentials = $this->credentials();
@@ -23,13 +30,21 @@ class FirebasePushService
                 ->post('https://fcm.googleapis.com/v1/projects/'.$credentials['project_id'].'/messages:send', [
                     'message' => [
                         'token' => $deviceToken,
-                        // Data-only delivery prevents Android from displaying a second system notification.
+                        'notification' => [
+                            'title' => $title,
+                            'body' => $body,
+                        ],
                         'data' => collect(array_merge($data, ['title' => $title, 'body' => $body]))
                             ->mapWithKeys(fn ($value, $key) => [(string) $key => (string) ($value ?? '')])
                             ->all(),
                         'android' => [
-                            'priority' => 'HIGH',
-                            'ttl' => '60s',
+                            'priority' => $highPriority ? 'HIGH' : 'NORMAL',
+                            'ttl' => $highPriority ? '600s' : '3600s',
+                            'notification' => [
+                                'channel_id' => $channelId,
+                                'default_sound' => true,
+                                'notification_priority' => $highPriority ? 'PRIORITY_HIGH' : 'PRIORITY_DEFAULT',
+                            ],
                         ],
                     ],
                 ]);
