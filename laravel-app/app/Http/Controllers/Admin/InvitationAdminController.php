@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Invitation;
 use App\Models\Property;
 use App\Models\Role;
+use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\TenantAppNotificationService;
+use App\Services\TenantBillingService;
 use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -113,7 +116,9 @@ class InvitationAdminController extends Controller
         abort_if($user?->role?->name === 'LANDLORD' && $property->landlord_id !== $user->id, 403);
         abort_if($unit->tenant()->where('is_active', true)->exists(), 422, 'This unit is already occupied.');
 
-        $invitation = DB::transaction(function () use ($request, $data, $unit, $normalizedEmail, $firstTimeSetup) {
+        $autoAssignedTenant = null;
+
+        $invitation = DB::transaction(function () use ($request, $data, $unit, $normalizedEmail, $firstTimeSetup, $selectedTenant, &$autoAssignedTenant) {
             return Invitation::create([
                 'invite_type' => 'TENANT',
                 'code' => $this->uniqueCode(),
@@ -133,9 +138,46 @@ class InvitationAdminController extends Controller
                     'rent_amount' => $data['rent_amount'] ?? $unit->rent_amount,
                     'deposit_amount' => $data['deposit_amount'] ?? null,
                     'first_time_setup' => $firstTimeSetup,
+                    'auto_assigned' => false,
                 ],
             ]);
         });
+
+        if ($selectedTenant) {
+            $autoAssignedTenant = DB::transaction(function () use ($selectedTenant, $unit, $data, $invitation) {
+                $tenant = Tenant::query()->updateOrCreate(
+                    [
+                        'user_id' => $selectedTenant->id,
+                        'unit_id' => $unit->id,
+                    ],
+                    [
+                        'move_in_date' => $data['move_in_date'] ?? now()->toDateString(),
+                        'move_out_date' => null,
+                        'is_active' => true,
+                    ]
+                );
+
+                $unit->update(['status' => 'OCCUPIED']);
+
+                $metadata = $invitation->metadata ?? [];
+                $metadata['auto_assigned'] = true;
+                $metadata['auto_assigned_at'] = now()->toIso8601String();
+                $metadata['auto_assigned_user_id'] = $selectedTenant->id;
+
+                $invitation->update([
+                    'metadata' => $metadata,
+                ]);
+
+                return $tenant->fresh(['user', 'unit.property']);
+            });
+
+            $invoice = app(TenantBillingService::class)->createInitialRentInvoice($autoAssignedTenant);
+            app(TenantAppNotificationService::class)->tenantAssigned($autoAssignedTenant);
+            if ($invoice->wasRecentlyCreated) {
+                app(TenantAppNotificationService::class)->invoiceCreated($invoice);
+                app(TenantEmailService::class)->invoiceCreated($invoice);
+            }
+        }
 
         $emailSent = app(TenantEmailService::class)->tenantInvitation($invitation, [
             'loginEmail' => $loginUser->email,
@@ -145,9 +187,11 @@ class InvitationAdminController extends Controller
 
         return back()->with(
             'success',
-            $emailSent
-                ? 'Tenant invitation sent by email.'
-                : 'Tenant invitation saved, but email could not be sent. Check mail logs.'
+            $selectedTenant
+                ? 'Tenant linked to the unit immediately. Invitation code was also sent for fallback confirmation.'
+                : ($emailSent
+                    ? 'Tenant invitation sent by email.'
+                    : 'Tenant invitation saved, but email could not be sent. Check mail logs.')
         );
     }
 

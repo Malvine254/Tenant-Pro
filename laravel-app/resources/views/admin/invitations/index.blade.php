@@ -129,7 +129,8 @@
                     @endforeach
                 </select>
                 <p style="font-size:12px;color:#64748b;margin-top:6px;">
-                    Selecting a tenant auto-fills name, email, and phone.
+                    Selecting a tenant auto-fills name, email, and phone, and links the unit immediately.
+                    The invitation code is still sent and can be used as a fallback confirmation.
                 </p>
                 @error('tenant_user_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>

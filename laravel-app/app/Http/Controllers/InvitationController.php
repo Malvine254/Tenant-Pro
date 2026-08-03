@@ -91,19 +91,26 @@ class InvitationController extends Controller
     {
         $data = $request->validate(['code' => 'required|string']);
         $invitation = Invitation::with('unit')->where('code', strtoupper(trim($data['code'])))->first();
+        $requestUser = $request->user();
 
         if (!$invitation || $invitation->status !== 'PENDING' || $invitation->expires_at < now()) {
             return response()->json(['message' => 'Invitation code is invalid or expired.'], 422);
         }
 
-        if ($invitation->unit->tenant()->where('is_active', true)->exists()) {
+        $existingActiveTenancy = $invitation->unit->tenant()->where('is_active', true)->first();
+        if ($existingActiveTenancy && $existingActiveTenancy->user_id === $requestUser->id) {
+            $invitation->update(['status' => 'ACCEPTED', 'accepted_at' => now()]);
+            return response()->json(['message' => 'Unit already linked to your account. Invitation confirmed.']);
+        }
+
+        if ($existingActiveTenancy) {
             return response()->json(['message' => 'This unit already has an active tenant.'], 422);
         }
 
-        $tenant = DB::transaction(function () use ($request, $invitation) {
+        $tenant = DB::transaction(function () use ($requestUser, $invitation) {
             $tenant = Tenant::updateOrCreate(
                 [
-                    'user_id' => $request->user()->id,
+                    'user_id' => $requestUser->id,
                     'unit_id' => $invitation->unit_id,
                 ],
                 [
