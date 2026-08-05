@@ -429,6 +429,20 @@ class AuthController extends Controller
 
     private function userPayload(User $user): array
     {
+        $subscriptionState = $user->isLandlord()
+            ? $this->subscriptionService->evaluate($user)
+            : [
+                'allowed' => true,
+                'status' => 'not_required',
+                'message' => null,
+            ];
+
+        // Ensure payload reflects any status updates done during evaluation.
+        if ($user->isLandlord()) {
+            $user->refresh();
+            $user->loadMissing(['role', 'tenancies.unit.property']);
+        }
+
         $tenant = $user->relationLoaded('tenant') ? $user->tenant : null;
         if ($tenant && !$tenant->is_active) {
             $tenant = null;
@@ -503,6 +517,14 @@ class AuthController extends Controller
                 'emailNotificationsEnabled' => (bool) ($appSettings['emailNotificationsEnabled'] ?? true),
                 'biometricLockEnabled' => (bool) ($appSettings['biometricLockEnabled'] ?? false),
             ],
+            'requiresSubscription' => (bool) ($user->requires_subscription ?? false),
+            'billingStatus' => $user->billing_status ?? $subscriptionState['status'],
+            'trialStartedAt' => $user->trial_started_at?->toISOString(),
+            'trialEndsAt' => $user->trial_ends_at?->toISOString(),
+            'servicePaidUntil' => $user->service_paid_until?->toISOString(),
+            'subscriptionStatus' => $subscriptionState['status'],
+            'subscriptionAllowed' => (bool) ($subscriptionState['allowed'] ?? true),
+            'subscriptionMessage' => $subscriptionState['message'] ?? null,
         ];
     }
 }

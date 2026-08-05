@@ -94,6 +94,29 @@
                             android:maxLines="1"
                             android:textColor="@color/on_surface_variant"
                             android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/tvSubscriptionStatus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textColor="@color/info"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/tvSubscriptionDetail"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textColor="@color/on_surface_variant"
+                            android:textSize="10sp"
+                            android:visibility="gone" />
                     </LinearLayout>
 
                     <TextView

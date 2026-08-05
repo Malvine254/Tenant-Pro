@@ -47,26 +47,18 @@ class LandlordSubscriptionService
             ];
         }
 
-        if (!$user->requires_subscription) {
-            if (!$user->trial_started_at && !$user->subscription_started_at) {
-                $this->initializeTrial($user);
-                $user->refresh();
-            }
-
-            return [
-                'allowed' => true,
-                'status' => $user->billing_status ?? self::STATUS_NOT_REQUIRED,
-                'message' => $user->trial_ends_at
-                    ? 'Free trial active until '.$user->trial_ends_at->format('d M Y').'.'
-                    : null,
-            ];
+        // Backfill legacy landlord records that missed trial initialization.
+        if (!$user->trial_started_at && !$user->trial_ends_at && !$user->subscription_started_at && !$user->service_paid_until) {
+            $this->initializeTrial($user);
+            $user->refresh();
         }
 
-        $now = now();
-
         if ($user->service_paid_until instanceof Carbon && $user->service_paid_until->isFuture()) {
-            if ($user->billing_status !== self::STATUS_ACTIVE) {
-                $user->update(['billing_status' => self::STATUS_ACTIVE]);
+            if ($user->billing_status !== self::STATUS_ACTIVE || !$user->requires_subscription) {
+                $user->update([
+                    'requires_subscription' => true,
+                    'billing_status' => self::STATUS_ACTIVE,
+                ]);
             }
 
             return [
@@ -77,8 +69,11 @@ class LandlordSubscriptionService
         }
 
         if ($user->trial_ends_at instanceof Carbon && $user->trial_ends_at->isFuture()) {
-            if ($user->billing_status !== self::STATUS_TRIAL) {
-                $user->update(['billing_status' => self::STATUS_TRIAL]);
+            if ($user->billing_status !== self::STATUS_TRIAL || !$user->requires_subscription) {
+                $user->update([
+                    'requires_subscription' => true,
+                    'billing_status' => self::STATUS_TRIAL,
+                ]);
             }
 
             return [
@@ -88,8 +83,19 @@ class LandlordSubscriptionService
             ];
         }
 
+        if (!$user->requires_subscription && !$user->trial_ends_at) {
+            return [
+                'allowed' => true,
+                'status' => self::STATUS_NOT_REQUIRED,
+                'message' => null,
+            ];
+        }
+
         if ($user->billing_status !== self::STATUS_PAST_DUE) {
-            $user->update(['billing_status' => self::STATUS_PAST_DUE]);
+            $user->update([
+                'requires_subscription' => true,
+                'billing_status' => self::STATUS_PAST_DUE,
+            ]);
         }
 
         $trialEndedOn = $user->trial_ends_at?->format('d M Y') ?? 'your trial end date';

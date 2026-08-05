@@ -174,6 +174,19 @@ class AccountSettingsFragment : Fragment() {
         binding.tvUserName.text = displayName
         binding.tvUserEmail.text = displayEmail
         binding.tvUserPhone.text = displayPhone
+        binding.tvSubscriptionStatus.visibility = if (state.showSubscriptionStatus) View.VISIBLE else View.GONE
+        binding.tvSubscriptionDetail.visibility =
+            if (state.showSubscriptionStatus && state.subscriptionDetailText.isNotBlank()) View.VISIBLE else View.GONE
+        binding.tvSubscriptionStatus.text = state.subscriptionStatusText
+        binding.tvSubscriptionDetail.text = state.subscriptionDetailText
+
+        val statusColor = when {
+            state.subscriptionStatusText.contains("Trial", ignoreCase = true) -> R.color.info
+            state.subscriptionStatusText.contains("Active", ignoreCase = true) -> R.color.success
+            state.subscriptionStatusText.contains("Past due", ignoreCase = true) -> R.color.error
+            else -> R.color.on_surface_variant
+        }
+        binding.tvSubscriptionStatus.setTextColor(ContextCompat.getColor(requireContext(), statusColor))
         binding.root.findViewById<TextView>(R.id.tvSettingsPaymentPhone)?.text = displayPhone
         bindSwitchStates(state)
 

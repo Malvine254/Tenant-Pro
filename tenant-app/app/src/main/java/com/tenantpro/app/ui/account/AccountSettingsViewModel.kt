@@ -30,6 +30,7 @@ class AccountSettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _apartmentInfo = MutableStateFlow(ApartmentInfo())
+    private val _subscriptionInfo = MutableStateFlow(SubscriptionInfoUi())
     private val _saving = MutableStateFlow(false)
     private val _loading = MutableStateFlow(true)
     private val _events = MutableSharedFlow<String>()
@@ -79,9 +80,10 @@ class AccountSettingsViewModel @Inject constructor(
     val uiState: StateFlow<AccountUiState> = combine(
         accountSettingsFlow,
         _apartmentInfo,
+        _subscriptionInfo,
         _saving,
         _loading
-    ) { account, apartment, saving, loading ->
+    ) { account, apartment, subscription, saving, loading ->
         val completion = calculateProfileCompletion(
             name = account.basic.name,
             phone = account.basic.phone,
@@ -99,6 +101,9 @@ class AccountSettingsViewModel @Inject constructor(
             bio = account.extra.bio.orEmpty(),
             imageUri = account.extra.imageUri,
             apartment = apartment,
+            subscriptionStatusText = subscription.statusText,
+            subscriptionDetailText = subscription.detailText,
+            showSubscriptionStatus = subscription.show,
             profileCompletionPercent = completion,
             profileCompletionText = "$completion% complete",
             notificationsEnabled = account.settings.notificationsEnabled,
@@ -120,6 +125,31 @@ class AccountSettingsViewModel @Inject constructor(
             when (val result = authRepository.getMyProfile()) {
                 is Resource.Success -> {
                     val profile = result.data
+                    val role = profile.role.uppercase()
+                    if (role == "LANDLORD") {
+                        val rawStatus = (profile.subscriptionStatus ?: profile.billingStatus ?: "").lowercase()
+                        val statusText = when (rawStatus) {
+                            "trial" -> "Subscription: Trial active"
+                            "active" -> "Subscription: Active"
+                            "past_due" -> "Subscription: Past due"
+                            "not_required" -> "Subscription: Not required"
+                            else -> "Subscription: Unknown"
+                        }
+                        val detailText = when {
+                            !profile.subscriptionMessage.isNullOrBlank() -> profile.subscriptionMessage
+                            rawStatus == "trial" && !profile.trialEndsAt.isNullOrBlank() -> "Trial ends ${profile.trialEndsAt.toDisplayDate()}"
+                            rawStatus == "active" && !profile.servicePaidUntil.isNullOrBlank() -> "Paid until ${profile.servicePaidUntil.toDisplayDate()}"
+                            else -> ""
+                        }
+                        _subscriptionInfo.value = SubscriptionInfoUi(
+                            show = true,
+                            statusText = statusText,
+                            detailText = detailText
+                        )
+                    } else {
+                        _subscriptionInfo.value = SubscriptionInfoUi()
+                    }
+
                     // Use first active tenancy from list, or fall back to singular profile
                     val tenancy = profile.tenantProfiles.firstOrNull { it.isActive }
                         ?: profile.tenantProfile
@@ -375,6 +405,9 @@ data class AccountUiState(
     val bio: String = "",
     val imageUri: String? = null,
     val apartment: ApartmentInfo = ApartmentInfo(),
+    val subscriptionStatusText: String = "",
+    val subscriptionDetailText: String = "",
+    val showSubscriptionStatus: Boolean = false,
     val profileCompletionPercent: Int = 0,
     val profileCompletionText: String = "0% complete",
     val notificationsEnabled: Boolean = true,
@@ -394,6 +427,12 @@ data class ApartmentInfo(
     val outstandingText: String = 0.0.toKes(),
     val pendingCount: Int = 0,
     val overdueCount: Int = 0
+)
+
+data class SubscriptionInfoUi(
+    val show: Boolean = false,
+    val statusText: String = "",
+    val detailText: String = ""
 )
 
 private data class BasicProfile(
