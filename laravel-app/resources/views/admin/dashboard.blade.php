@@ -167,7 +167,9 @@
     .ops-panel-note { font-size:12px;color:#64748b; }
     .ops-chart-host {
         width:100%;
-        min-height:260px;
+        height:220px;
+        min-height:220px;
+        max-height:220px;
     }
     .ops-mini-table {
         width:100%;
@@ -238,46 +240,48 @@
 </style>
 
 <div class="ops-dashboard">
-    <div class="ops-hero">
-        <div class="ops-hero-card">
-            <div class="ops-eyebrow">{{ $isLandlord ? 'Your rental portfolio' : 'Platform operations' }}</div>
-            <div class="ops-title">Dashboard snapshot for {{ now()->format('D, d M Y') }}</div>
-            <p class="ops-subtitle">
-                Keep rent, occupancy, and maintenance decisions in one place with immediate shortcuts to daily actions.
-            </p>
-            <div class="ops-hero-meta">
-                @foreach($heroHighlights as $highlight)
-                    <div class="ops-hero-chip">
-                        <span>{{ $highlight['label'] }}:</span>
-                        <strong>{{ $highlight['value'] }}</strong>
+    @unless($isLandlord)
+        <div class="ops-hero">
+            <div class="ops-hero-card">
+                <div class="ops-eyebrow">{{ $isLandlord ? 'Your rental portfolio' : 'Platform operations' }}</div>
+                <div class="ops-title">Dashboard snapshot for {{ now()->format('D, d M Y') }}</div>
+                <p class="ops-subtitle">
+                    Keep rent, occupancy, and maintenance decisions in one place with immediate shortcuts to daily actions.
+                </p>
+                <div class="ops-hero-meta">
+                    @foreach($heroHighlights as $highlight)
+                        <div class="ops-hero-chip">
+                            <span>{{ $highlight['label'] }}:</span>
+                            <strong>{{ $highlight['value'] }}</strong>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="ops-actions">
+                    <a href="{{ route('admin.properties.index') }}" class="ops-action-btn">Manage properties</a>
+                    <a href="{{ route('admin.invoices.index') }}" class="ops-action-btn">Review invoices</a>
+                    <a href="{{ route('admin.chats.index') }}" class="ops-action-btn">Open maintenance chats</a>
+                </div>
+            </div>
+            <div class="ops-kpis">
+                @foreach($kpis as $kpi)
+                    <div class="ops-kpi ops-tone-{{ $kpi['tone'] }}">
+                        <span>{{ $kpi['label'] }}</span>
+                        <strong>{{ $kpi['value'] }}</strong>
+                        <small>{{ $kpi['hint'] }}</small>
                     </div>
                 @endforeach
             </div>
-            <div class="ops-actions">
-                <a href="{{ route('admin.properties.index') }}" class="ops-action-btn">Manage properties</a>
-                <a href="{{ route('admin.invoices.index') }}" class="ops-action-btn">Review invoices</a>
-                <a href="{{ route('admin.chats.index') }}" class="ops-action-btn">Open maintenance chats</a>
-            </div>
         </div>
-        <div class="ops-kpis">
-            @foreach($kpis as $kpi)
-                <div class="ops-kpi ops-tone-{{ $kpi['tone'] }}">
-                    <span>{{ $kpi['label'] }}</span>
-                    <strong>{{ $kpi['value'] }}</strong>
-                    <small>{{ $kpi['hint'] }}</small>
+
+        <div class="ops-stat-strip">
+            @foreach($quickStats as $stat)
+                <div class="ops-stat">
+                    <span>{{ $stat['label'] }}</span>
+                    <strong>{{ $stat['value'] }}</strong>
                 </div>
             @endforeach
         </div>
-    </div>
-
-    <div class="ops-stat-strip">
-        @foreach($quickStats as $stat)
-            <div class="ops-stat">
-                <span>{{ $stat['label'] }}</span>
-                <strong>{{ $stat['value'] }}</strong>
-            </div>
-        @endforeach
-    </div>
+    @endunless
 
     <div class="ops-insight-grid">
         <div class="ops-panel">
@@ -563,7 +567,7 @@
 
     mount('#revenueTrendChart', {
         ...common,
-        chart: { ...common.chart, type: 'area', height: 260 },
+        chart: { ...common.chart, type: 'area', height: 220 },
         series: [{ name: 'Revenue (KSh)', data: revenue }],
         xaxis: { categories: labels },
         stroke: { curve: 'smooth', width: 3, colors: ['#2563eb'] },
@@ -577,7 +581,7 @@
 
     mount('#invoiceMixChart', {
         ...common,
-        chart: { ...common.chart, type: 'donut', height: 260 },
+        chart: { ...common.chart, type: 'donut', height: 220 },
         series: payload.invoiceStatusValues || [],
         labels: payload.invoiceStatusLabels || [],
         colors: ['#f59e0b', '#0ea5e9', '#16a34a', '#dc2626'],
@@ -586,7 +590,7 @@
 
     mount('#maintenanceChart', {
         ...common,
-        chart: { ...common.chart, type: 'bar', height: 260 },
+        chart: { ...common.chart, type: 'bar', height: 220 },
         series: [{ name: 'Requests', data: payload.maintenanceStatusValues || [] }],
         xaxis: { categories: payload.maintenanceStatusLabels || [] },
         colors: ['#1d4ed8'],
@@ -595,7 +599,7 @@
 
     mount('#portfolioSplitChart', {
         ...common,
-        chart: { ...common.chart, type: 'donut', height: 260 },
+        chart: { ...common.chart, type: 'donut', height: 220 },
         series: [
             {{ (int) $stats['occupied_units'] }},
             {{ (int) $stats['vacant_units'] }},
@@ -608,7 +612,7 @@
 
     mount('#cashPositionChart', {
         ...common,
-        chart: { ...common.chart, type: 'bar', height: 260 },
+        chart: { ...common.chart, type: 'bar', height: 220 },
         series: [{ name: 'KSh', data: [{{ (float) $stats['total_paid'] }}, {{ (float) $stats['outstanding'] }}] }],
         xaxis: { categories: ['Collected', 'Outstanding'] },
         colors: ['#16a34a', '#dc2626'],
@@ -619,7 +623,7 @@
 
     mount('#landlordPerformanceChart', {
         ...common,
-        chart: { ...common.chart, type: 'bar', height: 280 },
+        chart: { ...common.chart, type: 'bar', height: 240 },
         series: [
             { name: 'Collected', data: payload.landlordPerformanceCollectionValues || [] },
             { name: 'Outstanding', data: payload.landlordPerformanceOutstandingValues || [] },
@@ -632,7 +636,7 @@
 
     mount('#landlordHealthChart', {
         ...common,
-        chart: { ...common.chart, type: 'donut', height: 280 },
+        chart: { ...common.chart, type: 'donut', height: 240 },
         series: payload.landlordHealthValues || [],
         labels: payload.landlordHealthLabels || [],
         colors: ['#16a34a', '#f59e0b', '#dc2626'],
