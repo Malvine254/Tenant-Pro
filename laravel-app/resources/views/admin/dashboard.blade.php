@@ -33,6 +33,12 @@
         ['label' => 'Total collected', 'value' => 'KSh '.number_format($stats['total_paid'], 0)],
     ])->filter();
 
+    $heroHighlights = collect([
+        ['label' => 'Occupied units', 'value' => $stats['occupied_units'].' / '.$stats['total_units']],
+        ['label' => 'Overdue invoices', 'value' => $stats['overdue_invoices']],
+        ['label' => 'Open maintenance', 'value' => $stats['open_maintenance']],
+    ]);
+
     $maintenanceCounts = [
         'New' => $maintenanceStatus->firstWhere('label', 'OPEN')['count'] ?? 0,
         'In progress' => $maintenanceStatus->firstWhere('label', 'IN PROGRESS')['count'] ?? 0,
@@ -58,10 +64,10 @@
         margin-bottom:16px;
     }
     .ops-hero-card {
-        background:linear-gradient(135deg,#0f172a,#1e3a8a);
+        background:linear-gradient(145deg,#0b1324,#1e3a8a 58%,#2563eb);
         color:#fff;
         border-radius:18px;
-        padding:22px;
+        padding:20px 22px 18px;
         box-shadow:0 18px 36px rgba(15,23,42,.16);
         overflow:hidden;
         position:relative;
@@ -77,8 +83,52 @@
         top:-90px;
     }
     .ops-eyebrow { font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#bfdbfe;margin-bottom:7px; }
-    .ops-title { font-size:26px;font-weight:900;letter-spacing:-.05em;position:relative;z-index:1; }
-    .ops-subtitle { color:#cbd5e1;font-size:13px;line-height:1.6;margin-top:8px;max-width:650px;position:relative;z-index:1; }
+    .ops-title { font-size:25px;font-weight:900;letter-spacing:-.05em;position:relative;z-index:1; }
+    .ops-subtitle { color:#dbeafe;font-size:13px;line-height:1.6;margin-top:8px;max-width:650px;position:relative;z-index:1; }
+    .ops-hero-meta {
+        position:relative;
+        z-index:1;
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+        margin-top:13px;
+    }
+    .ops-hero-chip {
+        display:flex;
+        gap:6px;
+        align-items:center;
+        border:1px solid rgba(191,219,254,.35);
+        background:rgba(15,23,42,.34);
+        color:#e2e8f0;
+        border-radius:999px;
+        padding:6px 10px;
+        font-size:12px;
+        line-height:1;
+    }
+    .ops-hero-chip strong {
+        color:#fff;
+        font-size:12px;
+        letter-spacing:-.02em;
+    }
+    .ops-actions {
+        display:flex;
+        gap:8px;
+        margin-top:14px;
+        flex-wrap:wrap;
+        position:relative;
+        z-index:1;
+    }
+    .ops-action-btn {
+        border:1px solid rgba(191,219,254,.45);
+        background:rgba(30,64,175,.32);
+        color:#eff6ff;
+        border-radius:10px;
+        padding:7px 10px;
+        font-size:12px;
+        font-weight:700;
+        letter-spacing:.01em;
+    }
+    .ops-action-btn:hover { background:rgba(37,99,235,.5); color:#fff; }
     .ops-kpis {
         display:grid;
         grid-template-columns:repeat(2,minmax(0,1fr));
@@ -175,24 +225,31 @@
     @media (max-width:560px) {
         .ops-kpis,.ops-stat-strip,.maintenance-grid { grid-template-columns:1fr; }
         .ops-title { font-size:22px; }
+        .ops-actions { display:grid;grid-template-columns:1fr 1fr; }
     }
 </style>
 
 <div class="ops-dashboard">
-    @if($isLandlord && !empty($landlordAccess['message']))
-        <div class="card" style="margin-bottom:14px;border-color:{{ $landlordAccess['status'] === 'past_due' ? '#fecaca' : '#bfdbfe' }};background:{{ $landlordAccess['status'] === 'past_due' ? '#fff7f7' : '#f8fbff' }};">
-            <div style="font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:{{ $landlordAccess['status'] === 'past_due' ? '#b91c1c' : '#1d4ed8' }};margin-bottom:6px;">Service access update</div>
-            <div style="font-size:14px;color:#334155;">{{ $landlordAccess['message'] }}</div>
-        </div>
-    @endif
-
     <div class="ops-hero">
         <div class="ops-hero-card">
             <div class="ops-eyebrow">{{ $isLandlord ? 'Your rental portfolio' : 'Platform operations' }}</div>
-            <div class="ops-title">Today’s rental health at a glance</div>
+            <div class="ops-title">Dashboard snapshot for {{ now()->format('D, d M Y') }}</div>
             <p class="ops-subtitle">
-                Track rent collection, occupancy, invitations, invoices, and maintenance without crowding the page with too many cards.
+                Keep rent, occupancy, and maintenance decisions in one place with immediate shortcuts to daily actions.
             </p>
+            <div class="ops-hero-meta">
+                @foreach($heroHighlights as $highlight)
+                    <div class="ops-hero-chip">
+                        <span>{{ $highlight['label'] }}:</span>
+                        <strong>{{ $highlight['value'] }}</strong>
+                    </div>
+                @endforeach
+            </div>
+            <div class="ops-actions">
+                <a href="{{ route('admin.properties.index') }}" class="ops-action-btn">Manage properties</a>
+                <a href="{{ route('admin.invoices.index') }}" class="ops-action-btn">Review invoices</a>
+                <a href="{{ route('admin.chats.index') }}" class="ops-action-btn">Open maintenance chats</a>
+            </div>
         </div>
         <div class="ops-kpis">
             @foreach($kpis as $kpi)
