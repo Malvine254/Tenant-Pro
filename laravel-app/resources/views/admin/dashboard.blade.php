@@ -165,7 +165,10 @@
     }
     .ops-panel-title { font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:#0f172a; }
     .ops-panel-note { font-size:12px;color:#64748b; }
-    .ops-chart-card canvas { width:100% !important;height:260px !important; }
+    .ops-chart-host {
+        width:100%;
+        min-height:260px;
+    }
     .ops-mini-table {
         width:100%;
         border-collapse:collapse;
@@ -282,7 +285,7 @@
                 <div class="ops-panel-title">Portfolio occupancy split</div>
                 <div class="ops-panel-note">Unit distribution</div>
             </div>
-            <canvas id="portfolioSplitChart"></canvas>
+            <div id="portfolioSplitChart" class="ops-chart-host"></div>
         </div>
 
         <div class="ops-panel">
@@ -290,7 +293,7 @@
                 <div class="ops-panel-title">Collection cash position</div>
                 <div class="ops-panel-note">Collected vs outstanding</div>
             </div>
-            <canvas id="cashPositionChart"></canvas>
+            <div id="cashPositionChart" class="ops-chart-host"></div>
         </div>
     </div>
 
@@ -400,7 +403,7 @@
                 <div class="ops-panel-title">Revenue trend</div>
                 <div class="ops-panel-note">Interactive monthly line</div>
             </div>
-            <canvas id="revenueTrendChart"></canvas>
+            <div id="revenueTrendChart" class="ops-chart-host"></div>
         </div>
 
         <div class="ops-panel ops-chart-card">
@@ -408,7 +411,7 @@
                 <div class="ops-panel-title">Invoice mix</div>
                 <div class="ops-panel-note">Paid vs open balances</div>
             </div>
-            <canvas id="invoiceMixChart"></canvas>
+            <div id="invoiceMixChart" class="ops-chart-host"></div>
         </div>
 
         <div class="ops-panel ops-chart-card">
@@ -416,7 +419,7 @@
                 <div class="ops-panel-title">Maintenance flow</div>
                 <div class="ops-panel-note">Request resolution pipeline</div>
             </div>
-            <canvas id="maintenanceChart"></canvas>
+            <div id="maintenanceChart" class="ops-chart-host"></div>
         </div>
     </div>
 
@@ -470,7 +473,7 @@
                             <div class="ops-panel-title">Top landlord cashflow</div>
                             <div class="ops-panel-note">Collection vs outstanding</div>
                         </div>
-                        <canvas id="landlordPerformanceChart"></canvas>
+                        <div id="landlordPerformanceChart" class="ops-chart-host"></div>
                     </div>
 
                     <div class="ops-panel" style="box-shadow:none;">
@@ -478,7 +481,7 @@
                             <div class="ops-panel-title">Landlord health split</div>
                             <div class="ops-panel-note">Healthy vs attention vs risk</div>
                         </div>
-                        <canvas id="landlordHealthChart"></canvas>
+                        <div id="landlordHealthChart" class="ops-chart-host"></div>
                     </div>
                 </div>
 
@@ -527,251 +530,114 @@
     @endunless
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.53.0/dist/apexcharts.min.js"></script>
 <script>
 (() => {
     const payload = @json($chartSeries);
     const labels = payload.monthlyRevenueLabels || [];
     const revenue = payload.monthlyRevenueValues || [];
 
-    const baseOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                labels: {
-                    boxWidth: 12,
-                    boxHeight: 12,
-                    usePointStyle: true,
-                    color: '#334155',
-                    font: { size: 11, weight: '600' },
-                }
-            }
+    const common = {
+        chart: {
+            toolbar: { show: false },
+            zoom: { enabled: false },
+            foreColor: '#475569',
+            fontFamily: 'Segoe UI, Inter, system-ui, sans-serif',
         },
-        scales: {
-            x: {
-                grid: { color: 'rgba(148,163,184,.16)' },
-                ticks: { color: '#475569', font: { size: 11 } },
-            },
-            y: {
-                beginAtZero: true,
-                grid: { color: 'rgba(148,163,184,.16)' },
-                ticks: { color: '#475569', font: { size: 11 } },
-            }
-        }
+        dataLabels: { enabled: false },
+        grid: { borderColor: 'rgba(148,163,184,.16)' },
+        legend: {
+            position: 'bottom',
+            fontSize: '12px',
+            fontWeight: 600,
+            labels: { colors: '#334155' },
+        },
     };
 
-    const revenueCtx = document.getElementById('revenueTrendChart');
-    if (revenueCtx) {
-        new Chart(revenueCtx, {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [{
-                    label: 'Revenue (KSh)',
-                    data: revenue,
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, .14)',
-                    borderWidth: 3,
-                    tension: .35,
-                    fill: true,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#1d4ed8',
-                }]
-            },
-            options: baseOptions,
-        });
-    }
+    const mount = (selector, options) => {
+        const el = document.querySelector(selector);
+        if (!el) return;
+        const chart = new ApexCharts(el, options);
+        chart.render();
+    };
 
-    const invoiceCtx = document.getElementById('invoiceMixChart');
-    if (invoiceCtx) {
-        new Chart(invoiceCtx, {
-            type: 'doughnut',
-            data: {
-                labels: payload.invoiceStatusLabels || [],
-                datasets: [{
-                    data: payload.invoiceStatusValues || [],
-                    backgroundColor: ['#f59e0b', '#0ea5e9', '#16a34a', '#dc2626'],
-                    borderColor: '#ffffff',
-                    borderWidth: 2,
-                    hoverOffset: 6,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '58%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 11,
-                            boxHeight: 11,
-                            color: '#334155',
-                            font: { size: 11, weight: '600' },
-                        }
-                    }
-                }
-            }
-        });
-    }
+    mount('#revenueTrendChart', {
+        ...common,
+        chart: { ...common.chart, type: 'area', height: 260 },
+        series: [{ name: 'Revenue (KSh)', data: revenue }],
+        xaxis: { categories: labels },
+        stroke: { curve: 'smooth', width: 3, colors: ['#2563eb'] },
+        fill: {
+            type: 'gradient',
+            gradient: { shadeIntensity: 1, opacityFrom: 0.34, opacityTo: 0.06, stops: [0, 95, 100] },
+        },
+        colors: ['#2563eb'],
+        tooltip: { y: { formatter: (val) => 'KSh ' + Number(val || 0).toLocaleString() } },
+    });
 
-    const maintenanceCtx = document.getElementById('maintenanceChart');
-    if (maintenanceCtx) {
-        new Chart(maintenanceCtx, {
-            type: 'bar',
-            data: {
-                labels: payload.maintenanceStatusLabels || [],
-                datasets: [{
-                    label: 'Requests',
-                    data: payload.maintenanceStatusValues || [],
-                    backgroundColor: ['#1d4ed8', '#f59e0b', '#16a34a', '#475569'],
-                    borderRadius: 8,
-                    borderSkipped: false,
-                }]
-            },
-            options: {
-                ...baseOptions,
-                plugins: {
-                    ...baseOptions.plugins,
-                    legend: { display: false },
-                },
-            },
-        });
-    }
+    mount('#invoiceMixChart', {
+        ...common,
+        chart: { ...common.chart, type: 'donut', height: 260 },
+        series: payload.invoiceStatusValues || [],
+        labels: payload.invoiceStatusLabels || [],
+        colors: ['#f59e0b', '#0ea5e9', '#16a34a', '#dc2626'],
+        plotOptions: { pie: { donut: { size: '62%' } } },
+    });
 
-    const portfolioSplitCtx = document.getElementById('portfolioSplitChart');
-    if (portfolioSplitCtx) {
-        new Chart(portfolioSplitCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Occupied', 'Vacant', 'Pending invites'],
-                datasets: [{
-                    data: [
-                        {{ (int) $stats['occupied_units'] }},
-                        {{ (int) $stats['vacant_units'] }},
-                        {{ (int) $stats['pending_tenant_invites'] }}
-                    ],
-                    backgroundColor: ['#2563eb', '#14b8a6', '#f59e0b'],
-                    borderColor: '#ffffff',
-                    borderWidth: 2,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '56%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 11,
-                            boxHeight: 11,
-                            color: '#334155',
-                            font: { size: 11, weight: '600' },
-                        }
-                    }
-                }
-            }
-        });
-    }
+    mount('#maintenanceChart', {
+        ...common,
+        chart: { ...common.chart, type: 'bar', height: 260 },
+        series: [{ name: 'Requests', data: payload.maintenanceStatusValues || [] }],
+        xaxis: { categories: payload.maintenanceStatusLabels || [] },
+        colors: ['#1d4ed8'],
+        plotOptions: { bar: { borderRadius: 7, columnWidth: '42%' } },
+    });
 
-    const cashPositionCtx = document.getElementById('cashPositionChart');
-    if (cashPositionCtx) {
-        new Chart(cashPositionCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Collected', 'Outstanding'],
-                datasets: [{
-                    label: 'KSh',
-                    data: [{{ (float) $stats['total_paid'] }}, {{ (float) $stats['outstanding'] }}],
-                    backgroundColor: ['#16a34a', '#dc2626'],
-                    borderRadius: 8,
-                    borderSkipped: false,
-                }]
-            },
-            options: {
-                ...baseOptions,
-                plugins: {
-                    ...baseOptions.plugins,
-                    legend: { display: false },
-                },
-            }
-        });
-    }
+    mount('#portfolioSplitChart', {
+        ...common,
+        chart: { ...common.chart, type: 'donut', height: 260 },
+        series: [
+            {{ (int) $stats['occupied_units'] }},
+            {{ (int) $stats['vacant_units'] }},
+            {{ (int) $stats['pending_tenant_invites'] }}
+        ],
+        labels: ['Occupied', 'Vacant', 'Pending invites'],
+        colors: ['#2563eb', '#14b8a6', '#f59e0b'],
+        plotOptions: { pie: { donut: { size: '60%' } } },
+    });
 
-    const landlordPerformanceCtx = document.getElementById('landlordPerformanceChart');
-    if (landlordPerformanceCtx) {
-        new Chart(landlordPerformanceCtx, {
-            type: 'bar',
-            data: {
-                labels: payload.landlordPerformanceLabels || [],
-                datasets: [
-                    {
-                        label: 'Collected',
-                        data: payload.landlordPerformanceCollectionValues || [],
-                        backgroundColor: '#16a34a',
-                        borderRadius: 7,
-                        borderSkipped: false,
-                    },
-                    {
-                        label: 'Outstanding',
-                        data: payload.landlordPerformanceOutstandingValues || [],
-                        backgroundColor: '#dc2626',
-                        borderRadius: 7,
-                        borderSkipped: false,
-                    }
-                ]
-            },
-            options: {
-                ...baseOptions,
-                plugins: {
-                    ...baseOptions.plugins,
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 11,
-                            boxHeight: 11,
-                            color: '#334155',
-                            font: { size: 11, weight: '600' },
-                        }
-                    }
-                }
-            },
-        });
-    }
+    mount('#cashPositionChart', {
+        ...common,
+        chart: { ...common.chart, type: 'bar', height: 260 },
+        series: [{ name: 'KSh', data: [{{ (float) $stats['total_paid'] }}, {{ (float) $stats['outstanding'] }}] }],
+        xaxis: { categories: ['Collected', 'Outstanding'] },
+        colors: ['#16a34a', '#dc2626'],
+        plotOptions: { bar: { distributed: true, borderRadius: 8, columnWidth: '44%' } },
+        tooltip: { y: { formatter: (val) => 'KSh ' + Number(val || 0).toLocaleString() } },
+        legend: { show: false },
+    });
 
-    const landlordHealthCtx = document.getElementById('landlordHealthChart');
-    if (landlordHealthCtx) {
-        new Chart(landlordHealthCtx, {
-            type: 'doughnut',
-            data: {
-                labels: payload.landlordHealthLabels || [],
-                datasets: [{
-                    data: payload.landlordHealthValues || [],
-                    backgroundColor: ['#16a34a', '#f59e0b', '#dc2626'],
-                    borderColor: '#fff',
-                    borderWidth: 2,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '62%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 11,
-                            boxHeight: 11,
-                            color: '#334155',
-                            font: { size: 11, weight: '600' },
-                        }
-                    }
-                }
-            }
-        });
-    }
+    mount('#landlordPerformanceChart', {
+        ...common,
+        chart: { ...common.chart, type: 'bar', height: 280 },
+        series: [
+            { name: 'Collected', data: payload.landlordPerformanceCollectionValues || [] },
+            { name: 'Outstanding', data: payload.landlordPerformanceOutstandingValues || [] },
+        ],
+        xaxis: { categories: payload.landlordPerformanceLabels || [] },
+        colors: ['#16a34a', '#dc2626'],
+        plotOptions: { bar: { borderRadius: 7, columnWidth: '50%' } },
+        tooltip: { y: { formatter: (val) => 'KSh ' + Number(val || 0).toLocaleString() } },
+    });
+
+    mount('#landlordHealthChart', {
+        ...common,
+        chart: { ...common.chart, type: 'donut', height: 280 },
+        series: payload.landlordHealthValues || [],
+        labels: payload.landlordHealthLabels || [],
+        colors: ['#16a34a', '#f59e0b', '#dc2626'],
+        plotOptions: { pie: { donut: { size: '64%' } } },
+    });
 })();
 </script>
 @endsection
