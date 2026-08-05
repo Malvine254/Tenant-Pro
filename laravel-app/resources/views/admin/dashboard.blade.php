@@ -298,47 +298,6 @@
                 @endforeach
             </div>
         </div>
-    @elseif(!$isLandlord)
-        <div class="ops-hero">
-            <div class="ops-hero-card">
-                <div class="ops-eyebrow">{{ $isLandlord ? 'Your rental portfolio' : 'Platform operations' }}</div>
-                <div class="ops-title">Dashboard snapshot for {{ now()->format('D, d M Y') }}</div>
-                <p class="ops-subtitle">
-                    Keep rent, occupancy, and maintenance decisions in one place with immediate shortcuts to daily actions.
-                </p>
-                <div class="ops-hero-meta">
-                    @foreach($heroHighlights as $highlight)
-                        <div class="ops-hero-chip">
-                            <span>{{ $highlight['label'] }}:</span>
-                            <strong>{{ $highlight['value'] }}</strong>
-                        </div>
-                    @endforeach
-                </div>
-                <div class="ops-actions">
-                    <a href="{{ route('admin.properties.index') }}" class="ops-action-btn">Manage properties</a>
-                    <a href="{{ route('admin.invoices.index') }}" class="ops-action-btn">Review invoices</a>
-                    <a href="{{ route('admin.chats.index') }}" class="ops-action-btn">Open maintenance chats</a>
-                </div>
-            </div>
-            <div class="ops-kpis">
-                @foreach($kpis as $kpi)
-                    <div class="ops-kpi ops-tone-{{ $kpi['tone'] }}">
-                        <span>{{ $kpi['label'] }}</span>
-                        <strong>{{ $kpi['value'] }}</strong>
-                        <small>{{ $kpi['hint'] }}</small>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-
-        <div class="ops-stat-strip">
-            @foreach($quickStats as $stat)
-                <div class="ops-stat">
-                    <span>{{ $stat['label'] }}</span>
-                    <strong>{{ $stat['value'] }}</strong>
-                </div>
-            @endforeach
-        </div>
     @endif
 
     <div class="ops-insight-grid">
