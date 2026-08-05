@@ -25,6 +25,17 @@
         ['label' => 'Open maintenance', 'value' => $stats['open_maintenance']],
     ]);
 
+    $superAdminExecutiveStats = collect([
+        ['label' => 'Total landlords', 'value' => $superAdminLandlordStats['total_landlords'] ?? 0, 'tone' => 'blue'],
+        ['label' => 'Active paid landlords', 'value' => $superAdminLandlordStats['active_paid_landlords'] ?? 0, 'tone' => 'green'],
+        ['label' => 'Past due landlords', 'value' => $superAdminLandlordStats['past_due_landlords'] ?? 0, 'tone' => 'red'],
+        ['label' => 'Properties', 'value' => $stats['total_properties'], 'tone' => 'blue'],
+        ['label' => 'Active tenants', 'value' => $stats['total_tenants'], 'tone' => 'green'],
+        ['label' => 'Occupied units', 'value' => $stats['occupied_units'].' / '.$stats['total_units'], 'tone' => 'blue'],
+        ['label' => 'Collected this month', 'value' => 'KSh '.number_format((float) $stats['collected_this_month'], 2), 'tone' => 'green'],
+        ['label' => 'Outstanding', 'value' => 'KSh '.number_format((float) $stats['outstanding'], 2), 'tone' => 'red'],
+    ]);
+
     $statusClass = [
         'PAID' => 'badge-green',
         'PENDING' => 'badge-yellow',
@@ -220,11 +231,42 @@
     .ops-health-healthy { background:#dcfce7;color:#166534; }
     .ops-health-attention { background:#fef3c7;color:#92400e; }
     .ops-health-risk { background:#fee2e2;color:#991b1b; }
+    .ops-exec-grid {
+        display:grid;
+        grid-template-columns:repeat(4,minmax(0,1fr));
+        gap:10px;
+        margin-bottom:16px;
+    }
+    .ops-exec-card {
+        background:#fff;
+        border:1px solid #dbe4ef;
+        border-radius:12px;
+        padding:12px;
+        box-shadow:0 8px 18px rgba(15,23,42,.05);
+    }
+    .ops-exec-card span {
+        display:block;
+        font-size:11px;
+        color:#64748b;
+        margin-bottom:6px;
+        text-transform:uppercase;
+        letter-spacing:.04em;
+    }
+    .ops-exec-card strong {
+        font-size:21px;
+        font-weight:900;
+        letter-spacing:-.04em;
+        line-height:1.1;
+    }
+    .ops-exec-tone-green strong { color:#15803d; }
+    .ops-exec-tone-red strong { color:#b91c1c; }
+    .ops-exec-tone-blue strong { color:#1d4ed8; }
     @media (max-width:1200px) {
         .ops-stat-strip { grid-template-columns:repeat(3,minmax(0,1fr)); }
         .ops-hero { grid-template-columns:1fr; }
         .ops-chart-grid { grid-template-columns:1fr; }
         .ops-landlord-kpis { grid-template-columns:repeat(3,minmax(0,1fr)); }
+        .ops-exec-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
     @media (max-width:900px) {
         .ops-insight-grid,.ops-table-grid { grid-template-columns:1fr; }
@@ -236,11 +278,27 @@
         .ops-title { font-size:22px; }
         .ops-actions { display:grid;grid-template-columns:1fr 1fr; }
         .ops-landlord-kpis { grid-template-columns:1fr; }
+        .ops-exec-grid { grid-template-columns:1fr; }
     }
 </style>
 
 <div class="ops-dashboard">
-    @unless($isLandlord)
+    @if($isSuperAdmin)
+        <div class="ops-panel" style="margin-bottom:16px;">
+            <div class="ops-panel-head">
+                <div class="ops-panel-title">Super admin whole portfolio stats</div>
+                <div class="ops-panel-note">Live multi-landlord operational snapshot</div>
+            </div>
+            <div class="ops-exec-grid">
+                @foreach($superAdminExecutiveStats as $item)
+                    <div class="ops-exec-card ops-exec-tone-{{ $item['tone'] }}">
+                        <span>{{ $item['label'] }}</span>
+                        <strong>{{ $item['value'] }}</strong>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @elseif(!$isLandlord)
         <div class="ops-hero">
             <div class="ops-hero-card">
                 <div class="ops-eyebrow">{{ $isLandlord ? 'Your rental portfolio' : 'Platform operations' }}</div>
@@ -281,7 +339,7 @@
                 </div>
             @endforeach
         </div>
-    @endunless
+    @endif
 
     <div class="ops-insight-grid">
         <div class="ops-panel">
