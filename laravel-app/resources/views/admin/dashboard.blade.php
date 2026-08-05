@@ -3,20 +3,6 @@
 
 @section('content')
 @php
-    $maxRevenue = max(1, $monthlyRevenue->max('amount') ?: 1);
-    $pointCount = max(1, $monthlyRevenue->count());
-    $trendPoints = $monthlyRevenue->values()->map(function ($month, $index) use ($pointCount, $maxRevenue) {
-        $x = $pointCount === 1 ? 50 : ($index / max(1, $pointCount - 1)) * 100;
-        $y = 86 - (((float) $month['amount'] / $maxRevenue) * 64);
-        return round($x, 2).','.round($y, 2);
-    })->implode(' ');
-    $trendAreaPoints = '0,100 '.$trendPoints.' 100,100';
-
-    $totalUnits = max(1, (int) $stats['total_units']);
-    $occupiedPct = min(100, max(0, ((int) $stats['occupied_units'] / $totalUnits) * 100));
-    $vacantPct = min(100, max(0, ((int) $stats['vacant_units'] / $totalUnits) * 100));
-    $pendingPct = min(100, max(0, ((int) $stats['pending_tenant_invites'] / $totalUnits) * 100));
-
     $kpis = collect([
         ['label' => 'Rent this month', 'value' => 'KSh '.number_format($stats['collected_this_month'], 2), 'tone' => 'green', 'hint' => 'Current month collection'],
         ['label' => 'Outstanding', 'value' => 'KSh '.number_format($stats['outstanding'], 2), 'tone' => 'red', 'hint' => $stats['overdue_invoices'].' overdue invoices'],
@@ -38,13 +24,6 @@
         ['label' => 'Overdue invoices', 'value' => $stats['overdue_invoices']],
         ['label' => 'Open maintenance', 'value' => $stats['open_maintenance']],
     ]);
-
-    $maintenanceCounts = [
-        'New' => $maintenanceStatus->firstWhere('label', 'OPEN')['count'] ?? 0,
-        'In progress' => $maintenanceStatus->firstWhere('label', 'IN PROGRESS')['count'] ?? 0,
-        'Awaiting' => $maintenanceStatus->firstWhere('label', 'WAITING TENANT')['count'] ?? 0,
-        'Closed' => $maintenanceStatus->firstWhere('label', 'CLOSED')['count'] ?? 0,
-    ];
 
     $statusClass = [
         'PAID' => 'badge-green',
@@ -163,9 +142,9 @@
     }
     .ops-stat span { display:block;font-size:11px;color:#64748b;margin-bottom:5px; }
     .ops-stat strong { font-size:19px;font-weight:900;letter-spacing:-.04em; }
-    .ops-main-grid {
+    .ops-insight-grid {
         display:grid;
-        grid-template-columns:minmax(0,1.45fr) minmax(320px,.8fr);
+        grid-template-columns:repeat(2,minmax(0,1fr));
         gap:16px;
         margin-bottom:16px;
     }
@@ -186,46 +165,72 @@
     }
     .ops-panel-title { font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:#0f172a; }
     .ops-panel-note { font-size:12px;color:#64748b; }
-    .trend-chart {
-        position:relative;
-        height:230px;
-        border-radius:14px;
-        background:
-            linear-gradient(to bottom, rgba(148,163,184,.24) 1px, transparent 1px) 0 22px / 100% 48px,
-            linear-gradient(180deg,#fff,#f8fafc);
-        border:1px solid #eef2f7;
-        overflow:hidden;
+    .ops-chart-card canvas { width:100% !important;height:260px !important; }
+    .ops-mini-table {
+        width:100%;
+        border-collapse:collapse;
+        font-size:13px;
     }
-    .trend-chart svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
-    .trend-labels { display:flex;justify-content:space-between;padding:9px 4px 0;font-size:12px;color:#64748b; }
-    .health-stack { display:grid; gap:12px; }
-    .health-row { display:grid;grid-template-columns:94px 1fr 44px;gap:9px;align-items:center;font-size:12px;color:#334155; }
-    .health-track { height:10px;background:#eef2f7;border-radius:999px;overflow:hidden; }
-    .health-fill { height:100%;border-radius:999px; }
-    .maintenance-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:13px; }
-    .maintenance-box { border:1px solid #e2e8f0;border-radius:12px;padding:10px;text-align:center;background:#f8fafc; }
-    .maintenance-box span { display:block;font-size:11px;color:#64748b;margin-bottom:4px; }
-    .maintenance-box strong { font-size:18px;letter-spacing:-.04em; }
+    .ops-mini-table th,
+    .ops-mini-table td {
+        border-bottom:1px solid #e2e8f0;
+        padding:10px 8px;
+        text-align:left;
+    }
+    .ops-mini-table th { color:#64748b;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.03em; }
+    .ops-mini-table td:last-child,
+    .ops-mini-table th:last-child { text-align:right; }
     .ops-table-grid { display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:16px; }
     .ops-chart-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:16px; }
-    .ops-chart-card canvas { width:100% !important;height:240px !important; }
     .ops-subscription-grid { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px; }
     .ops-subscription-pill { border:1px solid #dbe4ef;border-radius:12px;padding:10px;background:#f8fafc; }
     .ops-subscription-pill span { display:block;font-size:11px;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em; }
     .ops-subscription-pill strong { font-size:20px;font-weight:900;letter-spacing:-.04em; }
+    .ops-landlord-kpis {
+        display:grid;
+        grid-template-columns:repeat(5,minmax(0,1fr));
+        gap:10px;
+        margin-bottom:16px;
+    }
+    .ops-landlord-kpi {
+        border:1px solid #dbe4ef;
+        border-radius:12px;
+        padding:10px;
+        background:#f8fafc;
+    }
+    .ops-landlord-kpi span { display:block;font-size:11px;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em; }
+    .ops-landlord-kpi strong { font-size:20px;font-weight:900;letter-spacing:-.04em;color:#0f172a; }
+    .ops-landlord-kpi small { display:block;color:#64748b;font-size:12px;margin-top:4px; }
+    .ops-landlord-name { font-weight:700;color:#0f172a; }
+    .ops-landlord-health {
+        display:inline-flex;
+        align-items:center;
+        border-radius:999px;
+        padding:3px 8px;
+        font-size:11px;
+        font-weight:700;
+        text-transform:uppercase;
+        letter-spacing:.03em;
+    }
+    .ops-health-healthy { background:#dcfce7;color:#166534; }
+    .ops-health-attention { background:#fef3c7;color:#92400e; }
+    .ops-health-risk { background:#fee2e2;color:#991b1b; }
     @media (max-width:1200px) {
         .ops-stat-strip { grid-template-columns:repeat(3,minmax(0,1fr)); }
         .ops-hero { grid-template-columns:1fr; }
         .ops-chart-grid { grid-template-columns:1fr; }
+        .ops-landlord-kpis { grid-template-columns:repeat(3,minmax(0,1fr)); }
     }
     @media (max-width:900px) {
-        .ops-main-grid,.ops-table-grid { grid-template-columns:1fr; }
+        .ops-insight-grid,.ops-table-grid { grid-template-columns:1fr; }
         .ops-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .ops-landlord-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
     @media (max-width:560px) {
-        .ops-kpis,.ops-stat-strip,.maintenance-grid { grid-template-columns:1fr; }
+        .ops-kpis,.ops-stat-strip { grid-template-columns:1fr; }
         .ops-title { font-size:22px; }
         .ops-actions { display:grid;grid-template-columns:1fr 1fr; }
+        .ops-landlord-kpis { grid-template-columns:1fr; }
     }
 </style>
 
@@ -271,70 +276,70 @@
         @endforeach
     </div>
 
-    <div class="ops-main-grid">
+    <div class="ops-insight-grid">
         <div class="ops-panel">
             <div class="ops-panel-head">
-                <div class="ops-panel-title">Monthly rent collection</div>
+                <div class="ops-panel-title">Portfolio occupancy split</div>
+                <div class="ops-panel-note">Unit distribution</div>
+            </div>
+            <canvas id="portfolioSplitChart"></canvas>
+        </div>
+
+        <div class="ops-panel">
+            <div class="ops-panel-head">
+                <div class="ops-panel-title">Collection cash position</div>
+                <div class="ops-panel-note">Collected vs outstanding</div>
+            </div>
+            <canvas id="cashPositionChart"></canvas>
+        </div>
+    </div>
+
+    <div class="ops-insight-grid">
+        <div class="ops-panel">
+            <div class="ops-panel-head">
+                <div class="ops-panel-title">Monthly collection table</div>
                 <div class="ops-panel-note">Last {{ $monthlyRevenue->count() }} months</div>
             </div>
-            <div class="trend-chart">
-                <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                    <defs>
-                        <linearGradient id="rentArea" x1="0" x2="1" y1="0" y2="1">
-                            <stop offset="0%" stop-color="#38bdf8" stop-opacity=".42" />
-                            <stop offset="60%" stop-color="#2563eb" stop-opacity=".20" />
-                            <stop offset="100%" stop-color="#9333ea" stop-opacity=".10" />
-                        </linearGradient>
-                    </defs>
-                    <polygon points="{{ $trendAreaPoints }}" fill="url(#rentArea)" />
-                    <polyline points="{{ $trendPoints }}" fill="none" stroke="#2563eb" stroke-width="2.1" vector-effect="non-scaling-stroke" />
-                    @foreach($monthlyRevenue->values() as $index => $month)
-                        @php
-                            $x = $pointCount === 1 ? 50 : ($index / max(1, $pointCount - 1)) * 100;
-                            $y = 86 - (((float) $month['amount'] / $maxRevenue) * 64);
-                        @endphp
-                        <circle cx="{{ $x }}" cy="{{ $y }}" r="1.8" fill="#fff" stroke="#2563eb" stroke-width=".9" vector-effect="non-scaling-stroke" />
-                    @endforeach
-                </svg>
-            </div>
-            <div class="trend-labels">
-                @foreach($monthlyRevenue as $month)
-                    <span>{{ $month['label'] }}</span>
-                @endforeach
+            <div class="table-scroll">
+                <table class="ops-mini-table">
+                    <thead>
+                        <tr><th>Month</th><th>Amount</th></tr>
+                    </thead>
+                    <tbody>
+                        @forelse($monthlyRevenue as $month)
+                            <tr>
+                                <td>{{ $month['label'] }}</td>
+                                <td>KSh {{ number_format((float) $month['amount'], 2) }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="2" class="empty-state">No monthly collection data yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
 
         <div class="ops-panel">
             <div class="ops-panel-head">
-                <div class="ops-panel-title">Portfolio health</div>
-                <div class="ops-panel-note">{{ $stats['total_units'] }} total units</div>
+                <div class="ops-panel-title">Maintenance status table</div>
+                <div class="ops-panel-note">Open to resolved flow</div>
             </div>
-            <div class="health-stack">
-                <div class="health-row">
-                    <span>Occupied</span>
-                    <div class="health-track"><div class="health-fill" style="width:{{ $occupiedPct }}%;background:#2563eb;"></div></div>
-                    <strong>{{ $stats['occupied_units'] }}</strong>
-                </div>
-                <div class="health-row">
-                    <span>Vacant</span>
-                    <div class="health-track"><div class="health-fill" style="width:{{ $vacantPct }}%;background:#14b8a6;"></div></div>
-                    <strong>{{ $stats['vacant_units'] }}</strong>
-                </div>
-                <div class="health-row">
-                    <span>Pending</span>
-                    <div class="health-track"><div class="health-fill" style="width:{{ $pendingPct }}%;background:#f59e0b;"></div></div>
-                    <strong>{{ $stats['pending_tenant_invites'] }}</strong>
-                </div>
-            </div>
-            <div style="height:1px;background:#e2e8f0;margin:16px 0;"></div>
-            <div class="ops-panel-title" style="margin-bottom:10px;">Maintenance</div>
-            <div class="maintenance-grid">
-                @foreach($maintenanceCounts as $label => $count)
-                    <div class="maintenance-box">
-                        <span>{{ $label }}</span>
-                        <strong>{{ $count }}</strong>
-                    </div>
-                @endforeach
+            <div class="table-scroll">
+                <table class="ops-mini-table">
+                    <thead>
+                        <tr><th>Status</th><th>Count</th></tr>
+                    </thead>
+                    <tbody>
+                        @forelse($maintenanceStatus as $status)
+                            <tr>
+                                <td>{{ ucfirst(strtolower((string) ($status['label'] ?? '-'))) }}</td>
+                                <td>{{ $status['count'] ?? 0 }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="2" class="empty-state">No maintenance status data yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -428,6 +433,97 @@
                 <div class="ops-subscription-pill"><span>Not Required</span><strong style="color:#475569;">{{ $landlordSubscription['not_required'] ?? 0 }}</strong></div>
             </div>
         </div>
+
+        @if($isSuperAdmin)
+            <div class="ops-panel" style="margin-bottom:16px;">
+                <div class="ops-panel-head">
+                    <div class="ops-panel-title">Landlord performance command center</div>
+                    <div class="ops-panel-note">Operational risk and collections visibility</div>
+                </div>
+                <div class="ops-landlord-kpis">
+                    <div class="ops-landlord-kpi">
+                        <span>Total landlords</span>
+                        <strong>{{ $superAdminLandlordStats['total_landlords'] ?? 0 }}</strong>
+                    </div>
+                    <div class="ops-landlord-kpi">
+                        <span>Active paid landlords</span>
+                        <strong style="color:#15803d;">{{ $superAdminLandlordStats['active_paid_landlords'] ?? 0 }}</strong>
+                    </div>
+                    <div class="ops-landlord-kpi">
+                        <span>Past due landlords</span>
+                        <strong style="color:#b91c1c;">{{ $superAdminLandlordStats['past_due_landlords'] ?? 0 }}</strong>
+                    </div>
+                    <div class="ops-landlord-kpi">
+                        <span>With overdue invoices</span>
+                        <strong style="color:#b7791f;">{{ $superAdminLandlordStats['landlords_with_overdue_invoices'] ?? 0 }}</strong>
+                    </div>
+                    <div class="ops-landlord-kpi">
+                        <span>Avg monthly collection</span>
+                        <strong>KSh {{ number_format((float) ($superAdminLandlordStats['avg_monthly_collection_per_landlord'] ?? 0), 2) }}</strong>
+                        <small>Per landlord this month</small>
+                    </div>
+                </div>
+
+                <div class="ops-insight-grid" style="margin-bottom:0;">
+                    <div class="ops-panel" style="box-shadow:none;">
+                        <div class="ops-panel-head">
+                            <div class="ops-panel-title">Top landlord cashflow</div>
+                            <div class="ops-panel-note">Collection vs outstanding</div>
+                        </div>
+                        <canvas id="landlordPerformanceChart"></canvas>
+                    </div>
+
+                    <div class="ops-panel" style="box-shadow:none;">
+                        <div class="ops-panel-head">
+                            <div class="ops-panel-title">Landlord health split</div>
+                            <div class="ops-panel-note">Healthy vs attention vs risk</div>
+                        </div>
+                        <canvas id="landlordHealthChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="ops-panel" style="box-shadow:none;margin-top:16px;">
+                    <div class="ops-panel-head">
+                        <div class="ops-panel-title">Landlord leaderboard</div>
+                        <div class="ops-panel-note">Sorted by monthly collection</div>
+                    </div>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Landlord</th>
+                                    <th>Units</th>
+                                    <th>Occupancy</th>
+                                    <th>Collected</th>
+                                    <th>Outstanding</th>
+                                    <th>Overdue</th>
+                                    <th>Health</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($landlordPerformance->take(10) as $landlord)
+                                    <tr>
+                                        <td class="ops-landlord-name">{{ $landlord['name'] }}</td>
+                                        <td>{{ $landlord['units'] }}</td>
+                                        <td>{{ $landlord['occupancy_rate'] }}%</td>
+                                        <td>KSh {{ number_format((float) $landlord['monthly_collection'], 2) }}</td>
+                                        <td>KSh {{ number_format((float) $landlord['outstanding'], 2) }}</td>
+                                        <td>{{ $landlord['overdue_invoices'] }}</td>
+                                        <td>
+                                            <span class="ops-landlord-health ops-health-{{ $landlord['health'] === 'risk' ? 'risk' : ($landlord['health'] === 'attention' ? 'attention' : 'healthy') }}">
+                                                {{ $landlord['health'] === 'risk' ? 'At risk' : ($landlord['health'] === 'attention' ? 'Needs attention' : 'Healthy') }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="7" class="empty-state">No landlord performance data yet.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        @endif
     @endunless
 </div>
 
@@ -541,6 +637,139 @@
                     legend: { display: false },
                 },
             },
+        });
+    }
+
+    const portfolioSplitCtx = document.getElementById('portfolioSplitChart');
+    if (portfolioSplitCtx) {
+        new Chart(portfolioSplitCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Occupied', 'Vacant', 'Pending invites'],
+                datasets: [{
+                    data: [
+                        {{ (int) $stats['occupied_units'] }},
+                        {{ (int) $stats['vacant_units'] }},
+                        {{ (int) $stats['pending_tenant_invites'] }}
+                    ],
+                    backgroundColor: ['#2563eb', '#14b8a6', '#f59e0b'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '56%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 11,
+                            boxHeight: 11,
+                            color: '#334155',
+                            font: { size: 11, weight: '600' },
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const cashPositionCtx = document.getElementById('cashPositionChart');
+    if (cashPositionCtx) {
+        new Chart(cashPositionCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Collected', 'Outstanding'],
+                datasets: [{
+                    label: 'KSh',
+                    data: [{{ (float) $stats['total_paid'] }}, {{ (float) $stats['outstanding'] }}],
+                    backgroundColor: ['#16a34a', '#dc2626'],
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                ...baseOptions,
+                plugins: {
+                    ...baseOptions.plugins,
+                    legend: { display: false },
+                },
+            }
+        });
+    }
+
+    const landlordPerformanceCtx = document.getElementById('landlordPerformanceChart');
+    if (landlordPerformanceCtx) {
+        new Chart(landlordPerformanceCtx, {
+            type: 'bar',
+            data: {
+                labels: payload.landlordPerformanceLabels || [],
+                datasets: [
+                    {
+                        label: 'Collected',
+                        data: payload.landlordPerformanceCollectionValues || [],
+                        backgroundColor: '#16a34a',
+                        borderRadius: 7,
+                        borderSkipped: false,
+                    },
+                    {
+                        label: 'Outstanding',
+                        data: payload.landlordPerformanceOutstandingValues || [],
+                        backgroundColor: '#dc2626',
+                        borderRadius: 7,
+                        borderSkipped: false,
+                    }
+                ]
+            },
+            options: {
+                ...baseOptions,
+                plugins: {
+                    ...baseOptions.plugins,
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 11,
+                            boxHeight: 11,
+                            color: '#334155',
+                            font: { size: 11, weight: '600' },
+                        }
+                    }
+                }
+            },
+        });
+    }
+
+    const landlordHealthCtx = document.getElementById('landlordHealthChart');
+    if (landlordHealthCtx) {
+        new Chart(landlordHealthCtx, {
+            type: 'doughnut',
+            data: {
+                labels: payload.landlordHealthLabels || [],
+                datasets: [{
+                    data: payload.landlordHealthValues || [],
+                    backgroundColor: ['#16a34a', '#f59e0b', '#dc2626'],
+                    borderColor: '#fff',
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 11,
+                            boxHeight: 11,
+                            color: '#334155',
+                            font: { size: 11, weight: '600' },
+                        }
+                    }
+                }
+            }
         });
     }
 })();

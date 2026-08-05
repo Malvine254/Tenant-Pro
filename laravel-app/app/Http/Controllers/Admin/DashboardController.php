@@ -24,7 +24,9 @@ class DashboardController extends Controller
     public function index()
     {
         $user = request()->user();
-        $isLandlord = $user?->role?->name === 'LANDLORD';
+        $roleName = $user?->role?->name;
+        $isLandlord = $roleName === 'LANDLORD';
+        $isSuperAdmin = $roleName === 'SUPER_ADMIN';
         $landlordAccess = $isLandlord
             ? $this->subscriptionService->evaluate($user)
             : ['allowed' => true, 'status' => 'not_required', 'message' => null];
@@ -113,6 +115,16 @@ class DashboardController extends Controller
             'not_required' => 0,
         ];
 
+        $superAdminLandlordStats = [
+            'total_landlords' => 0,
+            'active_paid_landlords' => 0,
+            'past_due_landlords' => 0,
+            'landlords_with_overdue_invoices' => 0,
+            'avg_monthly_collection_per_landlord' => 0,
+        ];
+
+        $landlordPerformance = collect();
+
         if (!$isLandlord) {
             $landlordSubscription = [
                 'trial' => (clone $landlordsQuery)->where('billing_status', 'trial')->count(),
@@ -122,6 +134,74 @@ class DashboardController extends Controller
                     $q->whereNull('billing_status')->orWhere('billing_status', 'not_required');
                 })->count(),
             ];
+
+            if ($isSuperAdmin) {
+                $landlords = (clone $landlordsQuery)
+                    ->select(['id', 'name', 'billing_status', 'is_active'])
+                    ->get();
+
+                $landlordPerformance = $landlords->map(function ($landlord) {
+                    $unitsCount = Unit::query()
+                        ->whereHas('property', fn($q) => $q->where('landlord_id', $landlord->id))
+                        ->count();
+
+                    $activeTenants = Tenant::query()
+                        ->where('is_active', true)
+                        ->whereHas('unit.property', fn($q) => $q->where('landlord_id', $landlord->id))
+                        ->count();
+
+                    $billed = (float) Invoice::query()
+                        ->whereHas('unit.property', fn($q) => $q->where('landlord_id', $landlord->id))
+                        ->sum('total_amount');
+
+                    $paid = (float) Invoice::query()
+                        ->whereHas('unit.property', fn($q) => $q->where('landlord_id', $landlord->id))
+                        ->sum('paid_amount');
+
+                    $monthlyCollection = (float) Payment::query()
+                        ->whereHas('invoice.unit.property', fn($q) => $q->where('landlord_id', $landlord->id))
+                        ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+                        ->sum('amount');
+
+                    $overdueInvoices = Invoice::query()
+                        ->where('status', 'OVERDUE')
+                        ->whereHas('unit.property', fn($q) => $q->where('landlord_id', $landlord->id))
+                        ->count();
+
+                    $outstanding = max(0, $billed - $paid);
+                    $occupancyRate = $unitsCount > 0 ? round(($activeTenants / $unitsCount) * 100) : 0;
+
+                    $health = 'healthy';
+                    if ($overdueInvoices > 0 || $outstanding > 0) {
+                        $health = 'attention';
+                    }
+                    if (($landlord->billing_status ?? null) === 'past_due' || $overdueInvoices >= 3) {
+                        $health = 'risk';
+                    }
+
+                    return [
+                        'id' => $landlord->id,
+                        'name' => $landlord->name,
+                        'status' => $landlord->is_active ? 'active' : 'inactive',
+                        'billing_status' => $landlord->billing_status ?? 'not_required',
+                        'units' => $unitsCount,
+                        'active_tenants' => $activeTenants,
+                        'occupancy_rate' => $occupancyRate,
+                        'monthly_collection' => $monthlyCollection,
+                        'outstanding' => $outstanding,
+                        'overdue_invoices' => $overdueInvoices,
+                        'health' => $health,
+                    ];
+                })->sortByDesc('monthly_collection')->values();
+
+                $superAdminLandlordStats = [
+                    'total_landlords' => $landlordPerformance->count(),
+                    'active_paid_landlords' => $landlordPerformance->where('billing_status', 'active')->count(),
+                    'past_due_landlords' => $landlordPerformance->where('billing_status', 'past_due')->count(),
+                    'landlords_with_overdue_invoices' => $landlordPerformance->where('overdue_invoices', '>', 0)->count(),
+                    'avg_monthly_collection_per_landlord' => round((float) $landlordPerformance->avg('monthly_collection'), 2),
+                ];
+            }
         }
 
         $chartSeries = [
@@ -131,6 +211,15 @@ class DashboardController extends Controller
             'invoiceStatusValues' => $invoiceStatus->pluck('count')->values()->all(),
             'maintenanceStatusLabels' => $maintenanceStatus->pluck('label')->values()->all(),
             'maintenanceStatusValues' => $maintenanceStatus->pluck('count')->values()->all(),
+            'landlordPerformanceLabels' => $landlordPerformance->take(8)->map(fn($item) => $item['name'])->values()->all(),
+            'landlordPerformanceCollectionValues' => $landlordPerformance->take(8)->map(fn($item) => (float) $item['monthly_collection'])->values()->all(),
+            'landlordPerformanceOutstandingValues' => $landlordPerformance->take(8)->map(fn($item) => (float) $item['outstanding'])->values()->all(),
+            'landlordHealthLabels' => ['Healthy', 'Needs attention', 'At risk'],
+            'landlordHealthValues' => [
+                $landlordPerformance->where('health', 'healthy')->count(),
+                $landlordPerformance->where('health', 'attention')->count(),
+                $landlordPerformance->where('health', 'risk')->count(),
+            ],
         ];
 
         return view('admin.dashboard', compact(
@@ -143,7 +232,10 @@ class DashboardController extends Controller
             'recentPayments',
             'recentInvitations',
             'isLandlord',
+            'isSuperAdmin',
             'landlordSubscription',
+            'superAdminLandlordStats',
+            'landlordPerformance',
             'chartSeries',
             'landlordAccess'
         ));
