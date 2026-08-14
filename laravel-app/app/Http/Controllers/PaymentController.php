@@ -169,11 +169,17 @@ class PaymentController extends Controller
         }
 
         try {
+            $landlord = $invoice->unit?->property?->landlord;
+            $landlordSettings = $landlord && is_array($landlord->app_settings)
+                ? ($landlord->app_settings['paymentSettings'] ?? [])
+                : [];
+
             $result = $mpesa->stkPush(
                 $data['phone_number'],
                 $amount,
                 $invoice->id,
-                'Tenant Pro invoice payment'
+                'Tenant Pro invoice payment',
+                $landlordSettings
             );
             $payment->update([
                 'checkout_request_id' => $result['CheckoutRequestID'],

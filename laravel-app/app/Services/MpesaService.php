@@ -9,11 +9,14 @@ use RuntimeException;
 
 class MpesaService
 {
-    public function stkPush(string $phone, float $amount, string $reference, string $description): array
+    public function stkPush(string $phone, float $amount, string $reference, string $description, ?array $landlordSettings = null): array
     {
         $timestamp = now()->format('YmdHis');
-        $shortCode = (string) config('services.mpesa.shortcode');
-        $passkey = (string) config('services.mpesa.passkey');
+        $settings = $this->resolveDarajaConfig($landlordSettings);
+        $shortCode = (string) ($settings['shortcode'] ?? config('services.mpesa.shortcode'));
+        $passkey = (string) ($settings['passkey'] ?? config('services.mpesa.passkey'));
+        $transactionType = (string) ($settings['transaction_type'] ?? 'CustomerPayBillOnline');
+        $accountReference = (string) ($settings['account_reference'] ?? substr($reference, 0, 12));
 
         if ($shortCode === '' || $passkey === '') {
             throw new RuntimeException('M-Pesa shortcode or passkey is not configured.');
@@ -23,13 +26,13 @@ class MpesaService
             'BusinessShortCode' => $shortCode,
             'Password' => base64_encode($shortCode.$passkey.$timestamp),
             'Timestamp' => $timestamp,
-            'TransactionType' => 'CustomerPayBillOnline',
+            'TransactionType' => $transactionType,
             'Amount' => (int) ceil($amount),
             'PartyA' => $this->normalizePhone($phone),
-            'PartyB' => $shortCode,
+            'PartyB' => (string) ($settings['party_b'] ?? $shortCode),
             'PhoneNumber' => $this->normalizePhone($phone),
             'CallBackURL' => (string) config('services.mpesa.callback_url'),
-            'AccountReference' => substr($reference, 0, 12),
+            'AccountReference' => substr($accountReference, 0, 12),
             'TransactionDesc' => substr($description, 0, 30),
         ]);
 
@@ -43,6 +46,32 @@ class MpesaService
         }
 
         return $data;
+    }
+
+    private function resolveDarajaConfig(?array $landlordSettings): array
+    {
+        $settings = is_array($landlordSettings) ? $landlordSettings : [];
+        $paymentType = strtoupper((string) ($settings['payment_type'] ?? 'PAYBILL'));
+
+        if ($paymentType === 'TILL') {
+            $shortcode = (string) ($settings['till_number'] ?? config('services.mpesa.shortcode'));
+            return [
+                'shortcode' => $shortcode,
+                'passkey' => (string) ($settings['till_passkey'] ?? config('services.mpesa.passkey')),
+                'transaction_type' => 'CustomerBuyGoodsOnline',
+                'party_b' => $shortcode,
+                'account_reference' => (string) ($settings['account_reference'] ?? 'Tenant Pro'),
+            ];
+        }
+
+        $shortcode = (string) ($settings['paybill_number'] ?? config('services.mpesa.shortcode'));
+        return [
+            'shortcode' => $shortcode,
+            'passkey' => (string) ($settings['paybill_passkey'] ?? $settings['passkey'] ?? config('services.mpesa.passkey')),
+            'transaction_type' => 'CustomerPayBillOnline',
+            'party_b' => $shortcode,
+            'account_reference' => (string) ($settings['account_reference'] ?? 'Tenant Pro'),
+        ];
     }
 
     private function client(): PendingRequest

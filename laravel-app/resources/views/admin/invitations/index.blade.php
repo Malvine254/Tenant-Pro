@@ -58,11 +58,11 @@
     }
     .invitation-layout {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         gap: 16px;
     }
     .invitation-card .form-group {
-        margin-bottom: 14px;
+        margin-bottom: 0;
     }
     .invitation-card label {
         color: #cbd5e1;
@@ -91,7 +91,7 @@
     }
     @media (min-width: 840px) {
         .invitation-layout.dual {
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         }
     }
 </style>

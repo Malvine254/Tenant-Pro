@@ -99,6 +99,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 		Route::patch('/chats/{supportConversation}/toggle', [SupportChatAdminController::class, 'toggle'])->name('chats.toggle');
 		Route::get('/chats/{supportConversation}/state', [SupportChatAdminController::class, 'state'])->name('chats.state');
 		Route::post('/chats/{supportConversation}/typing', [SupportChatAdminController::class, 'typing'])->name('chats.typing');
+		Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
+		Route::put('/settings/payment', [\App\Http\Controllers\Admin\SettingsController::class, 'updatePayment'])->name('settings.payment');
 		Route::get('/downloads', [DownloadsController::class, 'index'])->name('downloads.index');
 		Route::get('/downloads/apk/download', function () {
 			$filePath = public_path('downloads/app-debug.apk');
