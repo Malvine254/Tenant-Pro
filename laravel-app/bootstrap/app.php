@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'mobile.api.key' => EnsureMobileApiKey::class,
             'admin.role' => EnsureAdminRole::class,
+            'platform.access' => \App\Http\Middleware\EnsureAccountAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

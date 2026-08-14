@@ -66,18 +66,36 @@ class User extends Authenticatable
 
     public function hasActiveServiceAccess(): bool
     {
-        if (!$this->isLandlord()) {
-            return true;
+        if (!$this->is_active) {
+            return false;
         }
 
-        if (!$this->requires_subscription) {
-            return true;
+        if ($this->isLandlord()) {
+            if (!$this->requires_subscription) {
+                return true;
+            }
+
+            if ($this->service_paid_until && $this->service_paid_until->isFuture()) {
+                return true;
+            }
+
+            return $this->trial_ends_at && $this->trial_ends_at->isFuture();
         }
 
-        if ($this->service_paid_until && $this->service_paid_until->isFuture()) {
-            return true;
-        }
+        $hasActiveTenancy = $this->tenancies()
+            ->where('is_active', true)
+            ->with('unit.property.landlord')
+            ->get()
+            ->contains(function ($tenancy) {
+                $landlord = $tenancy->unit?->property?->landlord;
 
-        return $this->trial_ends_at && $this->trial_ends_at->isFuture();
+                if (!$landlord) {
+                    return false;
+                }
+
+                return !$landlord->is_active || !$landlord->hasActiveServiceAccess();
+            });
+
+        return !$hasActiveTenancy;
     }
 }

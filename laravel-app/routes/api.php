@@ -41,7 +41,7 @@ Route::middleware('mobile.api.key')->group(function () {
 	Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
 
 	// Protected routes
-	Route::middleware('auth:sanctum')->group(function () {
+		Route::middleware(['auth:sanctum', 'platform.access'])->group(function () {
 		Route::get('/auth/me', [AuthController::class, 'me']);
 		Route::get('/users/me/profile', [AuthController::class, 'profile']);
 		Route::patch('/users/me/profile', [AuthController::class, 'updateProfile']);

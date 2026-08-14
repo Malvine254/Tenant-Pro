@@ -99,6 +99,17 @@ class AuthController extends Controller
             return response()->json(['message' => 'Account is inactive.'], 403);
         }
 
+        if (!$user->hasActiveServiceAccess()) {
+            if ($user->isLandlord()) {
+                $message = $this->subscriptionService->evaluate($user)['message'] ?? 'Your service subscription is inactive.';
+                return response()->json(['message' => $message], 403);
+            }
+
+            return response()->json([
+                'message' => 'Your services are temporarily unavailable because the property owner account is inactive or past due.',
+            ], 403);
+        }
+
         if (!$user->email_verified_at) {
             return response()->json([
                 'message' => 'Please verify your email before signing in.',
