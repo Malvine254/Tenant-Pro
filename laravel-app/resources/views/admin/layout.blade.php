@@ -156,7 +156,9 @@
             <a href="{{ route('admin.invoices.index') }}" class="{{ request()->routeIs('admin.invoices*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6m-6 4h6m-6 4h4"/></svg></i><span>Invoices</span></a>
         @endunless
         <a href="{{ route('admin.chats.index') }}" class="{{ request()->routeIs('admin.chats*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 9h8m-8 4h5"/></svg></i><span>Chats</span></a>
-        <a href="{{ route('admin.downloads.index') }}" class="{{ request()->routeIs('admin.downloads*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></i><span>Download App</span></a>
+        @if(\Illuminate\Support\Facades\Route::has('admin.downloads.index'))
+            <a href="{{ route('admin.downloads.index') }}" class="{{ request()->routeIs('admin.downloads*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></i><span>Download App</span></a>
+        @endif
         @unless($isCaretaker)
         @endunless
         @if($isPlatformAdmin)
