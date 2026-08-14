@@ -57,7 +57,7 @@ class MpesaService
             $shortcode = (string) ($settings['till_number'] ?? config('services.mpesa.shortcode'));
             return [
                 'shortcode' => $shortcode,
-                'passkey' => (string) ($settings['till_passkey'] ?? config('services.mpesa.passkey')),
+                'passkey' => (string) config('services.mpesa.passkey'),
                 'transaction_type' => 'CustomerBuyGoodsOnline',
                 'party_b' => $shortcode,
                 'account_reference' => (string) ($settings['account_reference'] ?? 'Tenant Pro'),
@@ -67,7 +67,7 @@ class MpesaService
         $shortcode = (string) ($settings['paybill_number'] ?? config('services.mpesa.shortcode'));
         return [
             'shortcode' => $shortcode,
-            'passkey' => (string) ($settings['paybill_passkey'] ?? $settings['passkey'] ?? config('services.mpesa.passkey')),
+            'passkey' => (string) config('services.mpesa.passkey'),
             'transaction_type' => 'CustomerPayBillOnline',
             'party_b' => $shortcode,
             'account_reference' => (string) ($settings['account_reference'] ?? 'Tenant Pro'),

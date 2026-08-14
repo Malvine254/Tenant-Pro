@@ -122,6 +122,24 @@
             <p>Choose the M-Pesa channel your tenants should use for rent and invoice payments. The selected configuration is applied to this landlord’s tenants automatically.</p>
         </div>
 
+        @if($isAdmin)
+            <form method="POST" action="{{ route('admin.settings.passkey') }}" class="settings-form" style="border-bottom:1px solid rgba(148,163,184,.12);">
+                @csrf
+                @method('PUT')
+
+                <div class="settings-grid">
+                    <div class="field" style="grid-column: 1 / -1;">
+                        <label for="passkey">Global Daraja passkey</label>
+                        <input id="passkey" name="passkey" value="{{ old('passkey', $globalPasskey ?? '') }}" placeholder="Paste the shared Daraja passkey">
+                    </div>
+                </div>
+
+                <div style="margin-top:18px; display:flex; justify-content:flex-end;">
+                    <button type="submit" class="btn btn-primary">Save global passkey</button>
+                </div>
+            </form>
+        @endif
+
         <form method="POST" action="{{ route('admin.settings.payment') }}" class="settings-form">
             @csrf
             @method('PUT')
@@ -153,11 +171,6 @@
                 <div class="field">
                     <label for="business_name">Business name</label>
                     <input id="business_name" name="business_name" value="{{ old('business_name', $paymentSettings['business_name'] ?? '') }}" placeholder="Starmax Ltd">
-                </div>
-
-                <div class="field">
-                    <label for="passkey">Daraja passkey</label>
-                    <input id="passkey" name="passkey" value="{{ old('passkey', $paymentSettings['passkey'] ?? '') }}" placeholder="Paste your Daraja passkey">
                 </div>
 
                 <div class="field" style="grid-column: 1 / -1;">
