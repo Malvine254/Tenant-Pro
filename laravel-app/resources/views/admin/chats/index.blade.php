@@ -4,6 +4,16 @@
 @php
 $initials=fn($name)=>collect(explode(' ',trim((string)$name)))->filter()->take(2)->map(fn($p)=>strtoupper(substr($p,0,1)))->implode('')?:'U';
 $media=fn($url)=>str_starts_with((string)$url,'http')?$url:asset(ltrim((string)$url,'/'));
+$chatDateLabel=function($date) {
+    if (!$date) return 'Earlier';
+    $date = \Illuminate\Support\Carbon::parse($date);
+    if ($date->isToday()) return 'Today';
+    if ($date->isYesterday()) return 'Yesterday';
+    return $date->format('j M Y');
+};
+$chatTime=fn($date)=>$date ? \Illuminate\Support\Carbon::parse($date)->format('H:i') : '';
+$conversationGroups=$conversations->getCollection()->groupBy(fn($conversation) => $chatDateLabel($conversation->messages->first()?->created_at ?? $conversation->updated_at));
+$messageGroups=$selectedConversation?->messages->sortBy('created_at')->groupBy(fn($message) => $message->created_at?->toDateString() ?? 'earlier') ?? collect();
 @endphp
 <style>
 .chat-shell {
@@ -111,6 +121,34 @@ $media=fn($url)=>str_starts_with((string)$url,'http')?$url:asset(ltrim((string)$
     color: #f8fafc;
 }
 
+.conversation-copy .conversation-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.conversation-time {
+    flex: 0 0 auto;
+    font-size: 10px;
+    color: #93c5fd;
+}
+
+.conversation-group-label,
+.date-divider {
+    color: #cbd5e1;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.conversation-group-label {
+    padding: 14px 14px 6px;
+    background: rgba(15, 23, 42, .96);
+    border-bottom: 1px solid rgba(148, 163, 184, .14);
+}
+
 .conversation-copy span {
     font-size: 11px;
     color: #94a3b8;
@@ -161,6 +199,17 @@ $media=fn($url)=>str_starts_with((string)$url,'http')?$url:asset(ltrim((string)$
 
 .row.mine {
     justify-content: flex-end;
+}
+
+.date-divider {
+    width: fit-content;
+    margin: 18px auto 12px;
+    padding: 5px 9px;
+    border: 1px solid rgba(148, 163, 184, .3);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, .9);
+    text-transform: none;
+    letter-spacing: 0;
 }
 
 .row .avatar {
@@ -219,6 +268,46 @@ $media=fn($url)=>str_starts_with((string)$url,'http')?$url:asset(ltrim((string)$
     text-decoration: none;
     font-weight: 700;
 }
+
+.attachment-card {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 210px;
+    margin-top: 8px;
+    padding: 9px;
+    border: 1px solid rgba(191, 219, 254, .38);
+    border-radius: 10px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.attachment-icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, .14);
+    font-size: 15px;
+}
+
+.attachment-copy {
+    min-width: 0;
+}
+
+.attachment-copy strong,
+.attachment-copy span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.attachment-copy strong { font-size: 12px; }
+.attachment-copy span { margin-top: 2px; font-size: 10px; opacity: .8; }
+.attachment-audio { display: block; width: min(260px, 58vw); margin-top: 8px; }
 
 .composer {
     padding: 11px;
@@ -432,20 +521,23 @@ body.admin-chat-page {
 </style>
 <div class="chat-shell" id="chatShell">
  <aside class="chat-sidebar"><form class="chat-search" method="GET"><input name="search" value="{{ request('search') }}" placeholder="Search chats"></form><div class="chat-list">
- @forelse($conversations as $c) @php $u=$c->tenant;$tenancy=$u?->tenancies?->first(fn($t)=>$t->unit?->property?->landlord_id===$c->landlord_user_id) ?? $u?->tenancies?->first();$unit=$tenancy?->unit;$last=$c->messages->first(); @endphp
- <a class="conversation {{ $selectedConversation?->id===$c->id?'active':'' }}" data-conversation-id="{{ $c->id }}" href="{{ route('admin.chats.index',['conversation_id'=>$c->id]) }}"><span class="avatar">@if($u?->profile_image_url)<img src="{{ $media($u->profile_image_url) }}" alt="">@else{{ $initials($u?->name) }}@endif</span><span class="conversation-copy"><strong>{{ $u?->name??'Unknown tenant' }}</strong><span>{{ $unit?->property?->name??'No property' }} · Unit {{ $unit?->unit_number??'-' }}</span><span class="conversation-preview">{{ $last?->body?:$last?->attachment_name?:'No messages' }}</span><span class="conversation-typing"><span class="typing-dots"><i></i><i></i><i></i></span> typing…</span></span></a>
+ @forelse($conversationGroups as $groupLabel => $group)<div class="conversation-group-label">{{ $groupLabel }}</div>@foreach($group as $c) @php $u=$c->tenant;$tenancy=$u?->tenancies?->first(fn($t)=>$t->unit?->property?->landlord_id===$c->landlord_user_id) ?? $u?->tenancies?->first();$unit=$tenancy?->unit;$last=$c->messages->first(); @endphp
+ <a class="conversation {{ $selectedConversation?->id===$c->id?'active':'' }}" data-conversation-id="{{ $c->id }}" href="{{ route('admin.chats.index',['conversation_id'=>$c->id]) }}"><span class="avatar">@if($u?->profile_image_url)<img src="{{ $media($u->profile_image_url) }}" alt="">@else{{ $initials($u?->name) }}@endif</span><span class="conversation-copy"><span class="conversation-title"><strong>{{ $u?->name??'Unknown tenant' }}</strong><time class="conversation-time">{{ $chatTime($last?->created_at ?? $c->updated_at) }}</time></span><span>{{ $unit?->property?->name??'No property' }} · Unit {{ $unit?->unit_number??'-' }}</span><span class="conversation-preview">{{ $last?->body?:($last?->attachment_name ? 'Attachment: '.$last->attachment_name : 'No messages') }}</span><span class="conversation-typing"><span class="typing-dots"><i></i><i></i><i></i></span> typing…</span></span></a>
+ @endforeach
  @empty <div class="empty" style="padding:30px">No chats yet.</div> @endforelse
  </div></aside>
  <main class="chat-main">@if($selectedConversation) @php $u=$selectedConversation->tenant;$tenancy=$u?->tenancies?->first(fn($t)=>$t->unit?->property?->landlord_id===$selectedConversation->landlord_user_id) ?? $u?->tenancies?->first();$unit=$tenancy?->unit; @endphp
  <header class="chat-head"><span class="avatar">@if($u?->profile_image_url)<img src="{{ $media($u->profile_image_url) }}" alt="">@else{{ $initials($u?->name) }}@endif</span><div><h3>{{ $u?->name??'Unknown tenant' }}</h3><p>{{ ucfirst(strtolower($u?->role?->name??'Tenant')) }} · {{ $unit?->property?->name??'No property' }} · Unit {{ $unit?->unit_number??'-' }}</p></div></header>
- <div class="stream" id="stream">@foreach($selectedConversation->messages->sortBy('created_at') as $m) @php $sender=$m->sender;$url=$m->attachment_uri?$media($m->attachment_uri):null; @endphp
+ <div class="stream" id="stream">@foreach($messageGroups as $date => $messages)<div class="date-divider">{{ $chatDateLabel($messages->first()?->created_at) }}</div>@foreach($messages as $m) @php $sender=$m->sender;$url=$m->attachment_uri?$media($m->attachment_uri):null; @endphp
  @php
    $visibleBody = trim((string) $m->body) !== '' && strcasecmp(trim((string) $m->body), 'Attachment shared') !== 0;
    $extension = strtolower(pathinfo(parse_url((string) $m->attachment_uri, PHP_URL_PATH) ?: (string) $m->attachment_name, PATHINFO_EXTENSION));
    $isImage = $m->message_type === 'image' || str_starts_with((string) $m->attachment_mime_type, 'image/') || in_array($extension, ['jpg','jpeg','png','gif','webp'], true);
+   $isAudio = $m->message_type === 'audio' || str_starts_with((string) $m->attachment_mime_type, 'audio/');
+   $fileSize = $m->attachment_size ? number_format($m->attachment_size / 1024, $m->attachment_size >= 1024 * 1024 ? 1 : 0).' '.($m->attachment_size >= 1024 * 1024 ? 'MB' : 'KB') : null;
  @endphp
- <div class="row {{ $m->is_from_tenant?'':'mine' }}">@if($m->is_from_tenant)<span class="avatar">@if($sender?->profile_image_url)<img src="{{ $media($sender->profile_image_url) }}" alt="">@else{{ $initials($sender?->name) }}@endif</span>@endif<div class="bubble">@if($visibleBody)<div>{{ $m->body }}</div>@endif @if($url) @if($isImage)<img src="{{ $url }}" alt="{{ $m->attachment_name ?: 'Shared image' }}" loading="lazy">@else<a class="file" href="{{ $url }}" target="_blank" rel="noopener">📎 {{ $m->attachment_name??'Open attachment' }}</a>@endif @endif<div class="meta">{{ $m->created_at?->format('H:i') }} · {{ $m->status }}</div></div></div>
- @endforeach</div>
+ <div class="row {{ $m->is_from_tenant?'':'mine' }}">@if($m->is_from_tenant)<span class="avatar">@if($sender?->profile_image_url)<img src="{{ $media($sender->profile_image_url) }}" alt="">@else{{ $initials($sender?->name) }}@endif</span>@endif<div class="bubble">@if($visibleBody)<div>{{ $m->body }}</div>@endif @if($url) @if($isImage)<img src="{{ $url }}" alt="{{ $m->attachment_name ?: 'Shared image' }}" loading="lazy">@elseif($isAudio)<audio class="attachment-audio" controls preload="metadata"><source src="{{ $url }}" type="{{ $m->attachment_mime_type ?: 'audio/mpeg' }}">Audio playback is unavailable. <a class="file" href="{{ $url }}" target="_blank" rel="noopener">Download audio</a></audio>@else<a class="attachment-card" href="{{ $url }}" target="_blank" rel="noopener"><span class="attachment-icon">📎</span><span class="attachment-copy"><strong>{{ $m->attachment_name ?: 'Attachment' }}</strong><span>{{ collect([$m->attachment_mime_type, $fileSize])->filter()->implode(' · ') ?: 'Open attachment' }}</span></span></a>@endif @endif<div class="meta"><time datetime="{{ $m->created_at?->toIso8601String() }}">{{ $chatTime($m->created_at) }}</time> · {{ $m->status }}</div></div></div>
+ @endforeach @endforeach</div>
  <form class="composer" id="composer" action="{{ route('admin.chats.reply',$selectedConversation) }}" method="POST" enctype="multipart/form-data">@csrf<input id="file" name="file" type="file" hidden accept="image/*,.pdf,.doc,.docx,.txt,audio/*"><button class="icon-btn attach" type="button" id="attach" aria-label="Attach file">+</button><textarea name="body" placeholder="Write a message…" maxlength="5000"></textarea><button class="icon-btn send" type="submit" aria-label="Send">➤</button><span class="selected-file" id="fileName" hidden></span></form>
  @else<div class="empty"><strong>Select a chat</strong><p>Choose a tenant conversation.</p></div>@endif</main>
 </div>
