@@ -71,10 +71,11 @@
         .section-heading { font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.04em; }
         .alert-success { background: rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.25); color:#bbf7d0; padding:10px 14px; border-radius:10px; margin-bottom:16px; font-size:14px; }
         .alert-error { background: rgba(248,113,113,.12); border:1px solid rgba(248,113,113,.25); color:#fecaca; padding:10px 14px; border-radius:10px; margin-bottom:16px; font-size:14px; }
-        .form-group { margin-bottom:15px; }
-        .form-group label { display:block; font-size:12px; font-weight:800; margin-bottom:6px; color:#e2e8f0; }
-        .form-group input, .form-group select, .form-group textarea { width:100%; padding:10px 12px; border:1px solid rgba(148,163,184,.22); border-radius:11px; font-size:14px; background:rgba(15,23,42,.8); color:var(--text); outline:none; transition:border-color .14s, box-shadow .14s, background .14s; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:rgba(96,165,250,.5); background: rgba(15,23,42,.9); box-shadow: 0 0 0 3px rgba(96,165,250,.12); }
+        .form-group, .field { margin-bottom:15px; }
+        .form-group label, .field label { display:block; font-size:12px; font-weight:800; margin-bottom:6px; color:#e2e8f0; }
+        .form-group input, .form-group select, .form-group textarea, .field input, .field select, .field textarea { width:100%; padding:10px 12px; border:1px solid rgba(255,255,255,.62); border-radius:11px; font-size:14px; background:transparent; color:var(--text); outline:none; transition:border-color .14s, box-shadow .14s, background .14s; }
+        .form-group input::placeholder, .form-group textarea::placeholder, .field input::placeholder, .field textarea::placeholder { color:rgba(248,250,252,.68); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus, .field input:focus, .field select:focus, .field textarea:focus { border-color:#fff; background: rgba(255,255,255,.03); box-shadow: 0 0 0 3px rgba(255,255,255,.12); }
         .form-error { color:#fca5a5; font-size:12px; margin-top:3px; }
         .pagination { display:flex; gap:6px; margin-top:16px; flex-wrap:wrap; }
         .pagination a, .pagination span { padding:7px 11px; border:1px solid rgba(148,163,184,.18); border-radius:9px; font-size:13px; text-decoration:none; color:#e2e8f0; background:rgba(15,23,42,.7); }
@@ -84,7 +85,12 @@
         .admin-page-header p { font-size:13px;color:var(--muted);margin-top:5px;line-height:1.5;max-width:760px; }
         .admin-actions { display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end; }
         .admin-filter { display:flex;gap:8px;align-items:center;flex-wrap:wrap; }
-        .admin-filter input, .admin-filter select { padding:9px 12px;border:1px solid rgba(148,163,184,.22);border-radius:10px;background:rgba(15,23,42,.8);color:var(--text);font-size:13px;min-height:38px; }
+        .admin-filter input, .admin-filter select { padding:9px 12px;border:1px solid rgba(255,255,255,.62);border-radius:10px;background:transparent;color:var(--text);font-size:13px;min-height:38px; }
+        .admin-filter input::placeholder { color:rgba(248,250,252,.68); }
+        .admin-filter input:focus, .admin-filter select:focus { border-color:#fff; background:rgba(255,255,255,.03); box-shadow:0 0 0 3px rgba(255,255,255,.12); outline:none; }
+        input[type="file"] { color:#f8fafc; }
+        input[type="checkbox"], input[type="radio"] { accent-color:#60a5fa; }
+        select option, optgroup { background:#0f172a; color:#f8fafc; }
         .table-scroll { overflow-x:auto; }
         details { border:1px solid var(--line) !important;border-radius:13px !important;margin-bottom:10px !important;overflow:hidden;background:rgba(15,23,42,.7); }
         details summary { cursor:pointer;padding:13px 15px !important;background:rgba(15,23,42,.55) !important;font-weight:800 !important;display:flex;justify-content:space-between;align-items:center;gap:10px; color:#f8fafc; }
@@ -113,7 +119,7 @@
             .stat-value { font-size:22px; }
             .card { padding:14px; border-radius:9px; overflow-x:auto; }
             table { min-width:680px; }
-            .form-group input, .form-group select, .form-group textarea { min-height:40px; }
+            .form-group input, .form-group select, .form-group textarea, .field input, .field select, .field textarea { min-height:40px; }
             .admin-page-header { flex-direction:column; }
             .admin-actions { justify-content:flex-start; width:100%; }
             .admin-filter { width:100%; }
@@ -137,6 +143,7 @@
     $roleName = auth()->user()?->role?->name;
     $isLandlord = $roleName === 'LANDLORD';
     $isCaretaker = $roleName === 'CARETAKER';
+    $isSuperAdmin = $roleName === 'SUPER_ADMIN';
     $isPlatformAdmin = in_array($roleName, ['SUPER_ADMIN', 'ADMIN'], true);
 @endphp
 <div class="admin-shell">
@@ -160,6 +167,8 @@
         <a href="{{ route('admin.chats.index') }}" class="{{ request()->routeIs('admin.chats*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 9h8m-8 4h5"/></svg></i><span>Chats</span></a>
         @if($isLandlord)
             <a href="{{ route('admin.settings.index') }}" class="{{ request()->routeIs('admin.settings*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.82 2.82l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .98 1.7 1.7 0 0 0-.2 1.02V22a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-.23-1.02 1.7 1.7 0 0 0-1-.98 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.82-2.82l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.98-1 1.7 1.7 0 0 0-1.02-.2H2.5a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 3.6 9a1.7 1.7 0 0 0 .98-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06A2 2 0 1 1 6.99 3.25l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.98 1.7 1.7 0 0 0 .2-1.02V2.5a2 2 0 1 1 4 0v.09c.04.35.1.7.23 1.02.18.42.52.76.98 1a1.7 1.7 0 0 0 1.87-.34l.06-.06A2 2 0 0 1 20.75 6.99l-.06.06A1.7 1.7 0 0 0 19.4 9c.25.39.35.84.31 1.3a1.7 1.7 0 0 0 .98 1 1.7 1.7 0 0 0 1.02.2h.09a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.02.2 1.7 1.7 0 0 0-.98 1z"/></svg></i><span>Settings</span></a>
+        @endif
+        @if($isSuperAdmin)
             <a href="{{ route('admin.mpesa.sandbox-test.index') }}" class="{{ request()->routeIs('admin.mpesa.sandbox-test*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 12h18M12 3v18"/><rect x="5" y="5" width="14" height="14" rx="2"/></svg></i><span>Sandbox Pay Test</span></a>
         @endif
         @if(\Illuminate\Support\Facades\Route::has('admin.downloads.index'))

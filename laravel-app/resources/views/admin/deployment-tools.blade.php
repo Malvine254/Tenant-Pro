@@ -29,7 +29,7 @@
 
 <div class="card" style="margin-bottom:16px;">
     <h3 style="margin-bottom:10px;">Run Operation</h3>
-    <p style="font-size:13px;color:#64748b;margin-bottom:14px;">Use this when GoDaddy terminal access is unavailable.</p>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:14px;">Use this when GoDaddy terminal access is unavailable.</p>
 
     <form method="POST" action="{{ $formAction ?? route('admin.deployment-tools.run') }}">
         @csrf
@@ -43,11 +43,11 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-bottom:14px;">
             @foreach($availableActions as $action => $label)
-                <label style="display:flex;gap:10px;align-items:flex-start;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;cursor:pointer;background:#fff;">
+                <label style="display:flex;gap:10px;align-items:flex-start;border:1px solid rgba(255,255,255,.62);border-radius:8px;padding:10px 12px;cursor:pointer;background:transparent;color:#e2e8f0;">
                     <input type="radio" name="action" value="{{ $action }}" @checked($loop->first) style="margin-top:3px;">
                     <span>
-                        <strong style="display:block;color:#0f172a;">{{ $label }}</strong>
-                        <span style="display:block;color:#64748b;font-size:12px;">{{ $commandHints[$action] ?? $action }}</span>
+                        <strong style="display:block;color:#f8fafc;">{{ $label }}</strong>
+                        <span style="display:block;color:#94a3b8;font-size:12px;">{{ $commandHints[$action] ?? $action }}</span>
                     </span>
                 </label>
             @endforeach

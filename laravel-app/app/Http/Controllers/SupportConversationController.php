@@ -12,6 +12,7 @@ class SupportConversationController extends Controller
         $user = $request->user();
         $query = SupportConversation::with(['tenant', 'messages'])
             ->when($this->isTenant($user), fn($q) => $q->where('tenant_user_id', $user->id))
+            ->when($this->isLandlord($user), fn($q) => $q->where('landlord_user_id', $user->id))
             ->when($request->tenant_user_id, fn($q) => $q->where('tenant_user_id', $request->tenant_user_id))
             ->when($request->is_open !== null, fn($q) => $q->where('is_open', $request->boolean('is_open')));
         return response()->json($query->latest()->paginate(15));
@@ -22,14 +23,17 @@ class SupportConversationController extends Controller
         $user = $request->user();
         $request->merge([
             'tenant_user_id' => $request->input('tenant_user_id', $user?->id),
+            'landlord_user_id' => $request->input('landlord_user_id', $this->isTenant($user) ? $this->resolveLandlordUserId($user) : null),
         ]);
 
         $data = $request->validate([
             'tenant_user_id' => 'required|uuid|exists:users,id',
+            'landlord_user_id' => 'nullable|uuid|exists:users,id',
             'subject' => 'nullable|string|max:255',
             'topic' => 'required|string|max:255',
         ]);
         abort_if($this->isTenant($user) && $data['tenant_user_id'] !== $user->id, 403);
+        abort_if($this->isLandlord($user) && $data['landlord_user_id'] !== $user->id, 403);
 
         $data['is_open'] = true;
         return response()->json(SupportConversation::create($data)->load('tenant'), 201);
@@ -39,12 +43,17 @@ class SupportConversationController extends Controller
     {
         $user = request()->user();
         abort_if($this->isTenant($user) && $supportConversation->tenant_user_id !== $user->id, 403);
+        abort_if($this->isLandlord($user) && $supportConversation->landlord_user_id !== $user->id, 403);
 
         return response()->json($supportConversation->load(['tenant', 'messages.sender']));
     }
 
     public function update(Request $request, SupportConversation $supportConversation)
     {
+        $user = $request->user();
+        abort_if($this->isTenant($user) && $supportConversation->tenant_user_id !== $user->id, 403);
+        abort_if($this->isLandlord($user) && $supportConversation->landlord_user_id !== $user->id, 403);
+
         $data = $request->validate([
             'subject' => 'nullable|string|max:255',
             'topic' => 'sometimes|string|max:255',
@@ -56,6 +65,10 @@ class SupportConversationController extends Controller
 
     public function destroy(SupportConversation $supportConversation)
     {
+        $user = request()->user();
+        abort_if($this->isTenant($user) && $supportConversation->tenant_user_id !== $user->id, 403);
+        abort_if($this->isLandlord($user) && $supportConversation->landlord_user_id !== $user->id, 403);
+
         $supportConversation->delete();
         return response()->json(null, 204);
     }
@@ -63,5 +76,25 @@ class SupportConversationController extends Controller
     private function isTenant($user): bool
     {
         return $user?->role?->name === 'TENANT';
+    }
+
+    private function isLandlord($user): bool
+    {
+        return $user?->role?->name === 'LANDLORD';
+    }
+
+    private function resolveLandlordUserId($user): ?string
+    {
+        if (!$this->isTenant($user)) {
+            return null;
+        }
+
+        $activeTenancy = $user->tenancies()
+            ->where('is_active', true)
+            ->with('unit.property')
+            ->latest('updated_at')
+            ->first();
+
+        return $activeTenancy?->unit?->property?->landlord_id;
     }
 }

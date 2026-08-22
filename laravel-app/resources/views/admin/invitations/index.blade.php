@@ -70,16 +70,18 @@
     .invitation-card input,
     .invitation-card select,
     .invitation-card textarea {
-        background: rgba(15,23,42,.8);
-        border: 1px solid rgba(148,163,184,.2);
+        background: transparent;
+        border: 1px solid rgba(255,255,255,.62);
         color: #f8fafc;
     }
+    .invitation-card input::placeholder,
+    .invitation-card textarea::placeholder { color: rgba(248,250,252,.68); }
     .invitation-card input:focus,
     .invitation-card select:focus,
     .invitation-card textarea:focus {
-        background: rgba(15,23,42,.9);
-        border-color: rgba(96,165,250,.65);
-        box-shadow: 0 0 0 3px rgba(96,165,250,.12);
+        background: rgba(255,255,255,.03);
+        border-color: #fff;
+        box-shadow: 0 0 0 3px rgba(255,255,255,.12);
     }
     .invitation-card .btn-primary {
         background: linear-gradient(180deg,#2563eb,#1d4ed8);

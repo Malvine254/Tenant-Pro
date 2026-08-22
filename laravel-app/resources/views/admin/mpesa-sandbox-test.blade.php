@@ -51,15 +51,17 @@
         min-height: 42px;
         padding: 10px 12px;
         border-radius: 11px;
-        border: 1px solid rgba(148,163,184,.22);
-        background: rgba(15,23,42,.8);
+        border: 1px solid rgba(255,255,255,.62);
+        background: transparent;
         color: #f8fafc;
         font-size: 14px;
     }
+    .field input::placeholder { color: rgba(248,250,252,.68); }
     .field input:focus, .field select:focus {
         outline:none;
-        border-color: rgba(96,165,250,.5);
-        box-shadow: 0 0 0 3px rgba(96,165,250,.12);
+        border-color: #fff;
+        background: rgba(255,255,255,.03);
+        box-shadow: 0 0 0 3px rgba(255,255,255,.12);
     }
     .helper-box {
         background: linear-gradient(180deg, rgba(96,165,250,.1), rgba(15,23,42,.92));

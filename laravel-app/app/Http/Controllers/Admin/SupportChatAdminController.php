@@ -17,13 +17,13 @@ class SupportChatAdminController extends Controller
     {
         abort_if($request->user()?->role?->name === 'CARETAKER', 403);
         $query = $this->scoped($request->user())
-            ->with(['tenant.role', 'tenant.tenant.unit.property', 'messages' => fn ($q) => $q->latest()->limit(1)])
+            ->with(['tenant.role', 'tenant.tenancies.unit.property', 'messages' => fn ($q) => $q->latest()->limit(1)])
             ->when($request->search, fn ($q, $search) => $q->whereHas('tenant', fn ($u) => $u->where('name', 'like', "%{$search}%")))
             ->latest();
         $conversations = $query->paginate(20)->withQueryString();
         $id = $request->conversation_id ?: $conversations->first()?->id;
         $selectedConversation = $id ? $this->scoped($request->user())
-            ->with(['tenant.role', 'tenant.tenant.unit.property', 'messages.sender.role'])->findOrFail($id) : null;
+            ->with(['tenant.role', 'tenant.tenancies.unit.property', 'messages.sender.role'])->findOrFail($id) : null;
         if ($selectedConversation) {
             $selectedConversation->messages()->where('is_from_tenant', true)->whereNull('read_at')
                 ->update(['status' => 'READ', 'read_at' => now()]);
@@ -85,15 +85,17 @@ class SupportChatAdminController extends Controller
 
     private function scoped(?User $user)
     {
-        return SupportConversation::query()->when($user?->role?->name === 'LANDLORD', fn ($q) => $q->whereHas('tenant.tenant.unit.property', fn ($p) => $p->where('landlord_id', $user->id)));
+        return SupportConversation::query()->when(
+            $user?->role?->name === 'LANDLORD',
+            fn ($q) => $q->where('landlord_user_id', $user->id)
+        );
     }
 
     private function authorizeConversation(?User $user, SupportConversation $conversation): void
     {
         abort_if($user?->role?->name === 'CARETAKER', 403);
         if ($user?->role?->name === 'LANDLORD') {
-            $conversation->loadMissing('tenant.tenant.unit.property');
-            abort_if($conversation->tenant?->tenant?->unit?->property?->landlord_id !== $user->id, 403);
+            abort_if($conversation->landlord_user_id !== $user->id, 403);
         }
     }
 }

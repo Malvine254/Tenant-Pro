@@ -34,11 +34,13 @@ class SupportMessageController extends Controller
         }
 
         $topic = trim((string) $request->input('topic', 'General')) ?: 'General';
+        $landlordUserId = $this->resolveLandlordUserId($user);
         $conversation = $request->conversation_id
             ? SupportConversation::find($request->conversation_id)
             : SupportConversation::firstOrCreate(
                 [
                     'tenant_user_id' => $user->id,
+                    'landlord_user_id' => $landlordUserId,
                     'topic' => $topic,
                     'is_open' => true,
                 ],
@@ -192,5 +194,20 @@ class SupportMessageController extends Controller
     private function isTenant($user): bool
     {
         return $user?->role?->name === 'TENANT';
+    }
+
+    private function resolveLandlordUserId($user): ?string
+    {
+        if (!$this->isTenant($user)) {
+            return null;
+        }
+
+        $activeTenancy = $user->tenancies()
+            ->where('is_active', true)
+            ->with('unit.property')
+            ->latest('updated_at')
+            ->first();
+
+        return $activeTenancy?->unit?->property?->landlord_id;
     }
 }

@@ -99,19 +99,19 @@
         width:100%;
         min-height:38px;
         padding:8px 11px;
-        border:1px solid rgba(148,163,184,.25);
+        border:1px solid rgba(255,255,255,.62);
         border-radius:10px;
-        background:#0b1220;
+        background:transparent;
         font-size:13px;
         color:#e2e8f0;
         outline:none;
     }
-    .landlord-input::placeholder { color:#64748b; }
+    .landlord-input::placeholder { color:rgba(248,250,252,.68); }
     .landlord-input:focus,
     .landlord-select:focus {
-        border-color:#60a5fa;
-        background:#0f172a;
-        box-shadow:0 0 0 3px rgba(96,165,250,.18);
+        border-color:#fff;
+        background:rgba(255,255,255,.03);
+        box-shadow:0 0 0 3px rgba(255,255,255,.12);
     }
     .landlord-card {
         background:linear-gradient(180deg,#111827,#0b1220);

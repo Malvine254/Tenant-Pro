@@ -61,14 +61,14 @@
 </div>
 
 @if($tenant->is_active)
-<div class="card" style="margin-bottom:16px;border-color:#fecaca;background:#fff7f7;">
-    <h3 style="font-size:13px;color:#991b1b;margin-bottom:10px;text-transform:uppercase;">Close Tenancy / Move Out</h3>
-    <p style="font-size:13px;color:#64748b;margin-bottom:12px;">
+<div class="card" style="margin-bottom:16px;border-color:rgba(248,113,113,.3);background:linear-gradient(180deg,rgba(127,29,29,.3),rgba(11,18,32,.96));">
+    <h3 style="font-size:13px;color:#fecaca;margin-bottom:10px;text-transform:uppercase;">Close Tenancy / Move Out</h3>
+    <p style="font-size:13px;color:#cbd5e1;margin-bottom:12px;">
         Closing tenancy keeps the tenant history, invoices, and payments, then marks the unit vacant for a new invitation.
         @if($outstandingBalance > 0)
-            <strong style="color:#dc2626;">Outstanding balance: KSh {{ number_format($outstandingBalance, 2) }}.</strong>
+            <strong style="color:#fca5a5;">Outstanding balance: KSh {{ number_format($outstandingBalance, 2) }}.</strong>
         @else
-            <strong style="color:#16a34a;">No outstanding invoice balance found.</strong>
+            <strong style="color:#86efac;">No outstanding invoice balance found.</strong>
         @endif
     </p>
     <form method="POST" action="{{ route('admin.tenants.unassign', $tenant) }}" style="display:grid;grid-template-columns:180px 1fr auto;gap:10px;align-items:end;">

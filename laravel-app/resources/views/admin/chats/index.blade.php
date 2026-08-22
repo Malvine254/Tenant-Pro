@@ -6,26 +6,437 @@ $initials=fn($name)=>collect(explode(' ',trim((string)$name)))->filter()->take(2
 $media=fn($url)=>str_starts_with((string)$url,'http')?$url:asset(ltrim((string)$url,'/'));
 @endphp
 <style>
-.chat-shell{height:calc(100dvh - 120px);min-height:560px;display:grid;grid-template-columns:330px 1fr;background:#fff;border:1px solid #e2e8f0;border-radius:18px;overflow:hidden;box-shadow:0 15px 35px #0f172a12}.chat-sidebar{display:flex;flex-direction:column;min-width:0;background:#fbfcff;border-right:1px solid #e5e7eb}.chat-search{padding:14px;border-bottom:1px solid #e5e7eb}.chat-search input{width:100%;padding:11px 13px;border:1px solid #d8deea;border-radius:12px;background:#fff}.chat-list{overflow:auto}.conversation{display:flex;gap:11px;padding:13px 14px;color:inherit;text-decoration:none;border-bottom:1px solid #edf0f5}.conversation:hover,.conversation.active{background:#f1edff}.avatar{width:42px;height:42px;flex:0 0 42px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:linear-gradient(135deg,#7656d8,#4f46e5);color:#fff;font-size:12px;font-weight:900}.avatar img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}.conversation-copy{min-width:0;flex:1}.conversation-copy strong,.conversation-copy span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.conversation-copy strong{font-size:13px}.conversation-copy span{font-size:11px;color:#64748b;margin-top:3px}.chat-main{min-width:0;display:flex;flex-direction:column;background:#f8fafc}.chat-head{height:68px;flex:0 0 68px;padding:0 18px;display:flex;align-items:center;gap:11px;background:#fff;border-bottom:1px solid #e5e7eb}.chat-head h3{font-size:15px}.chat-head p{font-size:11px;color:#64748b;margin-top:3px}.stream{flex:1;overflow:auto;padding:20px}.row{display:flex;gap:7px;align-items:flex-end;margin:9px 0}.row.mine{justify-content:flex-end}.row .avatar{width:29px;height:29px;flex-basis:29px;font-size:9px}.bubble{max-width:70%;padding:10px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:15px 15px 15px 4px;font-size:13px;overflow-wrap:anywhere}.mine .bubble{background:#6d4ad9;border:0;color:#fff;border-radius:15px 15px 4px 15px}.bubble img{display:block;max-width:360px;width:100%;max-height:260px;object-fit:cover;border-radius:10px;margin-top:7px}.file{display:block;margin-top:7px;color:inherit;font-weight:700}.meta{font-size:9px;opacity:.65;text-align:right;margin-top:4px}.composer{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:9px;padding:11px 14px;background:#fff;border-top:1px solid #e5e7eb}.composer textarea{width:100%;min-height:42px;max-height:100px;resize:none;padding:11px 13px;border:1px solid #d8deea;border-radius:14px;background:#f8fafc}.icon-btn{width:42px;height:42px;border:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;font-size:18px}.attach{background:#f1edff;color:#6542ca}.send{background:#6d4ad9;color:#fff}.selected-file{grid-column:2;font-size:10px;color:#64748b}.empty{margin:auto;color:#64748b;text-align:center}@media(max-width:760px){.chat-shell{grid-template-columns:120px 1fr}.conversation-copy span{display:none}.conversation{padding:10px}.chat-sidebar .chat-search{display:none}.bubble{max-width:85%}}
-/* Keep both chat actions in the composer flow. These explicit rules also
-   neutralize legacy button positioning from previously cached chat styles. */
-.composer{grid-template-columns:minmax(0,1fr) 42px 42px;grid-template-rows:auto auto;gap:7px 9px}
-.composer textarea{grid-column:1;grid-row:1;min-width:0;box-sizing:border-box}
-.composer .icon-btn{position:static!important;inset:auto!important;transform:none!important;margin:0!important;padding:0!important;width:42px!important;height:42px!important;min-width:42px!important;min-height:42px!important;display:grid!important;place-items:center;align-self:center;line-height:1}
-.composer .attach{grid-column:2!important;grid-row:1!important}
-.composer .send{grid-column:3!important;grid-row:1!important}
-.composer .selected-file{grid-column:1/4;grid-row:2;padding-left:3px}
-@media(max-width:760px){.composer{grid-template-columns:minmax(0,1fr) 40px 40px;padding:9px;gap:6px}.composer .icon-btn{width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important}}
-body.admin-chat-page{overflow:hidden}.admin-chat-page .content{overflow:hidden;padding:14px}.chat-shell{height:calc(100dvh - 92px);min-height:0;grid-template-columns:300px minmax(0,1fr);border-radius:16px}.chat-main{min-height:0}.stream{min-height:0}.presence{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:10px;color:#64748b}.presence-dot{width:7px;height:7px;border-radius:50%;background:#94a3b8}.presence.online{color:#16845b}.presence.online .presence-dot{background:#20b97b;box-shadow:0 0 0 3px #20b97b20}.typing{height:14px;color:#6d4ad9;font-size:10px;font-weight:700;visibility:hidden}.typing.show{visibility:visible}@media(max-width:700px){.chat-shell{grid-template-columns:105px minmax(0,1fr);height:calc(100dvh - 84px)}}
-.conversation-typing{display:none!important;align-items:center;gap:5px;color:#6d4ad9!important;font-weight:800}.conversation-typing.show{display:flex!important}.typing-dots{display:inline-flex;gap:2px}.typing-dots i{width:4px;height:4px;border-radius:50%;background:#7c5ce0;animation:typingBounce 1s infinite ease-in-out}.typing-dots i:nth-child(2){animation-delay:.15s}.typing-dots i:nth-child(3){animation-delay:.3s}@keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-3px);opacity:1}}
+.chat-shell {
+    height: calc(100dvh - 120px);
+    min-height: 560px;
+    display: grid;
+    grid-template-columns: 330px 1fr;
+    background: linear-gradient(180deg, #0f172a, #0b1220);
+    border: 1px solid rgba(148, 163, 184, .22);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 18px 42px rgba(2, 6, 23, .32);
+}
+
+.chat-sidebar {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: rgba(15, 23, 42, .92);
+    border-right: 1px solid rgba(148, 163, 184, .2);
+}
+
+.chat-search {
+    padding: 14px;
+    border-bottom: 1px solid rgba(148, 163, 184, .2);
+}
+
+.chat-search input,
+.composer textarea {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid rgba(255, 255, 255, .65);
+    border-radius: 12px;
+    background: transparent;
+    color: #f8fafc;
+    outline: none;
+}
+
+.chat-search input::placeholder,
+.composer textarea::placeholder {
+    color: rgba(248, 250, 252, .7);
+}
+
+.chat-search input:focus,
+.composer textarea:focus {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, .15);
+}
+
+.chat-list {
+    overflow: auto;
+}
+
+.conversation {
+    display: flex;
+    gap: 11px;
+    padding: 13px 14px;
+    color: #e2e8f0;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(148, 163, 184, .14);
+}
+
+.conversation:hover,
+.conversation.active {
+    background: rgba(96, 165, 250, .16);
+}
+
+.avatar {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, #60a5fa, #2563eb);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.conversation-copy {
+    min-width: 0;
+    flex: 1;
+}
+
+.conversation-copy strong,
+.conversation-copy span {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.conversation-copy strong {
+    font-size: 13px;
+    color: #f8fafc;
+}
+
+.conversation-copy span {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 3px;
+}
+
+.chat-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: rgba(2, 6, 23, .55);
+}
+
+.chat-head {
+    height: 68px;
+    flex: 0 0 68px;
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    background: rgba(15, 23, 42, .92);
+    border-bottom: 1px solid rgba(148, 163, 184, .2);
+}
+
+.chat-head h3 {
+    font-size: 15px;
+    color: #f8fafc;
+}
+
+.chat-head p {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 3px;
+}
+
+.stream {
+    flex: 1;
+    overflow: auto;
+    padding: 20px;
+}
+
+.row {
+    display: flex;
+    gap: 7px;
+    align-items: flex-end;
+    margin: 9px 0;
+}
+
+.row.mine {
+    justify-content: flex-end;
+}
+
+.row .avatar {
+    width: 29px;
+    height: 29px;
+    flex-basis: 29px;
+    font-size: 9px;
+}
+
+.bubble {
+    max-width: 70%;
+    padding: 10px 12px;
+    background: rgba(15, 23, 42, .82);
+    border: 1px solid rgba(148, 163, 184, .26);
+    border-radius: 15px 15px 15px 4px;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+    color: #e2e8f0;
+}
+
+.mine .bubble {
+    background: linear-gradient(180deg, #2563eb, #1d4ed8);
+    border: 0;
+    color: #eff6ff;
+    border-radius: 15px 15px 4px 15px;
+}
+
+.bubble .meta {
+    margin-top: 5px;
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.mine .bubble .meta {
+    color: #dbeafe;
+}
+
+.bubble img {
+    display: block;
+    max-width: min(280px, 62vw);
+    width: auto;
+    height: auto;
+    max-height: 260px;
+    object-fit: cover;
+    border-radius: 11px;
+    margin-top: 8px;
+    border: 1px solid rgba(148, 163, 184, .26);
+}
+
+.bubble .file {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    color: #bfdbfe;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.composer {
+    padding: 11px;
+    border-top: 1px solid rgba(148, 163, 184, .2);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 42px 42px;
+    grid-template-rows: auto auto;
+    gap: 7px 9px;
+    align-items: center;
+    background: rgba(15, 23, 42, .92);
+}
+
+.composer textarea {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    resize: none;
+    max-height: 120px;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.composer .icon-btn {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    display: grid !important;
+    place-items: center;
+    align-self: center;
+    line-height: 1;
+    border: 1px solid rgba(255, 255, 255, .65);
+    border-radius: 12px;
+    font-size: 22px;
+    cursor: pointer;
+    background: transparent;
+    color: #f8fafc;
+}
+
+.composer .icon-btn:hover {
+    border-color: #fff;
+    background: rgba(255, 255, 255, .08);
+}
+
+.composer .attach {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+}
+
+.composer .send {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+}
+
+.composer .selected-file {
+    grid-column: 1 / 4;
+    grid-row: 2;
+    padding-left: 3px;
+    font-size: 11px;
+    color: #cbd5e1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.empty {
+    margin: auto;
+    color: #94a3b8;
+    text-align: center;
+}
+
+.empty strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #f8fafc;
+}
+
+body.admin-chat-page {
+    overflow: hidden;
+}
+
+.admin-chat-page .content {
+    overflow: hidden;
+    padding: 14px;
+}
+
+.chat-shell {
+    height: calc(100dvh - 92px);
+    min-height: 0;
+    grid-template-columns: 300px minmax(0, 1fr);
+    border-radius: 16px;
+}
+
+.chat-main {
+    min-height: 0;
+}
+
+.stream {
+    min-height: 0;
+}
+
+.presence {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 3px;
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.presence-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #94a3b8;
+}
+
+.presence.online {
+    color: #34d399;
+}
+
+.presence.online .presence-dot {
+    background: #34d399;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, .2);
+}
+
+.typing {
+    height: 14px;
+    color: #93c5fd;
+    font-size: 10px;
+    font-weight: 700;
+    visibility: hidden;
+}
+
+.typing.show {
+    visibility: visible;
+}
+
+.conversation-typing {
+    display: none !important;
+    align-items: center;
+    gap: 5px;
+    color: #93c5fd !important;
+    font-weight: 800;
+}
+
+.conversation-typing.show {
+    display: flex !important;
+}
+
+.typing-dots {
+    display: inline-flex;
+    gap: 2px;
+}
+
+.typing-dots i {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #93c5fd;
+    animation: typingBounce 1s infinite ease-in-out;
+}
+
+.typing-dots i:nth-child(2) {
+    animation-delay: .15s;
+}
+
+.typing-dots i:nth-child(3) {
+    animation-delay: .3s;
+}
+
+@keyframes typingBounce {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: .45;
+    }
+
+    30% {
+        transform: translateY(-3px);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 760px) {
+    .composer {
+        grid-template-columns: minmax(0, 1fr) 40px 40px;
+        padding: 9px;
+        gap: 6px;
+    }
+
+    .composer .icon-btn {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+    }
+}
+
+@media (max-width: 700px) {
+    .chat-shell {
+        grid-template-columns: 105px minmax(0, 1fr);
+        height: calc(100dvh - 84px);
+    }
+}
 </style>
 <div class="chat-shell" id="chatShell">
  <aside class="chat-sidebar"><form class="chat-search" method="GET"><input name="search" value="{{ request('search') }}" placeholder="Search chats"></form><div class="chat-list">
- @forelse($conversations as $c) @php $u=$c->tenant;$unit=$u?->tenant?->unit;$last=$c->messages->first(); @endphp
+ @forelse($conversations as $c) @php $u=$c->tenant;$tenancy=$u?->tenancies?->first(fn($t)=>$t->unit?->property?->landlord_id===$c->landlord_user_id) ?? $u?->tenancies?->first();$unit=$tenancy?->unit;$last=$c->messages->first(); @endphp
  <a class="conversation {{ $selectedConversation?->id===$c->id?'active':'' }}" data-conversation-id="{{ $c->id }}" href="{{ route('admin.chats.index',['conversation_id'=>$c->id]) }}"><span class="avatar">@if($u?->profile_image_url)<img src="{{ $media($u->profile_image_url) }}" alt="">@else{{ $initials($u?->name) }}@endif</span><span class="conversation-copy"><strong>{{ $u?->name??'Unknown tenant' }}</strong><span>{{ $unit?->property?->name??'No property' }} · Unit {{ $unit?->unit_number??'-' }}</span><span class="conversation-preview">{{ $last?->body?:$last?->attachment_name?:'No messages' }}</span><span class="conversation-typing"><span class="typing-dots"><i></i><i></i><i></i></span> typing…</span></span></a>
  @empty <div class="empty" style="padding:30px">No chats yet.</div> @endforelse
  </div></aside>
- <main class="chat-main">@if($selectedConversation) @php $u=$selectedConversation->tenant;$unit=$u?->tenant?->unit; @endphp
+ <main class="chat-main">@if($selectedConversation) @php $u=$selectedConversation->tenant;$tenancy=$u?->tenancies?->first(fn($t)=>$t->unit?->property?->landlord_id===$selectedConversation->landlord_user_id) ?? $u?->tenancies?->first();$unit=$tenancy?->unit; @endphp
  <header class="chat-head"><span class="avatar">@if($u?->profile_image_url)<img src="{{ $media($u->profile_image_url) }}" alt="">@else{{ $initials($u?->name) }}@endif</span><div><h3>{{ $u?->name??'Unknown tenant' }}</h3><p>{{ ucfirst(strtolower($u?->role?->name??'Tenant')) }} · {{ $unit?->property?->name??'No property' }} · Unit {{ $unit?->unit_number??'-' }}</p></div></header>
  <div class="stream" id="stream">@foreach($selectedConversation->messages->sortBy('created_at') as $m) @php $sender=$m->sender;$url=$m->attachment_uri?$media($m->attachment_uri):null; @endphp
  @php

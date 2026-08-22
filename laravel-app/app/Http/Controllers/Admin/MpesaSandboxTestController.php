@@ -11,6 +11,8 @@ class MpesaSandboxTestController extends Controller
 {
     public function index()
     {
+        $this->ensureSuperAdmin();
+
         return view('admin.mpesa-sandbox-test', [
             'environment' => config('services.mpesa.environment', 'sandbox'),
             'simulate' => filter_var(config('services.mpesa.simulate', true), FILTER_VALIDATE_BOOL),
@@ -19,6 +21,8 @@ class MpesaSandboxTestController extends Controller
 
     public function store(Request $request, MpesaService $mpesa)
     {
+        $this->ensureSuperAdmin();
+
         $data = $request->validate([
             'payment_type' => ['required', 'string', 'in:PAYBILL,TILL'],
             'short_code' => ['required', 'string', 'max:20'],
@@ -73,5 +77,10 @@ class MpesaSandboxTestController extends Controller
                 'mpesa' => $e->getMessage(),
             ])->withInput();
         }
+    }
+
+    private function ensureSuperAdmin(): void
+    {
+        abort_unless(request()->user()?->role?->name === 'SUPER_ADMIN', 403);
     }
 }
