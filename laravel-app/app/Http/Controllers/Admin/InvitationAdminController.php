@@ -81,7 +81,7 @@ class InvitationAdminController extends Controller
             'unit_id' => 'required|uuid|exists:units,id',
             'tenant_user_id' => 'nullable|uuid|exists:users,id',
             'invitee_name' => 'nullable|string|max:160',
-            'email' => 'required|email|max:255',
+            'email' => 'nullable|email|max:255|required_without:tenant_user_id',
             'phone_number' => 'nullable|string|max:30',
             'move_in_date' => 'nullable|date',
             'rent_amount' => 'nullable|numeric|min:0',
@@ -121,7 +121,8 @@ class InvitationAdminController extends Controller
             }
         }
 
-        $normalizedEmail = strtolower(trim((string) $data['email']));
+        $normalizedEmail = strtolower(trim((string) ($data['email'] ?? '')));
+        abort_if($normalizedEmail === '', 422, 'Tenant email is required when no existing tenant account is selected.');
 
         [$loginUser, $temporaryPassword, $firstTimeSetup] = $this->prepareTenantLogin(
             $normalizedEmail,

@@ -40,12 +40,14 @@ class SupportConversationController extends Controller
 
         $data = $request->validate([
             'tenant_user_id' => 'required|uuid|exists:users,id',
-            'landlord_user_id' => 'required|uuid|exists:users,id',
-            'property_id' => 'required|uuid|exists:properties,id',
+            'landlord_user_id' => 'nullable|uuid|exists:users,id',
+            'property_id' => 'nullable|uuid|exists:properties,id',
             'subject' => 'nullable|string|max:255',
             'topic' => 'required|string|max:255',
         ]);
         abort_if($this->isTenant($user) && $data['tenant_user_id'] !== $user->id, 403);
+        abort_if($this->isTenant($user) && blank($data['landlord_user_id']), 422, 'A landlord context is required to start a support conversation.');
+        abort_if($this->isTenant($user) && blank($data['property_id']), 422, 'A property context is required to start a support conversation.');
         abort_if($this->isLandlord($user) && $data['landlord_user_id'] !== $user->id, 403);
 
         $data['is_open'] = true;

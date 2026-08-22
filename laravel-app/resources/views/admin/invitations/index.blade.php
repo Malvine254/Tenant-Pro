@@ -253,8 +253,8 @@
                         <input id="tenantInviteName" name="invitee_name" value="{{ old('invitee_name') }}" placeholder="Enter tenant full name">
                     </div>
                     <div class="form-group">
-                        <label>Tenant email</label>
-                        <input id="tenantInviteEmail" type="email" name="email" value="{{ old('email') }}" placeholder="tenant@example.com" required>
+                        <label>Tenant email (required if no existing tenant selected)</label>
+                        <input id="tenantInviteEmail" type="email" name="email" value="{{ old('email') }}" placeholder="tenant@example.com">
                         @error('email')<div class="form-error">{{ $message }}</div>@enderror
                     </div>
                     <div class="form-group">
@@ -403,11 +403,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tenantPhone && !tenantPhone.value) tenantPhone.value = selected.dataset.phone || '';
     };
 
-    tenantUser?.addEventListener('change', autofillTenant);
+    const syncTenantEmailRequirement = () => {
+        if (!tenantUser || !tenantEmail) return;
+        const hasSelectedTenant = !!tenantUser.value;
+        tenantEmail.required = !hasSelectedTenant;
+    };
+
+    tenantUser?.addEventListener('change', () => {
+        autofillTenant();
+        syncTenantEmailRequirement();
+    });
     property.addEventListener('change', filterUnits);
     unit.addEventListener('change', syncRent);
     filterUnits();
     autofillTenant();
+    syncTenantEmailRequirement();
 });
 </script>
 @endsection
