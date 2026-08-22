@@ -14,6 +14,8 @@ class SupportMessageController extends Controller
 {
     public function index(Request $request)
     {
+        $this->ensureAllowedRole($request->user());
+
         return response()->json(
             $this->messagesForUser($request)
                 ->map(fn(SupportMessage $message) => $this->messagePayload($message))
@@ -23,6 +25,8 @@ class SupportMessageController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
+        $this->ensureAllowedRole($user);
+
         $request->merge([
             'body' => $request->input('body', $request->input('text')),
             'attachment_name' => $request->input('attachment_name', $request->input('attachmentName')),
@@ -116,6 +120,8 @@ class SupportMessageController extends Controller
     public function show(SupportMessage $supportMessage)
     {
         $user = request()->user();
+        $this->ensureAllowedRole($user);
+
         abort_if($this->isTenant($user) && $supportMessage->conversation()->where('tenant_user_id', $user->id)->doesntExist(), 403);
         abort_if($this->isLandlord($user) && $supportMessage->conversation()->where('landlord_user_id', $user->id)->doesntExist(), 403);
 
@@ -125,6 +131,8 @@ class SupportMessageController extends Controller
     public function update(Request $request, SupportMessage $supportMessage)
     {
         $user = $request->user();
+        $this->ensureAllowedRole($user);
+
         abort_if($this->isTenant($user) && $supportMessage->conversation()->where('tenant_user_id', $user->id)->doesntExist(), 403);
         abort_if($this->isLandlord($user) && $supportMessage->conversation()->where('landlord_user_id', $user->id)->doesntExist(), 403);
 
@@ -139,6 +147,8 @@ class SupportMessageController extends Controller
     public function destroy(SupportMessage $supportMessage)
     {
         $user = request()->user();
+        $this->ensureAllowedRole($user);
+
         abort_if($this->isTenant($user) && $supportMessage->conversation()->where('tenant_user_id', $user->id)->doesntExist(), 403);
         abort_if($this->isLandlord($user) && $supportMessage->conversation()->where('landlord_user_id', $user->id)->doesntExist(), 403);
         abort_unless($supportMessage->sender_id === $user?->id, 403);
@@ -152,6 +162,8 @@ class SupportMessageController extends Controller
 
     public function upload(Request $request)
     {
+        $this->ensureAllowedRole($request->user());
+
         $data = $request->validate([
             'file' => 'required|file|max:20480|mimetypes:image/jpeg,image/png,image/webp,application/pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,audio/mpeg,audio/mp4,audio/ogg,audio/webm',
         ]);
@@ -169,6 +181,8 @@ class SupportMessageController extends Controller
 
     public function heartbeat(Request $request)
     {
+        $this->ensureAllowedRole($request->user());
+
         Cache::put('chat:online:'.$request->user()->id, now()->timestamp, now()->addSeconds(45));
         return response()->json([
             'ok' => true,
@@ -179,6 +193,8 @@ class SupportMessageController extends Controller
 
     public function typing(Request $request)
     {
+        $this->ensureAllowedRole($request->user());
+
         $data = $request->validate(['typing' => 'required|boolean']);
         $key = 'chat:typing:'.$request->user()->id;
         $data['typing'] ? Cache::put($key, true, now()->addSeconds(4)) : Cache::forget($key);
@@ -261,5 +277,10 @@ class SupportMessageController extends Controller
         abort_if($propertyId && !$activeTenancy, 403, 'You can only contact landlords for properties assigned to you.');
 
         return $activeTenancy?->unit?->property;
+    }
+
+    private function ensureAllowedRole($user): void
+    {
+        abort_if($user?->role?->name === 'CARETAKER', 403, 'Caretakers cannot access support chat endpoints.');
     }
 }

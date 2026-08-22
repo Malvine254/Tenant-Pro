@@ -10,6 +10,8 @@ class SupportConversationController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        $this->ensureAllowedRole($user);
+
         $query = SupportConversation::with(['tenant', 'property', 'messages'])
             ->when($this->isTenant($user), fn($q) => $q->where('tenant_user_id', $user->id))
             ->when($this->isLandlord($user), fn($q) => $q->where('landlord_user_id', $user->id))
@@ -22,6 +24,8 @@ class SupportConversationController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
+        $this->ensureAllowedRole($user);
+
         $property = $this->isTenant($user)
             ? $this->resolveAccessibleProperty($user, $request->input('property_id', $request->input('propertyId')))
             : null;
@@ -51,6 +55,8 @@ class SupportConversationController extends Controller
     public function show(SupportConversation $supportConversation)
     {
         $user = request()->user();
+        $this->ensureAllowedRole($user);
+
         abort_if($this->isTenant($user) && $supportConversation->tenant_user_id !== $user->id, 403);
         abort_if($this->isLandlord($user) && $supportConversation->landlord_user_id !== $user->id, 403);
 
@@ -60,6 +66,8 @@ class SupportConversationController extends Controller
     public function update(Request $request, SupportConversation $supportConversation)
     {
         $user = $request->user();
+        $this->ensureAllowedRole($user);
+
         abort_if($this->isTenant($user) && $supportConversation->tenant_user_id !== $user->id, 403);
         abort_if($this->isLandlord($user) && $supportConversation->landlord_user_id !== $user->id, 403);
 
@@ -75,6 +83,8 @@ class SupportConversationController extends Controller
     public function destroy(SupportConversation $supportConversation)
     {
         $user = request()->user();
+        $this->ensureAllowedRole($user);
+
         abort_if($this->isTenant($user) && $supportConversation->tenant_user_id !== $user->id, 403);
         abort_if($this->isLandlord($user) && $supportConversation->landlord_user_id !== $user->id, 403);
 
@@ -108,5 +118,10 @@ class SupportConversationController extends Controller
         abort_if($propertyId && !$activeTenancy, 403, 'You can only contact landlords for properties assigned to you.');
 
         return $activeTenancy?->unit?->property;
+    }
+
+    private function ensureAllowedRole($user): void
+    {
+        abort_if($user?->role?->name === 'CARETAKER', 403, 'Caretakers cannot access support chat endpoints.');
     }
 }
