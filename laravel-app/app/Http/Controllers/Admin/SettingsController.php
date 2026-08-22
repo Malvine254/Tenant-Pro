@@ -183,7 +183,7 @@ class SettingsController extends Controller
     public function updatePasskey(Request $request)
     {
         $user = $this->currentUser();
-        abort_unless(in_array($user->role?->name, ['SUPER_ADMIN', 'ADMIN'], true), 403, 'Only admins can update the Daraja passkey.');
+        abort_unless($user->role?->name === 'SUPER_ADMIN', 403, 'Only super admins can update the Daraja passkey.');
 
         $data = $request->validate([
             'passkey' => ['required', 'string', 'min:10', 'max:255'],

@@ -20,6 +20,7 @@ storage/logs/
 
 # Android app source is part of this repo. Keep local machine files and secrets out.
 tenant-app/.gradle/
+tenant-app/.kotlin/
 tenant-app/local.properties
 tenant-app/**/.idea/
 

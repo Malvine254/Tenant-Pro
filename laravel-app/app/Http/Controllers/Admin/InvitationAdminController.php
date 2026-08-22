@@ -22,8 +22,10 @@ class InvitationAdminController extends Controller
     {
         $user = $request->user();
         $isLandlord = $user?->role?->name === 'LANDLORD';
-        $tenantSettings = $isLandlord ? (is_array($user->app_settings['tenantSettings'] ?? null) ? $user->app_settings['tenantSettings'] : []) : [];
-        $tenantInviteExpiryDefault = now()->addDays((int) ($tenantSettings['default_invite_expiry_days'] ?? 7))->toDateString();
+        $tenantSettingValues = $isLandlord && is_array($user->app_settings['tenantSettings'] ?? null)
+            ? $user->app_settings['tenantSettings']
+            : [];
+        $tenantInviteExpiryDefault = now()->addDays((int) ($tenantSettingValues['default_invite_expiry_days'] ?? 7))->toDateString();
 
         $invitations = Invitation::with(['property', 'unit', 'sentBy'])
             ->when(
@@ -68,7 +70,7 @@ class InvitationAdminController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'phone_number']);
 
-        return view('admin.invitations.index', compact('invitations', 'properties', 'tenantUsers', 'isLandlord', 'tenantSettings', 'tenantInviteExpiryDefault'));
+        return view('admin.invitations.index', compact('invitations', 'properties', 'tenantUsers', 'isLandlord', 'tenantInviteExpiryDefault'));
     }
 
     public function storeTenant(Request $request)
