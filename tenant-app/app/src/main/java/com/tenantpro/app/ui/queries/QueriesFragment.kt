@@ -63,6 +63,7 @@ class QueriesFragment : Fragment() {
 
         setupChatList()
         setupTopicDropdown()
+        setupPropertyDropdown()
         bindUi()
 
         binding.btnAttachment.setOnClickListener {
@@ -83,8 +84,7 @@ class QueriesFragment : Fragment() {
         // Keep the hint on the EditText and react to real text changes instead.
         binding.btnSendMessage.isEnabled = false
         binding.etQueryMessage.doAfterTextChanged { editable ->
-            val hasContent = !editable.isNullOrBlank() || pendingAttachmentUri != null
-            binding.btnSendMessage.isEnabled = hasContent && viewModel.sending.value.not()
+            updateComposerActions()
             if (!editable.isNullOrBlank()) binding.tilQueryMessage.error = null
             typingJob?.cancel()
             typingJob = viewLifecycleOwner.lifecycleScope.launch {
@@ -96,6 +96,13 @@ class QueriesFragment : Fragment() {
         binding.actQueryTopic.setOnItemClickListener { parent, _, position, _ ->
             val selected = parent.getItemAtPosition(position)?.toString().orEmpty()
             viewModel.selectTopic(selected)
+        }
+
+        binding.actQueryProperty.setOnItemClickListener { _, _, position, _ ->
+            val selected = viewModel.propertyOptions.value.getOrNull(position)
+            viewModel.selectProperty(selected?.propertyId)
+            binding.tilQueryProperty.error = null
+            updateComposerActions()
         }
 
         binding.etQueryMessage.setOnEditorActionListener { _, actionId, _ ->
@@ -111,7 +118,7 @@ class QueriesFragment : Fragment() {
         pendingAttachmentName = getFileName(uri)
         binding.tvAttachmentPreview.text = pendingAttachmentName
         binding.layoutAttachmentPreview.visible()
-        binding.btnSendMessage.isEnabled = true
+        updateComposerActions()
     }
 
     private fun getFileName(uri: Uri): String {
@@ -128,12 +135,17 @@ class QueriesFragment : Fragment() {
         pendingAttachmentUri = null
         pendingAttachmentName = null
         binding.layoutAttachmentPreview.gone()
-        binding.btnSendMessage.isEnabled = !binding.etQueryMessage.text.isNullOrBlank()
+        updateComposerActions()
     }
 
     private fun submitMessage() {
         val topic = binding.actQueryTopic.text?.toString()?.trim().orEmpty()
         val message = binding.etQueryMessage.text?.toString()?.trim().orEmpty()
+
+        if (viewModel.selectedProperty.value == null) {
+            binding.tilQueryProperty.error = getString(R.string.query_property_required)
+            return
+        }
 
         if (message.isBlank() && pendingAttachmentUri == null) {
             binding.tilQueryMessage.error = getString(com.tenantpro.app.R.string.query_message_required)
@@ -170,6 +182,20 @@ class QueriesFragment : Fragment() {
         binding.actQueryTopic.setText(viewModel.topics.first(), false)
     }
 
+    private fun setupPropertyDropdown() {
+        val propertyAdapter = ArrayAdapter(
+            requireContext(),
+            R.layout.item_topic_dropdown,
+            emptyList<String>()
+        )
+        binding.actQueryProperty.setAdapter(propertyAdapter)
+    }
+
+    private fun updateComposerActions() {
+        val hasContent = !binding.etQueryMessage.text.isNullOrBlank() || pendingAttachmentUri != null
+        binding.btnSendMessage.isEnabled = hasContent && viewModel.sending.value.not() && viewModel.selectedProperty.value != null
+    }
+
     private fun bindUi() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -183,6 +209,43 @@ class QueriesFragment : Fragment() {
                     viewModel.userProfileImage.collect { imageUrl ->
                         chatAdapter.outgoingProfileImage = imageUrl
                         chatAdapter.notifyItemRangeChanged(0, chatAdapter.itemCount)
+                    }
+                }
+                launch {
+                    viewModel.propertyOptions.collect { properties ->
+                        val labels = properties.map { it.displayLabel }
+                        val propertyAdapter = ArrayAdapter(
+                            requireContext(),
+                            R.layout.item_topic_dropdown,
+                            labels
+                        )
+                        binding.actQueryProperty.setAdapter(propertyAdapter)
+
+                        if (properties.isEmpty()) {
+                            binding.actQueryProperty.setText("", false)
+                            binding.tvChatTitle.text = getString(R.string.query_property_title_default)
+                            binding.tvChatSubtitle.text = getString(R.string.query_property_access_hint)
+                            binding.tvEmptyChats.text = getString(R.string.query_no_property_available)
+                        }
+
+                        updateComposerActions()
+                    }
+                }
+                launch {
+                    viewModel.selectedProperty.collect { property ->
+                        binding.actQueryProperty.setText(property?.displayLabel.orEmpty(), false)
+                        binding.tvChatTitle.text = property?.propertyName ?: getString(R.string.query_property_title_default)
+                        binding.tvChatSubtitle.text = if (property == null) {
+                            getString(R.string.query_property_access_hint)
+                        } else {
+                            getString(R.string.query_property_subtitle, property.unitLabel)
+                        }
+                        binding.tvEmptyChats.text = if (property == null) {
+                            getString(R.string.query_no_property_available)
+                        } else {
+                            getString(R.string.query_empty_for_property, property.propertyName)
+                        }
+                        updateComposerActions()
                     }
                 }
                 launch {
@@ -222,9 +285,9 @@ class QueriesFragment : Fragment() {
                 }
                 launch {
                     viewModel.sending.collect { sending ->
-                        binding.btnSendMessage.isEnabled = !sending &&
-                            (!binding.etQueryMessage.text.isNullOrBlank() || pendingAttachmentUri != null)
+                        updateComposerActions()
                         binding.btnAttachment.isEnabled = !sending
+                        binding.btnImageAttachment.isEnabled = !sending
                     }
                 }
                 launch {

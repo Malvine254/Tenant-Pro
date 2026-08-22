@@ -86,6 +86,13 @@
     <string name="query_submit_success">Query submitted. Support will contact you shortly.</string>
     <string name="queries_empty_chat">No messages yet. Start the conversation below.</string>
     <string name="query_topic_label">Topic</string>
+    <string name="query_property_label">Property</string>
+    <string name="query_property_required">Select a property to chat about</string>
+    <string name="query_property_title_default">Property chat</string>
+    <string name="query_property_access_hint">You can only contact landlords for properties assigned to you</string>
+    <string name="query_property_subtitle">Chatting about %1$s</string>
+    <string name="query_empty_for_property">No messages for %1$s yet. Send the first message below.</string>
+    <string name="query_no_property_available">You do not have an active property available for chat.</string>
     <string name="query_message_hint_chat">Type your message</string>
     <string name="query_send_message">Send Message</string>
     <string name="query_sending">Sending...</string>

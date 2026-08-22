@@ -28,24 +28,39 @@ class SupportMessageController extends Controller
             'attachment_name' => $request->input('attachment_name', $request->input('attachmentName')),
             'attachment_uri' => $request->input('attachment_uri', $request->input('attachmentUri')),
             'client_message_id' => $request->input('client_message_id', $request->input('clientMessageId')),
+            'property_id' => $request->input('property_id', $request->input('propertyId')),
+            'conversation_id' => $request->input('conversation_id', $request->input('conversationId')),
         ]);
         if (blank($request->input('body')) && filled($request->input('attachment_uri'))) {
             $request->merge(['body' => 'Attachment shared']);
         }
 
         $topic = trim((string) $request->input('topic', 'General')) ?: 'General';
-        $landlordUserId = $this->resolveLandlordUserId($user);
         $conversation = $request->conversation_id
-            ? SupportConversation::find($request->conversation_id)
-            : SupportConversation::firstOrCreate(
+            ? SupportConversation::with('property')->find($request->conversation_id)
+            : null;
+
+        abort_if($this->isTenant($user) && $conversation && $conversation->tenant_user_id !== $user->id, 403);
+
+        $property = $conversation?->property
+            ?? $this->resolveAccessibleProperty($user, $request->input('property_id'));
+
+        $landlordUserId = $conversation?->landlord_user_id ?: $property?->landlord_id;
+
+        if (!$conversation) {
+            $conversation = SupportConversation::firstOrCreate(
                 [
                     'tenant_user_id' => $user->id,
                     'landlord_user_id' => $landlordUserId,
-                    'topic' => $topic,
-                    'is_open' => true,
+                    'property_id' => $property?->id,
                 ],
-                ['subject' => $topic]
+                [
+                    'topic' => $topic,
+                    'subject' => trim(($property?->name ?: 'Property').' support'),
+                    'is_open' => true,
+                ]
             );
+        }
 
         $request->merge([
             'conversation_id' => $conversation?->id,
@@ -77,6 +92,12 @@ class SupportMessageController extends Controller
                 'client_message_id' => $data['client_message_id'],
             ], $data)
             : SupportMessage::create($data);
+
+        $conversation->update([
+            'topic' => $topic,
+            'subject' => trim(($property?->name ?: 'Property').' support'),
+            'is_open' => true,
+        ]);
 
         if ($this->isTenant($user)) {
             app(TenantEmailService::class)->supportMessageReceived($message);
@@ -158,7 +179,7 @@ class SupportMessageController extends Controller
     {
         $user = $request->user();
 
-        return SupportMessage::with('sender')
+        return SupportMessage::with(['sender', 'conversation.property'])
             ->when(
                 $this->isTenant($user),
                 fn($query) => $query->whereHas(
@@ -173,13 +194,18 @@ class SupportMessageController extends Controller
 
     private function messagePayload(SupportMessage $message): array
     {
+        $property = $message->conversation?->property;
+
         return [
             'id' => $message->id,
+            'conversationId' => $message->conversation_id,
             'topic' => $message->topic,
             'message' => $message->body,
             'isFromTenant' => (bool) $message->is_from_tenant,
             'timestamp' => $message->created_at?->getTimestampMs() ?? 0,
             'status' => $message->status,
+            'propertyId' => $property?->id,
+            'propertyName' => $property?->name,
             'attachmentUri' => $message->attachment_uri,
             'attachmentName' => $message->attachment_name,
             'messageType' => $message->message_type,
@@ -196,7 +222,7 @@ class SupportMessageController extends Controller
         return $user?->role?->name === 'TENANT';
     }
 
-    private function resolveLandlordUserId($user): ?string
+    private function resolveAccessibleProperty($user, ?string $propertyId)
     {
         if (!$this->isTenant($user)) {
             return null;
@@ -205,9 +231,12 @@ class SupportMessageController extends Controller
         $activeTenancy = $user->tenancies()
             ->where('is_active', true)
             ->with('unit.property')
+            ->when($propertyId, fn ($query) => $query->whereHas('unit.property', fn ($propertyQuery) => $propertyQuery->where('id', $propertyId)))
             ->latest('updated_at')
             ->first();
 
-        return $activeTenancy?->unit?->property?->landlord_id;
+        abort_if($propertyId && !$activeTenancy, 403, 'You can only contact landlords for properties assigned to you.');
+
+        return $activeTenancy?->unit?->property;
     }
 }

@@ -2,6 +2,9 @@ package com.tenantpro.app.ui.queries
 
 data class QueryChatMessage(
     val id: String,
+    val conversationId: String? = null,
+    val propertyId: String? = null,
+    val propertyName: String? = null,
     val topic: String,
     val message: String,
     val isFromTenant: Boolean,

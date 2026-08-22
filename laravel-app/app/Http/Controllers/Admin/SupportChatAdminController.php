@@ -17,13 +17,16 @@ class SupportChatAdminController extends Controller
     {
         abort_if($request->user()?->role?->name === 'CARETAKER', 403);
         $query = $this->scoped($request->user())
-            ->with(['tenant.role', 'tenant.tenancies.unit.property', 'messages' => fn ($q) => $q->latest()->limit(1)])
-            ->when($request->search, fn ($q, $search) => $q->whereHas('tenant', fn ($u) => $u->where('name', 'like', "%{$search}%")))
+            ->with(['tenant.role', 'property', 'messages' => fn ($q) => $q->latest()->limit(1)])
+            ->when($request->search, fn ($q, $search) => $q->where(function ($inner) use ($search) {
+                $inner->whereHas('tenant', fn ($u) => $u->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('property', fn ($property) => $property->where('name', 'like', "%{$search}%"));
+            }))
             ->latest();
         $conversations = $query->paginate(20)->withQueryString();
         $id = $request->conversation_id ?: $conversations->first()?->id;
         $selectedConversation = $id ? $this->scoped($request->user())
-            ->with(['tenant.role', 'tenant.tenancies.unit.property', 'messages.sender.role'])->findOrFail($id) : null;
+            ->with(['tenant.role', 'property', 'messages.sender.role'])->findOrFail($id) : null;
         if ($selectedConversation) {
             $selectedConversation->messages()->where('is_from_tenant', true)->whereNull('read_at')
                 ->update(['status' => 'READ', 'read_at' => now()]);

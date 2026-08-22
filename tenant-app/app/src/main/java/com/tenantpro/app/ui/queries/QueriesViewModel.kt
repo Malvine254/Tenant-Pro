@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tenantpro.app.data.repository.AuthRepository
 import com.tenantpro.app.data.model.SupportMessageDto
 import com.tenantpro.app.data.repository.TenantFeatureRepository
 import com.tenantpro.app.utils.DataStoreManager
@@ -34,6 +35,7 @@ import kotlin.random.Random
 class QueriesViewModel @Inject constructor(
     private val dataStoreManager: DataStoreManager,
     private val repository: TenantFeatureRepository,
+    private val authRepository: AuthRepository,
     private val connectivity: NetworkConnectivityObserver,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -56,8 +58,19 @@ class QueriesViewModel @Inject constructor(
     private val _selectedTopic = MutableStateFlow("General")
     val selectedTopic: StateFlow<String> = _selectedTopic.asStateFlow()
 
-    val visibleMessages: StateFlow<List<QueryChatMessage>> = combine(_messages, _selectedTopic) { messages, topic ->
-        messages.filter { it.topic.equals(topic, ignoreCase = true) }
+    private val _propertyOptions = MutableStateFlow<List<ChatPropertyOption>>(emptyList())
+    val propertyOptions: StateFlow<List<ChatPropertyOption>> = _propertyOptions.asStateFlow()
+
+    private val _selectedPropertyId = MutableStateFlow<String?>(null)
+    val selectedPropertyId: StateFlow<String?> = _selectedPropertyId.asStateFlow()
+
+    val selectedProperty: StateFlow<ChatPropertyOption?> = combine(_propertyOptions, _selectedPropertyId) { options, propertyId ->
+        options.firstOrNull { it.propertyId == propertyId }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    val visibleMessages: StateFlow<List<QueryChatMessage>> = combine(_messages, _selectedPropertyId) { messages, propertyId ->
+        if (propertyId.isNullOrBlank()) emptyList()
+        else messages.filter { it.propertyId == propertyId }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _sending = MutableStateFlow(false)
@@ -88,6 +101,10 @@ class QueriesViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            loadAvailableProperties()
+        }
+
+        viewModelScope.launch {
             loadMessages(showCached = true, emitErrors = true)
         }
 
@@ -102,6 +119,10 @@ class QueriesViewModel @Inject constructor(
 
     fun selectTopic(topic: String) {
         _selectedTopic.value = topic.ifBlank { "General" }
+    }
+
+    fun selectProperty(propertyId: String?) {
+        _selectedPropertyId.value = propertyId
     }
 
     fun startPolling() {
@@ -143,8 +164,13 @@ class QueriesViewModel @Inject constructor(
 
     fun sendMessage(topic: String, text: String, attachmentUri: Uri? = null, attachmentName: String? = null) {
         val message = text.trim()
+        val property = selectedProperty.value
         if (message.isBlank() && attachmentUri == null) {
             viewModelScope.launch { _events.emit("Message cannot be empty") }
+            return
+        }
+        if (property == null) {
+            viewModelScope.launch { _events.emit("Select one of your active properties before sending a message") }
             return
         }
 
@@ -165,6 +191,8 @@ class QueriesViewModel @Inject constructor(
                         queueOfflineMessage(
                             QueryChatMessage(
                                 id = generateId(),
+                                propertyId = property.propertyId,
+                                propertyName = property.propertyName,
                                 topic = topic,
                                 message = message.ifBlank { "Attachment shared" },
                                 isFromTenant = true,
@@ -185,6 +213,8 @@ class QueriesViewModel @Inject constructor(
 
             val outbound = QueryChatMessage(
                 id = generateId(),
+                propertyId = property.propertyId,
+                propertyName = property.propertyName,
                 topic = topic,
                 message = message.ifBlank { "Attachment shared" },
                 isFromTenant = true,
@@ -200,7 +230,7 @@ class QueriesViewModel @Inject constructor(
             _messages.value = updated
             persist(updated)
 
-            when (val result = repository.sendSupportMessage(topic, message, serverUri, serverName, clientMessageId)) {
+            when (val result = repository.sendSupportMessage(property.propertyId, topic, message, serverUri, serverName, clientMessageId)) {
                 is Resource.Success -> {
                     val mapped = result.data.toChatMessages()
                     _messages.value = mapped
@@ -250,6 +280,7 @@ class QueriesViewModel @Inject constructor(
             }
 
             when (repository.sendSupportMessage(
+                propertyId = queued.propertyId,
                 topic = queued.topic,
                 text = queued.message,
                 attachmentUri = serverUri,
@@ -295,6 +326,9 @@ class QueriesViewModel @Inject constructor(
                     add(
                         QueryChatMessage(
                             id = obj.optString("id"),
+                            conversationId = obj.optString("conversationId", "").ifBlank { null },
+                            propertyId = obj.optString("propertyId", "").ifBlank { null },
+                            propertyName = obj.optString("propertyName", "").ifBlank { null },
                             topic = obj.optString("topic", "General"),
                             message = obj.optString("message"),
                             isFromTenant = obj.optBoolean("isFromTenant", true),
@@ -319,6 +353,9 @@ class QueriesViewModel @Inject constructor(
             arr.put(
                 JSONObject().apply {
                     put("id", item.id)
+                    item.conversationId?.let { put("conversationId", it) }
+                    item.propertyId?.let { put("propertyId", it) }
+                    item.propertyName?.let { put("propertyName", it) }
                     put("topic", item.topic)
                     put("message", item.message)
                     put("isFromTenant", item.isFromTenant)
@@ -337,6 +374,9 @@ class QueriesViewModel @Inject constructor(
     private fun List<SupportMessageDto>.toChatMessages(): List<QueryChatMessage> = map {
         QueryChatMessage(
             id = it.id,
+            conversationId = it.conversationId,
+            propertyId = it.propertyId,
+            propertyName = it.propertyName,
             topic = it.topic,
             message = it.message,
             isFromTenant = it.isFromTenant,
@@ -350,6 +390,34 @@ class QueriesViewModel @Inject constructor(
 
     private fun generateId(): String = "m_${System.currentTimeMillis()}_${Random.nextInt(1000, 9999)}"
 
+    private suspend fun loadAvailableProperties() {
+        when (val profileResult = authRepository.getMyProfile()) {
+            is Resource.Success -> {
+                val options = profileResult.data.tenantProfiles
+                    .ifEmpty { listOfNotNull(profileResult.data.tenantProfile) }
+                    .filter { it.isActive }
+                    .mapNotNull { tenancy ->
+                        val property = tenancy.unit?.property ?: return@mapNotNull null
+                        ChatPropertyOption(
+                            propertyId = property.id,
+                            propertyName = property.name.ifBlank { "Property" },
+                            unitLabel = tenancy.unit?.unitName?.ifBlank { "Unit" } ?: "Unit"
+                        )
+                    }
+                    .distinctBy { it.propertyId }
+
+                _propertyOptions.value = options
+                if (_selectedPropertyId.value.isNullOrBlank()) {
+                    _selectedPropertyId.value = options.firstOrNull()?.propertyId
+                }
+            }
+            is Resource.Error -> if (_propertyOptions.value.isEmpty()) {
+                _events.emit(profileResult.message)
+            }
+            Resource.Loading -> Unit
+        }
+    }
+
     override fun onCleared() {
         stopPolling()
         super.onCleared()
@@ -358,4 +426,13 @@ class QueriesViewModel @Inject constructor(
     companion object {
         private const val POLLING_INTERVAL_MS = 3_000L
     }
+}
+
+data class ChatPropertyOption(
+    val propertyId: String,
+    val propertyName: String,
+    val unitLabel: String
+) {
+    val displayLabel: String
+        get() = "$propertyName - $unitLabel"
 }

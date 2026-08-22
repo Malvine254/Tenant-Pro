@@ -11,85 +11,127 @@
         android:layout_height="64dp"
         android:background="@color/surface"
         android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="12dp">
-
-        <TextView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/bg_circle_primary"
-            android:gravity="center"
-            android:text="PM"
-            android:textColor="@color/on_primary"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_weight="1"
+            android:background="@color/surface"
             android:orientation="vertical">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Property Manager"
-                android:textColor="@color/on_surface"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
             <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <View
-                    android:id="@+id/viewManagerPresence"
-                    android:layout_width="7dp"
-                    android:layout_height="7dp"
-                    android:layout_marginEnd="5dp"
-                    android:background="@drawable/bg_circle_success" />
-
+                android:orientation="horizontal"
+                android:paddingHorizontal="12dp">
+            android:gravity="center"
                 <TextView
-                    android:id="@+id/tvManagerPresence"
-                    android:layout_width="wrap_content"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_circle_primary"
+                    android:gravity="center"
+                    android:text="PM"
+                    android:textColor="@color/on_primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            android:layout_weight="1"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                android:maxLines="1"
+                    <TextView
+                        android:id="@+id/tvChatTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="Property chat"
+                        android:textColor="@color/on_surface"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                android:gravity="center_vertical"
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+                    android:layout_marginEnd="5dp"
+                        <View
+                            android:id="@+id/viewManagerPresence"
+                            android:layout_width="7dp"
+                            android:layout_height="7dp"
+                            android:layout_marginEnd="5dp"
+                            android:background="@drawable/bg_circle_success" />
                     android:text="Offline"
-                    android:textColor="@color/on_surface_variant"
-                    android:textSize="11sp" />
-            </LinearLayout>
-        </LinearLayout>
+                        <TextView
+                            android:id="@+id/tvManagerPresence"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Offline"
+                            android:textColor="@color/on_surface_variant"
+                            android:textSize="11sp" />
+                    </LinearLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilQueryTopic"
+                    <TextView
+                        android:id="@+id/tvChatSubtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="Only properties assigned to you can be contacted"
+                        android:textColor="@color/on_surface_variant"
+                        android:textSize="11sp" />
             style="@style/Theme.TenantPro.TextInputLayout.Search"
             android:layout_width="126dp"
-            android:layout_height="44dp"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilQueryTopic"
+                    style="@style/Theme.TenantPro.TextInputLayout.Search"
+                    android:layout_width="126dp"
+                    android:layout_height="44dp"
+                    app:endIconMode="dropdown_menu">
             app:endIconMode="dropdown_menu">
-
-            <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                android:id="@+id/actQueryTopic"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/transparent"
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/actQueryTopic"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:ellipsize="end"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        android:paddingHorizontal="10dp"
+                        android:textColor="@color/on_surface"
+                        android:textSize="12sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
                 android:ellipsize="end"
-                android:inputType="none"
-                android:maxLines="1"
-                android:paddingHorizontal="10dp"
-                android:textColor="@color/on_surface"
-                android:textSize="12sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-    </LinearLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilQueryProperty"
+                style="@style/Theme.TenantPro.TextInputLayout.Search"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:layout_marginBottom="10dp"
+                android:hint="@string/query_property_label"
+                app:endIconMode="dropdown_menu">
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/outline_variant" />
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/actQueryProperty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:ellipsize="end"
+                    android:inputType="none"
+                    android:maxLines="1"
+                    android:minHeight="48dp"
+                    android:paddingHorizontal="12dp"
+                    android:textColor="@color/on_surface"
+                    android:textSize="13sp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
