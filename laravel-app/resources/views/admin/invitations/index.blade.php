@@ -58,12 +58,12 @@
     }
     .invitation-layout {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 16px;
     }
     .tenant-invite-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 16px;
     }
     .tenant-invite-grid .full-width {
@@ -102,11 +102,6 @@
         background: rgba(148,163,184,.1);
         color: #e2e8f0;
     }
-    @media (min-width: 840px) {
-        .invitation-layout.dual {
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        }
-    }
     @media (max-width: 980px) {
         .tenant-invite-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -116,6 +111,7 @@
         }
     }
     @media (max-width: 720px) {
+        .invitation-layout,
         .tenant-invite-grid {
             grid-template-columns: 1fr;
         }
@@ -169,17 +165,17 @@
                 <h3>Invite Landlord</h3>
                 <form method="POST" action="{{ route('admin.invitations.landlords.store') }}">
                     @csrf
-                    <div class="form-group">
-                        <label>Landlord full name</label>
-                        <input name="invitee_name" value="{{ old('invitee_name') }}" required>
-                        @error('invitee_name')<div class="form-error">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" value="{{ old('email') }}" required>
-                        @error('email')<div class="form-error">{{ $message }}</div>@enderror
-                    </div>
                     <div class="invitation-layout dual">
+                        <div class="form-group">
+                            <label>Landlord full name</label>
+                            <input name="invitee_name" value="{{ old('invitee_name') }}" required>
+                            @error('invitee_name')<div class="form-error">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" value="{{ old('email') }}" required>
+                            @error('email')<div class="form-error">{{ $message }}</div>@enderror
+                        </div>
                         <div class="form-group">
                             <label>Phone, optional</label>
                             <input name="phone_number" value="{{ old('phone_number') }}">
@@ -189,14 +185,15 @@
                             <input name="business_name" value="{{ old('business_name') }}">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>Invite expires</label>
-                        <input type="date" name="expires_at" value="{{ old('expires_at', now()->addDays(7)->toDateString()) }}" required>
-                        @error('expires_at')<div class="form-error">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="form-group">
-                        <label>Optional message</label>
-                        <textarea name="message" rows="3">{{ old('message') }}</textarea>
+                        <div class="form-group">
+                            <label>Invite expires</label>
+                            <input type="date" name="expires_at" value="{{ old('expires_at', now()->addDays(7)->toDateString()) }}" required>
+                            @error('expires_at')<div class="form-error">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="form-group span-2">
+                            <label>Optional message</label>
+                            <textarea name="message" rows="3">{{ old('message') }}</textarea>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Send Landlord Invite</button>
                 </form>
@@ -260,6 +257,7 @@
                         <label>Tenant email</label>
                         <input id="tenantInviteEmail" type="email" name="email" value="{{ old('email') }}" required>
                         @error('email')<div class="form-error">{{ $message }}</div>@enderror
+                    </div>
                     <div class="form-group">
                         <label>Tenant phone, optional</label>
                         <input id="tenantInvitePhone" name="phone_number" value="{{ old('phone_number') }}">
@@ -267,6 +265,7 @@
                     <div class="form-group">
                         <label>Move-in date, optional</label>
                         <input type="date" name="move_in_date" value="{{ old('move_in_date') }}">
+                    </div>
                     <div class="form-group">
                         <label>Monthly rent</label>
                         <input id="tenantInviteRent" type="number" step="0.01" min="0" name="rent_amount" value="{{ old('rent_amount') }}">
@@ -274,6 +273,7 @@
                     <div class="form-group">
                         <label>Deposit, optional</label>
                         <input type="number" step="0.01" min="0" name="deposit_amount" value="{{ old('deposit_amount') }}">
+                    </div>
                     <div class="form-group">
                         <label>Invite expires</label>
                         <input type="date" name="expires_at" value="{{ old('expires_at', now()->addDays(7)->toDateString()) }}" required>
