@@ -186,7 +186,7 @@
                         </div>
                         <div class="form-group">
                             <label>Invite expires</label>
-                            <input type="date" name="expires_at" value="{{ old('expires_at', now()->addDays(7)->toDateString()) }}" placeholder="Select expiry date" required>
+                            <input type="date" name="expires_at" value="{{ old('expires_at', $tenantInviteExpiryDefault ?? now()->addDays(7)->toDateString()) }}" placeholder="Select expiry date" required>
                             @error('expires_at')<div class="form-error">{{ $message }}</div>@enderror
                         </div>
                         <div class="form-group span-2">
@@ -275,7 +275,7 @@
                     </div>
                     <div class="form-group">
                         <label>Invite expires</label>
-                        <input type="date" name="expires_at" value="{{ old('expires_at', now()->addDays(7)->toDateString()) }}" placeholder="Select expiry date" required>
+                        <input type="date" name="expires_at" value="{{ old('expires_at', $tenantInviteExpiryDefault ?? now()->addDays(7)->toDateString()) }}" placeholder="Select expiry date" required>
                     </div>
                     <div class="form-group full-width">
                         <label>Optional message</label>

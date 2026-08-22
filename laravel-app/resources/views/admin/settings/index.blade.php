@@ -233,8 +233,8 @@
             <button type="button" class="settings-tab" data-tab-target="security">Security</button>
             @if($isLandlord)
                 <button type="button" class="settings-tab" data-tab-target="tenants">Tenant Preferences</button>
+                <button type="button" class="settings-tab" data-tab-target="payment">Payment</button>
             @endif
-            <button type="button" class="settings-tab" data-tab-target="payment">Payment</button>
             @if($isAdmin)
                 <button type="button" class="settings-tab" data-tab-target="platform">Platform</button>
             @endif
@@ -337,6 +337,7 @@
             </div>
         @endif
 
+        @if($isLandlord)
         <div class="settings-pane" data-tab-pane="payment">
             <form method="POST" action="{{ route('admin.settings.payment') }}" class="settings-form">
                 @csrf
@@ -388,6 +389,7 @@
                 </div>
             </form>
         </div>
+        @endif
 
         @if($isAdmin)
             <div class="settings-pane" data-tab-pane="platform">
@@ -442,7 +444,9 @@
             <li>Account tab updates your personal profile details used across the dashboard.</li>
             <li>Security tab allows changing password with current-password verification.</li>
             <li>Tenant Preferences sets landlord-level defaults for onboarding behavior.</li>
-            <li>Payment stores the landlord-specific Daraja channel used by tenant billing flows.</li>
+            @if($isLandlord)
+                <li>Payment stores the landlord-specific Daraja channel used by tenant billing flows.</li>
+            @endif
             @if($isAdmin)
                 <li>Platform tab is reserved for global Daraja passkey management.</li>
             @endif

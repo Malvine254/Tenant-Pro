@@ -22,6 +22,8 @@ class InvitationAdminController extends Controller
     {
         $user = $request->user();
         $isLandlord = $user?->role?->name === 'LANDLORD';
+        $tenantSettings = $isLandlord ? (is_array($user->app_settings['tenantSettings'] ?? null) ? $user->app_settings['tenantSettings'] : []) : [];
+        $tenantInviteExpiryDefault = now()->addDays((int) ($tenantSettings['default_invite_expiry_days'] ?? 7))->toDateString();
 
         $invitations = Invitation::with(['property', 'unit', 'sentBy'])
             ->when(
@@ -66,7 +68,7 @@ class InvitationAdminController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'phone_number']);
 
-        return view('admin.invitations.index', compact('invitations', 'properties', 'tenantUsers', 'isLandlord'));
+        return view('admin.invitations.index', compact('invitations', 'properties', 'tenantUsers', 'isLandlord', 'tenantSettings', 'tenantInviteExpiryDefault'));
     }
 
     public function storeTenant(Request $request)
@@ -90,6 +92,11 @@ class InvitationAdminController extends Controller
 
         $property = Property::findOrFail($data['property_id']);
         $unit = Unit::with('tenant')->findOrFail($data['unit_id']);
+        $landlordSettings = is_array($property->landlord?->app_settings['tenantSettings'] ?? null)
+            ? $property->landlord->app_settings['tenantSettings']
+            : [];
+        $autoAssignOnSelect = (bool) ($landlordSettings['auto_assign_unit_on_accept'] ?? true);
+        $allowMultiUnitAssignment = (bool) ($landlordSettings['allow_multi_unit_assignment'] ?? true);
 
         $selectedTenant = null;
         if (!empty($data['tenant_user_id'])) {
@@ -103,6 +110,15 @@ class InvitationAdminController extends Controller
             $data['email'] = $selectedTenant->email;
             $data['phone_number'] = $data['phone_number'] ?: $selectedTenant->phone_number;
             $data['invitee_name'] = $data['invitee_name'] ?: $selectedTenant->name;
+
+            if (!$allowMultiUnitAssignment) {
+                $hasActiveTenancy = Tenant::query()
+                    ->where('user_id', $selectedTenant->id)
+                    ->where('is_active', true)
+                    ->exists();
+
+                abort_if($hasActiveTenancy, 422, 'This landlord does not allow multi-unit assignment for a tenant account.');
+            }
         }
 
         $normalizedEmail = strtolower(trim((string) $data['email']));
@@ -143,7 +159,7 @@ class InvitationAdminController extends Controller
             ]);
         });
 
-        if ($selectedTenant) {
+        if ($selectedTenant && $autoAssignOnSelect) {
             $autoAssignedTenant = DB::transaction(function () use ($selectedTenant, $unit, $data, $invitation) {
                 $tenant = Tenant::query()->updateOrCreate(
                     [

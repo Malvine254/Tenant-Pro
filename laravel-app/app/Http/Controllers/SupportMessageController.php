@@ -41,6 +41,7 @@ class SupportMessageController extends Controller
             : null;
 
         abort_if($this->isTenant($user) && $conversation && $conversation->tenant_user_id !== $user->id, 403);
+        abort_if($this->isLandlord($user) && $conversation && $conversation->landlord_user_id !== $user->id, 403);
 
         $property = $conversation?->property
             ?? $this->resolveAccessibleProperty($user, $request->input('property_id'));
@@ -81,6 +82,8 @@ class SupportMessageController extends Controller
         ]);
         abort_if($this->isTenant($user) && $data['sender_id'] !== $user->id, 403);
         abort_if($this->isTenant($user) && !SupportConversation::where('id', $data['conversation_id'])->where('tenant_user_id', $user->id)->exists(), 403);
+        abort_if($this->isLandlord($user) && $data['sender_id'] !== $user->id, 403);
+        abort_if($this->isLandlord($user) && !SupportConversation::where('id', $data['conversation_id'])->where('landlord_user_id', $user->id)->exists(), 403);
 
         $data['status'] = 'SENT';
         $data['message_type'] = $request->input('message_type', filled($data['attachment_uri'] ?? null) ? 'document' : 'text');
@@ -114,12 +117,17 @@ class SupportMessageController extends Controller
     {
         $user = request()->user();
         abort_if($this->isTenant($user) && $supportMessage->conversation()->where('tenant_user_id', $user->id)->doesntExist(), 403);
+        abort_if($this->isLandlord($user) && $supportMessage->conversation()->where('landlord_user_id', $user->id)->doesntExist(), 403);
 
         return response()->json($supportMessage->load(['sender', 'conversation']));
     }
 
     public function update(Request $request, SupportMessage $supportMessage)
     {
+        $user = $request->user();
+        abort_if($this->isTenant($user) && $supportMessage->conversation()->where('tenant_user_id', $user->id)->doesntExist(), 403);
+        abort_if($this->isLandlord($user) && $supportMessage->conversation()->where('landlord_user_id', $user->id)->doesntExist(), 403);
+
         $data = $request->validate([
             'status' => 'sometimes|in:SENT,READ',
             'body' => 'sometimes|string',
@@ -130,7 +138,10 @@ class SupportMessageController extends Controller
 
     public function destroy(SupportMessage $supportMessage)
     {
-        abort_unless($supportMessage->sender_id === request()->user()?->id, 403);
+        $user = request()->user();
+        abort_if($this->isTenant($user) && $supportMessage->conversation()->where('tenant_user_id', $user->id)->doesntExist(), 403);
+        abort_if($this->isLandlord($user) && $supportMessage->conversation()->where('landlord_user_id', $user->id)->doesntExist(), 403);
+        abort_unless($supportMessage->sender_id === $user?->id, 403);
         if ($supportMessage->attachment_uri) {
             $path = Str::after($supportMessage->attachment_uri, '/storage/');
             if ($path !== $supportMessage->attachment_uri) Storage::disk('public')->delete($path);
@@ -148,7 +159,7 @@ class SupportMessageController extends Controller
 
         return response()->json([
             'attachmentName' => $data['file']->getClientOriginalName(),
-            'attachmentUri' => Storage::disk('public')->url($path),
+            'attachmentUri' => Storage::url($path),
             'fileName' => basename($path),
             'attachmentMimeType' => $data['file']->getMimeType(),
             'attachmentSize' => $data['file']->getSize(),
@@ -187,6 +198,13 @@ class SupportMessageController extends Controller
                     fn($conversation) => $conversation->where('tenant_user_id', $user->id)
                 )
             )
+            ->when(
+                $this->isLandlord($user),
+                fn($query) => $query->whereHas(
+                    'conversation',
+                    fn($conversation) => $conversation->where('landlord_user_id', $user->id)
+                )
+            )
             ->when($request->conversation_id, fn($query) => $query->where('conversation_id', $request->conversation_id))
             ->oldest()
             ->get();
@@ -220,6 +238,11 @@ class SupportMessageController extends Controller
     private function isTenant($user): bool
     {
         return $user?->role?->name === 'TENANT';
+    }
+
+    private function isLandlord($user): bool
+    {
+        return $user?->role?->name === 'LANDLORD';
     }
 
     private function resolveAccessibleProperty($user, ?string $propertyId)

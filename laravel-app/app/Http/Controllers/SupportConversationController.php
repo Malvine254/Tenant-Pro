@@ -26,6 +26,8 @@ class SupportConversationController extends Controller
             ? $this->resolveAccessibleProperty($user, $request->input('property_id', $request->input('propertyId')))
             : null;
 
+        abort_if($this->isTenant($user) && !$property, 422, 'A valid property is required to start a support conversation.');
+
         $request->merge([
             'tenant_user_id' => $request->input('tenant_user_id', $user?->id),
             'landlord_user_id' => $request->input('landlord_user_id', $property?->landlord_id),
@@ -34,8 +36,8 @@ class SupportConversationController extends Controller
 
         $data = $request->validate([
             'tenant_user_id' => 'required|uuid|exists:users,id',
-            'landlord_user_id' => 'nullable|uuid|exists:users,id',
-            'property_id' => 'nullable|uuid|exists:properties,id',
+            'landlord_user_id' => 'required|uuid|exists:users,id',
+            'property_id' => 'required|uuid|exists:properties,id',
             'subject' => 'nullable|string|max:255',
             'topic' => 'required|string|max:255',
         ]);
