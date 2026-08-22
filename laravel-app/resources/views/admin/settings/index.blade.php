@@ -128,7 +128,28 @@
     .check-row input {
         width: 16px;
         height: 16px;
+        flex: 0 0 16px;
         accent-color: #60a5fa;
+    }
+    .tenant-preferences-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: stretch;
+    }
+    .tenant-preference-field,
+    .tenant-preferences-grid .check-row {
+        min-height: 88px;
+        box-sizing: border-box;
+        padding: 12px 14px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 12px;
+    }
+    .tenant-preference-field {
+        justify-content: space-between;
+    }
+    .tenant-preference-field input {
+        min-height: 38px;
+        padding: 8px 10px;
     }
     .actions-row {
         margin-top: 18px;
@@ -192,6 +213,9 @@
     }
     @media (max-width: 760px) {
         .settings-grid {
+            grid-template-columns: 1fr;
+        }
+        .tenant-preferences-grid {
             grid-template-columns: 1fr;
         }
     }
@@ -282,8 +306,8 @@
                     @method('PUT')
                     <input type="hidden" name="_settings_tab" value="tenants">
 
-                    <div class="settings-grid">
-                        <div class="field">
+                    <div class="settings-grid tenant-preferences-grid">
+                        <div class="field tenant-preference-field">
                             <label for="default_invite_expiry_days">Default invite expiry (days)</label>
                             <input id="default_invite_expiry_days" type="number" min="1" max="60" name="default_invite_expiry_days" value="{{ old('default_invite_expiry_days', $tenantSettings['default_invite_expiry_days'] ?? 7) }}" placeholder="e.g. 7" required>
                         </div>
