@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { InvoiceStatus } from '@prisma/client';
+import { InvoiceStatus, NotificationType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class RemindersService {
@@ -11,6 +12,7 @@ export class RemindersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -63,6 +65,13 @@ export class RemindersService {
             invoice.unit.property.name,
           );
         }
+        await this.notificationsService.createNotification(
+          invoice.userId,
+          NotificationType.INVOICE,
+          'Rent payment due soon',
+          `Rent for ${invoice.unit.property.name} is due on ${invoice.dueDate.toDateString()}.`,
+          { invoiceId: invoice.id, propertyId: invoice.unit.propertyId, dueDate: invoice.dueDate.toISOString() },
+        );
       }
 
       this.logger.log('Rent reminders sent successfully');
@@ -107,11 +116,10 @@ export class RemindersService {
       this.logger.log(`Found ${overdueInvoices.length} overdue invoices`);
 
       for (const invoice of overdueInvoices) {
+        const daysOverdue = Math.floor(
+          (today.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
         if (invoice.tenant?.user?.email) {
-          const daysOverdue = Math.floor(
-            (today.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24),
-          );
-
           await this.emailService.sendOverdueNoticeEmail(
             invoice.tenant.user.email,
             invoice.tenant.user.firstName || 'Tenant',
@@ -120,6 +128,13 @@ export class RemindersService {
             invoice.unit.property.name,
           );
         }
+        await this.notificationsService.createNotification(
+          invoice.userId,
+          NotificationType.INVOICE,
+          'Overdue rent payment',
+          `Your rent for ${invoice.unit.property.name} is ${daysOverdue} day(s) overdue.`,
+          { invoiceId: invoice.id, propertyId: invoice.unit.propertyId, dueDate: invoice.dueDate.toISOString() },
+        );
       }
 
       this.logger.log('Overdue notices sent successfully');
@@ -162,6 +177,13 @@ export class RemindersService {
       invoice.amount.toNumber(),
       invoice.dueDate,
       invoice.unit.property.name,
+    );
+    await this.notificationsService.createNotification(
+      invoice.userId,
+      NotificationType.INVOICE,
+      'Rent payment reminder',
+      `Rent for ${invoice.unit.property.name} is due on ${invoice.dueDate.toDateString()}.`,
+      { invoiceId: invoice.id, propertyId: invoice.unit.propertyId, dueDate: invoice.dueDate.toISOString() },
     );
 
     return { message: 'Reminder sent successfully' };

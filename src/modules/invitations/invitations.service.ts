@@ -60,9 +60,56 @@ export class InvitationsService {
       throw new NotFoundException('Unit not found for the selected property');
     }
 
-    const code = await this.generateUniqueCode();
     const expiryHours = dto.expiresInHours ?? 72;
     const expiresAt = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
+
+    const tenantUser = await this.prisma.user.findUnique({
+      where: { email: tenantEmail },
+      select: { id: true, firstName: true, role: { select: { name: true } } },
+    });
+
+    // Existing tenant accounts are linked immediately; invite codes are only for new accounts.
+    if (tenantUser?.role.name === RoleName.TENANT) {
+      const occupiedBy = await this.prisma.tenant.findFirst({
+        where: { unitId: dto.unitId, isActive: true, NOT: { userId: tenantUser.id } },
+      });
+      if (occupiedBy) {
+        throw new BadRequestException('This unit is already occupied by another active tenant');
+      }
+
+      const assignment = await this.prisma.$transaction(async (tx) => {
+        const existing = await tx.tenant.findUnique({
+          where: { userId_unitId: { userId: tenantUser.id, unitId: dto.unitId } },
+        });
+        const tenant = existing
+          ? await tx.tenant.update({
+              where: { id: existing.id },
+              data: { isActive: true, moveInDate: new Date(), moveOutDate: null },
+            })
+          : await tx.tenant.create({
+              data: { userId: tenantUser.id, unitId: dto.unitId, isActive: true, moveInDate: new Date() },
+            });
+        await tx.unit.update({ where: { id: dto.unitId }, data: { status: UnitStatus.OCCUPIED } });
+        return tenant;
+      });
+
+      void this.emailService.sendUnitAssignmentEmail(
+        tenantEmail,
+        tenantUser.firstName ?? undefined,
+        property.name,
+        unit.unitNumber,
+      );
+      void this.notificationsService.createNotification(
+        tenantUser.id,
+        NotificationType.GENERAL,
+        'Unit connected',
+        `Your account is now connected to Unit ${unit.unitNumber} at ${property.name}.`,
+        { unitId: dto.unitId, propertyId: dto.propertyId },
+      );
+      return { ...assignment, automaticallyAssigned: true };
+    }
+
+    const code = await this.generateUniqueCode();
 
     const invitation = await this.prisma.invitation.create({
       data: {
@@ -86,21 +133,6 @@ export class InvitationsService {
       unit.unitNumber,
       dto.tenantName,
     );
-
-    // Notify the tenant in-app if their account already exists.
-    const tenantUser = await this.prisma.user.findUnique({
-      where: { email: tenantEmail },
-      select: { id: true },
-    });
-    if (tenantUser) {
-      void this.notificationsService.createNotification(
-        tenantUser.id,
-        NotificationType.GENERAL,
-        'Room invitation',
-        `You have been invited to ${unit.unitNumber} at ${property.name}. Use code ${code} to accept.`,
-        { invitationId: invitation.id, code, propertyId: dto.propertyId, unitId: dto.unitId },
-      );
-    }
 
     return invitation;
   }

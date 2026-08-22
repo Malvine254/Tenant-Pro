@@ -65,11 +65,11 @@ export class FirebaseService implements OnModuleInit {
     try {
       await admin.messaging().send({
         token: fcmToken,
-        notification: { title, body },
-        data,
+        // Data-only messages invoke the service even when Android backgrounds the app.
+        data: { title, body, ...(data ?? {}) },
         android: {
           priority: 'high',
-          notification: { sound: 'default', channelId: 'tenantpro_default' },
+          ttl: 24 * 60 * 60 * 1000,
         },
       });
     } catch (e) {

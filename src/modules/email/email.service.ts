@@ -210,6 +210,31 @@ export class EmailService {
     }
   }
 
+  async sendUnitAssignmentEmail(
+    email: string,
+    firstName: string | undefined,
+    propertyName: string,
+    unitName: string,
+  ) {
+    const fromName = this.configService.get<string>('MAIL_FROM_NAME');
+    const fromEmail = this.configService.get<string>('MAIL_FROM_EMAIL');
+    const greeting = firstName ? `Hi ${firstName},` : 'Hi,';
+
+    try {
+      await this.transporter.sendMail({
+        from: `"${fromName}" <${fromEmail}>`,
+        to: email,
+        subject: `Your unit at ${propertyName} is connected`,
+        html: `<p>${greeting}</p><p>Your existing Tenant Pro account has been connected to your unit.</p><p><strong>Property:</strong> ${propertyName}<br /><strong>Unit:</strong> ${unitName}</p><p>Open the app to view your tenancy, invoices, and payment information. No invitation code is needed.</p>`,
+      });
+      this.logger.log(`Unit assignment email sent to ${email}`);
+      return { success: true };
+    } catch (error) {
+      this.logger.error(`Failed to send unit assignment email to ${email}:`, error);
+      return { success: false };
+    }
+  }
+
   async sendMaintenanceUpdateEmail(
     email: string,
     firstName: string,
