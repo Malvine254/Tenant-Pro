@@ -30,21 +30,15 @@ class FirebasePushService
                 ->post('https://fcm.googleapis.com/v1/projects/'.$credentials['project_id'].'/messages:send', [
                     'message' => [
                         'token' => $deviceToken,
-                        'notification' => [
-                            'title' => $title,
-                            'body' => $body,
-                        ],
+                        // Data-only messages are delivered to FirebaseMessagingService
+                        // while Android has the app in the background. Mixed messages
+                        // bypass that service and use Android's default notification UI.
                         'data' => collect(array_merge($data, ['title' => $title, 'body' => $body]))
                             ->mapWithKeys(fn ($value, $key) => [(string) $key => (string) ($value ?? '')])
                             ->all(),
                         'android' => [
                             'priority' => $highPriority ? 'HIGH' : 'NORMAL',
                             'ttl' => $highPriority ? '600s' : '3600s',
-                            'notification' => [
-                                'channel_id' => $channelId,
-                                'default_sound' => true,
-                                'notification_priority' => $highPriority ? 'PRIORITY_HIGH' : 'PRIORITY_DEFAULT',
-                            ],
                         ],
                     ],
                 ]);
