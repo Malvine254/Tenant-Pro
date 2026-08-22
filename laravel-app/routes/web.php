@@ -103,6 +103,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 		Route::get('/chats/{supportConversation}/state', [SupportChatAdminController::class, 'state'])->name('chats.state');
 		Route::post('/chats/{supportConversation}/typing', [SupportChatAdminController::class, 'typing'])->name('chats.typing');
 		Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
+		Route::put('/settings/account', [\App\Http\Controllers\Admin\SettingsController::class, 'updateAccount'])->name('settings.account');
+		Route::put('/settings/password', [\App\Http\Controllers\Admin\SettingsController::class, 'updatePassword'])->name('settings.password');
+		Route::put('/settings/tenant-preferences', [\App\Http\Controllers\Admin\SettingsController::class, 'updateTenantPreferences'])->name('settings.tenant-preferences');
 		Route::put('/settings/payment', [\App\Http\Controllers\Admin\SettingsController::class, 'updatePayment'])->name('settings.payment');
 		Route::put('/settings/passkey', [\App\Http\Controllers\Admin\SettingsController::class, 'updatePasskey'])->name('settings.passkey');
 		Route::get('/mpesa-sandbox-test', [MpesaSandboxTestController::class, 'index'])->name('mpesa.sandbox-test.index');
