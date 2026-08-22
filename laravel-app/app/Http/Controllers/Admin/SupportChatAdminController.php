@@ -51,7 +51,14 @@ class SupportChatAdminController extends Controller
         $supportConversation->update(['is_open' => true]);
         $supportConversation->loadMissing('tenant');
         app(TenantAppNotificationService::class)->supportReply($supportConversation->tenant, $supportConversation->topic ?: 'Support', $message->body ?: 'Sent an attachment', $supportConversation->id);
-        return response()->json(['ok' => true], 201);
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['ok' => true], 201);
+        }
+
+        // Keep chat usable if JavaScript is unavailable or a stale cached page is served.
+        return redirect()
+            ->route('admin.chats.index', ['conversation_id' => $supportConversation->id])
+            ->with('success', 'Reply sent.');
     }
 
     public function toggle(Request $request, SupportConversation $supportConversation)
