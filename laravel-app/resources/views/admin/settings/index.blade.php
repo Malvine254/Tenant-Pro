@@ -226,19 +226,19 @@
                 <div class="settings-grid">
                     <div class="field">
                         <label for="first_name">First name</label>
-                        <input id="first_name" name="first_name" value="{{ old('first_name', $user->first_name ?? '') }}" required>
+                        <input id="first_name" name="first_name" value="{{ old('first_name', $user->first_name ?? '') }}" placeholder="Enter first name" required>
                     </div>
                     <div class="field">
                         <label for="last_name">Last name</label>
-                        <input id="last_name" name="last_name" value="{{ old('last_name', $user->last_name ?? '') }}">
+                        <input id="last_name" name="last_name" value="{{ old('last_name', $user->last_name ?? '') }}" placeholder="Enter last name">
                     </div>
                     <div class="field">
                         <label for="email">Email address</label>
-                        <input id="email" type="email" name="email" value="{{ old('email', $user->email ?? '') }}" required>
+                        <input id="email" type="email" name="email" value="{{ old('email', $user->email ?? '') }}" placeholder="name@example.com" required>
                     </div>
                     <div class="field">
                         <label for="phone_number">Phone number</label>
-                        <input id="phone_number" name="phone_number" value="{{ old('phone_number', $user->phone_number ?? '') }}" required>
+                        <input id="phone_number" name="phone_number" value="{{ old('phone_number', $user->phone_number ?? '') }}" placeholder="e.g. 2547XXXXXXXX" required>
                     </div>
                 </div>
 
@@ -257,15 +257,15 @@
                 <div class="settings-grid">
                     <div class="field">
                         <label for="current_password">Current password</label>
-                        <input id="current_password" type="password" name="current_password" required>
+                        <input id="current_password" type="password" name="current_password" placeholder="Enter current password" required>
                     </div>
                     <div class="field">
                         <label for="password">New password</label>
-                        <input id="password" type="password" name="password" minlength="8" required>
+                        <input id="password" type="password" name="password" minlength="8" placeholder="Enter new password" required>
                     </div>
                     <div class="field">
                         <label for="password_confirmation">Confirm new password</label>
-                        <input id="password_confirmation" type="password" name="password_confirmation" minlength="8" required>
+                        <input id="password_confirmation" type="password" name="password_confirmation" minlength="8" placeholder="Re-enter new password" required>
                     </div>
                 </div>
 
@@ -285,7 +285,7 @@
                     <div class="settings-grid">
                         <div class="field">
                             <label for="default_invite_expiry_days">Default invite expiry (days)</label>
-                            <input id="default_invite_expiry_days" type="number" min="1" max="60" name="default_invite_expiry_days" value="{{ old('default_invite_expiry_days', $tenantSettings['default_invite_expiry_days'] ?? 7) }}" required>
+                            <input id="default_invite_expiry_days" type="number" min="1" max="60" name="default_invite_expiry_days" value="{{ old('default_invite_expiry_days', $tenantSettings['default_invite_expiry_days'] ?? 7) }}" placeholder="e.g. 7" required>
                         </div>
 
                         <label class="check-row" for="auto_assign_unit_on_accept">

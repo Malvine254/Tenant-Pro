@@ -168,31 +168,30 @@
                     <div class="invitation-layout dual">
                         <div class="form-group">
                             <label>Landlord full name</label>
-                            <input name="invitee_name" value="{{ old('invitee_name') }}" required>
+                            <input name="invitee_name" value="{{ old('invitee_name') }}" placeholder="Enter full name" required>
                             @error('invitee_name')<div class="form-error">{{ $message }}</div>@enderror
                         </div>
                         <div class="form-group">
                             <label>Email</label>
-                            <input type="email" name="email" value="{{ old('email') }}" required>
+                            <input type="email" name="email" value="{{ old('email') }}" placeholder="name@example.com" required>
                             @error('email')<div class="form-error">{{ $message }}</div>@enderror
                         </div>
                         <div class="form-group">
                             <label>Phone, optional</label>
-                            <input name="phone_number" value="{{ old('phone_number') }}">
+                            <input name="phone_number" value="{{ old('phone_number') }}" placeholder="e.g. 2547XXXXXXXX">
                         </div>
                         <div class="form-group">
                             <label>Business name, optional</label>
-                            <input name="business_name" value="{{ old('business_name') }}">
+                            <input name="business_name" value="{{ old('business_name') }}" placeholder="e.g. Starmax Properties">
                         </div>
-                    </div>
                         <div class="form-group">
                             <label>Invite expires</label>
-                            <input type="date" name="expires_at" value="{{ old('expires_at', now()->addDays(7)->toDateString()) }}" required>
+                            <input type="date" name="expires_at" value="{{ old('expires_at', now()->addDays(7)->toDateString()) }}" placeholder="Select expiry date" required>
                             @error('expires_at')<div class="form-error">{{ $message }}</div>@enderror
                         </div>
                         <div class="form-group span-2">
                             <label>Optional message</label>
-                            <textarea name="message" rows="3">{{ old('message') }}</textarea>
+                            <textarea name="message" rows="3" placeholder="Add a short welcome message">{{ old('message') }}</textarea>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Send Landlord Invite</button>
@@ -251,36 +250,36 @@
                     </div>
                     <div class="form-group">
                         <label>Tenant name, optional</label>
-                        <input id="tenantInviteName" name="invitee_name" value="{{ old('invitee_name') }}">
+                        <input id="tenantInviteName" name="invitee_name" value="{{ old('invitee_name') }}" placeholder="Enter tenant full name">
                     </div>
                     <div class="form-group">
                         <label>Tenant email</label>
-                        <input id="tenantInviteEmail" type="email" name="email" value="{{ old('email') }}" required>
+                        <input id="tenantInviteEmail" type="email" name="email" value="{{ old('email') }}" placeholder="tenant@example.com" required>
                         @error('email')<div class="form-error">{{ $message }}</div>@enderror
                     </div>
                     <div class="form-group">
                         <label>Tenant phone, optional</label>
-                        <input id="tenantInvitePhone" name="phone_number" value="{{ old('phone_number') }}">
+                        <input id="tenantInvitePhone" name="phone_number" value="{{ old('phone_number') }}" placeholder="e.g. 2547XXXXXXXX">
                     </div>
                     <div class="form-group">
                         <label>Move-in date, optional</label>
-                        <input type="date" name="move_in_date" value="{{ old('move_in_date') }}">
+                        <input type="date" name="move_in_date" value="{{ old('move_in_date') }}" placeholder="Select move-in date">
                     </div>
                     <div class="form-group">
                         <label>Monthly rent</label>
-                        <input id="tenantInviteRent" type="number" step="0.01" min="0" name="rent_amount" value="{{ old('rent_amount') }}">
+                        <input id="tenantInviteRent" type="number" step="0.01" min="0" name="rent_amount" value="{{ old('rent_amount') }}" placeholder="e.g. 25000">
                     </div>
                     <div class="form-group">
                         <label>Deposit, optional</label>
-                        <input type="number" step="0.01" min="0" name="deposit_amount" value="{{ old('deposit_amount') }}">
+                        <input type="number" step="0.01" min="0" name="deposit_amount" value="{{ old('deposit_amount') }}" placeholder="e.g. 25000">
                     </div>
                     <div class="form-group">
                         <label>Invite expires</label>
-                        <input type="date" name="expires_at" value="{{ old('expires_at', now()->addDays(7)->toDateString()) }}" required>
+                        <input type="date" name="expires_at" value="{{ old('expires_at', now()->addDays(7)->toDateString()) }}" placeholder="Select expiry date" required>
                     </div>
                     <div class="form-group full-width">
                         <label>Optional message</label>
-                        <textarea name="message" rows="3">{{ old('message') }}</textarea>
+                        <textarea name="message" rows="3" placeholder="Add a short message for the tenant">{{ old('message') }}</textarea>
                     </div>
                     <p class="full-width" style="font-size:12px;color:#94a3b8;margin:-4px 0 12px;">
                     M-Pesa details are not collected here. The tenant adds and controls their own payment phone in the Android app.
