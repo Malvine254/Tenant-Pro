@@ -441,9 +441,9 @@ class TenantEmailService
     }
 
     private function inviteUrl(Invitation $invitation): string
-    {
-        return rtrim(config('app.url'), '/').'/admin/login?invite='.$invitation->code;
-    }
+        {
+            return rtrim(config('app.url'), '/').'/invite/'.$invitation->code;
+        }
 
     private function tenantInviteUrl(Invitation $invitation): string
     {

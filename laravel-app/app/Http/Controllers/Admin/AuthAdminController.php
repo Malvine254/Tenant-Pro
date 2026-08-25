@@ -30,6 +30,7 @@ class AuthAdminController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            
             $role = Auth::user()?->role?->name;
             if (!in_array($role, ['SUPER_ADMIN', 'ADMIN', 'LANDLORD'], true)) {
                 Auth::logout();

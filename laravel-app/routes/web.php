@@ -30,6 +30,19 @@ Route::get('/invite', function (Request $request) {
 	]);
 })->name('tenant.invite.open');
 
+// landlord inviotation flow
+use App\Http\Controllers\InvitationAcceptanceController;
+
+
+Route::get('/invite/{code}',
+    [InvitationAcceptanceController::class, 'show']
+)->name('invitation.show');
+
+
+Route::post('/invite/{code}',
+    [InvitationAcceptanceController::class, 'accept']
+)->name('invitation.accept');
+
 // Public download endpoint (no auth required)
 Route::get('/download/apk', function () {
     $filePath = public_path('downloads/app-debug.apk');
