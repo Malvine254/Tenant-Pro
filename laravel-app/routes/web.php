@@ -104,6 +104,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 		Route::get('/invitations', [InvitationAdminController::class, 'index'])->name('invitations.index');
 		Route::post('/invitations/tenants', [InvitationAdminController::class, 'storeTenant'])->name('invitations.tenants.store');
 		Route::post('/invitations/landlords', [InvitationAdminController::class, 'storeLandlord'])->name('invitations.landlords.store');
+		Route::patch('/invitations/{invitation}', [InvitationAdminController::class, 'update'])->name('invitations.update');
 		Route::patch('/invitations/{invitation}/resend', [InvitationAdminController::class, 'resend'])->name('invitations.resend');
 		Route::patch('/invitations/{invitation}/cancel', [InvitationAdminController::class, 'cancel'])->name('invitations.cancel');
 		Route::get('/invoices', [InvoiceAdminController::class, 'index'])->name('invoices.index');

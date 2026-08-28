@@ -291,6 +291,53 @@
     </div>
 </div>
 
+@if($editingInvitation)
+    <div class="invitation-card invitation-shell" style="margin-top:18px;">
+        <h3>Edit {{ strtolower($editingInvitation->invite_type) }} invitation</h3>
+        <p style="color:#94a3b8;font-size:13px;margin:-4px 0 16px;">
+            Saving sends a refreshed invitation. If you correct a tenant's email, their temporary sign-in is moved to the new address and a new temporary password is sent.
+        </p>
+        <form method="POST" action="{{ route('admin.invitations.update', $editingInvitation) }}">
+            @csrf @method('PATCH')
+            <div class="tenant-invite-grid">
+                <div class="form-group">
+                    <label>Full name</label>
+                    <input name="invitee_name" value="{{ old('invitee_name', $editingInvitation->invitee_name) }}" placeholder="Enter full name">
+                    @error('invitee_name')<div class="form-error">{{ $message }}</div>@enderror
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ old('email', $editingInvitation->email) }}" placeholder="name@example.com" required>
+                    @error('email')<div class="form-error">{{ $message }}</div>@enderror
+                </div>
+                <div class="form-group">
+                    <label>Phone, optional</label>
+                    <input name="phone_number" value="{{ old('phone_number', $editingInvitation->phone_number) }}" placeholder="e.g. 2547XXXXXXXX">
+                    @error('phone_number')<div class="form-error">{{ $message }}</div>@enderror
+                </div>
+                @if($editingInvitation->invite_type === 'LANDLORD')
+                    <div class="form-group">
+                        <label>Business name, optional</label>
+                        <input name="business_name" value="{{ old('business_name', $editingInvitation->business_name) }}" placeholder="e.g. Starmax Properties">
+                    </div>
+                @endif
+                <div class="form-group">
+                    <label>Invite expires</label>
+                    <input type="date" name="expires_at" value="{{ old('expires_at', $editingInvitation->expires_at?->toDateString()) }}" required>
+                    @error('expires_at')<div class="form-error">{{ $message }}</div>@enderror
+                </div>
+                <div class="form-group full-width">
+                    <label>Optional message</label>
+                    <textarea name="message" rows="3" placeholder="Add a short message">{{ old('message', $editingInvitation->message) }}</textarea>
+                    @error('message')<div class="form-error">{{ $message }}</div>@enderror
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Update &amp; resend invitation</button>
+            <a href="{{ route('admin.invitations.index') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+@endif
+
 <div class="card" style="margin-top:18px;">
     <div style="overflow-x:auto;">
         <table>
@@ -323,6 +370,7 @@
                         <td>{{ $invitation->accepted_at?->format('d M Y') ?? '—' }}</td>
                         <td style="white-space:nowrap;">
                             @if(in_array($invitation->status, ['PENDING', 'EXPIRED'], true))
+                                <a href="{{ route('admin.invitations.index', ['edit' => $invitation->id]) }}" class="btn btn-secondary">Edit</a>
                                 <form method="POST" action="{{ route('admin.invitations.resend', $invitation) }}" style="display:inline;">
                                     @csrf @method('PATCH')
                                     <button type="submit" class="btn btn-secondary">Resend</button>

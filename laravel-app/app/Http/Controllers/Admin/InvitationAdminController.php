@@ -70,7 +70,17 @@ class InvitationAdminController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'phone_number']);
 
-        return view('admin.invitations.index', compact('invitations', 'properties', 'tenantUsers', 'isLandlord', 'tenantInviteExpiryDefault'));
+        $editingInvitation = null;
+        if ($request->filled('edit')) {
+            $editingInvitation = Invitation::query()
+                ->with(['property', 'unit', 'sentBy'])
+                ->findOrFail($request->string('edit'));
+
+            $this->authorizeInvitation($request, $editingInvitation);
+            abort_if(!in_array($editingInvitation->status, ['PENDING', 'EXPIRED'], true), 422, 'Only pending or expired invitations can be edited.');
+        }
+
+        return view('admin.invitations.index', compact('invitations', 'properties', 'tenantUsers', 'isLandlord', 'tenantInviteExpiryDefault', 'editingInvitation'));
     }
 
     public function storeTenant(Request $request)
@@ -315,6 +325,78 @@ class InvitationAdminController extends Controller
                 ? 'Landlord invitation sent by email.'
                 : 'Landlord invitation saved, but email could not be sent. Check mail logs.'
         );
+    }
+
+    public function update(Request $request, Invitation $invitation)
+    {
+        $this->authorizeInvitation($request, $invitation);
+        abort_if(!in_array($invitation->status, ['PENDING', 'EXPIRED'], true), 422, 'Only pending or expired invitations can be edited.');
+
+        $data = $request->validate([
+            'invitee_name' => 'nullable|string|max:160',
+            'email' => 'required|email|max:255',
+            'phone_number' => 'nullable|string|max:30',
+            'business_name' => 'nullable|string|max:160',
+            'message' => 'nullable|string|max:1000',
+            'expires_at' => 'required|date|after:today',
+        ]);
+
+        $email = strtolower(trim($data['email']));
+        $emailChanged = strtolower((string) $invitation->email) !== $email;
+        $temporaryPassword = null;
+
+        if ($invitation->invite_type === 'TENANT' && $emailChanged) {
+            $temporaryUser = User::query()
+                ->whereRaw('LOWER(email) = ?', [strtolower((string) $invitation->email)])
+                ->where('requires_password_change', true)
+                ->first();
+
+            if ($temporaryUser) {
+                $emailTaken = User::query()
+                    ->whereRaw('LOWER(email) = ?', [$email])
+                    ->whereKeyNot($temporaryUser->id)
+                    ->exists();
+
+                abort_if($emailTaken, 422, 'The corrected email already belongs to another account.');
+
+                $temporaryPassword = $this->generateTemporaryPassword();
+                $temporaryUser->update([
+                    'email' => $email,
+                    'password' => $temporaryPassword,
+                    'is_active' => true,
+                    'email_verified_at' => now(),
+                    'requires_password_change' => true,
+                ]);
+            }
+        }
+
+        $invitation->update([
+            'invitee_name' => $data['invitee_name'] ?: null,
+            'email' => $email,
+            'phone_number' => $data['phone_number'] ?: null,
+            'business_name' => $invitation->invite_type === 'LANDLORD' ? ($data['business_name'] ?: null) : $invitation->business_name,
+            'message' => $data['message'] ?: null,
+            'status' => 'PENDING',
+            'expires_at' => $data['expires_at'],
+            'last_sent_at' => now(),
+        ]);
+
+        $emailSent = $invitation->invite_type === 'LANDLORD'
+            ? app(TenantEmailService::class)->landlordInvitation($invitation)
+            : app(TenantEmailService::class)->tenantInvitation($invitation, [
+                'loginEmail' => $email,
+                'temporaryPassword' => $temporaryPassword,
+                'firstTimeSetup' => $temporaryPassword !== null,
+            ]);
+
+        return redirect()
+            ->route('admin.invitations.index')
+            ->with(
+                'success',
+                $emailSent
+                    ? 'Invitation updated and sent to the corrected recipient details.'
+                    : 'Invitation details were updated, but the email could not be sent. Check mail logs.'
+            );
     }
 
     public function resend(Request $request, Invitation $invitation)
