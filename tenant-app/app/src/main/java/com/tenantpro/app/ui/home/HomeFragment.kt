@@ -27,6 +27,7 @@ import com.tenantpro.app.R
 import com.tenantpro.app.data.model.Invoice
 import com.tenantpro.app.databinding.FragmentHomeBinding
 import com.tenantpro.app.databinding.ItemBillCardBinding
+import com.tenantpro.app.databinding.ItemMonthlyBillSummaryBinding
 import com.tenantpro.app.databinding.ItemRecentInvoiceBinding
 import com.tenantpro.app.utils.Resource
 import com.tenantpro.app.utils.gone
@@ -109,8 +110,12 @@ class HomeFragment : Fragment() {
                                 "Not set"
                             bindHomeUnits(s.units)
 
-                            binding.tvTotalDue.text = s.totalDueThisMonth.toKes()
-                            val billCount = s.thisMonthBills.count { it.status in setOf("PENDING", "PARTIAL", "OVERDUE") }
+                            val payableStatuses = setOf("PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID", "OVERDUE")
+                            val payableBills = s.thisMonthBills.filter {
+                                it.status.uppercase(Locale.ROOT) in payableStatuses && it.balance > 0
+                            }
+                            binding.tvTotalDue.text = payableBills.sumOf { it.balance }.toKes()
+                            val billCount = payableBills.size
                             binding.tvBillCount.text = when {
                                 s.thisMonthBills.isEmpty() -> "No bill issued yet"
                                 billCount == 0 -> "All bills paid"
@@ -151,7 +156,10 @@ class HomeFragment : Fragment() {
     private fun bindBillCards(bills: List<BillItem>) {
         binding.llBillCards.removeAllViews()
 
-        val unpaidBills = bills.filter { it.status in setOf("PENDING", "PARTIAL", "OVERDUE") }
+        val payableStatuses = setOf("PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID", "OVERDUE")
+        val unpaidBills = bills.filter {
+            it.status.uppercase(Locale.ROOT) in payableStatuses && it.balance > 0
+        }
         firstPayableBill = unpaidBills.firstOrNull()
 
         if (unpaidBills.isEmpty()) {
@@ -167,6 +175,17 @@ class HomeFragment : Fragment() {
         }
 
         binding.llNoBills.gone()
+
+        val summary = ItemMonthlyBillSummaryBinding.inflate(layoutInflater, binding.llBillCards, false)
+        val nextDueBill = unpaidBills.minByOrNull { it.dueDate ?: "9999-12-31" }
+        summary.tvMonthlyBillTitle.text = "${unpaidBills.size} bill${if (unpaidBills.size == 1) "" else "s"} due this month"
+        summary.tvMonthlyBillTotal.text = unpaidBills.sumOf { it.balance }.toKes()
+        summary.tvMonthlyBillDue.text = nextDueBill?.dueDate?.let { "Next due ${formatDueDate(it)}" }
+            ?: "Review the items below"
+        unpaidBills.forEach { bill -> addBillBreakdownRow(summary.llBillBreakdown, bill) }
+        summary.btnViewMonthlyBills.setOnClickListener { openInvoices(openOnly = true) }
+        binding.llBillCards.addView(summary.root)
+        return
 
         unpaidBills.take(6).forEach { bill ->
             val row = ItemBillCardBinding.inflate(layoutInflater, binding.llBillCards, false)
@@ -284,6 +303,33 @@ class HomeFragment : Fragment() {
                 setOnClickListener { openInvoices(openOnly = true) }
             })
         }
+    }
+
+    private fun addBillBreakdownRow(container: LinearLayout, bill: BillItem) {
+        val context = requireContext()
+        val row = LinearLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(4.dp(), 7.dp(), 4.dp(), 7.dp())
+        }
+        val title = TextView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            text = bill.billingType.replaceFirstChar { it.uppercase() }
+            setTextColor(context.getColor(R.color.on_surface))
+            textSize = 14f
+        }
+        val amount = TextView(context).apply {
+            text = bill.balance.toKes()
+            setTextColor(context.getColor(R.color.on_surface))
+            textSize = 14f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        }
+        row.addView(title)
+        row.addView(amount)
+        container.addView(row)
     }
 
     private fun openInvoices(openOnly: Boolean) {

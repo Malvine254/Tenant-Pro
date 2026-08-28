@@ -216,9 +216,11 @@ class HomeViewModel @Inject constructor(
                         .takeIf { it > 0.0 }
                         ?: rent
 
-                    val dueAndOverdueInvoices = invoices.filter { inv ->
+                    // The monthly card must only represent the current billing month.
+                    // Historic overdue invoices are still represented by Outstanding,
+                    // but must not inflate the "Total due this month" figure.
+                    val thisMonthInvoices = invoices.filter { inv ->
                         try {
-                            val isOverdue = inv.statusCode() == "OVERDUE"
                             val periodMatches =
                                 inv.periodYear == thisYear && inv.periodMonth == thisMonth + 1
                             val dueDateMatches = inv.dueDate?.take(10)?.let { dateStr ->
@@ -226,11 +228,11 @@ class HomeViewModel @Inject constructor(
                                 cal.time = date
                                 cal.get(Calendar.YEAR) == thisYear && cal.get(Calendar.MONTH) == thisMonth
                             } ?: false
-                            isOverdue || periodMatches || dueDateMatches
+                            periodMatches || dueDateMatches
                         } catch (_: Exception) { false }
                     }
 
-                    val invoiceBillItems = dueAndOverdueInvoices
+                    val invoiceBillItems = thisMonthInvoices
                         .filter { it.statusCode() != "CANCELLED" }
                         .map { inv ->
                             BillItem(

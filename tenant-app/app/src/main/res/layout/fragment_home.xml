@@ -402,7 +402,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="This Month's Bills"
+                    android:text="This Month's Bill Summary"
                     android:textColor="@color/on_surface"
                     android:textSize="17sp"
                     android:textStyle="bold" />
