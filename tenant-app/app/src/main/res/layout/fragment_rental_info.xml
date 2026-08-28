@@ -335,7 +335,8 @@
                         style="@style/Theme.TenantPro.TextInputLayout.Auth"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="2dp"
                         android:hint="@string/profile_invitation_code"
                         app:startIconDrawable="@drawable/ic_file"
                         app:startIconTint="@color/primary">
@@ -345,9 +346,8 @@
                             style="@style/Theme.TenantPro.TextInputEditText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Enter invitation code"
-                            android:inputType="textCapCharacters"
-                            android:textSize="13sp" />
+                            android:imeOptions="actionDone"
+                            android:inputType="textCapCharacters" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.button.MaterialButton

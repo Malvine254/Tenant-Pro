@@ -17,7 +17,8 @@ data class InvoiceGroup(val key: String, val title: String, val invoices: List<I
 }
 
 class InvoiceAdapter(
-    private val onGroupClick: (InvoiceGroup) -> Unit
+    private val onGroupClick: (InvoiceGroup) -> Unit,
+    private val onGroupPayClick: (InvoiceGroup) -> Unit
 ) : ListAdapter<InvoiceGroup, InvoiceAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     inner class ViewHolder(private val binding: ItemInvoiceGroupBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -34,7 +35,7 @@ class InvoiceAdapter(
                 if (group.balance <= 0.0) R.color.success else R.color.error
             ))
             binding.btnPayGroup.visibility = if (group.balance > 0.0) android.view.View.VISIBLE else android.view.View.GONE
-            binding.btnPayGroup.setOnClickListener { onGroupClick(group) }
+            binding.btnPayGroup.setOnClickListener { onGroupPayClick(group) }
             binding.root.setOnClickListener { onGroupClick(group) }
         }
     }

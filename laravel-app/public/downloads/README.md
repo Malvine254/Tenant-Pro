@@ -10,15 +10,17 @@ When you rebuild the Android app and want to update the download available in th
 ```powershell
 cd tenant-app
 ./gradlew assembleDebug
-copy app\build\outputs\apk\debug\app-debug.apk ..\laravel-app\public\downloads\
 ```
 
 ### On Linux/Mac:
 ```bash
 cd tenant-app
 ./gradlew assembleDebug
-cp app/build/outputs/apk/debug/app-debug.apk ../laravel-app/public/downloads/
 ```
+
+`assembleDebug` automatically copies the build output to
+`laravel-app/public/downloads/app-debug.apk`. The file is tracked by Git, so
+run `git status` after every build and commit the updated APK with the source changes.
 
 Then commit and push to GitHub:
 ```bash

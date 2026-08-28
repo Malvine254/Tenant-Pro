@@ -68,7 +68,10 @@ class InvoicesFragment : Fragment() {
     private var hasResumedOnce = false
 
     private val adapter by lazy {
-        InvoiceAdapter(onGroupClick = ::showGroupDetailDialog)
+        InvoiceAdapter(
+            onGroupClick = ::showGroupDetailDialog,
+            onGroupPayClick = ::openNextGroupPayment
+        )
     }
 
     override fun onCreateView(
@@ -307,15 +310,42 @@ class InvoicesFragment : Fragment() {
         }
 
     private fun showGroupDetailDialog(group: InvoiceGroup) {
+        val billBreakdown = group.invoices.joinToString("\n") { invoice ->
+            "${invoice.billingType.toBillingLabel()}: ${invoice.effectiveTotalAmount().toKes()} (balance ${invoice.effectiveBalance().toKes()})"
+        }
         val options = group.invoices.map { invoice ->
-            "${invoice.billingType.toBillingLabel()}  ·  ${invoice.effectiveBalance().toKes()} balance"
+            "${invoice.billingType.toBillingLabel()}  ·  Total ${invoice.effectiveTotalAmount().toKes()}  ·  Balance ${invoice.effectiveBalance().toKes()}"
         }.toTypedArray()
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(group.title)
-            .setMessage("Select a bill to view, pay, or download its invoice.")
-            .setItems(options) { _, which -> showDetailDialog(group.invoices[which]) }
+            .setMessage(
+                "Monthly total: ${group.total.toKes()}\n" +
+                    "Paid: ${(group.total - group.balance).coerceAtLeast(0.0).toKes()}\n" +
+                    "Balance due: ${group.balance.toKes()}\n\n" +
+                    "BILL BREAKDOWN\n$billBreakdown"
+            )
+            .setPositiveButton(if (group.balance > 0.0) "Pay next bill" else getString(R.string.invoice_close)) { _, _ ->
+                if (group.balance > 0.0) openNextGroupPayment(group)
+            }
             .setNegativeButton(getString(R.string.invoice_close), null)
             .show()
+    }
+
+    private fun openNextGroupPayment(group: InvoiceGroup) {
+        val nextInvoice = group.invoices
+            .filter { it.effectiveBalance() > 0.0 }
+            .sortedWith(compareBy<Invoice> { billingPriority(it.billingType) }.thenBy { it.dueDate.orEmpty() })
+            .firstOrNull()
+            ?: return
+        openPayment(nextInvoice)
+    }
+
+    private fun billingPriority(type: String): Int = when (type.uppercase(Locale.ROOT)) {
+        "RENT" -> 0
+        "WATER" -> 1
+        "GARBAGE" -> 2
+        "ELECTRIC" -> 3
+        else -> 4
     }
 
     // ── Detail dialog ─────────────────────────────────────────────────────────

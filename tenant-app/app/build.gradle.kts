@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.gradle.api.tasks.Copy
 
 plugins {
     alias(libs.plugins.android.application)
@@ -137,4 +138,16 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+// Keep the APK offered by the Laravel admin portal in sync with every debug build.
+// The destination is version-controlled, so Git will show the new APK ready to commit.
+val syncDebugApkToPortal by tasks.registering(Copy::class) {
+    from(layout.buildDirectory.file("outputs/apk/debug/app-debug.apk"))
+    into(rootProject.file("../laravel-app/public/downloads"))
+    rename { "app-debug.apk" }
+}
+
+tasks.named("assembleDebug") {
+    finalizedBy(syncDebugApkToPortal)
 }

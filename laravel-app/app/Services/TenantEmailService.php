@@ -16,6 +16,35 @@ use Throwable;
 
 class TenantEmailService
 {
+    public function sendSubscriptionDueReminder(User $landlord, \Illuminate\Support\Carbon $dueDate, int $daysUntilDue): bool
+    {
+        $dueText = $dueDate->format('d M Y');
+
+        return $this->send($landlord, [
+            'subjectLine' => $daysUntilDue === 0
+                ? 'TenantPro subscription due today'
+                : 'TenantPro subscription renewal reminder',
+            'preheader' => $daysUntilDue === 0
+                ? 'Your TenantPro subscription is due today.'
+                : 'Your TenantPro subscription renewal date is approaching.',
+            'title' => $daysUntilDue === 0 ? 'Subscription due today' : 'Subscription renewal reminder',
+            'introLines' => [
+                'Hi '.$this->firstName($landlord).',',
+                $daysUntilDue === 0
+                    ? 'Your TenantPro service subscription is due today. Please renew to avoid an interruption to portal access.'
+                    : 'Your TenantPro service subscription is due in '.$daysUntilDue.' day'.($daysUntilDue === 1 ? '' : 's').'.',
+            ],
+            'details' => [
+                'Renewal date' => $dueText,
+                'Monthly service fee' => 'KES '.number_format((float) ($landlord->monthly_service_fee ?? 0), 2),
+                'Subscription status' => ucfirst(str_replace('_', ' ', (string) $landlord->billing_status)),
+            ],
+            'actionLabel' => 'Open TenantPro portal',
+            'actionUrl' => rtrim(config('app.url'), '/').'/admin/dashboard',
+            'footerText' => 'You will receive one reminder for each scheduled interval before your renewal date.',
+        ]);
+    }
+
     public function sendRentDueReminder(Invoice $invoice, int $daysUntilDue): bool
     {
         $invoice->loadMissing(['tenant', 'unit.property']);

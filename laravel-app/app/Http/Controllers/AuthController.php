@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Tenant;
+use App\Models\Invitation;
 use App\Services\LandlordSubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -87,12 +88,23 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $data['email'])->first();
+        $email = strtolower(trim($data['email']));
+        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
 
         if (!$user || !Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
+        }
+
+        // Temporary credentials are delivered only to the invitation email.
+        // Treat a successful temporary-password sign-in as proof of email access,
+        // including invitation accounts created before this flow marked emails verified.
+        if (!$user->email_verified_at && $this->isTemporaryTenantLogin($user, $email)) {
+            $user->forceFill([
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ])->save();
         }
 
         if (!$user->is_active) {
@@ -124,6 +136,20 @@ class AuthController extends Controller
             'accessToken' => $token,
             'requiresPasswordChange' => (bool) $user->requires_password_change,
         ]);
+    }
+
+    private function isTemporaryTenantLogin(User $user, string $email): bool
+    {
+        if ($user->requires_password_change) {
+            return true;
+        }
+
+        return Invitation::query()
+            ->where('invite_type', 'TENANT')
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->where('status', 'PENDING')
+            ->where('expires_at', '>=', now())
+            ->exists();
     }
 
     public function requestEmailOtp(Request $request)

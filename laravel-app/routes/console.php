@@ -4,6 +4,7 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use App\Services\RentReminderService;
+use App\Services\LandlordSubscriptionReminderService;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -22,5 +23,20 @@ Artisan::command('tenantpro:send-rent-reminders', function (RentReminderService 
 
 Schedule::command('tenantpro:send-rent-reminders')
     ->dailyAt(env('RENT_REMINDER_TIME', '09:15'))
+    ->withoutOverlapping()
+    ->onOneServer();
+
+Artisan::command('tenantpro:send-subscription-reminders', function (LandlordSubscriptionReminderService $service) {
+    $result = $service->runDailyReminders();
+    $this->info(sprintf(
+        'Subscription reminders done. Considered: %d, Sent: %d, Skipped: %d',
+        $result['considered'] ?? 0,
+        $result['sent'] ?? 0,
+        $result['skipped'] ?? 0,
+    ));
+})->purpose('Send landlord subscription renewal reminders by email and notification');
+
+Schedule::command('tenantpro:send-subscription-reminders')
+    ->dailyAt(env('SUBSCRIPTION_REMINDER_TIME', '09:30'))
     ->withoutOverlapping()
     ->onOneServer();
