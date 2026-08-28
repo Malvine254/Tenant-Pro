@@ -168,11 +168,12 @@ class TenantBillingService
     private function createRecurringUtilityInvoices(Tenant $tenant, Carbon $periodDate, Carbon $dueDate, Carbon $issueDate): int
     {
         $settings = $tenant->unit?->property?->billing_settings ?? [];
+        $overrides = $tenant->unit?->billing_overrides ?? [];
         $created = 0;
 
         foreach ([
-            'WATER' => (float) ($settings['water_monthly_fee'] ?? 0),
-            'GARBAGE' => (float) ($settings['garbage_monthly_fee'] ?? 0),
+            'WATER' => (float) ($overrides['water_monthly_fee'] ?? $settings['water_monthly_fee'] ?? 0),
+            'GARBAGE' => (float) ($overrides['garbage_monthly_fee'] ?? $settings['garbage_monthly_fee'] ?? 0),
         ] as $billingType => $amount) {
             $invoice = Invoice::firstOrCreate(
                 [

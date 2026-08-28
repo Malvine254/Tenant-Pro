@@ -48,6 +48,14 @@
                 </select>
                 @error('status')<div class="form-error">{{ $message }}</div>@enderror
             </div>
+            <div style="border-top:1px solid #e2e8f0;margin:8px 0 16px;padding-top:16px;">
+                <h3 style="font-size:14px;margin:0 0 5px;">Unit utility overrides <span style="font-weight:normal;color:#64748b;">(optional)</span></h3>
+                <p style="font-size:12px;color:#64748b;margin:0 0 12px;">Leave blank to use this property’s water and garbage fees. Set an amount only when this unit is billed differently.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="form-group"><label>Water fee (KES/month)</label><input type="number" name="water_monthly_fee" value="{{ old('water_monthly_fee') }}" min="0" step="0.01">@error('water_monthly_fee')<div class="form-error">{{ $message }}</div>@enderror</div>
+                    <div class="form-group"><label>Garbage fee (KES/month)</label><input type="number" name="garbage_monthly_fee" value="{{ old('garbage_monthly_fee') }}" min="0" step="0.01">@error('garbage_monthly_fee')<div class="form-error">{{ $message }}</div>@enderror</div>
+                </div>
+            </div>
             <div style="display:flex;gap:10px;">
                 <button type="submit" class="btn btn-primary">Create Unit(s)</button>
                 <a href="{{ route('admin.properties.show', $property) }}" class="btn btn-secondary">Cancel</a>

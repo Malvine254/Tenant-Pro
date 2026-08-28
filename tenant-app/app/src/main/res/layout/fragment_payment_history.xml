@@ -4,14 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background">
+    android:background="@color/surface_variant">
 
     <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@color/primary"
+        android:background="@color/surface"
         android:padding="16dp">
 
         <TextView
@@ -20,7 +20,7 @@
             android:text="@string/label_payment_history"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="@android:color/white"
+            android:textColor="@color/on_surface"
             android:layout_marginBottom="4dp" />
 
         <TextView
@@ -28,7 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="13sp"
-            android:textColor="#CCffffff" />
+            android:textColor="@color/on_surface_variant" />
     </LinearLayout>
 
     <!-- List -->

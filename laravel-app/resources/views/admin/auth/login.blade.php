@@ -26,6 +26,9 @@
             </div>
             <button type="submit" class="btn btn-primary" style="width:100%;padding:10px;">Sign In</button>
         </form>
+        <div style="text-align:center;margin-top:14px;">
+            <a href="{{ route('admin.password.request') }}" style="font-size:13px;">Forgot password?</a>
+        </div>
 
         @if(app()->environment('local', 'testing'))
             <div style="margin-top:14px;padding:10px 12px;border:1px dashed rgba(255,255,255,.32);background:rgba(255,255,255,.03);border-radius:10px;">

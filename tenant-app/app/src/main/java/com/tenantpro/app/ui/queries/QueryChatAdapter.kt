@@ -15,6 +15,7 @@ import com.tenantpro.app.BuildConfig
 import com.tenantpro.app.databinding.ItemQueryChatIncomingBinding
 import com.tenantpro.app.databinding.ItemQueryChatOutgoingBinding
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -57,9 +58,10 @@ class QueryChatAdapter(var outgoingInitials: String = "U") :
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)
+        val showDateDivider = position == 0 || !isSameDay(item.timestamp, getItem(position - 1).timestamp)
         when (holder) {
-            is IncomingVH -> holder.bind(item)
-            is OutgoingVH -> holder.bind(item)
+            is IncomingVH -> holder.bind(item, showDateDivider)
+            is OutgoingVH -> holder.bind(item, showDateDivider)
         }
     }
 
@@ -67,9 +69,9 @@ class QueryChatAdapter(var outgoingInitials: String = "U") :
         private val binding: ItemQueryChatIncomingBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: QueryChatMessage) {
+        fun bind(item: QueryChatMessage, showDateDivider: Boolean) {
             binding.tvAvatarLabel.text = "PM"
-            binding.tvTopic.text = item.topic
+            bindDateDivider(binding.tvTopic, item.timestamp, showDateDivider)
             val visibleMessage = displayMessage(item)
             binding.tvMessage.text = visibleMessage
             binding.tvMeta.text = formatMeta(item.timestamp, item.status)
@@ -87,7 +89,7 @@ class QueryChatAdapter(var outgoingInitials: String = "U") :
         private val binding: ItemQueryChatOutgoingBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: QueryChatMessage) {
+        fun bind(item: QueryChatMessage, showDateDivider: Boolean) {
             binding.tvAvatarLabel.text = outgoingInitials
             val profileImage = outgoingProfileImage
             if (profileImage.isNullOrBlank()) {
@@ -126,7 +128,7 @@ class QueryChatAdapter(var outgoingInitials: String = "U") :
                     })
                     .into(binding.ivAvatar)
             }
-            binding.tvTopic.text = item.topic
+            bindDateDivider(binding.tvTopic, item.timestamp, showDateDivider)
             val visibleMessage = displayMessage(item)
             binding.tvMessage.text = visibleMessage
             binding.tvMeta.text = formatMeta(item.timestamp, item.status)
@@ -171,6 +173,29 @@ class QueryChatAdapter(var outgoingInitials: String = "U") :
         val text = item.message.trim()
         return if (text.equals("Attachment shared", ignoreCase = true) &&
             (!item.attachmentUri.isNullOrBlank() || !item.attachmentName.isNullOrBlank())) "" else text
+    }
+
+    private fun bindDateDivider(view: android.widget.TextView, timestamp: Long, visible: Boolean) {
+        view.visibility = if (visible) View.VISIBLE else View.GONE
+        if (visible) view.text = formatDateDivider(timestamp)
+    }
+
+    private fun isSameDay(first: Long, second: Long): Boolean {
+        val firstDate = Calendar.getInstance().apply { timeInMillis = first }
+        val secondDate = Calendar.getInstance().apply { timeInMillis = second }
+        return firstDate.get(Calendar.ERA) == secondDate.get(Calendar.ERA) &&
+            firstDate.get(Calendar.YEAR) == secondDate.get(Calendar.YEAR) &&
+            firstDate.get(Calendar.DAY_OF_YEAR) == secondDate.get(Calendar.DAY_OF_YEAR)
+    }
+
+    private fun formatDateDivider(timestamp: Long): String {
+        val now = Calendar.getInstance()
+        val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
+        return when {
+            isSameDay(timestamp, now.timeInMillis) -> "Today"
+            isSameDay(timestamp, yesterday.timeInMillis) -> "Yesterday"
+            else -> SimpleDateFormat("EEE, d MMM", Locale.getDefault()).format(Date(timestamp))
+        }
     }
 
     companion object {

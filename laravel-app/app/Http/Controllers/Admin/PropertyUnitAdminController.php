@@ -53,6 +53,8 @@ class PropertyUnitAdminController extends Controller
             'units_count' => 'required|integer|min:1|max:100',
             'floor' => 'nullable|integer',
             'rent_amount' => 'required|numeric|min:0',
+            'water_monthly_fee' => 'nullable|numeric|min:0',
+            'garbage_monthly_fee' => 'nullable|numeric|min:0',
             'status' => 'required|in:AVAILABLE,OCCUPIED,UNDER_MAINTENANCE',
         ]);
 
@@ -76,6 +78,7 @@ class PropertyUnitAdminController extends Controller
                     'floor' => $data['floor'] ?? null,
                     'rent_amount' => $data['rent_amount'],
                     'status' => $data['status'],
+                    'billing_overrides' => $this->billingOverrides($data),
                 ]);
             }
         });
@@ -109,10 +112,14 @@ class PropertyUnitAdminController extends Controller
             ],
             'floor' => 'nullable|integer',
             'rent_amount' => 'required|numeric|min:0',
+            'water_monthly_fee' => 'nullable|numeric|min:0',
+            'garbage_monthly_fee' => 'nullable|numeric|min:0',
             'status' => 'required|in:AVAILABLE,OCCUPIED,UNDER_MAINTENANCE',
         ]);
 
-        $unit->update($data);
+        $unitFields = collect($data)->except(['water_monthly_fee', 'garbage_monthly_fee'])->all();
+        $unitFields['billing_overrides'] = $this->billingOverrides($data);
+        $unit->update($unitFields);
 
         return redirect()
             ->route('admin.properties.show', $property)
@@ -139,6 +146,16 @@ class PropertyUnitAdminController extends Controller
     {
         $user = request()->user();
         abort_if($user?->role?->name === 'LANDLORD' && $property->landlord_id !== $user->id, 403);
+    }
+
+    private function billingOverrides(array $data): ?array
+    {
+        $overrides = collect([
+            'water_monthly_fee' => $data['water_monthly_fee'] ?? null,
+            'garbage_monthly_fee' => $data['garbage_monthly_fee'] ?? null,
+        ])->filter(fn ($value) => $value !== null && $value !== '')->map(fn ($value) => (float) $value)->all();
+
+        return $overrides ?: null;
     }
 
     private function buildUnitNumbers(string $firstUnitNumber, int $count): array

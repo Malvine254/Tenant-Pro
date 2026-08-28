@@ -79,7 +79,8 @@ object DeviceNotificationHelper {
             id = timestamp.hashCode(),
             title = "New $topic message",
             message = preview,
-            priority = true
+            priority = true,
+            destination = "CHAT"
         )
     }
 

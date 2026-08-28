@@ -75,6 +75,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 	Route::get('/login', [AuthAdminController::class, 'showLogin'])->name('login');
 	Route::post('/login', [AuthAdminController::class, 'login'])->name('login.post');
+	Route::get('/forgot-password', [AuthAdminController::class, 'showForgotPassword'])->name('password.request');
+	Route::post('/forgot-password', [AuthAdminController::class, 'sendPasswordResetLink'])->name('password.email');
+	Route::post('/reset-password', [AuthAdminController::class, 'resetPassword'])->name('password.update');
 	Route::post('/logout', [AuthAdminController::class, 'logout'])->name('logout');
 
 	// Protected admin routes
@@ -133,3 +136,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 		})->name('downloads.apk.download');
 	});
 });
+
+// Laravel's password-reset notification resolves this conventional route name.
+Route::get('/admin/reset-password/{token}', [AuthAdminController::class, 'showResetPassword'])
+    ->middleware('guest')
+    ->name('password.reset');

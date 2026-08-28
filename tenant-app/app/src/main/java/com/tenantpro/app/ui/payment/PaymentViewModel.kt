@@ -27,7 +27,19 @@ class PaymentViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            _savedPhone.value = authRepository.getSavedPhone()
+            val cachedPhone = authRepository.getSavedPhone()?.trim().orEmpty()
+            if (cachedPhone.isNotBlank()) {
+                _savedPhone.value = cachedPhone
+                return@launch
+            }
+
+            // A direct payment action can open before Home has refreshed the
+            // profile into DataStore. Fetch it once so the M-Pesa number still
+            // pre-fills on a fresh install or biometric unlock.
+            when (val profile = authRepository.getMyProfile()) {
+                is Resource.Success -> _savedPhone.value = profile.data.phoneNumber.trim().ifBlank { null }
+                is Resource.Error, Resource.Loading -> _savedPhone.value = null
+            }
         }
     }
 

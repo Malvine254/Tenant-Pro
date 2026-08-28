@@ -11,11 +11,12 @@ class Unit extends Model
 
     protected $appends = ['currency', 'currency_symbol', 'rent_amount_formatted'];
 
-    protected $fillable = ['property_id', 'unit_number', 'floor', 'rent_amount', 'status', 'image_urls'];
+    protected $fillable = ['property_id', 'unit_number', 'floor', 'rent_amount', 'status', 'image_urls', 'billing_overrides'];
 
     protected $casts = [
         'image_urls' => 'array',
         'rent_amount' => 'decimal:2',
+        'billing_overrides' => 'array',
     ];
 
     public function property() { return $this->belongsTo(Property::class); }

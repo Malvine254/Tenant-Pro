@@ -35,7 +35,9 @@ import com.tenantpro.app.utils.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 @AndroidEntryPoint
@@ -166,7 +168,7 @@ class HomeFragment : Fragment() {
 
         binding.llNoBills.gone()
 
-        unpaidBills.take(3).forEach { bill ->
+        unpaidBills.take(6).forEach { bill ->
             val row = ItemBillCardBinding.inflate(layoutInflater, binding.llBillCards, false)
 
             val ctx = requireContext()
@@ -212,7 +214,7 @@ class HomeFragment : Fragment() {
             val detailText = when {
                 !bill.description.isNullOrBlank() -> bill.description
                 !bill.period.isNullOrBlank() -> bill.period
-                !bill.dueDate.isNullOrBlank() -> "Due: ${bill.dueDate}"
+                !bill.dueDate.isNullOrBlank() -> "Due ${formatDueDate(bill.dueDate)}"
                 else -> "—"
             }
             row.tvBillDetail.text = detailText
@@ -249,7 +251,7 @@ class HomeFragment : Fragment() {
             }
 
             // Due date
-            row.tvBillDue.text = if (!bill.dueDate.isNullOrBlank()) "Due: ${bill.dueDate}" else ""
+            row.tvBillDue.text = bill.dueDate?.let { "Due ${formatDueDate(it)}" }.orEmpty()
 
             // Pay button
             row.btnPayBill.setOnClickListener {
@@ -297,6 +299,14 @@ class HomeFragment : Fragment() {
             putString("invoiceLabel", bill.billingType.replaceFirstChar { it.uppercase() })
             putFloat("remainingAmount", bill.balance.toFloat())
         })
+    }
+
+    private fun formatDueDate(value: String): String {
+        val dateValue = value.take(10)
+        return runCatching {
+            val parsed = SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(dateValue) ?: return@runCatching dateValue
+            SimpleDateFormat("EEE, d MMM", Locale.getDefault()).format(Date(parsed.time))
+        }.getOrDefault(dateValue)
     }
 
     private data class BillStyle(
