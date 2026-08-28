@@ -42,7 +42,7 @@
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="Property chat"
+                    android:text="Landlord chat"
                     android:textColor="@color/on_surface"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -77,20 +77,20 @@
                     android:layout_marginTop="2dp"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="Only properties assigned to you can be contacted"
+                    android:text="Choose the landlord and property you want to contact"
                     android:textColor="@color/on_surface_variant"
                     android:textSize="11sp" />
             </LinearLayout>
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilQueryTopic"
-                style="@style/Theme.TenantPro.TextInputLayout.Search"
+                android:id="@+id/tilQueryLandlord"
+                style="@style/Theme.TenantPro.TextInputLayout.ExposedDropdown"
                 android:layout_width="126dp"
                 android:layout_height="44dp"
                 app:endIconMode="dropdown_menu">
 
                 <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                    android:id="@+id/actQueryTopic"
+                    android:id="@+id/actQueryLandlord"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@android:color/transparent"
@@ -102,31 +102,6 @@
                     android:textSize="12sp" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilQueryProperty"
-            style="@style/Theme.TenantPro.TextInputLayout.Search"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
-            android:layout_marginBottom="10dp"
-            android:hint="@string/query_property_label"
-            app:endIconMode="dropdown_menu">
-
-            <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                android:id="@+id/actQueryProperty"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:ellipsize="end"
-                android:inputType="none"
-                android:maxLines="1"
-                android:minHeight="48dp"
-                android:paddingHorizontal="12dp"
-                android:textColor="@color/on_surface"
-                android:textSize="13sp" />
-        </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 
     <FrameLayout

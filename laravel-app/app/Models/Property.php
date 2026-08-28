@@ -12,6 +12,11 @@ class Property extends Model
     protected $fillable = [
         'landlord_id', 'name', 'description', 'cover_image_url',
         'address_line', 'city', 'state', 'country',
+        'billing_settings',
+    ];
+
+    protected $casts = [
+        'billing_settings' => 'array',
     ];
 
     public function landlord() { return $this->belongsTo(User::class, 'landlord_id'); }

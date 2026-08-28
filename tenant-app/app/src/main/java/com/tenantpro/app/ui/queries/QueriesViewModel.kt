@@ -401,7 +401,8 @@ class QueriesViewModel @Inject constructor(
                         ChatPropertyOption(
                             propertyId = property.id,
                             propertyName = property.name.ifBlank { "Property" },
-                            unitLabel = tenancy.unit?.unitName?.ifBlank { "Unit" } ?: "Unit"
+                            unitLabel = tenancy.unit?.unitName?.ifBlank { "Unit" } ?: "Unit",
+                            landlordName = property.landlord?.fullName?.ifBlank { "Landlord" } ?: "Landlord"
                         )
                     }
                     .distinctBy { it.propertyId }
@@ -431,8 +432,9 @@ class QueriesViewModel @Inject constructor(
 data class ChatPropertyOption(
     val propertyId: String,
     val propertyName: String,
-    val unitLabel: String
+    val unitLabel: String,
+    val landlordName: String
 ) {
     val displayLabel: String
-        get() = "$propertyName - $unitLabel"
+        get() = "$landlordName · $propertyName - $unitLabel"
 }

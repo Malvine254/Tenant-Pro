@@ -54,6 +54,9 @@
         android:label="Forgot Password"
         tools:layout="@layout/fragment_forgot_password">
 
+        <argument android:name="email" app:argType="string" android:defaultValue="" />
+        <argument android:name="temporaryPassword" app:argType="boolean" android:defaultValue="false" />
+
         <action
             android:id="@+id/action_forgotPasswordFragment_to_loginFragment"
             app:destination="@id/loginFragment"

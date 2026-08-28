@@ -62,8 +62,7 @@ class QueriesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupChatList()
-        setupTopicDropdown()
-        setupPropertyDropdown()
+        setupLandlordDropdown()
         bindUi()
 
         binding.btnAttachment.setOnClickListener {
@@ -93,15 +92,10 @@ class QueriesFragment : Fragment() {
             }
         }
 
-        binding.actQueryTopic.setOnItemClickListener { parent, _, position, _ ->
-            val selected = parent.getItemAtPosition(position)?.toString().orEmpty()
-            viewModel.selectTopic(selected)
-        }
-
-        binding.actQueryProperty.setOnItemClickListener { _, _, position, _ ->
+        binding.actQueryLandlord.setOnItemClickListener { _, _, position, _ ->
             val selected = viewModel.propertyOptions.value.getOrNull(position)
             viewModel.selectProperty(selected?.propertyId)
-            binding.tilQueryProperty.error = null
+            binding.tilQueryLandlord.error = null
             updateComposerActions()
         }
 
@@ -139,11 +133,10 @@ class QueriesFragment : Fragment() {
     }
 
     private fun submitMessage() {
-        val topic = binding.actQueryTopic.text?.toString()?.trim().orEmpty()
         val message = binding.etQueryMessage.text?.toString()?.trim().orEmpty()
 
         if (viewModel.selectedProperty.value == null) {
-            binding.tilQueryProperty.error = getString(R.string.query_property_required)
+            binding.tilQueryLandlord.error = "Select the landlord you want to contact"
             return
         }
 
@@ -154,7 +147,7 @@ class QueriesFragment : Fragment() {
         binding.tilQueryMessage.error = null
 
         viewModel.sendMessage(
-            topic = topic.ifBlank { "General" },
+            topic = "General",
             text = message,
             attachmentUri = pendingAttachmentUri,
             attachmentName = pendingAttachmentName
@@ -172,23 +165,13 @@ class QueriesFragment : Fragment() {
         binding.rvChats.adapter = chatAdapter
     }
 
-    private fun setupTopicDropdown() {
-        val topicAdapter = ArrayAdapter(
-            requireContext(),
-            R.layout.item_topic_dropdown,
-            viewModel.topics
-        )
-        binding.actQueryTopic.setAdapter(topicAdapter)
-        binding.actQueryTopic.setText(viewModel.topics.first(), false)
-    }
-
-    private fun setupPropertyDropdown() {
+    private fun setupLandlordDropdown() {
         val propertyAdapter = ArrayAdapter(
             requireContext(),
             R.layout.item_topic_dropdown,
             emptyList<String>()
         )
-        binding.actQueryProperty.setAdapter(propertyAdapter)
+        binding.actQueryLandlord.setAdapter(propertyAdapter)
     }
 
     private fun updateComposerActions() {
@@ -219,10 +202,10 @@ class QueriesFragment : Fragment() {
                             R.layout.item_topic_dropdown,
                             labels
                         )
-                        binding.actQueryProperty.setAdapter(propertyAdapter)
+                        binding.actQueryLandlord.setAdapter(propertyAdapter)
 
                         if (properties.isEmpty()) {
-                            binding.actQueryProperty.setText("", false)
+                            binding.actQueryLandlord.setText("", false)
                             binding.tvChatTitle.text = getString(R.string.query_property_title_default)
                             binding.tvChatSubtitle.text = getString(R.string.query_property_access_hint)
                             binding.tvEmptyChats.text = getString(R.string.query_no_property_available)
@@ -233,12 +216,12 @@ class QueriesFragment : Fragment() {
                 }
                 launch {
                     viewModel.selectedProperty.collect { property ->
-                        binding.actQueryProperty.setText(property?.displayLabel.orEmpty(), false)
-                        binding.tvChatTitle.text = property?.propertyName ?: getString(R.string.query_property_title_default)
+                        binding.actQueryLandlord.setText(property?.displayLabel.orEmpty(), false)
+                        binding.tvChatTitle.text = property?.landlordName ?: "Landlord chat"
                         binding.tvChatSubtitle.text = if (property == null) {
                             getString(R.string.query_property_access_hint)
                         } else {
-                            getString(R.string.query_property_subtitle, property.unitLabel)
+                            "${property.propertyName} · ${property.unitLabel}"
                         }
                         binding.tvEmptyChats.text = if (property == null) {
                             getString(R.string.query_no_property_available)

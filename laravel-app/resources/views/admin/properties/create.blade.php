@@ -63,6 +63,30 @@
             </div>
 
             <div style="border-top:1px solid #e2e8f0;margin:6px 0 18px;padding-top:18px;">
+                <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;">Recurring tenant bills</h3>
+                <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Water and garbage invoices are created for every active tenant each month. Electricity is prepaid by default and is not added to the monthly invoice.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                    <div class="form-group">
+                        <label>Water fee (KES/month)</label>
+                        <input type="number" name="water_monthly_fee" value="{{ old('water_monthly_fee', 0) }}" min="0" step="0.01" required>
+                        @error('water_monthly_fee')<div class="form-error">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="form-group">
+                        <label>Garbage fee (KES/month)</label>
+                        <input type="number" name="garbage_monthly_fee" value="{{ old('garbage_monthly_fee', 0) }}" min="0" step="0.01" required>
+                        @error('garbage_monthly_fee')<div class="form-error">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="form-group">
+                        <label>Electricity billing</label>
+                        <select name="electricity_billing_mode" required>
+                            <option value="PREPAID" {{ old('electricity_billing_mode', 'PREPAID') === 'PREPAID' ? 'selected' : '' }}>Prepaid (default)</option>
+                            <option value="POSTPAID" {{ old('electricity_billing_mode') === 'POSTPAID' ? 'selected' : '' }}>Postpaid</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div style="border-top:1px solid #e2e8f0;margin:6px 0 18px;padding-top:18px;">
                 <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;">Add Units Now <span style="font-weight:normal;color:#64748b;">(optional)</span></h3>
                 <p style="font-size:12px;color:#64748b;margin-bottom:14px;">
                     Create the property and its initial units together. Example: first unit 101 and quantity 6 creates 101–106.

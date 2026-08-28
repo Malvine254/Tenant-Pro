@@ -268,6 +268,7 @@ class InvitationAdminController extends Controller
             'role_id' => $tenantRole->id,
             'is_active' => true,
             'email_verified_at' => now(),
+            'requires_password_change' => true,
         ]);
 
         return [$newUser, $temporaryPassword, true];

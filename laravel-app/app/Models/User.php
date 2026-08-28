@@ -26,6 +26,7 @@ class User extends Authenticatable
         'trial_started_at', 'trial_ends_at', 'service_paid_until',
         'subscription_started_at', 'subscription_last_paid_at',
         'monthly_service_fee',
+        'requires_password_change',
     ];
 
     protected $hidden = [
@@ -39,6 +40,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'requires_password_change' => 'boolean',
             'app_settings' => 'array',
             'requires_subscription' => 'boolean',
             'trial_started_at' => 'datetime',

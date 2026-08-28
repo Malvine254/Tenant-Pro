@@ -230,12 +230,12 @@ class TenantEmailService
         $invoice->loadMissing(['tenant', 'unit.property']);
 
         return $this->send($invoice->tenant, [
-            'subjectLine' => 'New rent invoice issued',
+            'subjectLine' => 'New '.strtolower((string) $invoice->billing_type).' invoice issued',
             'preheader' => 'A new invoice is available in your TenantPro account.',
             'title' => 'New invoice available',
             'introLines' => [
                 'Hi '.$this->firstName($invoice->tenant).',',
-                'A new invoice has been issued for your unit.',
+                'A new '.strtolower((string) $invoice->billing_type).' invoice has been issued for your unit.',
             ],
             'details' => [
                 'Property' => $invoice->unit?->property?->name ?? 'Not specified',

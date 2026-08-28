@@ -29,6 +29,7 @@ class ForgotPasswordFragment : Fragment() {
 
     private var currentEmail: String = ""
     private var otpSent: Boolean = false
+    private var temporaryPasswordSetup: Boolean = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -39,6 +40,15 @@ class ForgotPasswordFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        currentEmail = arguments?.getString("email").orEmpty()
+        temporaryPasswordSetup = arguments?.getBoolean("temporaryPassword", false) == true
+        if (currentEmail.isNotBlank()) {
+            binding.etEmail.setText(currentEmail)
+        }
+        if (temporaryPasswordSetup) {
+            binding.tvResetIntro.text = "Use your temporary password once, then choose a password only you know. We'll email a code to confirm the change."
+        }
 
         setupRequestOtpScreen()
         observeRequestOtpState()
@@ -130,7 +140,7 @@ class ForgotPasswordFragment : Fragment() {
                         is Resource.Success -> {
                             binding.progressBarReset.gone()
                             viewModel.resetResetPasswordState()
-                            toast("Password reset and email verified. Please sign in.")
+                            toast(if (temporaryPasswordSetup) "Password changed. Please sign in." else "Password reset and email verified. Please sign in.")
                             findNavController().popBackStack()
                         }
                         is Resource.Error -> {

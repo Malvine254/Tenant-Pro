@@ -122,6 +122,7 @@ class AuthController extends Controller
             'user' => $this->userPayload($user->load(['role', 'tenant.unit.property'])),
             'token' => $token,
             'accessToken' => $token,
+            'requiresPasswordChange' => (bool) $user->requires_password_change,
         ]);
     }
 
@@ -304,6 +305,7 @@ class AuthController extends Controller
         $user->forceFill([
             'password' => Hash::make($data['new_password']),
             'email_verified_at' => $user->email_verified_at ?? now(),
+            'requires_password_change' => false,
         ])->save();
         $user->tokens()->delete();
 
@@ -473,6 +475,7 @@ class AuthController extends Controller
         $tenantProfiles = $tenancies->map(function (Tenant $tenant) {
             $unit = $tenant->unit;
             $property = $unit?->property;
+            $landlord = $property?->loadMissing('landlord')?->landlord;
 
             return [
                 'id' => $tenant->id,
@@ -497,6 +500,10 @@ class AuthController extends Controller
                         'city' => $property->city,
                         'state' => $property->state,
                         'country' => $property->country,
+                        'landlord' => $landlord ? [
+                            'id' => $landlord->id,
+                            'fullName' => $landlord->name,
+                        ] : null,
                     ] : null,
                 ] : null,
             ];

@@ -23,7 +23,7 @@ class TenantBillingService
             : now();
         $amount = (float) ($tenant->unit?->rent_amount ?? 0);
 
-        return Invoice::firstOrCreate(
+        $rentInvoice = Invoice::firstOrCreate(
             [
                 'tenant_id' => $tenant->user_id,
                 'user_id' => $tenant->user_id,
@@ -43,6 +43,10 @@ class TenantBillingService
                 'paid_at' => null,
             ]
         )->load(['tenant', 'unit.property']);
+
+        $this->createRecurringUtilityInvoices($tenant, $moveInDate, $moveInDate->copy()->addDays(7), now());
+
+        return $rentInvoice;
     }
 
     public function syncMonthlyRentForActiveTenancies(?Carbon $asOf = null): array
@@ -84,10 +88,15 @@ class TenantBillingService
     {
         $tenant->loadMissing(['user', 'unit.property']);
 
+        // Backfill the current month for existing tenancies as well as new ones.
+        $created = $this->createRecurringUtilityInvoices(
+            $tenant,
+            $asOf,
+            $asOf->copy()->addDays(7),
+            $asOf
+        );
+
         $amount = (float) ($tenant->unit?->rent_amount ?? 0);
-        if ($amount <= 0) {
-            return 0;
-        }
 
         $rentInvoices = Invoice::query()
             ->where('tenant_id', $tenant->user_id)
@@ -105,10 +114,10 @@ class TenantBillingService
             if ($initial->wasRecentlyCreated) {
                 $this->appNotificationService->invoiceCreated($initial);
                 $this->emailService->invoiceCreated($initial);
-                return 1;
+                return $created + 1;
             }
 
-            return 0;
+            return $created;
         }
 
         $nextDueDate = $this->resolveNextDueDate($tenant, $latestRentInvoice);
@@ -117,8 +126,6 @@ class TenantBillingService
         }
 
         $cutoff = $asOf->copy()->addMonth()->endOfDay();
-        $created = 0;
-
         while ($nextDueDate->lte($cutoff)) {
             $periodMonth = (int) $nextDueDate->month;
             $periodYear = (int) $nextDueDate->year;
@@ -150,7 +157,49 @@ class TenantBillingService
                 $created++;
             }
 
+            $created += $this->createRecurringUtilityInvoices($tenant, $nextDueDate, $nextDueDate, $asOf);
+
             $nextDueDate = $nextDueDate->copy()->addMonth();
+        }
+
+        return $created;
+    }
+
+    private function createRecurringUtilityInvoices(Tenant $tenant, Carbon $periodDate, Carbon $dueDate, Carbon $issueDate): int
+    {
+        $settings = $tenant->unit?->property?->billing_settings ?? [];
+        $created = 0;
+
+        foreach ([
+            'WATER' => (float) ($settings['water_monthly_fee'] ?? 0),
+            'GARBAGE' => (float) ($settings['garbage_monthly_fee'] ?? 0),
+        ] as $billingType => $amount) {
+            $invoice = Invoice::firstOrCreate(
+                [
+                    'tenant_id' => $tenant->user_id,
+                    'user_id' => $tenant->user_id,
+                    'unit_id' => $tenant->unit_id,
+                    'billing_type' => $billingType,
+                    'period_month' => (int) $periodDate->month,
+                    'period_year' => (int) $periodDate->year,
+                ],
+                [
+                    'issue_date' => $issueDate->toDateString(),
+                    'due_date' => $dueDate->toDateString(),
+                    'amount' => $amount,
+                    'penalty_amount' => 0,
+                    'total_amount' => $amount,
+                    'paid_amount' => 0,
+                    'status' => 'PENDING',
+                    'paid_at' => null,
+                ]
+            )->load(['tenant', 'unit.property']);
+
+            if ($invoice->wasRecentlyCreated) {
+                $this->appNotificationService->invoiceCreated($invoice);
+                $this->emailService->invoiceCreated($invoice);
+                $created++;
+            }
         }
 
         return $created;

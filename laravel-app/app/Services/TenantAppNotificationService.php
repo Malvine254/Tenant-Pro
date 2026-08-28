@@ -29,8 +29,10 @@ class TenantAppNotificationService
     {
         $invoice->loadMissing(['tenant', 'unit.property']);
 
-        return $this->notify($invoice->tenant, 'INVOICE_CREATED', 'New rent invoice', sprintf(
-            'A rent invoice of %s is ready for %s, Unit %s.',
+        $billingLabel = ucfirst(strtolower((string) $invoice->billing_type));
+        return $this->notify($invoice->tenant, 'INVOICE_CREATED', "New {$billingLabel} invoice", sprintf(
+            'A %s invoice of %s is ready for %s, Unit %s.',
+            strtolower($billingLabel),
             $invoice->total_amount_formatted,
             $invoice->unit?->property?->name ?? 'your property',
             $invoice->unit?->unit_number ?? '-'

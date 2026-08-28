@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
@@ -206,6 +207,9 @@ class MainActivity : AppCompatActivity() {
         // Set the start destination ONCE based on the actual persisted auth state.
         // Use the repository-backed flow rather than the StateFlow default value.
         if (savedInstanceState == null) {
+            // The graph's XML default is Login. Keep the host hidden until the
+            // persisted session decides the real start destination, avoiding a login flash.
+            binding.navHostFragment.visibility = View.INVISIBLE
             lifecycleScope.launch {
                 val loggedIn = loginViewModel.hasSavedSession()
                 val biometricLockEnabled = dataStoreManager.biometricLockEnabled.firstOrNull() ?: false
@@ -214,6 +218,7 @@ class MainActivity : AppCompatActivity() {
                     if (loggedIn && !biometricLockEnabled) R.id.homeFragment else R.id.loginFragment
                 )
                 navController.graph = graph
+                binding.navHostFragment.visibility = View.VISIBLE
                 handlePendingInvitationDeepLink()
                 handlePendingNotificationNavigation()
                 syncFcmTokenIfLoggedIn()

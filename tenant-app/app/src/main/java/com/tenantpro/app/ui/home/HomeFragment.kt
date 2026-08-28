@@ -44,6 +44,7 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private val viewModel: HomeViewModel by viewModels()
+    private var firstPayableBill: BillItem? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -64,7 +65,7 @@ class HomeFragment : Fragment() {
         }
 
         binding.btnPayAll.setOnClickListener {
-            openInvoices(openOnly = true)
+            firstPayableBill?.let(::openPayment) ?: openInvoices(openOnly = true)
         }
 
         binding.tvTotalDue.setOnClickListener { openInvoices(openOnly = true) }
@@ -149,6 +150,7 @@ class HomeFragment : Fragment() {
         binding.llBillCards.removeAllViews()
 
         val unpaidBills = bills.filter { it.status in setOf("PENDING", "PARTIAL", "OVERDUE") }
+        firstPayableBill = unpaidBills.firstOrNull()
 
         if (unpaidBills.isEmpty()) {
             if (bills.isEmpty()) {
@@ -251,7 +253,7 @@ class HomeFragment : Fragment() {
 
             // Pay button
             row.btnPayBill.setOnClickListener {
-                openInvoices(openOnly = true)
+                openPayment(bill)
             }
             // Outline color matching bill type
             row.btnPayBill.setStrokeColorResource(
@@ -287,6 +289,14 @@ class HomeFragment : Fragment() {
             if (openOnly) putString("initialFilter", "OPEN")
         }
         findNavController().navigate(R.id.invoicesFragment, bundle)
+    }
+
+    private fun openPayment(bill: BillItem) {
+        findNavController().navigate(R.id.paymentFragment, Bundle().apply {
+            putString("invoiceId", bill.id)
+            putString("invoiceLabel", bill.billingType.replaceFirstChar { it.uppercase() })
+            putFloat("remainingAmount", bill.balance.toFloat())
+        })
     }
 
     private data class BillStyle(

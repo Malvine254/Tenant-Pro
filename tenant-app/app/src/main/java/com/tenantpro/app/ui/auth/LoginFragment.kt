@@ -99,8 +99,20 @@ class LoginFragment : Fragment() {
                         }
                         is Resource.Success -> {
                             binding.progressBar.gone()
+                            val requiresPasswordChange = state.data.requiresPasswordChange
+                            val email = binding.etEmail.text?.toString()?.trim().orEmpty()
                             viewModel.resetLoginState()
-                            navigateHome()
+                            if (requiresPasswordChange) {
+                                findNavController().navigate(
+                                    R.id.action_loginFragment_to_forgotPasswordFragment,
+                                    Bundle().apply {
+                                        putString("email", email)
+                                        putBoolean("temporaryPassword", true)
+                                    }
+                                )
+                            } else {
+                                navigateHome()
+                            }
                         }
                         is Resource.Error -> {
                             binding.progressBar.gone()

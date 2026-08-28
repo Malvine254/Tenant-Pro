@@ -22,7 +22,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Biometric lock"
+            android:text="Fingerprint login"
             android:textColor="@color/on_surface"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -31,7 +31,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="1dp"
-            android:text="Use fingerprint to sign in"
+            android:text="Unlock with fingerprint, face, or your screen lock"
             android:textColor="@color/on_surface_variant"
             android:textSize="11sp" />
     </LinearLayout>

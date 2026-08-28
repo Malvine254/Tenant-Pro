@@ -316,9 +316,11 @@ class AccountSettingsFragment : Fragment() {
             hint = label
             setPadding(0, 6, 0, 6)
             boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+            val radius = 14f * resources.displayMetrics.density
+            setBoxCornerRadii(radius, radius, radius, radius)
             setBoxBackgroundColor(
                 themedColor(
-                    com.google.android.material.R.attr.colorSurfaceContainerHigh,
+                    com.google.android.material.R.attr.colorSurface,
                     R.color.surface
                 )
             )

@@ -50,6 +50,9 @@ class PropertyAdminController extends Controller
             'first_unit_number' => 'nullable|string|max:50',
             'initial_floor' => 'nullable|integer',
             'initial_rent_amount' => 'nullable|numeric|min:0',
+            'water_monthly_fee' => 'required|numeric|min:0',
+            'garbage_monthly_fee' => 'required|numeric|min:0',
+            'electricity_billing_mode' => 'required|in:PREPAID,POSTPAID',
         ]);
 
         $unitCount = (int) ($data['initial_units_count'] ?? 0);
@@ -74,6 +77,11 @@ class PropertyAdminController extends Controller
         $propertyFields = collect($data)->only([
             'landlord_id', 'name', 'description', 'address_line', 'city', 'state', 'country',
         ])->all();
+        $propertyFields['billing_settings'] = [
+            'water_monthly_fee' => (float) $data['water_monthly_fee'],
+            'garbage_monthly_fee' => (float) $data['garbage_monthly_fee'],
+            'electricity_billing_mode' => $data['electricity_billing_mode'],
+        ];
 
         $property = DB::transaction(function () use ($propertyFields, $data, $unitNumbers) {
             $property = Property::create($propertyFields);
@@ -140,8 +148,19 @@ class PropertyAdminController extends Controller
             'city' => 'required|string',
             'state' => 'nullable|string',
             'country' => 'nullable|string',
+            'water_monthly_fee' => 'required|numeric|min:0',
+            'garbage_monthly_fee' => 'required|numeric|min:0',
+            'electricity_billing_mode' => 'required|in:PREPAID,POSTPAID',
         ]);
-        $property->update($data);
+        $propertyFields = collect($data)->except([
+            'water_monthly_fee', 'garbage_monthly_fee', 'electricity_billing_mode',
+        ])->all();
+        $propertyFields['billing_settings'] = [
+            'water_monthly_fee' => (float) $data['water_monthly_fee'],
+            'garbage_monthly_fee' => (float) $data['garbage_monthly_fee'],
+            'electricity_billing_mode' => $data['electricity_billing_mode'],
+        ];
+        $property->update($propertyFields);
         return redirect()->route('admin.properties.show', $property)->with('success', 'Property updated.');
     }
 

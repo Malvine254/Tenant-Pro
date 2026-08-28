@@ -57,6 +57,28 @@
                     <input type="text" name="country" value="{{ old('country', $property->country) }}">
                 </div>
             </div>
+            <div style="border-top:1px solid #e2e8f0;margin:6px 0 18px;padding-top:18px;">
+                <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;">Recurring tenant bills</h3>
+                <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Water and garbage invoices are issued monthly for every active tenancy. Electricity defaults to prepaid and is not automatically invoiced.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                    <div class="form-group">
+                        <label>Water fee (KES/month)</label>
+                        <input type="number" name="water_monthly_fee" value="{{ old('water_monthly_fee', $property->billing_settings['water_monthly_fee'] ?? 0) }}" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Garbage fee (KES/month)</label>
+                        <input type="number" name="garbage_monthly_fee" value="{{ old('garbage_monthly_fee', $property->billing_settings['garbage_monthly_fee'] ?? 0) }}" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Electricity billing</label>
+                        <select name="electricity_billing_mode" required>
+                            @php($electricityMode = old('electricity_billing_mode', $property->billing_settings['electricity_billing_mode'] ?? 'PREPAID'))
+                            <option value="PREPAID" {{ $electricityMode === 'PREPAID' ? 'selected' : '' }}>Prepaid (default)</option>
+                            <option value="POSTPAID" {{ $electricityMode === 'POSTPAID' ? 'selected' : '' }}>Postpaid</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
             <div style="display:flex;gap:10px;">
                 <button type="submit" class="btn btn-primary">Update Property</button>
                 <a href="{{ route('admin.properties.show', $property) }}" class="btn btn-secondary">Cancel</a>
