@@ -61,30 +61,14 @@ class InvoicesFragment : Fragment() {
 
     private var fullList: List<Invoice> = emptyList()
     private var filteredList: List<Invoice> = emptyList()
+    private var filteredGroups: List<InvoiceGroup> = emptyList()
     private var currentPage = 1
     private var sortByDateAscending = false
     private var selectedStatusFilter: String? = null
     private var hasResumedOnce = false
 
     private val adapter by lazy {
-        InvoiceAdapter(
-            onPayClick = { invoice ->
-                val bundle = Bundle().apply {
-                    putString("invoiceId", invoice.id)
-                    putString(
-                        "invoiceLabel",
-                        listOfNotNull(
-                            invoice.billingType.toBillingLabel(),
-                            invoice.displayPeriod()
-                        ).joinToString(" - ")
-                    )
-                    putFloat("remainingAmount", invoice.effectiveBalance().toFloat())
-                }
-                findNavController().navigate(R.id.paymentFragment, bundle)
-            },
-            onExportPdfClick = { invoice -> exportInvoicePdf(invoice) },
-            onCardClick = { invoice -> showDetailDialog(invoice) }
-        )
+        InvoiceAdapter(onGroupClick = ::showGroupDetailDialog)
     }
 
     override fun onCreateView(
@@ -251,16 +235,18 @@ class InvoicesFragment : Fragment() {
 
         filteredList = if (sortByDateAscending) {
             chipFiltered.sortedWith(
-                compareBy({ statusPriority(it.status) }, { it.dueDate ?: it.createdAt ?: "" })
+                compareBy<Invoice>({ it.groupKey() }, { statusPriority(it.status) }, { it.dueDate ?: it.createdAt ?: "" })
             )
         } else {
             chipFiltered.sortedWith(
-                compareBy<Invoice> { statusPriority(it.status) }
+                compareByDescending<Invoice> { it.groupKey() }
+                    .thenBy { statusPriority(it.status) }
                     .thenByDescending { it.dueDate ?: it.createdAt ?: "" }
             )
         }
 
         if (resetPage) currentPage = 1
+        filteredGroups = groupInvoices(filteredList)
         currentPage = currentPage.coerceIn(1, totalPages())
         renderCurrentPage()
     }
@@ -276,9 +262,8 @@ class InvoicesFragment : Fragment() {
             binding.tvEmpty.gone()
             binding.rvInvoices.visible()
             val from = (currentPage - 1) * pageSize
-            val to   = (from + pageSize).coerceAtMost(filteredList.size)
-            adapter.setNumberingOffset(from)
-            adapter.submitList(filteredList.subList(from, to))
+            val to   = (from + pageSize).coerceAtMost(filteredGroups.size)
+            adapter.submitList(filteredGroups.subList(from, to))
             val total = totalPages()
             binding.tvPageIndicator.text =
                 getString(R.string.invoice_page_indicator, currentPage, total)
@@ -288,7 +273,7 @@ class InvoicesFragment : Fragment() {
     }
 
     private fun totalPages(): Int =
-        if (filteredList.isEmpty()) 1 else ((filteredList.size - 1) / pageSize) + 1
+        if (filteredGroups.isEmpty()) 1 else ((filteredGroups.size - 1) / pageSize) + 1
 
     private fun statusPriority(status: String): Int = when (statusCode(status)) {
         FILTER_OVERDUE -> 0
@@ -303,6 +288,35 @@ class InvoicesFragment : Fragment() {
     private fun statusCode(status: String): String = status.uppercase(Locale.ROOT)
 
     private fun Invoice.statusCode(): String = statusCode(status)
+
+    private fun Invoice.groupKey(): String {
+        val period = periodYear?.let { year ->
+            "%04d-%02d".format(Locale.US, year, periodMonth ?: 0)
+        } ?: dueDate?.take(7).orEmpty()
+        return "$period|${unit?.id.orEmpty()}"
+    }
+
+    private fun groupInvoices(invoices: List<Invoice>): List<InvoiceGroup> = invoices
+        .groupBy { it.groupKey() }
+        .map { (key, items) ->
+            val first = items.first()
+            val period = first.displayPeriod().orEmpty().ifBlank { "Other invoices" }
+            val property = listOfNotNull(first.unit?.property?.name, first.unit?.unitName)
+                .joinToString(" · ")
+            InvoiceGroup(key, if (property.isBlank()) period else "$period · $property", items)
+        }
+
+    private fun showGroupDetailDialog(group: InvoiceGroup) {
+        val options = group.invoices.map { invoice ->
+            "${invoice.billingType.toBillingLabel()}  ·  ${invoice.effectiveBalance().toKes()} balance"
+        }.toTypedArray()
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(group.title)
+            .setMessage("Select a bill to view, pay, or download its invoice.")
+            .setItems(options) { _, which -> showDetailDialog(group.invoices[which]) }
+            .setNegativeButton(getString(R.string.invoice_close), null)
+            .show()
+    }
 
     // ── Detail dialog ─────────────────────────────────────────────────────────
 
@@ -325,12 +339,24 @@ class InvoicesFragment : Fragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.invoice_detail_title))
             .setMessage(message)
-            .setPositiveButton(getString(R.string.invoice_close), null)
+            .setPositiveButton(if (remaining > 0) getString(R.string.invoice_action_pay) else getString(R.string.invoice_close)) { _, _ ->
+                if (remaining > 0) openPayment(invoice)
+            }
             .setNegativeButton(getString(R.string.btn_history)) { _, _ ->
                 openPaymentHistory(invoice)
             }
             .setNeutralButton(getString(R.string.invoice_share)) { _, _ -> shareInvoice(invoice) }
             .show()
+    }
+
+    private fun openPayment(invoice: Invoice) {
+        findNavController().navigate(R.id.paymentFragment, Bundle().apply {
+            putString("invoiceId", invoice.id)
+            putString("invoiceLabel", listOfNotNull(
+                invoice.billingType.toBillingLabel(), invoice.displayPeriod()
+            ).joinToString(" - "))
+            putFloat("remainingAmount", invoice.effectiveBalance().toFloat())
+        })
     }
 
     private fun openPaymentHistory(invoice: Invoice) {
@@ -453,10 +479,10 @@ class InvoicesFragment : Fragment() {
         // Header bar
         canvas.drawRect(0f, 0f, pageWidth, 80f,
             Paint().apply { color = Color.parseColor("#0F172A") })
-        canvas.drawText("TenantPro", m, 38f,
+        canvas.drawText("TenantPro", m, 35f,
             Paint().apply { textSize = 22f; isFakeBoldText = true; color = Color.WHITE; isAntiAlias = true })
-        canvas.drawText("Invoice Receipt", m, 60f,
-            Paint().apply { textSize = 13f; color = Color.parseColor("#94A3B8"); isAntiAlias = true })
+        canvas.drawText("${invoice.billingType.toBillingLabel()} invoice  ·  #${invoice.id.takeLast(8).uppercase()}", m, 58f,
+            Paint().apply { textSize = 11f; color = Color.parseColor("#CBD5E1"); isAntiAlias = true })
 
         // Status badge (top-right)
         val badgeRight = pageWidth - m
@@ -519,7 +545,17 @@ class InvoicesFragment : Fragment() {
                 color = if (remaining <= 0) Color.parseColor("#16A34A") else accentColor
                 isAntiAlias = true
             })
-        y += 20f
+        y += 12f
+
+        val dueCardColor = if (remaining <= 0) Color.parseColor("#DCFCE7") else Color.parseColor("#EEF2FF")
+        val dueCardText = if (remaining <= 0) Color.parseColor("#15803D") else Color.parseColor("#3730A3")
+        canvas.drawRoundRect(RectF(m, y, pageWidth - m, y + 58f), 12f, 12f,
+            Paint().apply { color = dueCardColor; isAntiAlias = true })
+        canvas.drawText(if (remaining <= 0) "PAYMENT COMPLETE" else "AMOUNT TO PAY", m + 16f, y + 23f,
+            Paint().apply { textSize = 10f; isFakeBoldText = true; color = dueCardText; isAntiAlias = true })
+        canvas.drawText(if (remaining <= 0) "Thank you — this invoice is settled." else remaining.toKes(), m + 16f, y + 43f,
+            Paint().apply { textSize = if (remaining <= 0) 11f else 17f; isFakeBoldText = true; color = dueCardText; isAntiAlias = true })
+        y += 78f
 
         canvas.drawLine(m, y, pageWidth - m, y, divPaint)
         y += 30f

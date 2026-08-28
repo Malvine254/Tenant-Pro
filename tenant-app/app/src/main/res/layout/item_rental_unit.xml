@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
-    app:cardBackgroundColor="@color/card_white"
-    app:cardCornerRadius="10dp"
+    app:cardBackgroundColor="@color/surface"
+    app:cardCornerRadius="14dp"
     app:cardElevation="0dp"
     app:strokeColor="@color/outline_variant"
     app:strokeWidth="1dp">
@@ -32,13 +32,15 @@
                 android:scaleType="centerCrop" />
 
             <ImageView
-                android:layout_width="14dp"
-                android:layout_height="14dp"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
                 android:layout_gravity="bottom|end"
                 android:layout_margin="3dp"
+                android:background="@drawable/bg_quick_action"
                 android:contentDescription="Unit"
+                android:padding="5dp"
                 android:src="@drawable/ic_home"
-                android:tint="@color/secondary" />
+                android:tint="@android:color/white" />
         </FrameLayout>
 
         <LinearLayout
@@ -60,7 +62,7 @@
                     android:layout_weight="1"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:textColor="@color/text_dark"
+                    android:textColor="@color/on_surface"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -84,7 +86,7 @@
                 android:layout_marginTop="2dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="@color/text_muted"
+                android:textColor="@color/on_surface_variant"
                 android:textSize="10sp" />
 
             <LinearLayout
@@ -104,14 +106,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="FLOOR"
-                        android:textColor="@color/text_muted"
+                        android:textColor="@color/on_surface_variant"
                         android:textSize="8sp" />
 
                     <com.google.android.material.textview.MaterialTextView
                         android:id="@+id/tvUnitFloor"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/text_dark"
+                        android:textColor="@color/on_surface"
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -126,14 +128,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="RENT / MONTH"
-                        android:textColor="@color/text_muted"
+                        android:textColor="@color/on_surface_variant"
                         android:textSize="8sp" />
 
                     <com.google.android.material.textview.MaterialTextView
                         android:id="@+id/tvUnitRent"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/text_dark"
+                        android:textColor="@color/on_surface"
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -148,14 +150,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="MOVE-IN"
-                        android:textColor="@color/text_muted"
+                        android:textColor="@color/on_surface_variant"
                         android:textSize="8sp" />
 
                     <com.google.android.material.textview.MaterialTextView
                         android:id="@+id/tvUnitMoveIn"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/text_dark"
+                        android:textColor="@color/on_surface"
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -168,7 +170,7 @@
                 android:layout_marginTop="7dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="@color/text_muted"
+                android:textColor="@color/on_surface_variant"
                 android:textSize="10sp" />
         </LinearLayout>
     </LinearLayout>

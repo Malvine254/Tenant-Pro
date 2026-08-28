@@ -84,29 +84,59 @@
 
         </LinearLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilQueryLandlord"
-            style="@style/Theme.TenantPro.TextInputLayout.ExposedDropdown"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
             android:layout_marginBottom="10dp"
-            android:hint="Landlord and property"
-            app:endIconMode="dropdown_menu">
+            app:cardBackgroundColor="@color/surface_variant"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/outline_variant"
+            app:strokeWidth="1dp">
 
-            <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                android:id="@+id/actQueryLandlord"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:ellipsize="end"
-                android:inputType="none"
-                android:maxLines="1"
-                android:minHeight="56dp"
-                android:paddingHorizontal="12dp"
-                android:textColor="@color/on_surface"
-                android:textSize="14sp" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:orientation="vertical"
+                android:padding="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="CHAT WITH"
+                    android:textColor="@color/secondary"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilQueryLandlord"
+                    style="@style/Theme.TenantPro.TextInputLayout.ExposedDropdown"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:hint="Choose landlord and property"
+                    app:endIconMode="dropdown_menu"
+                    app:startIconDrawable="@drawable/ic_home"
+                    app:startIconTint="@color/primary">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/actQueryLandlord"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:ellipsize="end"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        android:minHeight="54dp"
+                        android:paddingHorizontal="12dp"
+                        android:textColor="@color/on_surface"
+                        android:textSize="14sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 
     <FrameLayout
