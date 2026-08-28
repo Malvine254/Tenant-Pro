@@ -148,6 +148,6 @@ val syncDebugApkToPortal by tasks.registering(Copy::class) {
     rename { "app-debug.apk" }
 }
 
-tasks.named("assembleDebug") {
+tasks.matching { it.name == "assembleDebug" }.configureEach {
     finalizedBy(syncDebugApkToPortal)
 }
