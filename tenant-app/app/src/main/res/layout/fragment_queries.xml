@@ -106,7 +106,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:text="CHAT WITH"
-                    android:textColor="@color/secondary"
+                    android:textColor="@color/primary"
                     android:textSize="10sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.08" />
@@ -177,7 +177,7 @@
         android:paddingHorizontal="12dp"
         android:paddingVertical="7dp"
         android:text="Property Manager is typing…"
-        android:textColor="@color/secondary"
+        android:textColor="@color/primary"
         android:textSize="11sp"
         android:textStyle="italic"
         android:visibility="gone" />
@@ -198,7 +198,7 @@
             android:layout_height="36dp"
             android:layout_marginBottom="6dp"
             android:visibility="gone"
-            app:cardBackgroundColor="@color/secondary_light"
+            app:cardBackgroundColor="@color/primary_variant"
             app:cardCornerRadius="18dp"
             app:cardElevation="0dp"
             app:strokeColor="@color/info_border"
@@ -215,7 +215,7 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_file"
-                    android:tint="@color/secondary" />
+                    android:tint="@color/primary" />
 
                 <TextView
                     android:id="@+id/tvAttachmentPreview"
@@ -325,12 +325,12 @@
                 android:layout_width="46dp"
                 android:layout_height="46dp"
                 android:layout_marginStart="8dp"
-                android:background="@drawable/bg_circle_secondary"
+                android:background="@drawable/bg_circle_primary"
                 android:contentDescription="Send message"
                 android:padding="12dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_send"
-                android:tint="@color/on_secondary" />
+                android:tint="@color/on_primary" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

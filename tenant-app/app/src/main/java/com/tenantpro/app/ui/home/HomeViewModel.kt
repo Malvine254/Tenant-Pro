@@ -90,11 +90,11 @@ class HomeViewModel @Inject constructor(
             connectivity.isConnected
                 .drop(1)
                 .filter { it }
-                .collect { loadSummary() }
+                .collect { loadSummary(forceRefresh = true) }
         }
     }
 
-    fun loadSummary() {
+    fun loadSummary(forceRefresh: Boolean = false) {
         viewModelScope.launch {
             _summaryState.value = Resource.Loading
 
@@ -116,11 +116,13 @@ class HomeViewModel @Inject constructor(
             var profileUnits = emptyList<HomeUnitItem>()
             var activeUnitIds = emptySet<String>()
             var profileLoaded = false
+            var profileFromCache = false
 
             authRepository.claimMatchingInvitations()
-            when (val profileResult = authRepository.getMyProfile()) {
+            when (val profileResult = authRepository.getMyProfile(forceRefresh)) {
                 is Resource.Success -> {
                     profileLoaded = true
+                    profileFromCache = profileResult.fromCache
                     val profile = profileResult.data
                     userName = profile.firstName
                         ?.trim()
@@ -161,7 +163,7 @@ class HomeViewModel @Inject constructor(
                 is Resource.Error, Resource.Loading -> Unit
             }
 
-            when (val result = invoiceRepository.getInvoices()) {
+            when (val result = invoiceRepository.getInvoices(forceRefresh)) {
                 is Resource.Success -> {
                     // Once the profile has loaded, only invoices belonging to an
                     // active tenancy may contribute to the Home dashboard.
@@ -316,7 +318,8 @@ class HomeViewModel @Inject constructor(
                             allOutstandingBills = allOutstandingBills,
                             totalDueThisMonth  = totalDueThisMonth,
                             currentMonth       = currentMonth
-                        )
+                        ),
+                        fromCache = result.fromCache || profileFromCache
                     )
                 }
                 is Resource.Error -> {

@@ -365,7 +365,7 @@
 
                     <div class="field">
                         <label for="account_reference">Account reference</label>
-                        <input id="account_reference" name="account_reference" value="{{ old('account_reference', $paymentSettings['account_reference'] ?? 'Tenant Pro') }}" placeholder="Primary rent account">
+                        <input id="account_reference" name="account_reference" value="{{ old('account_reference', $paymentSettings['account_reference'] ?? '') }}" placeholder="Required for Paybill, e.g. UNIT-A12">
                     </div>
 
                     <div class="field">

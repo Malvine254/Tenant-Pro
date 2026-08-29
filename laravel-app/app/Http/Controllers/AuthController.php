@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TenantProUpdateMail;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Tenant;
@@ -349,19 +350,19 @@ class AuthController extends Controller
             'hash' => Hash::make($code),
         ], now()->addMinutes(10));
 
-        Mail::html(
-            '<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:28px">'
-            .'<h2 style="color:#1a2744">Verify your email</h2>'
-            .'<p>Hello '.e($user->first_name ?: $user->name ?: 'there').',</p>'
-            .'<p>Use this code to finish setting up your TenantPro account:</p>'
-            .'<div style="font-size:32px;font-weight:700;letter-spacing:8px;color:#274690;padding:20px 0">'
-            .e($code).'</div>'
-            .'<p>This code expires in 10 minutes. If you did not request it, you can ignore this email.</p>'
-            .'</div>',
-            function ($message) use ($user) {
-                $message->to($user->email, $user->name)->subject('Your TenantPro verification code');
-            }
-        );
+        Mail::to($user->email, $user->name)->send(new TenantProUpdateMail(
+            subjectLine: 'Your Tenant Pro verification code',
+            preheader: 'Use this secure code to verify your email address.',
+            title: 'Verify your email',
+            introLines: [
+                'Hello '.($user->first_name ?: $user->name ?: 'there').',',
+                'Use the verification code below to finish setting up your Tenant Pro account.',
+            ],
+            footerText: 'This code expires in 10 minutes. If you did not request it, you can safely ignore this email.',
+            eyebrow: 'Account security',
+            highlightLabel: 'Verification code',
+            highlightValue: $code,
+        ));
     }
 
     private function otpCacheKey(string $email): string
@@ -378,19 +379,19 @@ class AuthController extends Controller
             'hash' => Hash::make($code),
         ], now()->addMinutes(10));
 
-        Mail::html(
-            '<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:28px">'
-            .'<h2 style="color:#1a2744">Reset your password</h2>'
-            .'<p>Hello '.e($user->first_name ?: $user->name ?: 'there').',</p>'
-            .'<p>Use this code to reset your TenantPro password:</p>'
-            .'<div style="font-size:32px;font-weight:700;letter-spacing:8px;color:#274690;padding:20px 0">'
-            .e($code).'</div>'
-            .'<p>This code expires in 10 minutes. If you did not request it, you can ignore this email.</p>'
-            .'</div>',
-            function ($message) use ($user) {
-                $message->to($user->email, $user->name)->subject('Your TenantPro password reset code');
-            }
-        );
+        Mail::to($user->email, $user->name)->send(new TenantProUpdateMail(
+            subjectLine: 'Your Tenant Pro password reset code',
+            preheader: 'Use this secure code to reset your password.',
+            title: 'Reset your password',
+            introLines: [
+                'Hello '.($user->first_name ?: $user->name ?: 'there').',',
+                'Use the code below to reset your Tenant Pro password.',
+            ],
+            footerText: 'This code expires in 10 minutes. If you did not request it, you can safely ignore this email.',
+            eyebrow: 'Account security',
+            highlightLabel: 'Password reset code',
+            highlightValue: $code,
+        ));
     }
 
     private function passwordResetCacheKey(string $email): string

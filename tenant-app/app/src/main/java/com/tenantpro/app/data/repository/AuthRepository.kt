@@ -18,11 +18,15 @@ import com.tenantpro.app.data.model.UserProfile
 import com.tenantpro.app.data.model.VerifyEmailOtpRequest
 import com.tenantpro.app.data.model.VerifyOtpRequest
 import com.tenantpro.app.data.api.ApiErrorMapper
+import com.tenantpro.app.data.local.CacheKeys
+import com.tenantpro.app.data.local.CachePolicy
+import com.tenantpro.app.data.local.SafeResponseCache
 import com.tenantpro.app.utils.DataStoreManager
 import com.tenantpro.app.utils.NotificationWorkScheduler
 import com.tenantpro.app.utils.Resource
 import com.tenantpro.app.utils.UploadPayloadResolver
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -37,7 +41,9 @@ import javax.inject.Singleton
 class AuthRepository @Inject constructor(
     private val api: ApiService,
     private val dataStore: DataStoreManager,
-    private val notificationWorkScheduler: NotificationWorkScheduler
+    private val notificationWorkScheduler: NotificationWorkScheduler,
+    private val cache: SafeResponseCache,
+    private val gson: Gson
 ) {
     private fun parseErrorMessage(response: retrofit2.Response<*>): String =
         ApiErrorMapper.fromResponse(response)
@@ -49,6 +55,7 @@ class AuthRepository @Inject constructor(
             when {
                 body == null -> Resource.Error("Login response was empty. Please try again.")
                 body.accessToken.isBlank() -> Resource.Error("Login response was missing a session token.")
+                body.user?.userId.isNullOrBlank() -> Resource.Error("Login response was missing the account identity.")
                 else -> {
                     val displayName = listOfNotNull(body.user?.firstName, body.user?.lastName)
                         .joinToString(" ")
@@ -58,7 +65,8 @@ class AuthRepository @Inject constructor(
                             token = body.accessToken,
                             phone = body.user?.phoneNumber ?: "",
                             name = displayName,
-                            email = body.user?.email
+                            email = body.user?.email,
+                            userId = body.user?.userId
                         )
                         body.user?.let { syncUserProfileToStore(it) }
                         saveBiometricSessionIfEnabled()
@@ -138,6 +146,7 @@ class AuthRepository @Inject constructor(
             when {
                 body == null -> Resource.Error("OTP response was empty. Please try again.")
                 body.accessToken.isBlank() -> Resource.Error("OTP response was missing a session token.")
+                body.user?.userId.isNullOrBlank() -> Resource.Error("OTP response was missing the account identity.")
                 else -> {
                     dataStore.saveAuthData(
                         token = body.accessToken,
@@ -145,7 +154,8 @@ class AuthRepository @Inject constructor(
                         name = listOfNotNull(body.user?.firstName, body.user?.lastName)
                             .joinToString(" ")
                             .ifBlank { null },
-                        email = body.user?.email
+                        email = body.user?.email,
+                        userId = body.user?.userId
                     )
                     body.user?.let { syncUserProfileToStore(it) }
                     saveBiometricSessionIfEnabled()
@@ -186,6 +196,7 @@ class AuthRepository @Inject constructor(
 
     suspend fun logout() {
         notificationWorkScheduler.cancel()
+        cache.clearCurrentUser()
         dataStore.clearSession()
     }
 
@@ -201,7 +212,12 @@ class AuthRepository @Inject constructor(
     suspend fun getSavedPhone(): String? = dataStore.phoneNumber.firstOrNull()
 
     suspend fun claimMatchingInvitations(): Boolean = runCatching {
-        api.claimMatchingInvitations().isSuccessful
+        val response = api.claimMatchingInvitations()
+        if (response.isSuccessful && (response.body()?.connectedCount ?: 0) > 0) {
+            cache.remove(CacheKeys.PROFILE)
+            cache.remove(CacheKeys.INVOICES)
+        }
+        response.isSuccessful
     }.getOrDefault(false)
 
     private suspend fun syncUserProfileToStore(user: UserProfile) {
@@ -212,7 +228,8 @@ class AuthRepository @Inject constructor(
             token = dataStore.accessToken.firstOrNull() ?: "",
             phone = user.phoneNumber,
             name = displayName,
-            email = user.email
+            email = user.email,
+            userId = user.userId
         )
 
         dataStore.saveProfileData(
@@ -234,39 +251,68 @@ class AuthRepository @Inject constructor(
     }
 
     /** Fetches the current user's basic profile from the backend. */
-    suspend fun getCurrentUser(): Resource<UserProfile> = try {
-        val response = api.getMe()
-        if (response.isSuccessful) {
-            val user = response.body()
-            if (user == null) {
-                Resource.Error("Profile response was empty. Please try again.")
-            } else {
-                syncUserProfileToStore(user)
-                Resource.Success(user)
-            }
-        } else {
-            Resource.Error(parseErrorMessage(response))
+    suspend fun getCurrentUser(forceRefresh: Boolean = false): Resource<UserProfile> {
+        if (!forceRefresh) cachedProfile(CacheKeys.PROFILE_BASIC, CachePolicy.PROFILE_MS)?.let {
+            return Resource.Success(it, fromCache = true)
         }
-    } catch (e: Exception) {
-        Resource.Error(ApiErrorMapper.fromThrowable(e))
+        return try {
+            val response = api.getMe()
+            if (response.isSuccessful) {
+                val user = response.body()
+                if (user == null) Resource.Error("Profile response was empty. Please try again.")
+                else {
+                    syncUserProfileToStore(user)
+                    cache.write(CacheKeys.PROFILE_BASIC, gson.toJson(user))
+                    Resource.Success(user)
+                }
+            } else {
+                cachedProfile(CacheKeys.PROFILE_BASIC, CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+                    Resource.Success(it, fromCache = true)
+                } ?: Resource.Error(parseErrorMessage(response))
+            }
+        } catch (e: Exception) {
+            cachedProfile(CacheKeys.PROFILE_BASIC, CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+                Resource.Success(it, fromCache = true)
+            } ?: Resource.Error(ApiErrorMapper.fromThrowable(e))
+        }
     }
 
     /** Fetches the richer tenant profile including tenancy details. */
-    suspend fun getMyProfile(): Resource<UserProfile> = try {
-        val response = api.getMyProfile()
-        if (response.isSuccessful) {
-            val user = response.body()
-            if (user == null) {
-                Resource.Error("Profile response was empty. Please try again.")
-            } else {
-                syncUserProfileToStore(user)
-                Resource.Success(user)
-            }
-        } else {
-            Resource.Error(parseErrorMessage(response))
+    suspend fun getMyProfile(forceRefresh: Boolean = false): Resource<UserProfile> {
+        if (!forceRefresh) cachedProfile(CacheKeys.PROFILE, CachePolicy.PROFILE_MS)?.let {
+            return Resource.Success(it, fromCache = true)
         }
-    } catch (e: Exception) {
-        Resource.Error(ApiErrorMapper.fromThrowable(e))
+        return try {
+            val response = api.getMyProfile()
+            if (response.isSuccessful) {
+                val user = response.body()
+                if (user == null) Resource.Error("Profile response was empty. Please try again.")
+                else {
+                    syncUserProfileToStore(user)
+                    cache.write(CacheKeys.PROFILE, gson.toJson(user))
+                    Resource.Success(user)
+                }
+            } else {
+                cachedProfile(CacheKeys.PROFILE, CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+                    Resource.Success(it, fromCache = true)
+                } ?: Resource.Error(parseErrorMessage(response))
+            }
+        } catch (e: Exception) {
+            cachedProfile(CacheKeys.PROFILE, CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+                Resource.Success(it, fromCache = true)
+            } ?: Resource.Error(ApiErrorMapper.fromThrowable(e))
+        }
+    }
+
+    private suspend fun cachedProfile(key: String, maxAgeMillis: Long): UserProfile? =
+        cache.read(key, maxAgeMillis)?.let { payload ->
+            runCatching { gson.fromJson(payload, UserProfile::class.java) }.getOrNull()
+        }
+
+    private suspend fun cacheUpdatedProfile(user: UserProfile) {
+        val payload = gson.toJson(user)
+        cache.write(CacheKeys.PROFILE, payload)
+        cache.write(CacheKeys.PROFILE_BASIC, payload)
     }
 
     suspend fun updateMyProfile(
@@ -296,6 +342,7 @@ class AuthRepository @Inject constructor(
                 Resource.Error("Profile update response was empty. Please try again.")
             } else {
                 syncUserProfileToStore(user)
+                cacheUpdatedProfile(user)
                 Resource.Success(user)
             }
         } else {
@@ -326,6 +373,7 @@ class AuthRepository @Inject constructor(
                 Resource.Error("Settings update response was empty. Please try again.")
             } else {
                 syncUserProfileToStore(user)
+                cacheUpdatedProfile(user)
                 Resource.Success(user)
             }
         } else {
@@ -365,6 +413,7 @@ class AuthRepository @Inject constructor(
                     Resource.Error("Profile image response was empty. Please try again.")
                 } else {
                     syncUserProfileToStore(user)
+                    cacheUpdatedProfile(user)
                     Resource.Success(user)
                 }
             } else {
@@ -383,6 +432,7 @@ class AuthRepository @Inject constructor(
                 Resource.Error("Profile update response was empty. Please try again.")
             } else {
                 syncUserProfileToStore(user)
+                cacheUpdatedProfile(user)
                 dataStore.saveProfileImageUri("")
                 Resource.Success(user)
             }
@@ -396,6 +446,8 @@ class AuthRepository @Inject constructor(
     suspend fun acceptInvitation(code: String): Resource<String> = try {
         val response = api.acceptInvitation(AcceptInvitationRequest(code.trim()))
         if (response.isSuccessful) {
+            cache.remove(CacheKeys.PROFILE)
+            cache.remove(CacheKeys.INVOICES)
             Resource.Success(response.body()?.message ?: "Invitation accepted")
         } else {
             Resource.Error(parseErrorMessage(response))
@@ -428,6 +480,7 @@ class AuthRepository @Inject constructor(
             when {
                 body == null -> Resource.Error("Verification response was empty. Please try again.")
                 body.accessToken.isBlank() -> Resource.Error("Verification response was missing a session token.")
+                body.user?.userId.isNullOrBlank() -> Resource.Error("Verification response was missing the account identity.")
                 else -> {
                     val displayName = listOfNotNull(body.user?.firstName, body.user?.lastName)
                         .joinToString(" ")
@@ -436,7 +489,8 @@ class AuthRepository @Inject constructor(
                         token = body.accessToken,
                         phone = body.user?.phoneNumber ?: "",
                         name = displayName,
-                        email = body.user?.email
+                        email = body.user?.email,
+                        userId = body.user?.userId
                     )
                     body.user?.let { syncUserProfileToStore(it) }
                     saveBiometricSessionIfEnabled()

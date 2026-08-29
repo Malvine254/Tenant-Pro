@@ -41,6 +41,9 @@ class PaymentController extends Controller
         $this->requireUnitManager($user, Invoice::with('unit.property')->findOrFail($data['invoice_id'])->unit);
 
         $data['status'] = $data['status'] ?? 'SUCCESSFUL';
+        if ($data['status'] === 'SUCCESSFUL') {
+            $data['paid_at'] = now();
+        }
         $payment = Payment::create($data);
 
         $invoice = Invoice::find($data['invoice_id']);
@@ -53,6 +56,17 @@ class PaymentController extends Controller
                 $invoice->status = 'PARTIAL';
             }
             $invoice->save();
+
+            if (filled($payment->mpesa_receipt)) {
+                $payment->transactions()->create([
+                    'amount' => $payment->amount,
+                    'type' => 'MPESA_MANUAL',
+                    'description' => 'Manual M-Pesa payment verified by property management.',
+                    'external_reference' => $payment->mpesa_receipt,
+                    'processed_at' => $payment->paid_at ?? now(),
+                    'raw_payload' => ['verified_manually' => true],
+                ]);
+            }
         }
 
         if ($payment->status === 'SUCCESSFUL') {
@@ -86,6 +100,59 @@ class PaymentController extends Controller
         );
         if ($request->user()?->role?->name === 'LANDLORD') $this->requireUnitManager($request->user(), $invoice->unit);
         return response()->json($invoice->payments()->with('transactions')->latest()->get());
+    }
+
+    public function manualInstructions(Request $request)
+    {
+        abort_unless($this->isTenant($request->user()), 403, 'Only tenant accounts can view payment instructions.');
+        $data = $request->validate([
+            'invoiceIds' => 'required|array|min:1',
+            'invoiceIds.*' => 'required|uuid|distinct|exists:invoices,id',
+        ]);
+
+        $invoices = Invoice::with('unit.property.landlord')
+            ->whereIn('id', $data['invoiceIds'])
+            ->get();
+        abort_if($invoices->count() !== count($data['invoiceIds']), 422, 'One or more selected invoices are unavailable.');
+
+        foreach ($invoices as $invoice) {
+            abort_if($invoice->tenant_id !== $request->user()->id, 403);
+            abort_if(! $this->hasActiveTenancy($request->user()->id, $invoice->unit_id), 422, 'An invoice belongs to an inactive tenancy.');
+        }
+        abort_if(
+            $invoices->pluck('unit.property.landlord_id')->filter()->unique()->count() > 1,
+            422,
+            'Bills managed by different landlords require separate payment instructions.'
+        );
+
+        $landlord = $invoices->first()?->unit?->property?->landlord;
+        $settings = $landlord && is_array($landlord->app_settings)
+            ? ($landlord->app_settings['paymentSettings'] ?? [])
+            : [];
+        $type = strtoupper((string) ($settings['payment_type'] ?? 'PAYBILL')) === 'TILL' ? 'TILL' : 'PAYBILL';
+        $configuredNumber = trim((string) ($type === 'TILL'
+            ? ($settings['till_number'] ?? '')
+            : ($settings['paybill_number'] ?? '')));
+        $number = $configuredNumber;
+        $reference = trim((string) ($settings['account_reference'] ?? ''));
+        $isProduction = config('services.mpesa.environment') === 'production';
+        $hasRequiredDetails = $number !== '' && (
+            $type === 'TILL' || ($reference !== '' && strcasecmp($reference, 'Tenant Pro') !== 0)
+        );
+
+        return response()->json([
+            'available' => $isProduction && $hasRequiredDetails,
+            'stkAvailable' => $hasRequiredDetails,
+            'paymentType' => $type,
+            'businessNumber' => $number,
+            'accountReference' => $type === 'PAYBILL' ? $reference : null,
+            'businessName' => trim((string) ($settings['business_name'] ?? '')) ?: null,
+            'note' => trim((string) ($settings['short_code_note'] ?? '')) ?: null,
+            'verificationRequired' => true,
+            'message' => ! $isProduction
+                ? 'Manual M-Pesa payment is unavailable in test mode.'
+                : (! $hasRequiredDetails ? 'Your landlord has not completed the M-Pesa payment setup. Contact your property manager in Chat.' : null),
+        ]);
     }
 
     public function pay(Request $request, MpesaService $mpesa)
@@ -160,6 +227,7 @@ class PaymentController extends Controller
             $remaining = round($remaining - $allocated, 2);
         }
         $invoice = $orderedInvoices->first();
+        $landlordSettings = $this->landlordPaymentSettingsOrFail($invoice);
 
         $payment = Payment::create([
             'invoice_id' => $invoice->id,
@@ -218,11 +286,6 @@ class PaymentController extends Controller
         }
 
         try {
-            $landlord = $invoice->unit?->property?->landlord;
-            $landlordSettings = $landlord && is_array($landlord->app_settings)
-                ? ($landlord->app_settings['paymentSettings'] ?? [])
-                : [];
-
             $result = $mpesa->stkPush(
                 $data['phone_number'],
                 $amount,
@@ -387,6 +450,28 @@ class PaymentController extends Controller
             ->where('unit_id', $unitId)
             ->where('is_active', true)
             ->exists();
+    }
+
+    private function landlordPaymentSettingsOrFail(Invoice $invoice): array
+    {
+        $landlord = $invoice->unit?->property?->landlord;
+        $settings = $landlord && is_array($landlord->app_settings)
+            ? ($landlord->app_settings['paymentSettings'] ?? [])
+            : [];
+        abort_if(! is_array($settings) || $settings === [], 422, 'Your landlord has not configured M-Pesa payments yet.');
+
+        $type = strtoupper(trim((string) ($settings['payment_type'] ?? '')));
+        abort_if(! in_array($type, ['PAYBILL', 'TILL'], true), 422, 'Your landlord must select a Paybill or Till payment method.');
+
+        if ($type === 'TILL') {
+            abort_if(trim((string) ($settings['till_number'] ?? '')) === '', 422, 'Your landlord must configure a Till number before STK payments can be used.');
+        } else {
+            abort_if(trim((string) ($settings['paybill_number'] ?? '')) === '', 422, 'Your landlord must configure a Paybill number before STK payments can be used.');
+            $reference = trim((string) ($settings['account_reference'] ?? ''));
+            abort_if($reference === '' || strcasecmp($reference, 'Tenant Pro') === 0, 422, 'Your landlord must configure the Paybill account number before STK payments can be used.');
+        }
+
+        return $settings;
     }
 
     private function applyPaymentToInvoices(Payment $payment): void

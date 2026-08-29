@@ -44,6 +44,8 @@ import java.util.Locale
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
 
+    private var hasResumedOnce = false
+
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private val viewModel: HomeViewModel by viewModels()
@@ -61,7 +63,7 @@ class HomeFragment : Fragment() {
 
         binding.tvGreeting.text = getGreeting()
 
-        binding.swipeRefresh.setOnRefreshListener { viewModel.loadSummary() }
+        binding.swipeRefresh.setOnRefreshListener { viewModel.loadSummary(forceRefresh = true) }
 
         binding.tvViewAll.setOnClickListener {
             openInvoices(openOnly = false)
@@ -89,9 +91,6 @@ class HomeFragment : Fragment() {
                         is Resource.Success -> {
                             binding.progressBar.gone()
                             val s = state.data
-
-                            if (state.fromCache) binding.tvOfflineBanner.visible()
-                            else binding.tvOfflineBanner.gone()
 
                             binding.tvUserName.text = "Hi, ${s.userName}"
                             binding.tvCurrentMonth.text = s.currentMonth
@@ -593,8 +592,12 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Reconcile totals after returning from M-Pesa or another billing screen.
-        viewModel.loadSummary()
+        if (hasResumedOnce) {
+            // Reconcile totals after returning from M-Pesa or another billing screen.
+            viewModel.loadSummary(forceRefresh = true)
+        } else {
+            hasResumedOnce = true
+        }
     }
 
     private fun Int.dp(): Int = (this * resources.displayMetrics.density).toInt()

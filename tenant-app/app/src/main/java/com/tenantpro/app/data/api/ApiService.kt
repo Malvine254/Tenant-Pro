@@ -118,6 +118,11 @@ interface ApiService {
         @Body body: InitiatePaymentRequest
     ): Response<InitiatePaymentResponse>
 
+    @POST("payments/manual-instructions")
+    suspend fun getManualPaymentInstructions(
+        @Body body: com.tenantpro.app.data.model.ManualPaymentInstructionsRequest
+    ): Response<com.tenantpro.app.data.model.ManualPaymentInstructions>
+
     /** GET /payments/invoice/{invoiceId}  — payment history for one invoice */
     @GET("payments")
     suspend fun getPayments(@Query("per_page") perPage: Int = 100): Response<JsonElement>

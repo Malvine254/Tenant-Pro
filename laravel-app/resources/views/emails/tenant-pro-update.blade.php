@@ -1,70 +1,24 @@
 <!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $subjectLine }}</title>
-</head>
-<body style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#172033;">
-    <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">
-        {{ $preheader }}
-    </span>
-
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;margin:0;padding:32px 12px;">
-        <tr>
-            <td align="center">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 20px 60px rgba(15,23,42,.10);">
-                    <tr>
-                        <td style="background:linear-gradient(135deg,#1a2744,#2f80ed);padding:30px 34px;color:#ffffff;">
-                            <div style="font-size:14px;letter-spacing:.14em;text-transform:uppercase;opacity:.82;">Starmax TenantPro</div>
-                            <h1 style="margin:12px 0 0;font-size:28px;line-height:1.18;font-weight:800;">{{ $title }}</h1>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td style="padding:32px 34px 14px;">
-                            @foreach($introLines as $line)
-                                <p style="margin:0 0 14px;font-size:16px;line-height:1.65;color:#334155;">{{ $line }}</p>
-                            @endforeach
-                        </td>
-                    </tr>
-
-                    @if(!empty($details))
-                        <tr>
-                            <td style="padding:0 34px 22px;">
-                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
-                                    @foreach($details as $label => $value)
-                                        <tr>
-                                            <td style="width:42%;padding:13px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;font-size:13px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;">{{ $label }}</td>
-                                            <td style="padding:13px 16px;border-bottom:1px solid #e2e8f0;font-size:15px;color:#0f172a;font-weight:600;">{{ $value }}</td>
-                                        </tr>
-                                    @endforeach
-                                </table>
-                            </td>
-                        </tr>
-                    @endif
-
-                    @if($actionLabel && $actionUrl)
-                        <tr>
-                            <td style="padding:0 34px 30px;">
-                                <a href="{{ $actionUrl }}" style="display:inline-block;background:#2f80ed;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;padding:14px 22px;border-radius:999px;">{{ $actionLabel }}</a>
-                            </td>
-                        </tr>
-                    @endif
-
-                    <tr>
-                        <td style="padding:22px 34px;background:#f8fafc;border-top:1px solid #e2e8f0;">
-                            <p style="margin:0;font-size:13px;line-height:1.6;color:#64748b;">
-                                {{ $footerText ?: 'This is an automated TenantPro update from Starmax Ltd.' }}
-                            </p>
-                            <p style="margin:12px 0 0;font-size:12px;color:#94a3b8;">
-                                © {{ date('Y') }} Starmax Ltd. Please do not reply to this automated email.
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ $subjectLine }}</title></head>
+<body style="margin:0;padding:0;background:#f7f8fc;font-family:Arial,Helvetica,sans-serif;color:#071226">
+<span style="display:none!important;visibility:hidden;opacity:0;height:0;overflow:hidden">{{ $preheader }}</span>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f7f8fc;padding:28px 12px"><tr><td align="center">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#fff;border:1px solid #dde3ee;border-radius:18px;overflow:hidden">
+<tr><td style="height:5px;background:#1f2edb;font-size:0">&nbsp;</td></tr>
+<tr><td style="background:#071226;padding:22px 30px"><table role="presentation" width="100%"><tr><td style="width:48px"><div style="width:40px;height:40px;line-height:40px;text-align:center;border-radius:10px;background:#fff;color:#071226;font-size:15px;font-weight:800">TP</div></td><td style="color:#fff"><div style="font-size:17px;font-weight:800">Tenant Pro</div><div style="margin-top:2px;font-size:11px;color:#cbd5e1">Property management, made clear</div></td></tr></table></td></tr>
+<tr><td style="padding:30px 30px 12px">@if($eyebrow)<div style="margin-bottom:8px;color:#1f2edb;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">{{ $eyebrow }}</div>@endif<h1 style="margin:0;color:#071226;font-size:25px;line-height:1.25">{{ $title }}</h1></td></tr>
+@if(!empty($introLines))<tr><td style="padding:8px 30px 16px">@foreach($introLines as $line)<p style="margin:0 0 12px;color:#475569;font-size:15px;line-height:1.65">{{ $line }}</p>@endforeach</td></tr>@endif
+@if($highlightValue)<tr><td style="padding:2px 30px 24px"><div style="border:1px solid #dde3ee;border-radius:14px;background:#f7f8fc;padding:18px;text-align:center">@if($highlightLabel)<div style="color:#64748b;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">{{ $highlightLabel }}</div>@endif<div style="margin-top:7px;color:#071226;font-size:30px;font-weight:800;letter-spacing:.18em">{{ $highlightValue }}</div></div></td></tr>@endif
+@if($document)
+<tr><td style="padding:4px 30px 24px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #dde3ee;border-radius:14px;overflow:hidden">
+<tr><td style="padding:18px;background:#f7f8fc"><div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase">Invoice</div><div style="margin-top:5px;font-size:17px;font-weight:800">{{ $document['number'] ?? '—' }}</div></td><td align="right" style="padding:18px;background:#f7f8fc"><span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#eaf8ef;color:#166534;font-size:10px;font-weight:800;text-transform:uppercase">{{ $document['status'] ?? 'Issued' }}</span></td></tr>
+<tr><td colspan="2" style="padding:16px 18px;border-top:1px solid #dde3ee"><table role="presentation" width="100%"><tr><td style="color:#64748b;font-size:12px;line-height:1.6"><strong style="color:#071226">Bill to</strong><br>{{ $document['billTo'] ?? 'Tenant' }}<br>{{ $document['property'] ?? '' }}{{ !empty($document['unit']) ? ' · '.$document['unit'] : '' }}</td><td align="right" style="color:#64748b;font-size:12px;line-height:1.6"><strong style="color:#071226">Issued:</strong> {{ $document['issueDate'] ?? '—' }}<br><strong style="color:#071226">Due:</strong> {{ $document['dueDate'] ?? '—' }}</td></tr></table></td></tr>
+<tr><td colspan="2" style="padding:0 18px 14px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse"><tr><th align="left" style="padding:10px 8px;background:#071226;color:#fff;font-size:10px;text-transform:uppercase">Description</th><th align="left" style="padding:10px 8px;background:#071226;color:#fff;font-size:10px;text-transform:uppercase">Period</th><th align="right" style="padding:10px 8px;background:#071226;color:#fff;font-size:10px;text-transform:uppercase">Amount</th></tr>@foreach(($document['lineItems'] ?? []) as $item)<tr><td style="padding:11px 8px;border-bottom:1px solid #e8ecf5;font-size:13px;font-weight:600">{{ $item['description'] ?? 'Charge' }}</td><td style="padding:11px 8px;border-bottom:1px solid #e8ecf5;color:#64748b;font-size:12px">{{ $item['period'] ?? '—' }}</td><td align="right" style="padding:11px 8px;border-bottom:1px solid #e8ecf5;font-size:13px;font-weight:700">{{ $item['amount'] ?? '—' }}</td></tr>@endforeach</table></td></tr>
+<tr><td colspan="2" style="padding:0 18px 18px"><table role="presentation" width="100%">@foreach(($document['totals'] ?? []) as $label => $value)<tr><td align="right" style="padding:5px 10px;color:#64748b;font-size:12px">{{ $label }}</td><td align="right" style="width:130px;padding:5px 0;font-size:13px;font-weight:700">{{ $value }}</td></tr>@endforeach<tr><td align="right" style="padding:10px 10px 0;border-top:2px solid #071226;font-size:13px;font-weight:800">Balance due</td><td align="right" style="padding:10px 0 0;border-top:2px solid #071226;font-size:17px;font-weight:800">{{ $document['balance'] ?? '—' }}</td></tr></table></td></tr>
+</table></td></tr>
+@elseif(!empty($details))
+<tr><td style="padding:2px 30px 24px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #dde3ee;border-radius:14px;overflow:hidden">@foreach($details as $label => $value)<tr><td style="width:40%;padding:12px 14px;background:#f7f8fc;border-bottom:1px solid #e8ecf5;color:#64748b;font-size:11px;font-weight:800;text-transform:uppercase">{{ $label }}</td><td style="padding:12px 14px;border-bottom:1px solid #e8ecf5;font-size:14px;font-weight:600;word-break:break-word">{{ $value }}</td></tr>@endforeach</table></td></tr>
+@endif
+@if($actionLabel && $actionUrl)<tr><td style="padding:0 30px 30px"><a href="{{ $actionUrl }}" style="display:inline-block;background:#071226;color:#fff;text-decoration:none;font-size:14px;font-weight:800;padding:13px 20px;border-radius:10px">{{ $actionLabel }}</a></td></tr>@endif
+<tr><td style="padding:20px 30px;background:#f7f8fc;border-top:1px solid #dde3ee"><p style="margin:0;color:#64748b;font-size:12px;line-height:1.6">{{ $footerText ?: 'This message was sent automatically by Tenant Pro.' }}</p><p style="margin:10px 0 0;color:#94a3b8;font-size:11px">&copy; {{ date('Y') }} Tenant Pro by Starmax Ltd. Please do not reply to this automated email.</p></td></tr>
+</table></td></tr></table></body></html>

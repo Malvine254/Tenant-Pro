@@ -3,6 +3,7 @@ package com.tenantpro.app.ui.payment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tenantpro.app.data.model.InitiatePaymentResponse
+import com.tenantpro.app.data.model.ManualPaymentInstructions
 import com.tenantpro.app.data.repository.AuthRepository
 import com.tenantpro.app.data.repository.PaymentRepository
 import com.tenantpro.app.utils.Resource
@@ -24,6 +25,9 @@ class PaymentViewModel @Inject constructor(
 
     private val _savedPhone = MutableStateFlow<String?>(null)
     val savedPhone: StateFlow<String?> = _savedPhone.asStateFlow()
+
+    private val _manualInstructions = MutableStateFlow<Resource<ManualPaymentInstructions>?>(null)
+    val manualInstructions: StateFlow<Resource<ManualPaymentInstructions>?> = _manualInstructions.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -51,6 +55,14 @@ class PaymentViewModel @Inject constructor(
         viewModelScope.launch {
             _payState.value = Resource.Loading
             _payState.value = paymentRepository.initiatePayment(invoiceIds, phoneNumber, amount)
+        }
+    }
+
+    fun loadManualInstructions(invoiceIds: List<String>) {
+        if (invoiceIds.isEmpty() || _manualInstructions.value is Resource.Loading) return
+        viewModelScope.launch {
+            _manualInstructions.value = Resource.Loading
+            _manualInstructions.value = paymentRepository.getManualPaymentInstructions(invoiceIds)
         }
     }
 

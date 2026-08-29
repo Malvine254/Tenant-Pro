@@ -18,7 +18,8 @@ data class InvoiceGroup(val key: String, val title: String, val invoices: List<I
 
 class InvoiceAdapter(
     private val onGroupClick: (InvoiceGroup) -> Unit,
-    private val onGroupPayClick: (InvoiceGroup) -> Unit
+    private val onGroupPayClick: (InvoiceGroup) -> Unit,
+    private val onGroupDownloadClick: (InvoiceGroup) -> Unit
 ) : ListAdapter<InvoiceGroup, InvoiceAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     inner class ViewHolder(private val binding: ItemInvoiceGroupBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -40,6 +41,7 @@ class InvoiceAdapter(
             }
             binding.btnPayGroup.text = if (payableCount > 1) "Pay $payableCount bills" else "Pay"
             binding.btnPayGroup.setOnClickListener { onGroupPayClick(group) }
+            binding.btnDownloadGroup.setOnClickListener { onGroupDownloadClick(group) }
             binding.root.setOnClickListener { onGroupClick(group) }
         }
     }

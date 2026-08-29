@@ -70,7 +70,8 @@ class InvoicesFragment : Fragment() {
     private val adapter by lazy {
         InvoiceAdapter(
             onGroupClick = ::showGroupDetailDialog,
-            onGroupPayClick = ::openGroupPayment
+            onGroupPayClick = ::openGroupPayment,
+            onGroupDownloadClick = ::exportInvoiceGroupPdf
         )
     }
 
@@ -87,8 +88,8 @@ class InvoicesFragment : Fragment() {
         binding.rvInvoices.layoutManager = LinearLayoutManager(requireContext())
         binding.rvInvoices.adapter = adapter
 
-        binding.swipeRefresh.setOnRefreshListener { viewModel.loadInvoices() }
-        binding.btnRetry.setOnClickListener { viewModel.loadInvoices() }
+        binding.swipeRefresh.setOnRefreshListener { viewModel.loadInvoices(forceRefresh = true) }
+        binding.btnRetry.setOnClickListener { viewModel.loadInvoices(forceRefresh = true) }
 
         setupSearch()
         setupSortToggle()
@@ -103,7 +104,7 @@ class InvoicesFragment : Fragment() {
         if (hasResumedOnce) {
             // Refresh after returning from Make Payment so a completed real or
             // simulated payment immediately updates the balance and status.
-            viewModel.loadInvoices()
+            viewModel.loadInvoices(forceRefresh = true)
         } else {
             hasResumedOnce = true
         }
@@ -328,6 +329,7 @@ class InvoicesFragment : Fragment() {
                 if (group.balance > 0.0) openGroupPayment(group)
             }
             .setNegativeButton(getString(R.string.invoice_close), null)
+            .setNeutralButton("Download PDF") { _, _ -> exportInvoiceGroupPdf(group) }
             .show()
     }
 
@@ -438,6 +440,121 @@ class InvoicesFragment : Fragment() {
     }
 
     // ── PDF export ────────────────────────────────────────────────────────────
+
+    private fun exportInvoiceGroupPdf(group: InvoiceGroup) {
+        try {
+            val doc = PdfDocument()
+            val pages = group.invoices.chunked(12).ifEmpty { listOf(emptyList()) }
+            pages.forEachIndexed { index, invoices ->
+                val page = doc.startPage(PdfDocument.PageInfo.Builder(595, 842, index + 1).create())
+                drawInvoiceGroupPage(
+                    canvas = page.canvas,
+                    group = group,
+                    invoices = invoices,
+                    pageNumber = index + 1,
+                    pageCount = pages.size,
+                    showTotals = index == pages.lastIndex
+                )
+                doc.finishPage(page)
+            }
+            val safe = group.invoices.firstOrNull()?.displayPeriod()
+                ?.replace(" ", "_")?.replace("/", "-") ?: "statement"
+            val filename = "TenantPro_Invoice_$safe.pdf"
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val values = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, filename)
+                    put(MediaStore.Downloads.MIME_TYPE, "application/pdf")
+                    put(MediaStore.Downloads.IS_PENDING, 1)
+                }
+                val resolver = requireContext().contentResolver
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                if (uri != null) {
+                    resolver.openOutputStream(uri)?.use { doc.writeTo(it) }
+                    values.clear()
+                    values.put(MediaStore.Downloads.IS_PENDING, 0)
+                    resolver.update(uri, values, null, null)
+                    doc.close()
+                    Toast.makeText(requireContext(), "Invoice saved to Downloads", Toast.LENGTH_SHORT).show()
+                    runCatching { startActivity(Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(uri, "application/pdf")
+                        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    }) }
+                    return
+                }
+            }
+
+            val dir = File(requireContext().externalCacheDir, "invoices").also { it.mkdirs() }
+            val file = File(dir, filename)
+            file.outputStream().use { doc.writeTo(it) }
+            doc.close()
+            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.provider", file)
+            startActivity(Intent.createChooser(Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/pdf")
+                flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            }, "Open invoice PDF"))
+        } catch (_: Exception) {
+            Toast.makeText(requireContext(), "Could not generate invoice PDF", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun drawInvoiceGroupPage(
+        canvas: Canvas,
+        group: InvoiceGroup,
+        invoices: List<Invoice>,
+        pageNumber: Int,
+        pageCount: Int,
+        showTotals: Boolean
+    ) {
+        val left = 42f
+        val right = 553f
+        val navy = Color.parseColor("#071226")
+        val muted = Color.parseColor("#64748B")
+        val border = Color.parseColor("#DDE3EE")
+        fun p(size: Float, color: Int, bold: Boolean = false, align: Paint.Align = Paint.Align.LEFT) =
+            Paint().apply { textSize = size; this.color = color; isFakeBoldText = bold; isAntiAlias = true; textAlign = align }
+
+        canvas.drawRect(0f, 0f, 595f, 82f, Paint().apply { color = navy })
+        canvas.drawText("Tenant Pro", left, 35f, p(22f, Color.WHITE, true))
+        canvas.drawText("INVOICE  ·  #${group.key.takeLast(10).uppercase()}", left, 59f, p(10f, Color.parseColor("#CBD5E1"), true))
+        canvas.drawText("Invoice", left, 124f, p(24f, navy, true))
+        canvas.drawText(group.title, left, 149f, p(11f, muted))
+        canvas.drawText("Issued ${SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())}", right, 124f, p(10f, muted, align = Paint.Align.RIGHT))
+        if (pageCount > 1) canvas.drawText("Page $pageNumber of $pageCount", right, 149f, p(9f, muted, align = Paint.Align.RIGHT))
+
+        var y = 180f
+        canvas.drawRect(left, y, right, y + 34f, Paint().apply { color = navy })
+        canvas.drawText("DESCRIPTION", left + 9f, y + 22f, p(9f, Color.WHITE, true))
+        canvas.drawText("PERIOD", 250f, y + 22f, p(9f, Color.WHITE, true))
+        canvas.drawText("AMOUNT", 385f, y + 22f, p(9f, Color.WHITE, true, Paint.Align.RIGHT))
+        canvas.drawText("PAID", 465f, y + 22f, p(9f, Color.WHITE, true, Paint.Align.RIGHT))
+        canvas.drawText("BALANCE", right - 8f, y + 22f, p(9f, Color.WHITE, true, Paint.Align.RIGHT))
+        y += 34f
+
+        invoices.forEach { invoice ->
+            canvas.drawText(invoice.billingType.toBillingLabel(), left + 9f, y + 25f, p(10f, navy, true))
+            canvas.drawText(invoice.displayPeriod() ?: "—", 250f, y + 25f, p(9f, muted))
+            canvas.drawText(invoice.effectiveTotalAmount().toKes(), 385f, y + 25f, p(9f, navy, align = Paint.Align.RIGHT))
+            canvas.drawText(invoice.paidAmount.toKes(), 465f, y + 25f, p(9f, navy, align = Paint.Align.RIGHT))
+            canvas.drawText(invoice.effectiveBalance().toKes(), right - 8f, y + 25f, p(9f, navy, true, Paint.Align.RIGHT))
+            canvas.drawLine(left, y + 39f, right, y + 39f, Paint().apply { color = border; strokeWidth = 1f })
+            y += 40f
+        }
+
+        if (showTotals) {
+            val paid = (group.total - group.balance).coerceAtLeast(0.0)
+            y += 18f
+            listOf("Invoice total" to group.total.toKes(), "Amount paid" to paid.toKes()).forEach { (label, value) ->
+                canvas.drawText(label, 430f, y, p(10f, muted, align = Paint.Align.RIGHT))
+                canvas.drawText(value, right, y, p(11f, navy, true, Paint.Align.RIGHT))
+                y += 24f
+            }
+            canvas.drawLine(350f, y - 8f, right, y - 8f, Paint().apply { color = navy; strokeWidth = 2f })
+            canvas.drawText("BALANCE DUE", 430f, y + 12f, p(11f, navy, true, Paint.Align.RIGHT))
+            canvas.drawText(group.balance.toKes(), right, y + 12f, p(16f, navy, true, Paint.Align.RIGHT))
+        }
+        canvas.drawText("Generated securely by Tenant Pro", left, 805f, p(9f, muted))
+    }
 
     private fun exportInvoicePdf(invoice: Invoice) {
         try {

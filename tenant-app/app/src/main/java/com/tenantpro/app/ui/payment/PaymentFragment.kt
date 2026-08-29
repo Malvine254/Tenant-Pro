@@ -1,5 +1,8 @@
 package com.tenantpro.app.ui.payment
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.tenantpro.app.data.model.ManualPaymentInstructions
 import com.tenantpro.app.databinding.FragmentPaymentBinding
 import com.tenantpro.app.utils.Resource
 import com.tenantpro.app.utils.gone
@@ -29,6 +33,7 @@ class PaymentFragment : Fragment() {
     private var _binding: FragmentPaymentBinding? = null
     private val binding get() = _binding!!
     private val viewModel: PaymentViewModel by viewModels()
+    private var stkPaymentConfigured = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -74,6 +79,49 @@ class PaymentFragment : Fragment() {
                 com.tenantpro.app.R.string.mpesa_full_balance_hint,
                 remainingAmount.toDouble().toKes()
             )
+
+        viewModel.loadManualInstructions(invoiceIds)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.manualInstructions.collect { state ->
+                    when (state) {
+                        is Resource.Loading -> {
+                            stkPaymentConfigured = false
+                            binding.btnPay.isEnabled = false
+                            binding.progressManualPayment.visible()
+                            binding.tvManualStatus.gone()
+                            binding.layoutManualDetails.gone()
+                        }
+                        is Resource.Success -> {
+                            binding.progressManualPayment.gone()
+                            val details = state.data
+                            stkPaymentConfigured = details.stkAvailable
+                            binding.btnPay.isEnabled = stkPaymentConfigured
+                            if (!details.available) {
+                                binding.layoutManualDetails.gone()
+                                binding.tvManualStatus.text = details.message
+                                    ?: "Manual payment details are not available. Contact your property manager in Chat."
+                                binding.tvManualStatus.visible()
+                            } else {
+                                binding.tvManualStatus.gone()
+                                showManualInstructions(details)
+                            }
+                        }
+                        is Resource.Error -> {
+                            stkPaymentConfigured = false
+                            binding.btnPay.isEnabled = false
+                            binding.progressManualPayment.gone()
+                            binding.layoutManualDetails.gone()
+                            binding.tvManualStatus.text =
+                                "Could not verify the landlord's M-Pesa setup. Reconnect and reopen this page, or contact your property manager in Chat."
+                            binding.tvManualStatus.visible()
+                        }
+                        null -> Unit
+                    }
+                }
+            }
+        }
 
         binding.btnPay.setOnClickListener {
             val phone = binding.etPhone.text?.toString()?.trim() ?: return@setOnClickListener
@@ -124,7 +172,7 @@ class PaymentFragment : Fragment() {
                         }
                         is Resource.Success -> {
                             binding.progressBar.gone()
-                            binding.btnPay.isEnabled = true
+                            binding.btnPay.isEnabled = stkPaymentConfigured
                             viewModel.reset()
                             showSuccessSnackbar(
                                 state.data.message ?: "Payment completed successfully."
@@ -133,7 +181,7 @@ class PaymentFragment : Fragment() {
                         }
                         is Resource.Error -> {
                             binding.progressBar.gone()
-                            binding.btnPay.isEnabled = true
+                            binding.btnPay.isEnabled = stkPaymentConfigured
                             showErrorSnackbar(state.message ?: "Payment failed", "Retry") {
                                 binding.btnPay.performClick()
                             }
@@ -143,6 +191,58 @@ class PaymentFragment : Fragment() {
                     }
                 }
             }
+        }
+    }
+
+    private fun showManualInstructions(details: ManualPaymentInstructions) {
+        val isTill = details.paymentType.equals("TILL", ignoreCase = true)
+        binding.tvManualBusinessName.text = details.businessName.orEmpty()
+        if (details.businessName.isNullOrBlank()) binding.tvManualBusinessName.gone()
+        else binding.tvManualBusinessName.visible()
+
+        binding.tvManualNumber.text = if (isTill) {
+            "Till number: ${details.businessNumber}"
+        } else {
+            "Paybill number: ${details.businessNumber}"
+        }
+        if (isTill) {
+            binding.tvManualReference.gone()
+        } else {
+            binding.tvManualReference.text = "Account number: ${details.accountReference.orEmpty()}"
+            binding.tvManualReference.visible()
+        }
+
+        binding.tvManualSteps.text = manualInstructionsText(details)
+        binding.btnCopyManualInstructions.setOnClickListener {
+            val amount = binding.etAmount.text?.toString()?.trim().orEmpty()
+            val copiedText = buildString {
+                append(manualInstructionsText(details))
+                if (amount.isNotBlank()) append("\nAmount: KES $amount")
+            }
+            val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("M-Pesa payment instructions", copiedText))
+            showSuccessSnackbar("Payment instructions copied")
+        }
+        binding.layoutManualDetails.visible()
+    }
+
+    private fun manualInstructionsText(details: ManualPaymentInstructions): String {
+        val isTill = details.paymentType.equals("TILL", ignoreCase = true)
+        return buildString {
+            append("1. Open M-PESA and choose Lipa na M-PESA.\n")
+            if (isTill) {
+                append("2. Choose Buy Goods and Services.\n")
+                append("3. Enter Till number ${details.businessNumber}.\n")
+                append("4. Enter the amount shown above and your M-PESA PIN.\n")
+                append("5. Confirm the business name before sending.")
+            } else {
+                append("2. Choose Pay Bill.\n")
+                append("3. Enter Business number ${details.businessNumber}.\n")
+                append("4. Enter Account number ${details.accountReference.orEmpty()}.\n")
+                append("5. Enter the amount shown above and your M-PESA PIN.\n")
+                append("6. Confirm the details before sending.")
+            }
+            details.note?.takeIf { it.isNotBlank() }?.let { append("\n\nNote: $it") }
         }
     }
 

@@ -45,7 +45,9 @@ class PaymentHistoryFragment : Fragment() {
         binding.rvPayments.layoutManager = LinearLayoutManager(requireContext())
         binding.rvPayments.adapter = adapter
 
-        binding.swipeRefresh.setOnRefreshListener { viewModel.load(invoiceId) }
+        binding.swipeRefresh.setOnRefreshListener {
+            viewModel.load(invoiceId, forceRefresh = true)
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

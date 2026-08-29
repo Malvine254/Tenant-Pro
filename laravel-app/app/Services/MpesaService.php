@@ -13,13 +13,13 @@ class MpesaService
     {
         $timestamp = now()->format('YmdHis');
         $settings = $this->resolveDarajaConfig($landlordSettings);
-        $shortCode = (string) ($settings['shortcode'] ?? config('services.mpesa.shortcode'));
+        $shortCode = trim((string) ($settings['shortcode'] ?? ''));
         $passkey = (string) ($settings['passkey'] ?? config('services.mpesa.passkey'));
         $transactionType = (string) ($settings['transaction_type'] ?? 'CustomerPayBillOnline');
-        $accountReference = (string) ($settings['account_reference'] ?? substr($reference, 0, 12));
+        $accountReference = trim((string) ($settings['account_reference'] ?? ''));
 
-        if ($shortCode === '' || $passkey === '') {
-            throw new RuntimeException('M-Pesa shortcode or passkey is not configured.');
+        if ($shortCode === '' || $passkey === '' || $accountReference === '') {
+            throw new RuntimeException('M-Pesa payment details are incomplete. Configure the shortcode and account reference first.');
         }
 
         $response = $this->client()->post('/mpesa/stkpush/v1/processrequest', [
@@ -54,23 +54,30 @@ class MpesaService
         $paymentType = strtoupper((string) ($settings['payment_type'] ?? 'PAYBILL'));
 
         if ($paymentType === 'TILL') {
-            $shortcode = (string) ($settings['till_number'] ?? config('services.mpesa.shortcode'));
+            $shortcode = trim((string) ($settings['till_number'] ?? ''));
+            if ($shortcode === '') {
+                throw new RuntimeException('A Till number must be configured before requesting an STK Push.');
+            }
             return [
                 'shortcode' => $shortcode,
                 'passkey' => (string) config('services.mpesa.passkey'),
                 'transaction_type' => 'CustomerBuyGoodsOnline',
                 'party_b' => $shortcode,
-                'account_reference' => (string) ($settings['account_reference'] ?? 'Tenant Pro'),
+                'account_reference' => trim((string) ($settings['account_reference'] ?? '')) ?: 'Till payment',
             ];
         }
 
-        $shortcode = (string) ($settings['paybill_number'] ?? config('services.mpesa.shortcode'));
+        $shortcode = trim((string) ($settings['paybill_number'] ?? ''));
+        $accountReference = trim((string) ($settings['account_reference'] ?? ''));
+        if ($shortcode === '' || $accountReference === '' || strcasecmp($accountReference, 'Tenant Pro') === 0) {
+            throw new RuntimeException('A Paybill number and account reference must be configured before requesting an STK Push.');
+        }
         return [
             'shortcode' => $shortcode,
             'passkey' => (string) config('services.mpesa.passkey'),
             'transaction_type' => 'CustomerPayBillOnline',
             'party_b' => $shortcode,
-            'account_reference' => (string) ($settings['account_reference'] ?? 'Tenant Pro'),
+            'account_reference' => $accountReference,
         ];
     }
 

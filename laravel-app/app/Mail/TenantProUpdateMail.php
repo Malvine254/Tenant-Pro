@@ -19,6 +19,10 @@ class TenantProUpdateMail extends Mailable
         public ?string $actionLabel = null,
         public ?string $actionUrl = null,
         public ?string $footerText = null,
+        public ?string $eyebrow = null,
+        public ?string $highlightLabel = null,
+        public ?string $highlightValue = null,
+        public ?array $document = null,
     ) {
     }
 
@@ -36,6 +40,10 @@ class TenantProUpdateMail extends Mailable
                 'actionLabel' => $this->actionLabel,
                 'actionUrl' => $this->actionUrl,
                 'footerText' => $this->footerText,
+                'eyebrow' => $this->eyebrow,
+                'highlightLabel' => $this->highlightLabel,
+                'highlightValue' => $this->highlightValue,
+                'document' => $this->document,
             ]);
     }
 }

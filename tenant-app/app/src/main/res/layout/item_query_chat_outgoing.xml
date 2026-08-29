@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="72dp"
-        app:cardBackgroundColor="@color/secondary"
+        app:cardBackgroundColor="@color/primary"
         app:cardCornerRadius="8dp"
         app:cardElevation="0dp"
         app:strokeWidth="0dp">
@@ -32,7 +32,7 @@
                 android:layout_height="wrap_content"
                 android:alpha="0.75"
                 android:textAllCaps="true"
-                android:textColor="@color/on_secondary"
+                android:textColor="@color/on_primary"
                 android:textSize="9sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
@@ -42,7 +42,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:maxWidth="238dp"
-                android:textColor="@color/on_secondary"
+                android:textColor="@color/on_primary"
                 android:textSize="12sp"
                 android:lineSpacingMultiplier="1.25" />
 
@@ -70,7 +70,7 @@
                     android:layout_width="15dp"
                     android:layout_height="15dp"
                     android:src="@drawable/ic_file"
-                    android:tint="@color/on_secondary" />
+                    android:tint="@color/on_primary" />
 
                 <TextView
                     android:id="@+id/tvAttachmentName"
@@ -80,7 +80,7 @@
                     android:ellipsize="middle"
                     android:maxWidth="190dp"
                     android:singleLine="true"
-                    android:textColor="@color/on_secondary"
+                    android:textColor="@color/on_primary"
                     android:textSize="11sp" />
             </LinearLayout>
 
@@ -91,7 +91,7 @@
                 android:layout_gravity="end"
                 android:layout_marginTop="4dp"
                 android:alpha="0.75"
-                android:textColor="@color/on_secondary"
+                android:textColor="@color/on_primary"
                 android:textSize="9sp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -101,7 +101,7 @@
         android:layout_height="30dp"
         android:layout_gravity="bottom"
         android:layout_marginStart="8dp"
-        android:background="@drawable/bg_circle_secondary">
+        android:background="@drawable/bg_circle_primary">
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/ivAvatar"
@@ -118,7 +118,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:text="U"
-            android:textColor="@color/on_secondary"
+            android:textColor="@color/on_primary"
             android:textSize="10sp"
             android:textStyle="bold" />
     </FrameLayout>

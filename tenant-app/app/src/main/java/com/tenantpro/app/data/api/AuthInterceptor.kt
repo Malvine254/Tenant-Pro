@@ -1,5 +1,6 @@
 package com.tenantpro.app.data.api
 
+import com.tenantpro.app.data.local.SafeResponseCache
 import com.tenantpro.app.utils.DataStoreManager
 import com.tenantpro.app.utils.NotificationWorkScheduler
 import com.tenantpro.app.utils.SessionManager
@@ -15,7 +16,8 @@ import javax.inject.Singleton
 class AuthInterceptor @Inject constructor(
     private val dataStoreManager: DataStoreManager,
     private val sessionManager: SessionManager,
-    private val notificationWorkScheduler: NotificationWorkScheduler
+    private val notificationWorkScheduler: NotificationWorkScheduler,
+    private val cache: SafeResponseCache
 ) : Interceptor {
     private val sessionExpiredNotified = AtomicBoolean(false)
 
@@ -33,7 +35,10 @@ class AuthInterceptor @Inject constructor(
 
         if (response.code == 401 && !token.isNullOrBlank() && sessionExpiredNotified.compareAndSet(false, true)) {
             notificationWorkScheduler.cancel()
-            runBlocking { dataStoreManager.clearSession() }
+            runBlocking {
+                cache.clearCurrentUser()
+                dataStoreManager.clearSession()
+            }
             sessionManager.notifyExpired()
         } else if (response.code != 401) {
             sessionExpiredNotified.set(false)

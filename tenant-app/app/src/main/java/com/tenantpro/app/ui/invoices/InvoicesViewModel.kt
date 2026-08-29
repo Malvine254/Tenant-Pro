@@ -33,14 +33,14 @@ class InvoicesViewModel @Inject constructor(
             connectivity.isConnected
                 .drop(1)
                 .filter { it }
-                .collect { loadInvoices() }
+                .collect { loadInvoices(forceRefresh = true) }
         }
     }
 
-    fun loadInvoices() {
+    fun loadInvoices(forceRefresh: Boolean = false) {
         viewModelScope.launch {
             _invoicesState.value = Resource.Loading
-            _invoicesState.value = invoiceRepository.getInvoices()
+            _invoicesState.value = invoiceRepository.getInvoices(forceRefresh)
         }
     }
 

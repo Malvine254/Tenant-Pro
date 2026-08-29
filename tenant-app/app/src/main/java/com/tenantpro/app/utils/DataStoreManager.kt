@@ -24,6 +24,7 @@ class DataStoreManager @Inject constructor(
         private val KEY_PHONE_NUMBER = stringPreferencesKey("phone_number")
         private val KEY_USER_NAME    = stringPreferencesKey("user_name")
         private val KEY_USER_EMAIL   = stringPreferencesKey("user_email")
+        private val KEY_USER_ID      = stringPreferencesKey("user_id")
         private val KEY_PROFILE_IMAGE_URI = stringPreferencesKey("profile_image_uri")
         private val KEY_EMERGENCY_CONTACT = stringPreferencesKey("emergency_contact")
         private val KEY_PROFILE_BIO = stringPreferencesKey("profile_bio")
@@ -49,6 +50,9 @@ class DataStoreManager @Inject constructor(
 
     val userEmail: Flow<String?> = context.dataStore.data
         .map { it[KEY_USER_EMAIL] }
+
+    val userId: Flow<String?> = context.dataStore.data
+        .map { it[KEY_USER_ID] }
 
     val profileImageUri: Flow<String?> = context.dataStore.data
         .map { it[KEY_PROFILE_IMAGE_URI] }
@@ -86,12 +90,13 @@ class DataStoreManager @Inject constructor(
     val pendingFcmToken: Flow<String?> = context.dataStore.data
         .map { it[KEY_PENDING_FCM_TOKEN] }
 
-    suspend fun saveAuthData(token: String, phone: String, name: String?, email: String? = null) {
+    suspend fun saveAuthData(token: String, phone: String, name: String?, email: String? = null, userId: String? = null) {
         context.dataStore.edit { prefs ->
             prefs[KEY_ACCESS_TOKEN] = token
             prefs[KEY_PHONE_NUMBER] = phone
             if (name != null) prefs[KEY_USER_NAME] = name
             if (email != null) prefs[KEY_USER_EMAIL] = email
+            if (userId != null) prefs[KEY_USER_ID] = userId
         }
     }
 
@@ -212,8 +217,18 @@ class DataStoreManager @Inject constructor(
     suspend fun clearSession() {
         context.dataStore.edit { prefs ->
             prefs.remove(KEY_ACCESS_TOKEN)
+            prefs.remove(KEY_USER_ID)
+            prefs.remove(KEY_PHONE_NUMBER)
+            prefs.remove(KEY_USER_NAME)
+            prefs.remove(KEY_USER_EMAIL)
+            prefs.remove(KEY_PROFILE_IMAGE_URI)
+            prefs.remove(KEY_EMERGENCY_CONTACT)
+            prefs.remove(KEY_PROFILE_BIO)
+            prefs.remove(KEY_QUERY_CHAT_HISTORY)
+            prefs.remove(KEY_PENDING_SUPPORT_QUEUE)
             prefs.remove(KEY_LAST_NOTIFICATION_CHECKPOINT)
             prefs.remove(KEY_LAST_SUPPORT_REPLY_CHECKPOINT)
+            prefs.remove(KEY_BIOMETRIC_SESSION_TOKEN)
         }
     }
 

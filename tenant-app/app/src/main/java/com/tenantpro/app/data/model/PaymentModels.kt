@@ -18,6 +18,22 @@ data class InitiatePaymentResponse(
     @SerializedName(value = "merchantRequestID", alternate = ["merchantRequestId", "mpesaRequestId"]) val merchantRequestId: String? = null
 )
 
+data class ManualPaymentInstructionsRequest(
+    @SerializedName("invoiceIds") val invoiceIds: List<String>
+)
+
+data class ManualPaymentInstructions(
+    @SerializedName("available") val available: Boolean = false,
+    @SerializedName("stkAvailable") val stkAvailable: Boolean = false,
+    @SerializedName("paymentType") val paymentType: String = "PAYBILL",
+    @SerializedName("businessNumber") val businessNumber: String = "",
+    @SerializedName("accountReference") val accountReference: String? = null,
+    @SerializedName("businessName") val businessName: String? = null,
+    @SerializedName("note") val note: String? = null,
+    @SerializedName("verificationRequired") val verificationRequired: Boolean = true,
+    @SerializedName("message") val message: String? = null
+)
+
 // ─── Payment record ───────────────────────────────────────────────────────────
 
 data class Payment(

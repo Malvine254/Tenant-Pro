@@ -71,6 +71,8 @@ class TenantEmailService
             'actionLabel' => 'Open TenantPro app',
             'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'This is a periodic reminder. You will not receive duplicate reminders for the same reminder interval.',
+            'eyebrow' => 'Invoice reminder',
+            'document' => $this->invoiceDocument($invoice),
         ]);
     }
 
@@ -98,6 +100,8 @@ class TenantEmailService
             'actionLabel' => 'Open TenantPro app',
             'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'This is a periodic reminder to help avoid too-frequent notifications while keeping you updated.',
+            'eyebrow' => 'Overdue invoice',
+            'document' => $this->invoiceDocument($invoice),
         ]);
     }
 
@@ -278,6 +282,8 @@ class TenantEmailService
             'actionLabel' => 'View invoice',
             'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'Please pay before the due date to keep your account in good standing.',
+            'eyebrow' => 'Invoice issued',
+            'document' => $this->invoiceDocument($invoice),
         ]);
     }
 
@@ -501,5 +507,40 @@ class TenantEmailService
         }
 
         return date('F Y', mktime(0, 0, 0, (int) $invoice->period_month, 1, (int) $invoice->period_year));
+    }
+
+    private function invoiceDocument(Invoice $invoice): array
+    {
+        $type = ucfirst(strtolower(str_replace('_', ' ', (string) $invoice->billing_type)));
+        $lineItems = [[
+            'description' => $type.' charge',
+            'period' => $this->invoicePeriod($invoice),
+            'amount' => $invoice->amount_formatted,
+        ]];
+        if ((float) $invoice->penalty_amount > 0) {
+            $lineItems[] = [
+                'description' => 'Penalty / late fee',
+                'period' => $this->invoicePeriod($invoice),
+                'amount' => $invoice->penalty_amount_formatted,
+            ];
+        }
+
+        return [
+            'number' => '#'.strtoupper(substr(str_replace('-', '', (string) $invoice->id), -10)),
+            'status' => ucfirst(strtolower((string) $invoice->status)),
+            'billTo' => $invoice->tenant?->name ?? 'Tenant',
+            'property' => $invoice->unit?->property?->name ?? 'Property not specified',
+            'unit' => $invoice->unit?->unit_number ? 'Unit '.$invoice->unit->unit_number : null,
+            'issueDate' => $invoice->issue_date?->format('d M Y') ?? 'Not specified',
+            'dueDate' => $invoice->due_date?->format('d M Y') ?? 'Not specified',
+            'lineItems' => $lineItems,
+            'totals' => array_filter([
+                'Subtotal' => $invoice->amount_formatted,
+                'Penalty' => (float) $invoice->penalty_amount > 0 ? $invoice->penalty_amount_formatted : null,
+                'Invoice total' => $invoice->total_amount_formatted,
+                'Amount paid' => $invoice->paid_amount_formatted,
+            ], fn ($value) => $value !== null),
+            'balance' => $invoice->balance_amount_formatted,
+        ];
     }
 }

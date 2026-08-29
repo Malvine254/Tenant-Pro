@@ -51,6 +51,7 @@ Route::middleware('mobile.api.key')->group(function () {
 		Route::post('/invitations/accept', [InvitationController::class, 'accept']);
 		Route::post('/invitations/claim', [InvitationController::class, 'claim']);
 		Route::post('/payments/pay', [PaymentController::class, 'pay']);
+		Route::post('/payments/manual-instructions', [PaymentController::class, 'manualInstructions']);
 		Route::get('/payments/invoice/{invoice}', [PaymentController::class, 'forInvoice']);
 		Route::post('/support/upload', [SupportMessageController::class, 'upload']);
 		Route::post('/support/heartbeat', [SupportMessageController::class, 'heartbeat']);

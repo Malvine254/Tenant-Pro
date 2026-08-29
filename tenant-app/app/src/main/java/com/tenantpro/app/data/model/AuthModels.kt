@@ -94,5 +94,6 @@ data class AppSettings(
 data class MessageResponse(
     @SerializedName("message") val message: String = "Operation successful",
     @SerializedName("email") val email: String? = null,
-    @SerializedName("expiresAt") val expiresAt: String? = null
+    @SerializedName("expiresAt") val expiresAt: String? = null,
+    @SerializedName("connectedCount") val connectedCount: Int = 0
 )
