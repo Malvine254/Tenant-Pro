@@ -12,6 +12,7 @@ class MaintenanceRequestController extends Controller
         $user = $request->user();
         $query = MaintenanceRequest::with(['unit.property', 'reportedBy', 'assignedTo'])
             ->when($this->isTenant($user), fn($q) => $q->where('tenant_id', $user->id))
+            ->when($user?->role?->name === 'LANDLORD', fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id)))
             ->when($request->unit_id, fn($q) => $q->where('unit_id', $request->unit_id))
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->priority, fn($q) => $q->where('priority', $request->priority));
@@ -21,7 +22,9 @@ class MaintenanceRequestController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-        $tenant = $this->isTenant($user) ? $user->tenant()->with('unit')->first() : null;
+        $tenant = $this->isTenant($user)
+            ? $user->tenancies()->where('is_active', true)->when($request->input('unit_id'), fn($q, $unitId) => $q->where('unit_id', $unitId))->with('unit')->first()
+            : null;
 
         $request->merge([
             'tenant_id' => $request->input('tenant_id', $user?->id),
@@ -38,6 +41,8 @@ class MaintenanceRequestController extends Controller
             'priority' => 'in:LOW,MEDIUM,HIGH,URGENT',
         ]);
         abort_if($this->isTenant($user) && ($data['tenant_id'] !== $user->id || $data['reported_by_id'] !== $user->id), 403);
+        abort_if($this->isTenant($user) && !$this->hasActiveTenancy($user->id, $data['unit_id']), 403);
+        if (!$this->isTenant($user)) $this->requireUnitManager($user, \App\Models\Unit::findOrFail($data['unit_id']));
 
         $data['status'] = 'OPEN';
         return response()->json(MaintenanceRequest::create($data)->load(['unit', 'reportedBy']), 201);
@@ -47,12 +52,14 @@ class MaintenanceRequestController extends Controller
     {
         $user = request()->user();
         abort_if($this->isTenant($user) && $maintenanceRequest->tenant_id !== $user->id, 403);
+        if ($user?->role?->name === 'LANDLORD') $this->requireUnitManager($user, $maintenanceRequest->unit);
 
         return response()->json($maintenanceRequest->load(['unit.property', 'tenant', 'reportedBy', 'assignedTo']));
     }
 
     public function update(Request $request, MaintenanceRequest $maintenanceRequest)
     {
+        $this->requireUnitManager($request->user(), $maintenanceRequest->unit);
         $data = $request->validate([
             'status' => 'sometimes|in:OPEN,IN_PROGRESS,RESOLVED,CLOSED',
             'priority' => 'sometimes|in:LOW,MEDIUM,HIGH,URGENT',
@@ -70,6 +77,7 @@ class MaintenanceRequestController extends Controller
 
     public function destroy(MaintenanceRequest $maintenanceRequest)
     {
+        $this->requireUnitManager(request()->user(), $maintenanceRequest->unit);
         $maintenanceRequest->delete();
         return response()->json(null, 204);
     }
@@ -77,5 +85,13 @@ class MaintenanceRequestController extends Controller
     private function isTenant($user): bool
     {
         return $user?->role?->name === 'TENANT';
+    }
+
+    private function hasActiveTenancy(string $userId, string $unitId): bool
+    {
+        return \App\Models\Tenant::where('user_id', $userId)
+            ->where('unit_id', $unitId)
+            ->where('is_active', true)
+            ->exists();
     }
 }

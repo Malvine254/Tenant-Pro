@@ -28,10 +28,11 @@ class PaymentHistoryAdapter :
 
         fun bind(payment: Payment) {
             val callback = payment.transactions
-                ?.firstOrNull { it.type.equals("CALLBACK", ignoreCase = true) }
+                ?.firstOrNull { it.type.contains("CALLBACK", ignoreCase = true) }
             val receipt = payment.mpesaReceiptNumber?.takeIf { it.isNotBlank() }
                 ?: callback?.externalReference?.takeIf { it.isNotBlank() }
                 ?: callbackMetadataValue(callback?.rawPayload, "MpesaReceiptNumber")
+                ?: callback?.description?.let(::receiptFromDescription)
             val phone = payment.phoneNumber?.takeIf { it.isNotBlank() }
                 ?: callbackMetadataValue(callback?.rawPayload, "PhoneNumber")
             val paymentTime = payment.paidAt?.takeIf { it.isNotBlank() }
@@ -54,14 +55,19 @@ class PaymentHistoryAdapter :
                 ?: if (invoice?.periodMonth in 1..12 && invoice?.periodYear != null) {
                     "${DateFormatSymbols(Locale.getDefault()).shortMonths[invoice.periodMonth!! - 1]} ${invoice.periodYear}"
                 } else null
-            val billType = invoice?.billingType
-                ?.lowercase(Locale.getDefault())
-                ?.replaceFirstChar { it.titlecase(Locale.getDefault()) }
-                ?: "Payment"
+            val allocationCount = payment.metadata?.invoiceAllocations?.size ?: 0
+            val billType = if (allocationCount > 1) {
+                "$allocationCount bills"
+            } else {
+                invoice?.billingType
+                    ?.lowercase(Locale.getDefault())
+                    ?.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+                    ?: "Payment"
+            }
             binding.tvInvoice.text = listOfNotNull(billType, period).joinToString(" · ")
 
             val (textColor, bgRes) = when (payment.status.uppercase(Locale.ROOT)) {
-                "SUCCESS" -> Color.parseColor("#14532d") to R.drawable.bg_badge_green
+                "SUCCESS", "SUCCESSFUL" -> Color.parseColor("#14532d") to R.drawable.bg_badge_green
                 "FAILED", "REVERSED" -> Color.parseColor("#7f1d1d") to R.drawable.bg_badge_red
                 else -> Color.parseColor("#78350f") to R.drawable.bg_badge_yellow
             }
@@ -75,9 +81,11 @@ class PaymentHistoryAdapter :
                 val root = if (rawPayload.isJsonPrimitive && rawPayload.asJsonPrimitive.isString) {
                     JsonParser.parseString(rawPayload.asString)
                 } else rawPayload
-                val items = root.asJsonObject
-                    .getAsJsonObject("Body")
-                    .getAsJsonObject("stkCallback")
+                val rootObject = root.asJsonObject
+                val callbackObject = rootObject.getAsJsonObject("Body")
+                    ?.getAsJsonObject("stkCallback")
+                    ?: rootObject
+                val items = callbackObject
                     .getAsJsonObject("CallbackMetadata")
                     .getAsJsonArray("Item")
                 items.firstNotNullOfOrNull { item ->
@@ -85,6 +93,12 @@ class PaymentHistoryAdapter :
                     if (obj.get("Name")?.asString == name) obj.get("Value")?.asString else null
                 }
             }.getOrNull()
+
+        private fun receiptFromDescription(description: String): String? =
+            Regex("(?:receipt|code)\\s+([A-Za-z0-9-]+)", RegexOption.IGNORE_CASE)
+                .find(description)
+                ?.groupValues
+                ?.getOrNull(1)
 
         private fun formatPaymentDateTime(value: String?): String {
             if (value.isNullOrBlank()) return "—"

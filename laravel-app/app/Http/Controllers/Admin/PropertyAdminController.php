@@ -168,6 +168,10 @@ class PropertyAdminController extends Controller
     {
         $this->authorizeLandlordProperty($property);
 
+        if ($property->units()->exists()) {
+            return back()->with('error', 'Properties with units cannot be deleted. Preserve the rental and financial history.');
+        }
+
         $property->delete();
         return redirect()->route('admin.properties.index')->with('success', 'Property deleted.');
     }

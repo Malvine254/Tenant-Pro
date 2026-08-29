@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\DeploymentToolsController;
 use App\Http\Controllers\Admin\PropertyUnitAdminController;
 use App\Http\Controllers\Admin\InvitationAdminController;
 use App\Http\Controllers\Admin\MpesaSandboxTestController;
+use App\Http\Controllers\Admin\PaymentAdminController;
 use App\Http\Controllers\DownloadsController;
 use App\Http\Controllers\SiteController;
 use Illuminate\Support\Facades\Route;
@@ -57,12 +58,10 @@ Route::get('/products', [SiteController::class, 'products']);
 Route::get('/portfolio', [SiteController::class, 'portfolio']);
 Route::get('/contact', [SiteController::class, 'contact']);
 Route::post('/contact', [SiteController::class, 'submitContact']);
-Route::get('/mpesa-sandbox-test', [\App\Http\Controllers\PublicMpesaSandboxTestController::class, 'index'])->name('public.mpesa.sandbox-test.index');
-Route::post('/mpesa-sandbox-test', [\App\Http\Controllers\PublicMpesaSandboxTestController::class, 'store'])->name('public.mpesa.sandbox-test.store');
-Route::get('/deployment-tools-once', [DeploymentToolsController::class, 'once'])->name('deployment-tools.once');
-Route::post('/deployment-tools-once/run', [DeploymentToolsController::class, 'runOnce'])->name('deployment-tools.once.run');
-Route::get('/deployment-tools-testing', [DeploymentToolsController::class, 'publicIndex'])->name('deployment-tools.testing');
-Route::post('/deployment-tools-testing', [DeploymentToolsController::class, 'publicRun'])->name('deployment-tools.testing.run');
+Route::get('/deployment-tools-once', [DeploymentToolsController::class, 'once'])
+	->middleware('throttle:10,1')->name('deployment-tools.once');
+Route::post('/deployment-tools-once/run', [DeploymentToolsController::class, 'runOnce'])
+	->middleware('throttle:5,1')->name('deployment-tools.once.run');
 
 // Admin auth routes
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -109,6 +108,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 		Route::patch('/invitations/{invitation}/cancel', [InvitationAdminController::class, 'cancel'])->name('invitations.cancel');
 		Route::get('/invoices', [InvoiceAdminController::class, 'index'])->name('invoices.index');
 		Route::get('/invoices/{invoice}', [InvoiceAdminController::class, 'show'])->name('invoices.show');
+		Route::get('/payments', [PaymentAdminController::class, 'index'])->name('payments.index');
 		Route::get('/chats', [SupportChatAdminController::class, 'index'])->name('chats.index');
 		Route::post('/chats/{supportConversation}/reply', [SupportChatAdminController::class, 'reply'])->name('chats.reply');
 		Route::patch('/chats/{supportConversation}/toggle', [SupportChatAdminController::class, 'toggle'])->name('chats.toggle');

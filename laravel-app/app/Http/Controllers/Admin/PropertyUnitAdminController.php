@@ -131,8 +131,8 @@ class PropertyUnitAdminController extends Controller
         $this->authorizeLandlordProperty($property);
         abort_if($unit->property_id !== $property->id, 404);
 
-        if ($unit->tenant()->exists()) {
-            return back()->with('error', 'Cannot delete a unit with an assigned tenant.');
+        if ($unit->tenant()->exists() || $unit->invoices()->exists() || $unit->maintenanceRequests()->exists()) {
+            return back()->with('error', 'Units with tenancy, invoice or maintenance history cannot be deleted.');
         }
 
         $unit->delete();

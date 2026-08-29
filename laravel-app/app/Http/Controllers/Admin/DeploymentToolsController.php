@@ -15,15 +15,16 @@ class DeploymentToolsController extends Controller
     public function once(Request $request): View
     {
         $token = (string) $request->query('token', '');
+        $validToken = $this->deploymentUrlTokenValid($token);
 
         return view('deployment-tools-once', [
             'isConfigured' => $this->deploymentUrlTokenConfigured(),
-            'isValidToken' => $this->deploymentUrlTokenValid($token),
+            'isValidToken' => $validToken,
             'tokenSource' => $this->deploymentUrlTokenSource(),
             'token' => $token,
-            'status' => $this->statusSnapshot(),
-            'maintenanceActions' => $this->oneTimeMaintenanceActions(),
-            'commandHints' => $this->commandHints(),
+            'status' => $validToken ? $this->statusSnapshot() : [],
+            'maintenanceActions' => $validToken ? $this->oneTimeMaintenanceActions() : [],
+            'commandHints' => $validToken ? $this->commandHints() : [],
         ]);
     }
 
@@ -324,9 +325,7 @@ class DeploymentToolsController extends Controller
         } catch (HttpException $e) {
             throw $e;
         } catch (\Throwable $e) {
-            // If role mapping fails on shared hosting (missing table/column),
-            // keep the page accessible to authenticated users and rely on
-            // DEPLOYMENT_TOOL_TOKEN for command execution protection.
+            throw new HttpException(403, 'Unable to verify administrator access.');
         }
     }
 

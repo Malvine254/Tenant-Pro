@@ -81,6 +81,11 @@ class PaymentFragment : Fragment() {
             val amount = amountText?.toDoubleOrNull()
             val normalizedPhone = phone.normalizeKenyanPhone()
 
+            if (invoiceIds.isEmpty()) {
+                showErrorSnackbar("The selected bill is unavailable. Return to Home and try again.")
+                return@setOnClickListener
+            }
+
             if (phone.isBlank()) {
                 binding.tilPhone.error = getString(com.tenantpro.app.R.string.error_phone_required)
                 return@setOnClickListener

@@ -140,6 +140,9 @@ class InvitationAdminController extends Controller
             $normalizedEmail,
             (string) ($data['invitee_name'] ?? '')
         );
+        if (!$selectedTenant && !$firstTimeSetup && $loginUser->role?->name === 'TENANT') {
+            $selectedTenant = $loginUser;
+        }
 
         abort_if($unit->property_id !== $property->id, 422, 'The selected unit does not belong to this property.');
         abort_if($user?->role?->name === 'LANDLORD' && $property->landlord_id !== $user->id, 403);

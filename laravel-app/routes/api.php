@@ -49,6 +49,7 @@ Route::middleware('mobile.api.key')->group(function () {
 		Route::post('/users/device-token', [AuthController::class, 'saveDeviceToken']);
 		Route::post('/auth/logout', [AuthController::class, 'logout']);
 		Route::post('/invitations/accept', [InvitationController::class, 'accept']);
+		Route::post('/invitations/claim', [InvitationController::class, 'claim']);
 		Route::post('/payments/pay', [PaymentController::class, 'pay']);
 		Route::get('/payments/invoice/{invoice}', [PaymentController::class, 'forInvoice']);
 		Route::post('/support/upload', [SupportMessageController::class, 'upload']);

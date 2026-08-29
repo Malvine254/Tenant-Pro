@@ -50,6 +50,7 @@
         </table>
     </div>
 
+    @if($isValidToken)
     <div class="card">
         <h2>Server Status</h2>
         <table>
@@ -78,6 +79,7 @@
             <p class="bad">Cannot run: token missing/invalid or not configured.</p>
         @endif
     </div>
+    @endif
 
     <div class="card">
         <h2>Maintenance Commands</h2>

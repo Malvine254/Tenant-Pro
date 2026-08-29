@@ -19,7 +19,7 @@
     <string name="label_verify_otp">Verify OTP</string>
     <string name="label_invoices">My Invoices</string>
     <string name="label_my_rental">My Rental</string>
-    <string name="label_notifications">Notifications</string>
+    <string name="label_notifications">Updates</string>
     <string name="label_maintenance">Maintenance</string>
     <string name="label_queries">Chats</string>
     <string name="label_account_settings">Account Settings</string>
@@ -27,7 +27,7 @@
     <string name="label_payment_history">Payment History</string>
 
     <string name="nav_home">Home</string>
-    <string name="nav_notifications">Notifications</string>
+    <string name="nav_notifications">Updates</string>
     <string name="nav_queries">Chats</string>
     <string name="nav_account">Account</string>
 
@@ -63,8 +63,8 @@
     <string name="label_date">Date</string>
 
     <!-- Notifications -->
-    <string name="notifications_intro">Stay updated with billing, payment and maintenance alerts.</string>
-    <string name="notifications_empty">No new notifications right now.</string>
+    <string name="notifications_intro">Receipts, billing notices, rental changes and important property updates.</string>
+    <string name="notifications_empty">No updates right now.</string>
     <string name="notifications_mark_all_read">Mark all read</string>
 
     <!-- Maintenance -->

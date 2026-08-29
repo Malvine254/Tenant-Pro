@@ -23,17 +23,18 @@ class InvoiceController extends Controller
                         ->where('tenants.user_id', $user->id)
                         ->where('tenants.is_active', true);
                 }))
+            ->when($user?->role?->name === 'LANDLORD', fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id)))
             ->when($request->tenant_id, fn($q) => $q->where('tenant_id', $request->tenant_id))
             ->when($request->unit_id, fn($q) => $q->where('unit_id', $request->unit_id))
             ->when($request->status, fn($q) => $q->where('status', $request->status));
-        return response()->json($query->latest()->paginate(15));
+        return response()->json($query->latest()->paginate(min(max($request->integer('per_page', 15), 1), 100)));
     }
 
     public function store(Request $request)
     {
+        $this->requireManager($request->user());
         $data = $request->validate([
             'tenant_id' => 'required|uuid|exists:users,id',
-            'user_id' => 'required|uuid|exists:users,id',
             'unit_id' => 'required|uuid|exists:units,id',
             'billing_type' => 'required|string',
             'period_month' => 'required|integer|min:1|max:12',
@@ -42,9 +43,13 @@ class InvoiceController extends Controller
             'due_date' => 'required|date|after_or_equal:issue_date',
             'amount' => 'required|numeric|min:0',
             'penalty_amount' => 'nullable|numeric|min:0',
-            'total_amount' => 'required|numeric|min:0',
         ]);
+        $unit = \App\Models\Unit::findOrFail($data['unit_id']);
+        $this->requireUnitManager($request->user(), $unit);
+        abort_unless(Tenant::where('user_id', $data['tenant_id'])->where('unit_id', $unit->id)->where('is_active', true)->exists(), 422, 'Tenant is not actively linked to this unit.');
+        $data['user_id'] = $data['tenant_id'];
         $data['paid_amount'] = 0;
+        $data['total_amount'] = round((float) $data['amount'] + (float) ($data['penalty_amount'] ?? 0), 2);
         $data['status'] = 'PENDING';
         $invoice = Invoice::create($data)->load(['tenant', 'unit.property']);
         app(TenantAppNotificationService::class)->invoiceCreated($invoice);
@@ -58,28 +63,35 @@ class InvoiceController extends Controller
         $user = request()->user();
         abort_if($this->isTenant($user) && $invoice->tenant_id !== $user->id, 403);
         abort_if($this->isTenant($user) && ! $this->hasActiveTenancy($user->id, $invoice->unit_id), 404);
+        if ($user?->role?->name === 'LANDLORD') $this->requireUnitManager($user, $invoice->unit);
 
         return response()->json($invoice->load(['tenant', 'unit.property', 'payments']));
     }
 
     public function update(Request $request, Invoice $invoice)
     {
+        $this->requireUnitManager($request->user(), $invoice->unit);
         $data = $request->validate([
-            'status' => 'sometimes|in:PENDING,PARTIAL,PAID,OVERDUE,CANCELLED',
-            'paid_amount' => 'sometimes|numeric|min:0',
+            'status' => 'sometimes|in:PENDING,OVERDUE,CANCELLED',
             'penalty_amount' => 'nullable|numeric|min:0',
-            'total_amount' => 'sometimes|numeric|min:0',
             'due_date' => 'sometimes|date',
-            'paid_at' => 'nullable|date',
         ]);
+        abort_if(
+            $invoice->payments()->exists() && array_key_exists('penalty_amount', $data),
+            422,
+            'Amounts cannot be changed after a payment has been recorded.'
+        );
+        if (array_key_exists('penalty_amount', $data)) {
+            $data['total_amount'] = round((float) $invoice->amount + (float) ($data['penalty_amount'] ?? 0), 2);
+        }
         $invoice->update($data);
         return response()->json($invoice->load(['tenant', 'unit']));
     }
 
     public function destroy(Invoice $invoice)
     {
-        $invoice->delete();
-        return response()->json(null, 204);
+        $this->requireUnitManager(request()->user(), $invoice->unit);
+        abort(405, 'Invoices are financial records and cannot be deleted. Cancel the invoice instead.');
     }
 
     private function isTenant($user): bool

@@ -188,7 +188,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.homeFragment -> "Home"
                 R.id.invoicesFragment -> "Invoices"
                 R.id.rentalInfoFragment -> "Rental Info"
-                R.id.notificationsFragment -> "Notifications"
+                R.id.notificationsFragment -> "Updates"
                 R.id.maintenanceFragment -> "Maintenance"
                 R.id.queriesFragment -> "Chats"
                 R.id.accountSettingsFragment -> "Account"
@@ -323,12 +323,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun extractInvitationCode(intent: Intent?): String? {
         val uri = intent?.data ?: return intent?.getStringExtra("invitation_code")
-        if (uri.scheme != "tenantpro") return null
-
-        return when (uri.host) {
-            "invite" -> uri.getQueryParameter("code") ?: uri.lastPathSegment
+        val code = when {
+            uri.scheme == "tenantpro" && uri.host == "invite" ->
+                uri.getQueryParameter("code") ?: uri.lastPathSegment
+            uri.scheme == "https" && uri.host.equals("app.starmaxltd.com", ignoreCase = true)
+                && uri.pathSegments.firstOrNull() == "invite" ->
+                uri.getQueryParameter("code") ?: uri.pathSegments.getOrNull(1)
             else -> null
-        }?.takeIf { it.isNotBlank() }
+        }
+        return code?.takeIf { it.isNotBlank() }
     }
 
     private fun handlePendingInvitationDeepLink() {

@@ -13,12 +13,13 @@ class Payment extends Model
 
     protected $fillable = [
         'invoice_id', 'amount', 'method', 'payment_phone', 'mpesa_receipt',
-        'status', 'checkout_request_id', 'reference', 'paid_at',
+        'status', 'checkout_request_id', 'reference', 'paid_at', 'metadata',
     ];
 
     protected $casts = [
         'paid_at' => 'datetime',
         'amount' => 'decimal:2',
+        'metadata' => 'array',
     ];
 
     public function invoice() { return $this->belongsTo(Invoice::class); }

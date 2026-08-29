@@ -6,8 +6,8 @@ vendor/
 
 # local runtime data
 .localdb/
-data/
-uploads/
+/data/
+/uploads/
 storage/logs/
 **/storage/logs/
 

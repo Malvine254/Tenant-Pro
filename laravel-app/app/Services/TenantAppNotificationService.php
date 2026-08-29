@@ -84,7 +84,9 @@ class TenantAppNotificationService
             'metadata' => $metadata,
         ]);
 
-        if ($user->fcm_token) {
+        $settings = is_array($user->app_settings) ? $user->app_settings : [];
+        $pushEnabled = (bool) ($settings['notificationsEnabled'] ?? true);
+        if ($pushEnabled && $user->fcm_token) {
             $highPriority = $this->isHighPriority($type, $title, $body);
             app(FirebasePushService::class)->send($user->fcm_token, $title, $body, [
                 'type' => $type,

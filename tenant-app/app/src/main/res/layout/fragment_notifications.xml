@@ -154,7 +154,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     android:gravity="center"
-                    android:text="No new notifications right now"
+                    android:text="@string/notifications_empty"
                     android:textColor="@color/text_dark"
                     android:textSize="15sp"
                     android:textStyle="bold" />

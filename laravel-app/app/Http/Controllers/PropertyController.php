@@ -23,6 +23,7 @@ class PropertyController extends Controller
 
     public function store(Request $request)
     {
+        $this->requireManager($request->user());
         $data = $request->validate([
             'landlord_id' => 'required|uuid|exists:users,id',
             'name' => 'required|string|max:255',
@@ -34,6 +35,7 @@ class PropertyController extends Controller
             'state' => 'nullable|string|max:100',
             'country' => 'nullable|string|max:100',
         ]);
+        if ($request->user()?->role?->name === 'LANDLORD') $data['landlord_id'] = $request->user()->id;
 
         // Handle file upload
         if ($request->hasFile('cover_image')) {
@@ -56,6 +58,7 @@ class PropertyController extends Controller
 
     public function update(Request $request, Property $property)
     {
+        $this->requirePropertyManager($request->user(), $property);
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
@@ -82,6 +85,8 @@ class PropertyController extends Controller
 
     public function destroy(Property $property)
     {
+        $this->requirePropertyManager(request()->user(), $property);
+        abort_if($property->units()->exists(), 422, 'Remove or archive the property units before deleting this property.');
         // Clean up image when property is deleted
         if ($property->cover_image_url) {
             $this->deletePropertyImage($property->cover_image_url);
