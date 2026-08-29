@@ -23,7 +23,10 @@ class EnsureAccountAccess
         }
 
         if (!$user->is_active) {
-            return response()->json(['message' => 'Account is inactive.'], 403);
+            return response()->json([
+                'message' => 'Account is inactive.',
+                'code' => 'ACCOUNT_SUSPENDED',
+            ], 403);
         }
 
         if ($user->isLandlord()) {
@@ -41,6 +44,7 @@ class EnsureAccountAccess
 
             return response()->json([
                 'message' => 'Your services are temporarily unavailable because the property owner account is inactive or past due.',
+                'code' => 'LANDLORD_ACCESS_SUSPENDED',
             ], 403);
         }
 

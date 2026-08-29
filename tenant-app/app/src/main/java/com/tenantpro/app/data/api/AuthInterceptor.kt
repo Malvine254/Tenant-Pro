@@ -33,14 +33,27 @@ class AuthInterceptor @Inject constructor(
 
         val response = chain.proceed(request)
 
-        if (response.code == 401 && !token.isNullOrBlank() && sessionExpiredNotified.compareAndSet(false, true)) {
+        val accessSuspended = response.code == 403 && response.peekBody(64 * 1024).string().let { body ->
+            body.contains("LANDLORD_ACCESS_SUSPENDED") || body.contains("ACCOUNT_SUSPENDED")
+        }
+
+        if ((response.code == 401 || accessSuspended) &&
+            !token.isNullOrBlank() &&
+            sessionExpiredNotified.compareAndSet(false, true)
+        ) {
             notificationWorkScheduler.cancel()
             runBlocking {
                 cache.clearCurrentUser()
                 dataStoreManager.clearSession()
             }
-            sessionManager.notifyExpired()
-        } else if (response.code != 401) {
+            sessionManager.notifyExpired(
+                if (accessSuspended) {
+                    "Access is paused because the property manager account is suspended."
+                } else {
+                    "Your session has expired. Please sign in again."
+                }
+            )
+        } else if (response.code != 401 && !accessSuspended) {
             sessionExpiredNotified.set(false)
         }
 

@@ -7,6 +7,7 @@ import com.tenantpro.app.data.model.ManualPaymentInstructions
 import com.tenantpro.app.data.repository.AuthRepository
 import com.tenantpro.app.data.repository.PaymentRepository
 import com.tenantpro.app.utils.Resource
+import com.tenantpro.app.utils.normalizeKenyanPhone
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,16 +33,19 @@ class PaymentViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val cachedPhone = authRepository.getSavedPhone()?.trim().orEmpty()
-            if (cachedPhone.isNotBlank()) {
-                _savedPhone.value = cachedPhone
+            val cachedMpesaPhone = cachedPhone.asMpesaDisplayNumber()
+            if (cachedMpesaPhone != null) {
+                _savedPhone.value = cachedMpesaPhone
                 return@launch
             }
 
             // A direct payment action can open before Home has refreshed the
             // profile into DataStore. Fetch it once so the M-Pesa number still
             // pre-fills on a fresh install or biometric unlock.
-            when (val profile = authRepository.getMyProfile()) {
-                is Resource.Success -> _savedPhone.value = profile.data.phoneNumber.trim().ifBlank { null }
+            when (val profile = authRepository.getMyProfile(forceRefresh = true)) {
+                is Resource.Success -> _savedPhone.value = profile.data.phoneNumber
+                    .trim()
+                    .asMpesaDisplayNumber()
                 is Resource.Error, Resource.Loading -> _savedPhone.value = null
             }
         }
@@ -67,4 +71,9 @@ class PaymentViewModel @Inject constructor(
     }
 
     fun reset() { _payState.value = null }
+
+    private fun String.asMpesaDisplayNumber(): String? {
+        val normalized = normalizeKenyanPhone() ?: return null
+        return "0${normalized.removePrefix("254")}"
+    }
 }

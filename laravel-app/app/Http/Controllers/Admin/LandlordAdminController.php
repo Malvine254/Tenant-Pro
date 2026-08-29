@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Role;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\LandlordSubscriptionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class LandlordAdminController extends Controller
@@ -132,7 +134,13 @@ class LandlordAdminController extends Controller
             $updates['password'] = Hash::make($data['password']);
         }
 
-        $landlord->update($updates);
+        DB::transaction(function () use ($landlord, $updates) {
+            $landlord->update($updates);
+
+            if (!$landlord->is_active) {
+                $this->revokeSuspendedLandlordSessions($landlord);
+            }
+        });
 
         return redirect()->route('admin.landlords.index')->with('success', 'Landlord account updated.');
     }
@@ -146,7 +154,13 @@ class LandlordAdminController extends Controller
             'is_active' => 'required|boolean',
         ]);
 
-        $landlord->update(['is_active' => (bool) $data['is_active']]);
+        DB::transaction(function () use ($landlord, $data) {
+            $landlord->update(['is_active' => (bool) $data['is_active']]);
+
+            if (!$landlord->is_active) {
+                $this->revokeSuspendedLandlordSessions($landlord);
+            }
+        });
 
         return back()->with('success', 'Landlord status updated.');
     }
@@ -168,5 +182,20 @@ class LandlordAdminController extends Controller
     private function isLandlord(?User $user): bool
     {
         return $user?->role?->name === 'LANDLORD';
+    }
+
+    private function revokeSuspendedLandlordSessions(User $landlord): void
+    {
+        $landlord->tokens()->delete();
+
+        $tenantUserIds = Tenant::query()
+            ->where('is_active', true)
+            ->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $landlord->id))
+            ->pluck('user_id')
+            ->unique();
+
+        User::query()
+            ->whereIn('id', $tenantUserIds)
+            ->eachById(fn (User $tenant) => $tenant->tokens()->delete());
     }
 }

@@ -27,6 +27,8 @@ class EnsureAdminRole
             abort(403, 'You are not authorized to access this area.');
         }
 
+        abort_if(!$user->is_active, 403, 'Your account is suspended.');
+
         if ($role === 'LANDLORD') {
             $evaluation = $this->subscriptionService->evaluate($user);
             if (!$evaluation['allowed']) {

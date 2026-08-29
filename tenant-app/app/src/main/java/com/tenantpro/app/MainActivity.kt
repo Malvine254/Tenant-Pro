@@ -234,8 +234,8 @@ class MainActivity : AppCompatActivity() {
         // Navigate to login when the session expires (401 received on any request)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                sessionManager.sessionExpired.collect {
-                    toast(getString(R.string.session_expired))
+                sessionManager.sessionExpired.collect { message ->
+                    toast(message)
                     navController.navigate(
                         R.id.loginFragment,
                         null,
