@@ -70,7 +70,7 @@ class InvoicesFragment : Fragment() {
     private val adapter by lazy {
         InvoiceAdapter(
             onGroupClick = ::showGroupDetailDialog,
-            onGroupPayClick = ::openNextGroupPayment
+            onGroupPayClick = ::openGroupPayment
         )
     }
 
@@ -324,20 +324,29 @@ class InvoicesFragment : Fragment() {
                     "Balance due: ${group.balance.toKes()}\n\n" +
                     "BILL BREAKDOWN\n$billBreakdown"
             )
-            .setPositiveButton(if (group.balance > 0.0) "Pay next bill" else getString(R.string.invoice_close)) { _, _ ->
-                if (group.balance > 0.0) openNextGroupPayment(group)
+            .setPositiveButton(if (group.balance > 0.0) "Pay bills" else getString(R.string.invoice_close)) { _, _ ->
+                if (group.balance > 0.0) openGroupPayment(group)
             }
             .setNegativeButton(getString(R.string.invoice_close), null)
             .show()
     }
 
-    private fun openNextGroupPayment(group: InvoiceGroup) {
-        val nextInvoice = group.invoices
-            .filter { it.effectiveBalance() > 0.0 }
+    private fun openGroupPayment(group: InvoiceGroup) {
+        val payableInvoices = group.invoices
+            .filter { it.statusCode() != "CANCELLED" && it.effectiveBalance() > 0.0 }
             .sortedWith(compareBy<Invoice> { billingPriority(it.billingType) }.thenBy { it.dueDate.orEmpty() })
-            .firstOrNull()
-            ?: return
-        openPayment(nextInvoice)
+        if (payableInvoices.isEmpty()) return
+        if (payableInvoices.size == 1) {
+            openPayment(payableInvoices.first())
+            return
+        }
+
+        findNavController().navigate(R.id.paymentFragment, Bundle().apply {
+            putString("invoiceId", payableInvoices.first().id)
+            putStringArrayList("invoiceIds", ArrayList(payableInvoices.map { it.id }))
+            putString("invoiceLabel", "${payableInvoices.size} bills · ${group.title}")
+            putFloat("remainingAmount", payableInvoices.sumOf { it.effectiveBalance() }.toFloat())
+        })
     }
 
     private fun billingPriority(type: String): Int = when (type.uppercase(Locale.ROOT)) {

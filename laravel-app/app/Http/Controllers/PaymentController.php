@@ -6,7 +6,6 @@ use App\Models\Payment;
 use App\Models\Invoice;
 use App\Models\Tenant;
 use App\Services\TenantAppNotificationService;
-use App\Services\TenantBillingService;
 use App\Services\TenantEmailService;
 use App\Services\MpesaService;
 use Illuminate\Http\Request;
@@ -59,9 +58,6 @@ class PaymentController extends Controller
         if ($payment->status === 'SUCCESSFUL') {
             app(TenantEmailService::class)->paymentReceived($payment->load('invoice.tenant', 'invoice.unit.property'));
             app(TenantAppNotificationService::class)->paymentReceived($payment);
-            if (strtoupper((string) $invoice->billing_type) === 'RENT') {
-                app(TenantBillingService::class)->syncMonthlyRentForTenantUnit($invoice->tenant_id, $invoice->unit_id);
-            }
         }
 
         return response()->json($payment->load('invoice'), 201);
@@ -123,8 +119,25 @@ class PaymentController extends Controller
                 422,
                 'An invoice belongs to an inactive tenancy.'
             );
-            abort_if(in_array($selectedInvoice->status, ['PAID', 'CANCELLED'], true), 422, 'A selected invoice cannot be paid.');
+            abort_if(
+                strtoupper(trim((string) $selectedInvoice->status)) === 'CANCELLED',
+                422,
+                'A cancelled invoice cannot be paid.'
+            );
         }
+
+        // Monetary fields are authoritative. Historical data can contain a
+        // stale PAID status while paid_amount is still below total_amount.
+        // Such an invoice remains payable; genuinely settled invoices are
+        // simply removed from a combined selection.
+        $orderedInvoices = $orderedInvoices
+            ->filter(fn ($item) => round(
+                max(0, (float) $item->total_amount - (float) $item->paid_amount),
+                2
+            ) > 0)
+            ->values();
+        abort_if($orderedInvoices->isEmpty(), 422, 'The selected invoice is already fully paid.');
+
         abort_if(
             $orderedInvoices->pluck('unit.property.landlord_id')->filter()->unique()->count() > 1,
             422,
@@ -399,19 +412,6 @@ class PaymentController extends Controller
         $payment = Payment::with('invoice.tenant', 'invoice.unit.property')->find($paymentId);
         if (! $payment) return;
 
-        $generatedInvoices = 0;
-        $allocationInvoiceIds = collect($payment->metadata['invoice_allocations'] ?? [])
-            ->pluck('invoice_id')
-            ->filter()
-            ->whenEmpty(fn ($ids) => $ids->push($payment->invoice_id))
-            ->unique();
-        foreach (Invoice::whereIn('id', $allocationInvoiceIds)->get() as $paidInvoice) {
-            if (strtoupper((string) $paidInvoice->billing_type) === 'RENT') {
-                $generatedInvoices += app(TenantBillingService::class)
-                    ->syncMonthlyRentForTenantUnit($paidInvoice->tenant_id, $paidInvoice->unit_id);
-            }
-        }
-
         try {
             app(TenantEmailService::class)->paymentReceived($payment);
             app(TenantAppNotificationService::class)->paymentReceived($payment);
@@ -419,7 +419,6 @@ class PaymentController extends Controller
             Log::error('Payment notification failed', [
                 'payment_id' => $paymentId,
                 'error' => $error->getMessage(),
-                'generated_invoices' => $generatedInvoices,
             ]);
         }
     }

@@ -35,6 +35,10 @@ class InvoiceAdapter(
                 if (group.balance <= 0.0) R.color.success else R.color.error
             ))
             binding.btnPayGroup.visibility = if (group.balance > 0.0) android.view.View.VISIBLE else android.view.View.GONE
+            val payableCount = group.invoices.count { invoice ->
+                invoice.status.uppercase() != "CANCELLED" && invoice.effectiveBalance() > 0.0
+            }
+            binding.btnPayGroup.text = if (payableCount > 1) "Pay $payableCount bills" else "Pay"
             binding.btnPayGroup.setOnClickListener { onGroupPayClick(group) }
             binding.root.setOnClickListener { onGroupClick(group) }
         }

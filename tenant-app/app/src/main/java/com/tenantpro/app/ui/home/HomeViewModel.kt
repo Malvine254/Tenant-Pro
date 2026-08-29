@@ -58,6 +58,7 @@ data class HomeSummary(
     val recentInvoices: List<Invoice>,
     val monthlyTrend: List<MonthlyBucket>,
     val thisMonthBills: List<BillItem>,
+    val allOutstandingBills: List<BillItem>,
     val totalDueThisMonth: Double,
     val currentMonth: String
 )
@@ -248,6 +249,37 @@ class HomeViewModel @Inject constructor(
                         .filter { it.status.uppercase(Locale.ROOT) != "CANCELLED" }
                         .sortedBy { when (it.billingType.uppercase()) { "RENT" -> 0; "WATER" -> 1; "GARBAGE" -> 2; else -> 3 } }
 
+                    val allOutstandingBills = invoices
+                        .filter { inv ->
+                            if (inv.statusCode() == "CANCELLED" || inv.effectiveBalance() <= 0.0) {
+                                false
+                            } else if (inv.periodYear != null && inv.periodMonth != null) {
+                                (inv.periodYear * 12 + inv.periodMonth) <= (thisYear * 12 + thisMonth + 1)
+                            } else {
+                                // Invoices without an explicit billing period are due
+                                // now when their due month is not after this month.
+                                inv.dueDate?.take(7)?.let { it <= "%04d-%02d".format(thisYear, thisMonth + 1) }
+                                    ?: true
+                            }
+                        }
+                        .map { inv ->
+                            BillItem(
+                                id = inv.id,
+                                billingType = inv.billingType,
+                                amount = inv.effectiveTotalAmount(),
+                                paidAmount = inv.paidAmount,
+                                balance = inv.effectiveBalance(),
+                                dueDate = inv.dueDate,
+                                period = inv.displayPeriod(),
+                                status = inv.status,
+                                description = inv.description
+                            )
+                        }
+                        .sortedWith(
+                            compareBy<BillItem> { it.dueDate ?: "9999-12-31" }
+                                .thenBy { when (it.billingType.uppercase()) { "RENT" -> 0; "WATER" -> 1; "GARBAGE" -> 2; else -> 3 } }
+                        )
+
                     val totalDueThisMonth = billItems
                         .filter { it.balance > 0.0 }
                         .sumOf { it.balance }
@@ -281,6 +313,7 @@ class HomeViewModel @Inject constructor(
                             recentInvoices     = recentInvoices,
                             monthlyTrend       = buildMonthlyTrend(invoices),
                             thisMonthBills     = billItems,
+                            allOutstandingBills = allOutstandingBills,
                             totalDueThisMonth  = totalDueThisMonth,
                             currentMonth       = currentMonth
                         )
@@ -303,6 +336,7 @@ class HomeViewModel @Inject constructor(
                                 recentInvoices = emptyList(),
                                 monthlyTrend = buildMonthlyTrend(emptyList()),
                                 thisMonthBills = emptyList(),
+                                allOutstandingBills = emptyList(),
                                 totalDueThisMonth = 0.0,
                                 currentMonth = currentMonth
                             )

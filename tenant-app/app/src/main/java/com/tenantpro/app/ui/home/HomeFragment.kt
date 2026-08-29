@@ -111,18 +111,20 @@ class HomeFragment : Fragment() {
                                 "Not set"
                             bindHomeUnits(s.units)
 
-                            val payableBills = s.thisMonthBills.filter {
+                            val currentMonthPayableBills = s.thisMonthBills.filter {
                                 it.status.uppercase(Locale.ROOT) != "CANCELLED" && it.balance > 0
                             }
-                            binding.tvTotalDue.text = payableBills.sumOf { it.balance }.toKes()
-                            val billCount = payableBills.size
+                            binding.tvTotalDue.text = currentMonthPayableBills.sumOf { it.balance }.toKes()
+                            val billCount = currentMonthPayableBills.size
                             binding.tvBillCount.text = when {
                                 s.thisMonthBills.isEmpty() -> "No bill issued yet"
                                 billCount == 0 -> "All bills paid"
                                 billCount == 1 -> "1 bill due"
                                 else -> "$billCount bills due"
                             }
-                            binding.btnPayAll.isEnabled = billCount > 0
+                            payableBills = s.allOutstandingBills
+                            binding.btnPayAll.isEnabled = payableBills.isNotEmpty()
+                            binding.btnPayAll.text = if (payableBills.size > 1) "Pay All" else "Pay Now"
 
                             binding.tvOutstanding.text = NumberFormat.getNumberInstance(Locale.US)
                                 .apply { maximumFractionDigits = 2 }
@@ -161,8 +163,6 @@ class HomeFragment : Fragment() {
         val unpaidBills = bills.filter {
             it.status.uppercase(Locale.ROOT) != "CANCELLED" && it.balance > 0
         }
-        payableBills = unpaidBills
-
         if (unpaidBills.isEmpty()) {
             if (bills.isEmpty()) {
                 binding.tvNoBillsTitle.text = "No bill issued yet"
@@ -353,7 +353,7 @@ class HomeFragment : Fragment() {
         val label = if (bills.size == 1) {
             bills.first().billingType.replaceFirstChar { it.uppercase() }
         } else {
-            "${bills.size} bills for ${bills.firstNotNullOfOrNull { it.period } ?: "this month"}"
+            "${bills.size} outstanding bills"
         }
         findNavController().navigate(R.id.paymentFragment, Bundle().apply {
             putString("invoiceId", bills.first().id)
@@ -488,7 +488,11 @@ class HomeFragment : Fragment() {
         row.tvInvoiceTitle.text = title
         row.tvInvoiceType.text = invoice.billingType.replaceFirstChar { it.uppercase() }
         row.tvInvoicePeriod.text = invoice.displayPeriod() ?: invoice.dueDate?.take(10) ?: "—"
-        row.tvInvoiceAmount.text = invoice.effectiveTotalAmount().toKes()
+        row.tvInvoiceAmount.text = if (invoice.effectiveBalance() > 0.0) {
+            invoice.effectiveBalance().toKes()
+        } else {
+            invoice.effectiveTotalAmount().toKes()
+        }
 
         val statusColor = when (invoice.status) {
             "PAID"    -> requireContext().getColor(R.color.success)
