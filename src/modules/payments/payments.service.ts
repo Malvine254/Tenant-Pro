@@ -351,7 +351,10 @@ export class PaymentsService {
 
     return this.prisma.payment.findMany({
       where: { invoiceId },
-      include: { transactions: { orderBy: { createdAt: 'desc' } } },
+      include: {
+        invoice: true,
+        transactions: { orderBy: { createdAt: 'desc' } },
+      },
       orderBy: { createdAt: 'desc' },
     });
   }

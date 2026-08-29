@@ -9,12 +9,12 @@
 
         <item
             android:id="@+id/invoicesFragment"
-            android:icon="@drawable/ic_receipt"
+            android:icon="@drawable/ic_invoice_document"
             android:title="@string/label_invoices" />
 
         <item
             android:id="@+id/rentalInfoFragment"
-            android:icon="@drawable/ic_account_settings"
+            android:icon="@drawable/ic_apartment"
             android:title="@string/label_my_rental" />
 
         <item
@@ -24,7 +24,7 @@
 
         <item
             android:id="@+id/paymentHistoryFragment"
-            android:icon="@drawable/ic_receipt"
+            android:icon="@drawable/ic_payment_history"
             android:title="@string/label_payment_history" />
 
         <item
@@ -38,7 +38,7 @@
     <group android:id="@+id/secondary_group">
         <item
             android:id="@+id/accountSettingsFragment"
-            android:icon="@drawable/ic_account_settings"
+            android:icon="@drawable/ic_person"
             android:title="@string/label_account_settings" />
 
         <item
