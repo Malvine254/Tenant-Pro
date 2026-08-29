@@ -39,13 +39,13 @@ class PaymentHistoryFragment : Fragment() {
         val invoiceId = arguments?.getString("invoiceId") ?: ""
         val invoiceLabel = arguments?.getString("invoiceLabel") ?: ""
 
-        binding.tvInvoiceLabel.text = invoiceLabel
+        binding.tvInvoiceLabel.text = invoiceLabel.ifBlank {
+            "All recent and past M-Pesa transactions"
+        }
         binding.rvPayments.layoutManager = LinearLayoutManager(requireContext())
         binding.rvPayments.adapter = adapter
 
         binding.swipeRefresh.setOnRefreshListener { viewModel.load(invoiceId) }
-
-        viewModel.load(invoiceId)
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -76,6 +76,11 @@ class PaymentHistoryFragment : Fragment() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.load(arguments?.getString("invoiceId").orEmpty())
     }
 
     override fun onDestroyView() {

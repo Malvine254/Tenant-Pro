@@ -133,6 +133,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.invoicesFragment,
                 R.id.rentalInfoFragment,
                 R.id.notificationsFragment,
+                R.id.paymentHistoryFragment,
                 R.id.queriesFragment,
                 R.id.accountSettingsFragment,
                 R.id.loginFragment,
@@ -223,6 +224,10 @@ class MainActivity : AppCompatActivity() {
                 handlePendingNotificationNavigation()
                 syncFcmTokenIfLoggedIn()
             }
+        } else {
+            // Android restored the correct destination; reveal it without
+            // rebuilding the graph or briefly displaying Login.
+            binding.navHostFragment.visibility = View.VISIBLE
         }
 
         // Navigate to login when the session expires (401 received on any request)
@@ -366,7 +371,7 @@ class MainActivity : AppCompatActivity() {
             "CHAT" -> R.id.queriesFragment
             "INVOICES" -> R.id.invoicesFragment
             "PAYMENTS" -> R.id.paymentHistoryFragment
-            "MAINTENANCE" -> R.id.maintenanceFragment
+            "MAINTENANCE" -> R.id.queriesFragment
             "RENTAL" -> R.id.rentalInfoFragment
             else -> R.id.notificationsFragment
         }

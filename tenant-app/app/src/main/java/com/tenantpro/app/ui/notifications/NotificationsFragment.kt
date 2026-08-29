@@ -40,9 +40,6 @@ class NotificationsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnRefreshNotifications.setOnClickListener {
-            viewModel.loadNotifications(showLoading = true)
-        }
         binding.btnMarkAllRead.setOnClickListener { viewModel.markAllRead() }
 
         viewLifecycleOwner.lifecycleScope.launch {

@@ -47,10 +47,10 @@ class PaymentViewModel @Inject constructor(
      * Triggers an M-Pesa STK Push.
      * @param amount null means pay the full remaining balance.
      */
-    fun pay(invoiceId: String, phoneNumber: String, amount: Double?) {
+    fun pay(invoiceIds: List<String>, phoneNumber: String, amount: Double?) {
         viewModelScope.launch {
             _payState.value = Resource.Loading
-            _payState.value = paymentRepository.initiatePayment(invoiceId, phoneNumber, amount)
+            _payState.value = paymentRepository.initiatePayment(invoiceIds, phoneNumber, amount)
         }
     }
 

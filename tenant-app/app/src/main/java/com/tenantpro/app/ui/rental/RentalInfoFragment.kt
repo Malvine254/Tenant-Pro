@@ -12,7 +12,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textview.MaterialTextView
 import com.tenantpro.app.R
 import com.tenantpro.app.databinding.FragmentRentalInfoBinding
@@ -47,25 +46,9 @@ class RentalInfoFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnRefreshRental.setOnClickListener { viewModel.refreshRentalInfo() }
-
         val invitationCode = arguments?.getString("invitationCode")?.trim().orEmpty()
         if (invitationCode.isNotBlank() && savedInstanceState == null) {
-            binding.etRentalInvitationCode.setText(invitationCode)
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Accept rental invitation?")
-                .setMessage("Invitation code $invitationCode will link the assigned unit to your Tenant Pro account.")
-                .setPositiveButton("Accept invitation") { _, _ ->
-                    viewModel.acceptInvitation(invitationCode)
-                }
-                .setNegativeButton("Not now", null)
-                .show()
-        }
-
-        binding.btnLinkRental.setOnClickListener {
-            val code = binding.etRentalInvitationCode.text?.toString().orEmpty()
-            viewModel.acceptInvitation(code)
-            if (code.isNotBlank()) binding.etRentalInvitationCode.text?.clear()
+            viewModel.acceptInvitation(invitationCode)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -173,6 +156,11 @@ class RentalInfoFragment : Fragment() {
         val propertyText = "$properties propert${if (properties == 1) "y" else "ies"}"
         val rentText = if (totalRent > 0.0) " - ${totalRent.toKes()} monthly" else ""
         return "$roomText across $propertyText$rentText"
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshRentalInfo()
     }
 
     override fun onDestroyView() {

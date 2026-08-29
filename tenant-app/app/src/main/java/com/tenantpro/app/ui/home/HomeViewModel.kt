@@ -116,6 +116,7 @@ class HomeViewModel @Inject constructor(
             var activeUnitIds = emptySet<String>()
             var profileLoaded = false
 
+            authRepository.claimMatchingInvitations()
             when (val profileResult = authRepository.getMyProfile()) {
                 is Resource.Success -> {
                     profileLoaded = true
@@ -168,11 +169,6 @@ class HomeViewModel @Inject constructor(
                     } else {
                         result.data
                     }
-                    val outstanding = invoices
-                        .filter { it.statusCode() in setOf("PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID", "OVERDUE") }
-                        .sumOf { it.effectiveBalance() }
-                    val pending  = invoices.count { it.statusCode() in setOf("PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID") }
-                    val overdue  = invoices.count { it.statusCode() == "OVERDUE" }
                     val paid     = invoices.sumOf { it.paidAmount }
                     val propUnit = invoices.firstOrNull()?.unit?.let { u ->
                         listOfNotNull(u.property?.name, u.unitName).joinToString(" · ")
@@ -253,8 +249,20 @@ class HomeViewModel @Inject constructor(
                         .sortedBy { when (it.billingType.uppercase()) { "RENT" -> 0; "WATER" -> 1; "GARBAGE" -> 2; else -> 3 } }
 
                     val totalDueThisMonth = billItems
-                        .filter { it.status.uppercase(Locale.ROOT) in setOf("PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID", "OVERDUE") }
+                        .filter { it.balance > 0.0 }
                         .sumOf { it.balance }
+
+                    val currentOpenInvoices = thisMonthInvoices.filter {
+                        it.statusCode() != "CANCELLED" && it.effectiveBalance() > 0.0
+                    }
+                    val recentInvoices = invoices
+                        .filter { it.statusCode() != "CANCELLED" }
+                        .sortedWith(
+                            compareByDescending<Invoice> { it.periodYear ?: 0 }
+                                .thenByDescending { it.periodMonth ?: 0 }
+                                .thenByDescending { it.createdAt }
+                        )
+                        .take(3)
 
                     _summaryState.value = Resource.Success(
                         HomeSummary(
@@ -264,11 +272,13 @@ class HomeViewModel @Inject constructor(
                             unitName           = uName,
                             rentAmount         = displayRent,
                             units              = displayUnits,
-                            outstandingBalance = outstanding,
-                            pendingCount       = pending,
-                            overdueCount       = overdue,
+                            // The home card is a current-month snapshot. Historical
+                            // balances remain available on the Invoices screen.
+                            outstandingBalance = totalDueThisMonth,
+                            pendingCount       = currentOpenInvoices.count { it.statusCode() != "OVERDUE" },
+                            overdueCount       = currentOpenInvoices.count { it.statusCode() == "OVERDUE" },
                             paidAmount         = paid,
-                            recentInvoices     = invoices.take(3),
+                            recentInvoices     = recentInvoices,
                             monthlyTrend       = buildMonthlyTrend(invoices),
                             thisMonthBills     = billItems,
                             totalDueThisMonth  = totalDueThisMonth,
@@ -320,12 +330,16 @@ class HomeViewModel @Inject constructor(
 
         return buckets.map { (year, month, label) ->
             val slice = invoices.filter { inv ->
-                try {
-                    val dateStr = inv.dueDate?.take(10) ?: return@filter false
-                    val date = sdf.parse(dateStr) ?: return@filter false
-                    cal.time = date
-                    cal.get(Calendar.YEAR) == year && cal.get(Calendar.MONTH) == month
-                } catch (_: Exception) { false }
+                if (inv.periodYear != null && inv.periodMonth != null) {
+                    inv.periodYear == year && inv.periodMonth == month + 1
+                } else {
+                    try {
+                        val dateStr = inv.dueDate?.take(10) ?: return@filter false
+                        val date = sdf.parse(dateStr) ?: return@filter false
+                        cal.time = date
+                        cal.get(Calendar.YEAR) == year && cal.get(Calendar.MONTH) == month
+                    } catch (_: Exception) { false }
+                }
             }
             MonthlyBucket(
                 label  = label,

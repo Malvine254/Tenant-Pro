@@ -66,6 +66,15 @@
             android:background="@color/outline_variant"
             android:layout_marginBottom="12dp" />
 
+        <TextView
+            android:id="@+id/tvInvoice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:textColor="@color/primary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
         <!-- Receipt row -->
         <LinearLayout
             android:layout_width="match_parent"

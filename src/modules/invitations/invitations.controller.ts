@@ -32,6 +32,12 @@ export class InvitationsController {
     return this.invitationsService.acceptInvitation(req.user.userId, dto);
   }
 
+  @Post('claim')
+  @Roles(RoleName.TENANT)
+  claim(@Req() req: AuthenticatedRequest) {
+    return this.invitationsService.claimMatchingInvitations(req.user.userId);
+  }
+
   @Post('expire')
   @Roles(RoleName.LANDLORD, RoleName.ADMIN)
   expire(@Req() req: AuthenticatedRequest) {

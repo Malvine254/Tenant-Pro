@@ -23,7 +23,11 @@ class PaymentHistoryViewModel @Inject constructor(
     fun load(invoiceId: String) {
         viewModelScope.launch {
             _historyState.value = Resource.Loading
-            _historyState.value = paymentRepository.getPaymentsByInvoice(invoiceId)
+            _historyState.value = if (invoiceId.isBlank()) {
+                paymentRepository.getPayments()
+            } else {
+                paymentRepository.getPaymentsByInvoice(invoiceId)
+            }
         }
     }
 }

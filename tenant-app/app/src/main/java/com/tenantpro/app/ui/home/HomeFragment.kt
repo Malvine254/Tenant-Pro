@@ -47,7 +47,7 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private val viewModel: HomeViewModel by viewModels()
-    private var firstPayableBill: BillItem? = null
+    private var payableBills: List<BillItem> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -68,7 +68,8 @@ class HomeFragment : Fragment() {
         }
 
         binding.btnPayAll.setOnClickListener {
-            firstPayableBill?.let(::openPayment) ?: openInvoices(openOnly = true)
+            if (payableBills.isNotEmpty()) openCombinedPayment(payableBills)
+            else openInvoices(openOnly = true)
         }
 
         binding.tvTotalDue.setOnClickListener { openInvoices(openOnly = true) }
@@ -110,9 +111,8 @@ class HomeFragment : Fragment() {
                                 "Not set"
                             bindHomeUnits(s.units)
 
-                            val payableStatuses = setOf("PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID", "OVERDUE")
                             val payableBills = s.thisMonthBills.filter {
-                                it.status.uppercase(Locale.ROOT) in payableStatuses && it.balance > 0
+                                it.status.uppercase(Locale.ROOT) != "CANCELLED" && it.balance > 0
                             }
                             binding.tvTotalDue.text = payableBills.sumOf { it.balance }.toKes()
                             val billCount = payableBills.size
@@ -124,7 +124,9 @@ class HomeFragment : Fragment() {
                             }
                             binding.btnPayAll.isEnabled = billCount > 0
 
-                            binding.tvOutstanding.text = s.outstandingBalance.toKes()
+                            binding.tvOutstanding.text = NumberFormat.getNumberInstance(Locale.US)
+                                .apply { maximumFractionDigits = 2 }
+                                .format(s.outstandingBalance)
                             binding.tvPendingCount.text = "${s.pendingCount}"
                             binding.tvOverdueCount.text = "${s.overdueCount}"
                             binding.tvPaidAmount.text = NumberFormat.getNumberInstance(Locale.US)
@@ -156,11 +158,10 @@ class HomeFragment : Fragment() {
     private fun bindBillCards(bills: List<BillItem>) {
         binding.llBillCards.removeAllViews()
 
-        val payableStatuses = setOf("PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID", "OVERDUE")
         val unpaidBills = bills.filter {
-            it.status.uppercase(Locale.ROOT) in payableStatuses && it.balance > 0
+            it.status.uppercase(Locale.ROOT) != "CANCELLED" && it.balance > 0
         }
-        firstPayableBill = unpaidBills.firstOrNull()
+        payableBills = unpaidBills
 
         if (unpaidBills.isEmpty()) {
             if (bills.isEmpty()) {
@@ -344,6 +345,21 @@ class HomeFragment : Fragment() {
             putString("invoiceId", bill.id)
             putString("invoiceLabel", bill.billingType.replaceFirstChar { it.uppercase() })
             putFloat("remainingAmount", bill.balance.toFloat())
+        })
+    }
+
+    private fun openCombinedPayment(bills: List<BillItem>) {
+        val total = bills.sumOf { it.balance }
+        val label = if (bills.size == 1) {
+            bills.first().billingType.replaceFirstChar { it.uppercase() }
+        } else {
+            "${bills.size} bills for ${bills.firstNotNullOfOrNull { it.period } ?: "this month"}"
+        }
+        findNavController().navigate(R.id.paymentFragment, Bundle().apply {
+            putString("invoiceId", bills.first().id)
+            putStringArrayList("invoiceIds", ArrayList(bills.map { it.id }))
+            putString("invoiceLabel", label)
+            putFloat("remainingAmount", total.toFloat())
         })
     }
 
@@ -569,6 +585,12 @@ class HomeFragment : Fragment() {
         in 0..11  -> "Good morning!"
         in 12..16 -> "Good afternoon!"
         else      -> "Good evening!"
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Reconcile totals after returning from M-Pesa or another billing screen.
+        viewModel.loadSummary()
     }
 
     private fun Int.dp(): Int = (this * resources.displayMetrics.density).toInt()

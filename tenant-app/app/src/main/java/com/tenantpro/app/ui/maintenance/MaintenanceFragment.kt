@@ -46,7 +46,6 @@ class MaintenanceFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnCreateMaintenance.setOnClickListener { showCreateRequestDialog() }
-        binding.btnRefreshMaintenance.setOnClickListener { viewModel.refresh() }
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -54,7 +53,6 @@ class MaintenanceFragment : Fragment() {
                     viewModel.uiState.collect { state ->
                         binding.progressMaintenance.visibility = if (state.loading) View.VISIBLE else View.GONE
                         binding.btnCreateMaintenance.isEnabled = !state.submitting
-                        binding.btnRefreshMaintenance.isEnabled = !state.loading
                         binding.tvOpenCount.text = state.openCount.toString()
                         binding.tvInProgressCount.text = state.inProgressCount.toString()
                         binding.tvResolvedCount.text = state.resolvedCount.toString()

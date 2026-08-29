@@ -25,6 +25,14 @@ export class InvitationsService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
+  private phoneVariants(phone?: string | null) {
+    const digits = phone?.replace(/\D/g, '') ?? '';
+    if (!digits) return [];
+    const local = digits.startsWith('254') ? `0${digits.slice(3)}` : digits;
+    const international = local.startsWith('0') ? `254${local.slice(1)}` : local;
+    return [...new Set([phone!.trim(), local, international, `+${international}`])];
+  }
+
   private async generateUniqueCode() {
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const code = randomBytes(4).toString('hex').toUpperCase();
@@ -63,8 +71,15 @@ export class InvitationsService {
     const expiryHours = dto.expiresInHours ?? 72;
     const expiresAt = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
 
-    const tenantUser = await this.prisma.user.findUnique({
-      where: { email: tenantEmail },
+    const tenantUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: tenantEmail },
+          ...(dto.phoneNumber
+            ? [{ phoneNumber: { in: this.phoneVariants(dto.phoneNumber) } }]
+            : []),
+        ],
+      },
       select: { id: true, firstName: true, role: { select: { name: true } } },
     });
 
@@ -181,7 +196,10 @@ export class InvitationsService {
       if (!userEmail || userEmail !== invitationEmail) {
         throw new ForbiddenException('Invitation email does not match your account');
       }
-    } else if (invitation.phoneNumber && user.phoneNumber !== invitation.phoneNumber) {
+    } else if (
+      invitation.phoneNumber &&
+      !this.phoneVariants(invitation.phoneNumber).includes(user.phoneNumber)
+    ) {
       throw new ForbiddenException('Invitation phone number does not match your account');
     }
 
@@ -241,6 +259,47 @@ export class InvitationsService {
     });
 
     return result;
+  }
+
+  async claimMatchingInvitations(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+    if (!user || user.role.name !== RoleName.TENANT) {
+      throw new ForbiddenException('Only tenant accounts can claim unit invitations');
+    }
+
+    const email = user.email?.trim().toLowerCase();
+    const phoneNumbers = this.phoneVariants(user.phoneNumber);
+    const invitations = await this.prisma.invitation.findMany({
+      where: {
+        status: InvitationStatus.PENDING,
+        expiresAt: { gte: new Date() },
+        OR: [
+          ...(email ? [{ tenantEmail: email }] : []),
+          ...(phoneNumbers.length ? [{ phoneNumber: { in: phoneNumbers } }] : []),
+        ],
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    let connectedCount = 0;
+    for (const invitation of invitations) {
+      try {
+        await this.acceptInvitation(userId, { code: invitation.code });
+        connectedCount += 1;
+      } catch (error) {
+        if (!(error instanceof BadRequestException)) throw error;
+      }
+    }
+
+    return {
+      connectedCount,
+      message: connectedCount > 0
+        ? `${connectedCount} rental ${connectedCount === 1 ? 'unit' : 'units'} connected automatically.`
+        : 'No new rental invitations found.',
+    };
   }
 
   async expirePendingInvitations(actorUserId: string, actorRole: RoleName) {

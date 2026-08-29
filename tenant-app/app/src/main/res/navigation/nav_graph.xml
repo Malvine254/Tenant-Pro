@@ -236,8 +236,8 @@
         android:label="@string/label_payment_history"
         tools:layout="@layout/fragment_payment_history">
 
-        <argument android:name="invoiceId"    app:argType="string" />
-        <argument android:name="invoiceLabel" app:argType="string" />
+        <argument android:name="invoiceId"    app:argType="string" android:defaultValue="" />
+        <argument android:name="invoiceLabel" app:argType="string" android:defaultValue="" />
     </fragment>
 
     <fragment

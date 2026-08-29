@@ -86,20 +86,6 @@
                             android:text="@string/notifications_mark_all_read"
                             android:textSize="12sp" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnRefreshNotifications"
-                            style="@style/Theme.TenantPro.Button.Outlined"
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_weight="1"
-                            android:text="Refresh"
-                            android:textSize="12sp"
-                            app:icon="@drawable/ic_refresh"
-                            app:iconGravity="textStart"
-                            app:iconPadding="6dp"
-                            app:iconTint="@color/primary"
-                            app:strokeColor="@color/border_light" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

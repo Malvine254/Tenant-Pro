@@ -41,6 +41,17 @@ export class PaymentsController {
   }
 
   /**
+   * GET /api/payments
+   * Full payment timeline for the authenticated account.
+   */
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleName.TENANT, RoleName.LANDLORD, RoleName.ADMIN)
+  getPayments(@Req() req: AuthenticatedRequest) {
+    return this.paymentsService.getPayments(req.user.userId, req.user.role);
+  }
+
+  /**
    * GET /api/payments/invoice/:invoiceId
    * Fetch payment records (with transactions) for a given invoice.
    */

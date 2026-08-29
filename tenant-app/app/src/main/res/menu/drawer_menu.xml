@@ -23,9 +23,9 @@
             android:title="@string/label_notifications" />
 
         <item
-            android:id="@+id/maintenanceFragment"
-            android:icon="@drawable/ic_info"
-            android:title="@string/label_maintenance" />
+            android:id="@+id/paymentHistoryFragment"
+            android:icon="@drawable/ic_receipt"
+            android:title="@string/label_payment_history" />
 
         <item
             android:id="@+id/queriesFragment"

@@ -1,10 +1,27 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional, IsPositive, IsString, IsUUID, Matches } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  IsUUID,
+  Matches,
+} from 'class-validator';
 
 export class InitiatePaymentDto {
-  /** The invoice to pay */
+  /** A single invoice to pay (kept for backwards compatibility). */
+  @IsOptional()
   @IsUUID()
-  invoiceId!: string;
+  invoiceId?: string;
+
+  /** Multiple invoices to settle with one M-Pesa payment. */
+  @IsOptional()
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsUUID('4', { each: true })
+  invoiceIds?: string[];
 
   /** Phone number to receive STK Push – must be Safaricom format */
   @IsString()

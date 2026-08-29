@@ -11,6 +11,8 @@ import com.tenantpro.app.data.model.Payment
 import com.tenantpro.app.databinding.ItemPaymentHistoryBinding
 import com.tenantpro.app.utils.toDisplayDate
 import com.tenantpro.app.utils.toKes
+import java.text.DateFormatSymbols
+import java.util.Locale
 
 class PaymentHistoryAdapter :
     ListAdapter<Payment, PaymentHistoryAdapter.ViewHolder>(DIFF_CALLBACK) {
@@ -24,6 +26,16 @@ class PaymentHistoryAdapter :
             binding.tvPhone.text           = payment.phoneNumber ?: "—"
             binding.tvReceipt.text         = payment.mpesaReceiptNumber ?: "Pending"
             binding.tvStatus.text          = payment.status.replaceFirstChar { it.uppercase() }
+            val invoice = payment.invoice
+            val period = invoice?.billingPeriod?.takeIf { it.isNotBlank() }
+                ?: if (invoice?.periodMonth in 1..12 && invoice?.periodYear != null) {
+                    "${DateFormatSymbols(Locale.getDefault()).shortMonths[invoice.periodMonth!! - 1]} ${invoice.periodYear}"
+                } else null
+            val billType = invoice?.billingType
+                ?.lowercase(Locale.getDefault())
+                ?.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+                ?: "Payment"
+            binding.tvInvoice.text = listOfNotNull(billType, period).joinToString(" · ")
 
             val (textColor, bgRes) = when (payment.status) {
                 "SUCCESS"  -> Color.parseColor("#14532d") to R.drawable.bg_badge_green

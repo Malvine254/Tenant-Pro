@@ -77,16 +77,6 @@
                             android:text="New request"
                             android:textSize="12sp" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnRefreshMaintenance"
-                            style="@style/Theme.TenantPro.Button.Outlined"
-                            android:layout_width="wrap_content"
-                            android:layout_height="42dp"
-                            android:layout_marginStart="8dp"
-                            android:minWidth="88dp"
-                            android:text="Refresh"
-                            android:textSize="12sp"
-                            app:strokeColor="@color/outline_variant" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

@@ -40,7 +40,11 @@ class PaymentFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val invoiceId = arguments?.getString("invoiceId") ?: ""
+        val invoiceIds = arguments?.getStringArrayList("invoiceIds")
+            ?.filter { it.isNotBlank() }
+            ?.distinct()
+            ?.takeIf { it.isNotEmpty() }
+            ?: listOfNotNull(arguments?.getString("invoiceId")?.takeIf { it.isNotBlank() })
         val invoiceLabel = arguments?.getString("invoiceLabel") ?: ""
         val remainingAmount = arguments?.getFloat("remainingAmount") ?: 0f
 
@@ -100,7 +104,7 @@ class PaymentFragment : Fragment() {
             MaterialAlertDialogBuilder(requireContext(), com.tenantpro.app.R.style.Theme_TenantPro_Dialog_Form)
                 .setTitle("Confirm M-Pesa Payment")
                 .setMessage("Send an STK prompt for $displayAmount to $phone?\n\nConfirm on your phone using your M-Pesa PIN.")
-                .setPositiveButton("Send prompt") { _, _ -> viewModel.pay(invoiceId, normalizedPhone, amount) }
+                .setPositiveButton("Send prompt") { _, _ -> viewModel.pay(invoiceIds, normalizedPhone, amount) }
                 .setNegativeButton("Cancel", null)
                 .show()
         }

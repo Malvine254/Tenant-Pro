@@ -28,10 +28,6 @@ class RentalInfoViewModel @Inject constructor(
     private val _events = MutableSharedFlow<String>()
     val events = _events.asSharedFlow()
 
-    init {
-        refreshRentalInfo()
-    }
-
     fun refreshRentalInfo() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(loading = true)
@@ -41,6 +37,7 @@ class RentalInfoViewModel @Inject constructor(
             var pendingCount = 0
             var overdueCount = 0
 
+            authRepository.claimMatchingInvitations()
             when (val profileResult = authRepository.getMyProfile()) {
                 is Resource.Success -> {
                     val profile = profileResult.data

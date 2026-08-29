@@ -27,33 +27,45 @@ export class PaymentsService {
   // ---------------------------------------------------------------------------
 
   async initiateStkPush(actorUserId: string, actorRole: RoleName, dto: InitiatePaymentDto) {
-    const invoice = await this.prisma.invoice.findUnique({
-      where: { id: dto.invoiceId },
-      include: {
-        tenant: true,
-      },
-    });
-
-    if (!invoice) {
-      throw new NotFoundException('Invoice not found');
+    const requestedIds = [...new Set(dto.invoiceIds?.length ? dto.invoiceIds : [dto.invoiceId])]
+      .filter((id): id is string => Boolean(id));
+    if (requestedIds.length === 0) {
+      throw new BadRequestException('At least one invoice is required');
     }
 
-    if (invoice.status === InvoiceStatus.PAID || invoice.status === InvoiceStatus.CANCELLED) {
-      throw new BadRequestException(`Invoice is already ${invoice.status}`);
+    const foundInvoices = await this.prisma.invoice.findMany({
+      where: { id: { in: requestedIds } },
+      include: { tenant: true },
+    });
+    if (foundInvoices.length !== requestedIds.length) {
+      throw new NotFoundException('One or more invoices were not found');
+    }
+
+    const byId = new Map(foundInvoices.map((item) => [item.id, item]));
+    const invoices = requestedIds.map((id) => byId.get(id)!);
+    const invoice = invoices[0];
+
+    for (const item of invoices) {
+      if (item.status === InvoiceStatus.PAID || item.status === InvoiceStatus.CANCELLED) {
+        throw new BadRequestException(`Invoice ${item.id} is already ${item.status}`);
+      }
+      if (actorRole === RoleName.TENANT && item.userId !== actorUserId) {
+        throw new ForbiddenException('You can only pay your own invoices');
+      }
     }
 
     // Access control – tenant can only pay their own invoice
-    if (actorRole === RoleName.TENANT && invoice.userId !== actorUserId) {
-      throw new ForbiddenException('You can only pay your own invoices');
-    }
+    // Access for every invoice was checked above.
 
     // ── Partial-payment balance check ────────────────────────────────────
-    const totalAmount  = Number(invoice.totalAmount);
-    const paidAmount   = Number(invoice.paidAmount ?? 0);
-    const remaining    = Number((totalAmount - paidAmount).toFixed(2));
+    const balances = invoices.map((item) => ({
+      invoiceId: item.id,
+      amount: Number((Number(item.totalAmount) - Number(item.paidAmount ?? 0)).toFixed(2)),
+    }));
+    const remaining = Number(balances.reduce((sum, item) => sum + item.amount, 0).toFixed(2));
 
-    if (remaining <= 0) {
-      throw new BadRequestException('Invoice is already fully paid');
+    if (balances.some((item) => item.amount <= 0)) {
+      throw new BadRequestException('One or more invoices are already fully paid');
     }
 
     if (dto.amount !== undefined && dto.amount > remaining) {
@@ -63,6 +75,14 @@ export class PaymentsService {
     }
 
     const amount = dto.amount !== undefined ? dto.amount : remaining;
+    const allocations: Array<{ invoiceId: string; amount: number }> = [];
+    let amountToAllocate = amount;
+    for (const balance of balances) {
+      if (amountToAllocate <= 0) break;
+      const allocated = Number(Math.min(balance.amount, amountToAllocate).toFixed(2));
+      allocations.push({ invoiceId: balance.invoiceId, amount: allocated });
+      amountToAllocate = Number((amountToAllocate - allocated).toFixed(2));
+    }
     // ────────────────────────────────────────────────────────────────────────
 
     // Create a payment record in INITIATED state before contacting M-Pesa
@@ -85,6 +105,7 @@ export class PaymentsService {
         type: TransactionType.STK_PUSH,
         provider: 'MPESA',
         amount,
+        rawPayload: { invoiceAllocations: allocations },
         isValid: false,
       },
     });
@@ -93,8 +114,12 @@ export class PaymentsService {
       const stkResult = await this.mpesa.stkPush({
         phoneNumber: dto.phoneNumber,
         amount,
-        accountReference: invoice.id.substring(0, 12).toUpperCase(),
-        transactionDesc: `Payment for invoice ${invoice.id}`,
+        accountReference: requestedIds.length > 1
+          ? `BILLS-${invoice.id.substring(0, 6)}`.toUpperCase()
+          : invoice.id.substring(0, 12).toUpperCase(),
+        transactionDesc: requestedIds.length > 1
+          ? `Payment for ${requestedIds.length} invoices`
+          : `Payment for invoice ${invoice.id}`,
       });
 
       // Persist both M-Pesa request IDs on the payment row
@@ -137,13 +162,25 @@ export class PaymentsService {
 
     const payment = await this.prisma.payment.findUnique({
       where: { mpesaCheckoutRequestId: CheckoutRequestID },
-      include: { invoice: true },
+      include: {
+        invoice: true,
+        transactions: {
+          where: { type: TransactionType.STK_PUSH },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
     });
 
     if (!payment) {
       this.logger.warn(
         `No payment found for CheckoutRequestID: ${CheckoutRequestID}. Ignoring callback.`,
       );
+      return { ResultCode: 0, ResultDesc: 'Accepted' };
+    }
+
+    // Safaricom can retry callbacks. Never allocate the same receipt twice.
+    if (payment.status === PaymentStatus.SUCCESS || payment.status === PaymentStatus.FAILED) {
       return { ResultCode: 0, ResultDesc: 'Accepted' };
     }
 
@@ -180,15 +217,49 @@ export class PaymentsService {
       const now = new Date();
 
       // Re-fetch to get latest paidAmount (may have changed since callback arrived)
-      const freshInvoice = await this.prisma.invoice.findUnique({
-        where: { id: payment.invoiceId },
+      const requestPayload = payment.transactions[0]?.rawPayload as {
+        invoiceAllocations?: Array<{ invoiceId?: unknown; amount?: unknown }>;
+      } | null;
+      const storedAllocations = requestPayload?.invoiceAllocations
+        ?.filter((item) => typeof item.invoiceId === 'string' && Number(item.amount) > 0)
+        .map((item) => ({ invoiceId: String(item.invoiceId), amount: Number(item.amount) }));
+      const requestedAllocations = storedAllocations?.length
+        ? storedAllocations
+        : [{ invoiceId: payment.invoiceId, amount: Number(payment.amount) }];
+      const allocationInvoices = await this.prisma.invoice.findMany({
+        where: { id: { in: requestedAllocations.map((item) => item.invoiceId) } },
       });
+      const allocationInvoiceById = new Map(allocationInvoices.map((item) => [item.id, item]));
+      const amountPaidNow = transactionAmount ?? Number(payment.amount);
+      let actualAmountRemaining = amountPaidNow;
+      const invoiceUpdates: Prisma.PrismaPromise<unknown>[] = [];
 
-      const amountPaidNow   = transactionAmount ?? Number(payment.amount);
-      const prevPaid        = Number(freshInvoice?.paidAmount ?? 0);
-      const newPaidAmount   = Number((prevPaid + amountPaidNow).toFixed(2));
-      const invoiceTotal    = Number(freshInvoice?.totalAmount ?? '0');
-      const isFullyPaid     = newPaidAmount >= invoiceTotal;
+      for (const allocation of requestedAllocations) {
+        const currentInvoice = allocationInvoiceById.get(allocation.invoiceId);
+        if (!currentInvoice) continue;
+        const invoiceTotal = Number(currentInvoice.totalAmount);
+        const currentPaid = Number(currentInvoice.paidAmount ?? 0);
+        const currentBalance = Math.max(0, invoiceTotal - currentPaid);
+        const allocatedNow = Number(
+          Math.min(allocation.amount, actualAmountRemaining, currentBalance).toFixed(2),
+        );
+        if (allocatedNow <= 0) continue;
+        const newPaidAmount = Number(
+          Math.min(invoiceTotal, currentPaid + allocatedNow).toFixed(2),
+        );
+        invoiceUpdates.push(
+          this.prisma.invoice.update({
+            where: { id: allocation.invoiceId },
+            data: {
+              paidAmount: newPaidAmount,
+              ...(newPaidAmount >= invoiceTotal
+                ? { status: InvoiceStatus.PAID, paidAt: now }
+                : {}),
+            },
+          }),
+        );
+        actualAmountRemaining = Number((actualAmountRemaining - allocatedNow).toFixed(2));
+      }
 
       await this.prisma.$transaction([
         // Update payment row
@@ -200,21 +271,12 @@ export class PaymentsService {
             paidAt: now,
           },
         }),
-        // Update invoice paidAmount; only flip status to PAID when fully settled
-        this.prisma.invoice.update({
-          where: { id: payment.invoiceId },
-          data: {
-            paidAmount: newPaidAmount,
-            ...(isFullyPaid
-              ? { status: InvoiceStatus.PAID, paidAt: now }
-              : {}),
-          },
-        }),
+        ...invoiceUpdates,
       ]);
 
       this.logger.log(
         `Payment ${payment.id} succeeded – Receipt: ${receiptNumber ?? 'N/A'} | ` +
-        `paidAmount: ${newPaidAmount}/${invoiceTotal} (${isFullyPaid ? 'FULLY PAID' : 'PARTIAL'})`,
+        `allocated ${amountPaidNow} across ${invoiceUpdates.length} invoice(s)`,
       );
 
       const successUser = await this.prisma.user.findUnique({
@@ -258,6 +320,23 @@ export class PaymentsService {
   // ---------------------------------------------------------------------------
   // Read helpers (tenant-accessible payment history)
   // ---------------------------------------------------------------------------
+
+  async getPayments(actorUserId: string, actorRole: RoleName) {
+    const where = actorRole === RoleName.ADMIN
+      ? {}
+      : actorRole === RoleName.LANDLORD
+        ? { invoice: { unit: { property: { landlordId: actorUserId } } } }
+        : { userId: actorUserId };
+
+    return this.prisma.payment.findMany({
+      where,
+      include: {
+        invoice: true,
+        transactions: { orderBy: { createdAt: 'desc' } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 
   async getPaymentsByInvoice(actorUserId: string, actorRole: RoleName, invoiceId: string) {
     const invoice = await this.prisma.invoice.findUnique({
