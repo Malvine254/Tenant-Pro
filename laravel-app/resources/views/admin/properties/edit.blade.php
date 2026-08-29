@@ -2,6 +2,52 @@
 @section('page-title', 'Edit Property')
 
 @section('content')
+<style>
+    .property-edit-section {
+        border-top: 1px solid var(--line);
+        margin: 6px 0 18px;
+        padding-top: 18px;
+    }
+    .property-edit-help { color: var(--muted); }
+    .bulk-rent-panel {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) auto;
+        align-items: end;
+        gap: 12px;
+        padding: 14px;
+        margin-bottom: 14px;
+        border: 1px solid rgba(96, 165, 250, .25);
+        border-radius: 12px;
+        background: rgba(59, 130, 246, .08);
+    }
+    .bulk-rent-panel .form-group { margin-bottom: 0; }
+    .bulk-rent-status {
+        grid-column: 1 / -1;
+        min-height: 17px;
+        color: var(--green);
+        font-size: 12px;
+    }
+    .unit-price-card {
+        padding: 14px;
+        margin-bottom: 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: linear-gradient(180deg, rgba(17, 24, 39, .92), rgba(11, 18, 32, .96));
+        box-shadow: 0 10px 24px rgba(2, 6, 23, .16);
+    }
+    .units-empty {
+        padding: 18px;
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+        background: rgba(15, 23, 42, .35);
+        color: var(--muted);
+        text-align: center;
+    }
+    @media (max-width: 650px) {
+        .bulk-rent-panel { grid-template-columns: 1fr; }
+        .bulk-rent-panel .btn { width: 100%; text-align: center; }
+    }
+</style>
 <div style="max-width:1100px;">
     <h2 style="font-size:16px;font-weight:600;margin-bottom:16px;">Edit: {{ $property->name }}</h2>
     <div class="card">
@@ -15,7 +61,7 @@
                     @endforeach
                 </select>
                 @if(auth()->user()?->role?->name !== 'LANDLORD')
-                    <div style="font-size:12px;margin-top:5px;color:#64748b;"><a href="{{ route('admin.landlords.create') }}">Add a new landlord</a></div>
+                    <div class="property-edit-help" style="font-size:12px;margin-top:5px;"><a href="{{ route('admin.landlords.create') }}">Add a new landlord</a></div>
                 @endif
                 @error('landlord_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>
@@ -36,7 +82,7 @@
                     </div>
                 @endif
                 <input type="file" name="cover_image" accept="image/*" style="padding:8px;">
-                <small style="color:#64748b;">JPG, PNG up to 5MB</small>
+                <small class="property-edit-help">JPG, PNG up to 5MB</small>
                 @if($property->cover_image_url)
                     <label style="display:flex;align-items:center;gap:8px;margin-top:9px;font-weight:normal;">
                         <input type="checkbox" name="remove_cover_image" value="1" style="width:auto;" {{ old('remove_cover_image') ? 'checked' : '' }}>
@@ -63,9 +109,9 @@
                     <input type="text" name="country" value="{{ old('country', $property->country) }}">
                 </div>
             </div>
-            <div style="border-top:1px solid #e2e8f0;margin:6px 0 18px;padding-top:18px;">
+            <div class="property-edit-section">
                 <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;">Recurring tenant bills</h3>
-                <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Water and garbage invoices are issued monthly for every active tenancy. Electricity defaults to prepaid and is not automatically invoiced.</p>
+                <p class="property-edit-help" style="font-size:12px;margin-bottom:14px;">Water and garbage invoices are issued monthly for every active tenancy. Electricity defaults to prepaid and is not automatically invoiced.</p>
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
                     <div class="form-group">
                         <label>Water fee (KES/month)</label>
@@ -85,20 +131,38 @@
                     </div>
                 </div>
             </div>
-            <div style="border-top:1px solid #e2e8f0;margin:6px 0 18px;padding-top:18px;">
+            <div class="property-edit-section">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px;">
                     <div>
                         <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;">Units and monthly pricing</h3>
-                        <p style="font-size:12px;color:#64748b;margin:0;">Edit every unit here. New rent applies to future billing; invoices already issued keep their recorded amount.</p>
+                        <p class="property-edit-help" style="font-size:12px;margin:0;">Edit every unit here. New rent applies to future billing; invoices already issued keep their recorded amount.</p>
                     </div>
                     <a href="{{ route('admin.properties.units.create', $property) }}" class="btn btn-secondary" style="white-space:nowrap;">+ Add Unit</a>
                 </div>
 
                 @error('units')<div class="form-error" style="margin-bottom:12px;">{{ $message }}</div>@enderror
 
+                @if($property->units->isNotEmpty())
+                    @php
+                        $commonRent = $property->units
+                            ->pluck('rent_amount')
+                            ->map(fn ($amount) => number_format((float) $amount, 2, '.', ''))
+                            ->unique()
+                            ->when(fn ($amounts) => $amounts->count() === 1, fn ($amounts) => $amounts->first());
+                    @endphp
+                    <div class="bulk-rent-panel">
+                        <div class="form-group">
+                            <label for="bulkRentAmount">Set the same monthly rent for every unit (KES)</label>
+                            <input id="bulkRentAmount" type="number" value="{{ is_string($commonRent) ? $commonRent : '' }}" min="0" step="0.01" placeholder="Enter the shared monthly rent">
+                        </div>
+                        <button type="button" class="btn btn-primary" id="applyBulkRent">Apply to all {{ $property->units->count() }} units</button>
+                        <div class="bulk-rent-status" id="bulkRentStatus" role="status" aria-live="polite"></div>
+                    </div>
+                @endif
+
                 @forelse($property->units as $index => $unit)
                     <input type="hidden" name="units[{{ $index }}][id]" value="{{ $unit->id }}">
-                    <div style="border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin-bottom:12px;background:#f8fafc;">
+                    <div class="unit-price-card">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;">
                             <strong style="font-size:14px;">Unit {{ $unit->unit_number }}</strong>
                             @if($unit->tenant)
@@ -118,7 +182,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Monthly Rent (KES)</label>
-                                <input type="number" name="units[{{ $index }}][rent_amount]" value="{{ old("units.$index.rent_amount", $unit->rent_amount) }}" min="0" step="0.01" required>
+                                <input type="number" name="units[{{ $index }}][rent_amount]" value="{{ old("units.$index.rent_amount", $unit->rent_amount) }}" min="0" step="0.01" required data-unit-rent>
                                 @error("units.$index.rent_amount")<div class="form-error">{{ $message }}</div>@enderror
                             </div>
                             <div class="form-group">
@@ -146,7 +210,7 @@
                         </div>
                     </div>
                 @empty
-                    <div style="border:1px dashed #cbd5e1;border-radius:8px;padding:18px;text-align:center;color:#64748b;">No units have been added to this property yet.</div>
+                    <div class="units-empty">No units have been added to this property yet.</div>
                 @endforelse
             </div>
             <div style="display:flex;gap:10px;">
@@ -156,4 +220,42 @@
         </form>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const bulkInput = document.getElementById('bulkRentAmount');
+    const applyButton = document.getElementById('applyBulkRent');
+    const status = document.getElementById('bulkRentStatus');
+    const unitRentInputs = Array.from(document.querySelectorAll('[data-unit-rent]'));
+
+    if (!bulkInput || !applyButton || unitRentInputs.length === 0) return;
+
+    const applyBulkRent = () => {
+        bulkInput.setCustomValidity('');
+        if (!bulkInput.checkValidity() || bulkInput.value.trim() === '') {
+            bulkInput.setCustomValidity('Enter a valid monthly rent of zero or more.');
+            bulkInput.reportValidity();
+            return;
+        }
+
+        const amount = Number(bulkInput.value).toFixed(2);
+        unitRentInputs.forEach(input => {
+            input.value = amount;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        status.textContent = `Applied KES ${amount} to ${unitRentInputs.length} units. Save the form to confirm the change.`;
+    };
+
+    applyButton.addEventListener('click', applyBulkRent);
+    bulkInput.addEventListener('input', () => {
+        bulkInput.setCustomValidity('');
+        status.textContent = '';
+    });
+    bulkInput.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            applyBulkRent();
+        }
+    });
+});
+</script>
 @endsection
