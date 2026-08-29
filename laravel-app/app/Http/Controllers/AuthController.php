@@ -112,15 +112,9 @@ class AuthController extends Controller
             return response()->json(['message' => 'Account is inactive.'], 403);
         }
 
-        if (!$user->hasActiveServiceAccess()) {
-            if ($user->isLandlord()) {
-                $message = $this->subscriptionService->evaluate($user)['message'] ?? 'Your service subscription is inactive.';
-                return response()->json(['message' => $message], 403);
-            }
-
-            return response()->json([
-                'message' => 'Your services are temporarily unavailable because the property owner account is inactive or past due.',
-            ], 403);
+        if ($user->isLandlord() && !$user->hasActiveServiceAccess()) {
+            $message = $this->subscriptionService->evaluate($user)['message'] ?? 'Your service subscription is inactive.';
+            return response()->json(['message' => $message], 403);
         }
 
         if (!$user->email_verified_at) {
@@ -472,11 +466,15 @@ class AuthController extends Controller
     {
         $subscriptionState = $user->isLandlord()
             ? $this->subscriptionService->evaluate($user)
-            : [
+            : ($user->hasActiveServiceAccess() ? [
                 'allowed' => true,
                 'status' => 'not_required',
                 'message' => null,
-            ];
+            ] : [
+                'allowed' => false,
+                'status' => 'restricted',
+                'message' => 'Rental services are temporarily unavailable because the property owner account is inactive or past due.',
+            ]);
 
         // Ensure payload reflects any status updates done during evaluation.
         if ($user->isLandlord()) {
@@ -498,6 +496,12 @@ class AuthController extends Controller
 
         if ($tenancies->isEmpty() && $tenant) {
             $tenancies = collect([$tenant->loadMissing('unit.property')]);
+        }
+
+        // Never return suspended landlord, property or unit details in a
+        // restricted tenant's login/profile payload.
+        if (!$user->isLandlord() && !($subscriptionState['allowed'] ?? true)) {
+            $tenancies = collect();
         }
 
         $tenantProfiles = $tenancies->map(function (Tenant $tenant) {

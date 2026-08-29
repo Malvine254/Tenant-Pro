@@ -42,6 +42,13 @@ class EnsureAccountAccess
                 return response()->json(['message' => $message], 403);
             }
 
+            // A tenant still owns their account when their landlord is suspended.
+            // Keep only account, notification and logout routes available while
+            // preventing access to landlord, unit, billing and support data.
+            if ($this->isRestrictedTenantRouteAllowed($request)) {
+                return $next($request);
+            }
+
             return response()->json([
                 'message' => 'Your services are temporarily unavailable because the property owner account is inactive or past due.',
                 'code' => 'LANDLORD_ACCESS_SUSPENDED',
@@ -49,5 +56,19 @@ class EnsureAccountAccess
         }
 
         return $next($request);
+    }
+
+    private function isRestrictedTenantRouteAllowed(Request $request): bool
+    {
+        return match (true) {
+            $request->isMethod('GET') && $request->is('api/auth/me') => true,
+            in_array($request->method(), ['GET', 'PATCH'], true) && $request->is('api/users/me/profile') => true,
+            $request->isMethod('POST') && $request->is('api/users/me/profile-image') => true,
+            $request->isMethod('POST') && $request->is('api/users/device-token') => true,
+            $request->isMethod('POST') && $request->is('api/auth/logout') => true,
+            $request->isMethod('GET') && $request->is('api/notifications') => true,
+            in_array($request->method(), ['PATCH', 'POST', 'DELETE'], true) && $request->is('api/notifications/*') => true,
+            default => false,
+        };
     }
 }

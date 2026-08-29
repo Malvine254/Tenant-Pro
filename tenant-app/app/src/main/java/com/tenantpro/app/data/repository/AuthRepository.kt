@@ -233,6 +233,7 @@ class AuthRepository @Inject constructor(
             email = user.email,
             userId = user.userId
         )
+        dataStore.saveRentalAccessRestricted(!user.subscriptionAllowed)
 
         dataStore.saveProfileData(
             name = displayName.orEmpty(),

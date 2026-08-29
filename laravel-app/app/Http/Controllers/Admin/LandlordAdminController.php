@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Role;
-use App\Models\Tenant;
 use App\Models\User;
 use App\Services\LandlordSubscriptionService;
 use Illuminate\Http\Request;
@@ -187,15 +186,5 @@ class LandlordAdminController extends Controller
     private function revokeSuspendedLandlordSessions(User $landlord): void
     {
         $landlord->tokens()->delete();
-
-        $tenantUserIds = Tenant::query()
-            ->where('is_active', true)
-            ->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $landlord->id))
-            ->pluck('user_id')
-            ->unique();
-
-        User::query()
-            ->whereIn('id', $tenantUserIds)
-            ->eachById(fn (User $tenant) => $tenant->tokens()->delete());
     }
 }

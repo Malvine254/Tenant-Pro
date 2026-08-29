@@ -37,6 +37,7 @@ class DataStoreManager @Inject constructor(
         private val KEY_BIOMETRIC_LOCK_ENABLED = booleanPreferencesKey("biometric_lock_enabled")
         private val KEY_BIOMETRIC_SESSION_TOKEN = stringPreferencesKey("biometric_session_token")
         private val KEY_PENDING_FCM_TOKEN = stringPreferencesKey("pending_fcm_token")
+        private val KEY_RENTAL_ACCESS_RESTRICTED = booleanPreferencesKey("rental_access_restricted")
     }
 
     val accessToken: Flow<String?> = context.dataStore.data
@@ -89,6 +90,9 @@ class DataStoreManager @Inject constructor(
 
     val pendingFcmToken: Flow<String?> = context.dataStore.data
         .map { it[KEY_PENDING_FCM_TOKEN] }
+
+    val rentalAccessRestricted: Flow<Boolean> = context.dataStore.data
+        .map { it[KEY_RENTAL_ACCESS_RESTRICTED] ?: false }
 
     suspend fun saveAuthData(token: String, phone: String, name: String?, email: String? = null, userId: String? = null) {
         context.dataStore.edit { prefs ->
@@ -188,6 +192,12 @@ class DataStoreManager @Inject constructor(
         }
     }
 
+    suspend fun saveRentalAccessRestricted(restricted: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_RENTAL_ACCESS_RESTRICTED] = restricted
+        }
+    }
+
     suspend fun clearPendingFcmToken() {
         context.dataStore.edit { prefs ->
             prefs.remove(KEY_PENDING_FCM_TOKEN)
@@ -229,6 +239,16 @@ class DataStoreManager @Inject constructor(
             prefs.remove(KEY_LAST_NOTIFICATION_CHECKPOINT)
             prefs.remove(KEY_LAST_SUPPORT_REPLY_CHECKPOINT)
             prefs.remove(KEY_BIOMETRIC_SESSION_TOKEN)
+            prefs.remove(KEY_RENTAL_ACCESS_RESTRICTED)
+        }
+    }
+
+    suspend fun clearRestrictedRentalData() {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_RENTAL_ACCESS_RESTRICTED] = true
+            prefs.remove(KEY_QUERY_CHAT_HISTORY)
+            prefs.remove(KEY_PENDING_SUPPORT_QUEUE)
+            prefs.remove(KEY_LAST_SUPPORT_REPLY_CHECKPOINT)
         }
     }
 

@@ -152,6 +152,14 @@ class MainActivity : AppCompatActivity() {
 
         bindDrawerHeader(navView)
 
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                dataStoreManager.rentalAccessRestricted.collect { restricted ->
+                    setRentalMenuAccess(navView, restricted)
+                }
+            }
+        }
+
         // Handle logout from drawer menu
         navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
@@ -246,6 +254,17 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+
+        // A suspended landlord restricts rental services, but the tenant keeps
+        // their own signed-in account and is not redirected to Login.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                sessionManager.accessRestricted.collect { message ->
+                    toast(message)
+                }
+            }
+        }
     }
 
     override fun onStart() {
@@ -333,6 +352,17 @@ class MainActivity : AppCompatActivity() {
             else -> null
         }
         return code?.takeIf { it.isNotBlank() }
+    }
+
+    private fun setRentalMenuAccess(navView: NavigationView, restricted: Boolean) {
+        listOf(
+            R.id.invoicesFragment,
+            R.id.rentalInfoFragment,
+            R.id.paymentHistoryFragment,
+            R.id.queriesFragment
+        ).forEach { itemId ->
+            navView.menu.findItem(itemId)?.isVisible = !restricted
+        }
     }
 
     private fun handlePendingInvitationDeepLink() {

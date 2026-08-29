@@ -14,7 +14,7 @@ class LandlordSuspensionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_suspending_landlord_revokes_landlord_and_affected_tenant_api_sessions(): void
+    public function test_suspending_landlord_revokes_only_landlord_sessions(): void
     {
         [$admin, $landlord, $tenant] = $this->users();
         $this->assignTenantToLandlord($tenant, $landlord);
@@ -28,21 +28,37 @@ class LandlordSuspensionTest extends TestCase
 
         $this->assertFalse((bool) $landlord->fresh()->is_active);
         $this->assertSame(0, $landlord->tokens()->count());
-        $this->assertSame(0, $tenant->tokens()->count());
+        $this->assertSame(1, $tenant->tokens()->count());
     }
 
-    public function test_tenant_api_access_is_blocked_while_landlord_is_suspended(): void
+    public function test_tenant_can_login_but_landlord_dependent_operations_are_restricted(): void
     {
         [, $landlord, $tenant] = $this->users();
         $this->assignTenantToLandlord($tenant, $landlord);
         $landlord->update(['is_active' => false]);
-        $token = $tenant->createToken('stale-session')->plainTextToken;
         config(['deployment.mobile_api_key' => 'test-mobile-key']);
 
-        $this->withHeaders([
+        $login = $this->withHeader('X-Mobile-App-Key', 'test-mobile-key')
+            ->postJson('/api/auth/login', [
+                'email' => $tenant->email,
+                'password' => 'password',
+            ])
+            ->assertOk()
+            ->assertJsonPath('user.subscriptionAllowed', false)
+            ->assertJsonCount(0, 'user.tenantProfiles');
+
+        $token = $login->json('token');
+        $headers = [
             'X-Mobile-App-Key' => 'test-mobile-key',
             'Authorization' => 'Bearer '.$token,
-        ])->getJson('/api/auth/me')
+        ];
+
+        $this->withHeaders($headers)->getJson('/api/auth/me')
+            ->assertOk()
+            ->assertJsonPath('subscriptionAllowed', false)
+            ->assertJsonCount(0, 'tenantProfiles');
+
+        $this->withHeaders($headers)->getJson('/api/invoices')
             ->assertForbidden()
             ->assertJson([
                 'code' => 'LANDLORD_ACCESS_SUSPENDED',

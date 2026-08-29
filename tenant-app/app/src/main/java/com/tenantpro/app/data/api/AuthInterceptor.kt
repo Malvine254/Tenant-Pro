@@ -20,6 +20,7 @@ class AuthInterceptor @Inject constructor(
     private val cache: SafeResponseCache
 ) : Interceptor {
     private val sessionExpiredNotified = AtomicBoolean(false)
+    private val accessRestrictedNotified = AtomicBoolean(false)
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val token = runBlocking { dataStoreManager.accessToken.firstOrNull() }
@@ -33,11 +34,11 @@ class AuthInterceptor @Inject constructor(
 
         val response = chain.proceed(request)
 
-        val accessSuspended = response.code == 403 && response.peekBody(64 * 1024).string().let { body ->
-            body.contains("LANDLORD_ACCESS_SUSPENDED") || body.contains("ACCOUNT_SUSPENDED")
-        }
+        val responseBody = if (response.code == 403) response.peekBody(64 * 1024).string() else ""
+        val landlordAccessSuspended = response.code == 403 && responseBody.contains("LANDLORD_ACCESS_SUSPENDED")
+        val accountSuspended = response.code == 403 && responseBody.contains("ACCOUNT_SUSPENDED")
 
-        if ((response.code == 401 || accessSuspended) &&
+        if ((response.code == 401 || accountSuspended) &&
             !token.isNullOrBlank() &&
             sessionExpiredNotified.compareAndSet(false, true)
         ) {
@@ -47,14 +48,26 @@ class AuthInterceptor @Inject constructor(
                 dataStoreManager.clearSession()
             }
             sessionManager.notifyExpired(
-                if (accessSuspended) {
-                    "Access is paused because the property manager account is suspended."
+                if (accountSuspended) {
+                    "Your account is suspended. Please contact support."
                 } else {
                     "Your session has expired. Please sign in again."
                 }
             )
-        } else if (response.code != 401 && !accessSuspended) {
+        } else if (response.code != 401 && !accountSuspended) {
             sessionExpiredNotified.set(false)
+        }
+
+        if (landlordAccessSuspended && !token.isNullOrBlank() && accessRestrictedNotified.compareAndSet(false, true)) {
+            runBlocking {
+                cache.clearCurrentUser()
+                dataStoreManager.clearRestrictedRentalData()
+            }
+            sessionManager.notifyAccessRestricted(
+                "Rental services are temporarily restricted because the property owner account is inactive."
+            )
+        } else if (!landlordAccessSuspended) {
+            accessRestrictedNotified.set(false)
         }
 
         return response
