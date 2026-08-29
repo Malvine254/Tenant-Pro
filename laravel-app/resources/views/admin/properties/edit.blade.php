@@ -143,17 +143,10 @@
                 @error('units')<div class="form-error" style="margin-bottom:12px;">{{ $message }}</div>@enderror
 
                 @if($property->units->isNotEmpty())
-                    @php
-                        $commonRent = $property->units
-                            ->pluck('rent_amount')
-                            ->map(fn ($amount) => number_format((float) $amount, 2, '.', ''))
-                            ->unique()
-                            ->when(fn ($amounts) => $amounts->count() === 1, fn ($amounts) => $amounts->first());
-                    @endphp
                     <div class="bulk-rent-panel">
                         <div class="form-group">
                             <label for="bulkRentAmount">Set the same monthly rent for every unit (KES)</label>
-                            <input id="bulkRentAmount" type="number" value="{{ is_string($commonRent) ? $commonRent : '' }}" min="0" step="0.01" placeholder="Enter the shared monthly rent">
+                            <input id="bulkRentAmount" type="number" min="0" step="0.01" placeholder="Enter the shared monthly rent">
                         </div>
                         <button type="button" class="btn btn-primary" id="applyBulkRent">Apply to all {{ $property->units->count() }} units</button>
                         <div class="bulk-rent-status" id="bulkRentStatus" role="status" aria-live="polite"></div>
