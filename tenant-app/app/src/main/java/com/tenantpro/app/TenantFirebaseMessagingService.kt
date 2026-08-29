@@ -29,7 +29,9 @@ class TenantFirebaseMessagingService : FirebaseMessagingService() {
             val jwt = dataStore.accessToken.firstOrNull()
             if (!jwt.isNullOrBlank()) {
                 runCatching { api.saveDeviceToken(mapOf("token" to token)) }
-                    .onSuccess { dataStore.clearPendingFcmToken() }
+                    .onSuccess { response ->
+                        if (response.isSuccessful) dataStore.clearPendingFcmToken()
+                    }
             }
         }
     }

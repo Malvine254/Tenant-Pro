@@ -29,6 +29,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.tenantpro.app.R
+import com.tenantpro.app.MainActivity
 import com.tenantpro.app.databinding.FragmentAccountSettingsBinding
 import com.tenantpro.app.utils.toast
 import com.tenantpro.app.utils.toAbsoluteAssetUrl
@@ -127,6 +128,7 @@ class AccountSettingsFragment : Fragment() {
         binding.root.findViewById<SwitchMaterial>(R.id.switchNotifications)
             ?.setOnCheckedChangeListener { _, checked ->
                 if (!suppressSwitchEvents) {
+                    if (checked) (activity as? MainActivity)?.ensureNotificationPermission()
                     viewModel.setNotificationsEnabled(checked)
                 }
             }

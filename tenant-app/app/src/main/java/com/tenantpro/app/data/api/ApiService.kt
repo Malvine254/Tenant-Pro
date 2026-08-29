@@ -100,6 +100,9 @@ interface ApiService {
     @POST("users/device-token")
     suspend fun saveDeviceToken(@Body body: Map<String, String>): Response<MessageResponse>
 
+    @POST("auth/logout")
+    suspend fun logout(): Response<MessageResponse>
+
     // ──────────────────────────────────────────────────────────────────────────
     // Invoices
     // ──────────────────────────────────────────────────────────────────────────

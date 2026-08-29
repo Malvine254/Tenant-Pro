@@ -30,15 +30,24 @@ class FirebasePushService
                 ->post('https://fcm.googleapis.com/v1/projects/'.$credentials['project_id'].'/messages:send', [
                     'message' => [
                         'token' => $deviceToken,
-                        // Data-only messages are delivered to FirebaseMessagingService
-                        // while Android has the app in the background. Mixed messages
-                        // bypass that service and use Android's default notification UI.
+                        // Notification + data lets Android display the alert itself
+                        // while the app is backgrounded or its process is not running.
+                        'notification' => [
+                            'title' => $title,
+                            'body' => $body,
+                        ],
                         'data' => collect(array_merge($data, ['title' => $title, 'body' => $body]))
                             ->mapWithKeys(fn ($value, $key) => [(string) $key => (string) ($value ?? '')])
                             ->all(),
                         'android' => [
                             'priority' => $highPriority ? 'HIGH' : 'NORMAL',
-                            'ttl' => $highPriority ? '600s' : '3600s',
+                            'ttl' => $highPriority ? '86400s' : '604800s',
+                            'notification' => [
+                                'channel_id' => $channelId,
+                                'icon' => 'ic_notifications',
+                                'sound' => 'default',
+                                'default_vibrate_timings' => true,
+                            ],
                         ],
                     ],
                 ]);
@@ -55,18 +64,34 @@ class FirebasePushService
 
     private function credentials(): ?array
     {
+        $base64 = config('services.firebase.credentials_base64');
+        if (is_string($base64) && trim($base64) !== '') {
+            $decoded = base64_decode(trim($base64), true);
+            $credentials = $decoded === false ? null : json_decode($decoded, true);
+            if (is_array($credentials)) return $credentials;
+        }
+
         $inline = config('services.firebase.credentials_json');
         if (is_string($inline) && trim($inline) !== '') {
             $decoded = json_decode($inline, true);
             if (is_array($decoded)) return $decoded;
         }
 
-        $path = config('services.firebase.credentials');
-        if (!$path) $path = base_path('../firebase-service-account.json');
-        if (!is_file($path)) return null;
+        $configuredPath = config('services.firebase.credentials');
+        $paths = array_values(array_unique(array_filter([
+            is_string($configuredPath) ? $configuredPath : null,
+            is_string($configuredPath) ? base_path($configuredPath) : null,
+            base_path('firebase-service-account.json'),
+            base_path('../firebase-service-account.json'),
+        ])));
 
-        $decoded = json_decode((string) file_get_contents($path), true);
-        return is_array($decoded) ? $decoded : null;
+        foreach ($paths as $path) {
+            if (!is_file($path)) continue;
+            $credentials = json_decode((string) file_get_contents($path), true);
+            if (is_array($credentials)) return $credentials;
+        }
+
+        return null;
     }
 
     private function accessToken(array $credentials): string

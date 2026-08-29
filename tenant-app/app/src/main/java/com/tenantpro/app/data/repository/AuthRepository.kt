@@ -196,6 +196,8 @@ class AuthRepository @Inject constructor(
 
     suspend fun logout() {
         notificationWorkScheduler.cancel()
+        runCatching { api.logout() }
+        runCatching { FirebaseMessaging.getInstance().deleteToken().await() }
         cache.clearCurrentUser()
         dataStore.clearSession()
     }

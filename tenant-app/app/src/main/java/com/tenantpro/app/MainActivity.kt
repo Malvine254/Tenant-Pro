@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
         readNotificationDestination(intent)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        requestNotificationsIfNeeded()
+        ensureNotificationPermission()
 
         // Keep focused fields visible when keyboard opens on any fragment screen.
         ViewCompat.setOnApplyWindowInsetsListener(binding.navHostFragment) { view, insets ->
@@ -277,7 +277,7 @@ class MainActivity : AppCompatActivity() {
         appUnlockedForSession = true
     }
 
-    private fun requestNotificationsIfNeeded() {
+    fun ensureNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {

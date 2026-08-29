@@ -7,6 +7,7 @@ use App\Models\Notification;
 use App\Models\Payment;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 class TenantAppNotificationService
 {
@@ -88,13 +89,26 @@ class TenantAppNotificationService
         $pushEnabled = (bool) ($settings['notificationsEnabled'] ?? true);
         if ($pushEnabled && $user->fcm_token) {
             $highPriority = $this->isHighPriority($type, $title, $body);
-            app(FirebasePushService::class)->send($user->fcm_token, $title, $body, [
+            $sent = app(FirebasePushService::class)->send($user->fcm_token, $title, $body, [
                 'type' => $type,
                 'notification_id' => $notification->id,
                 'notification_destination' => $this->destination($type),
                 'destination' => $this->destination($type),
                 ...collect($metadata)->mapWithKeys(fn ($value, $key) => [$key => is_scalar($value) ? (string) $value : json_encode($value)])->all(),
             ], $highPriority, 'tenantpro_default');
+            if (! $sent) {
+                Log::warning('Tenant push notification was stored but FCM delivery failed.', [
+                    'user_id' => $user->id,
+                    'notification_id' => $notification->id,
+                    'type' => $type,
+                ]);
+            }
+        } elseif ($pushEnabled) {
+            Log::info('Tenant push notification was stored without a registered device token.', [
+                'user_id' => $user->id,
+                'notification_id' => $notification->id,
+                'type' => $type,
+            ]);
         }
 
         return $notification;
