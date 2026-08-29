@@ -6,11 +6,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.card.MaterialCardView
 import com.tenantpro.app.R
@@ -83,14 +85,34 @@ class NotificationsFragment : Fragment() {
                 if (!item.isRead) {
                     viewModel.markRead(item.id)
                 }
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(item.title)
-                    .setMessage(item.message)
-                    .setPositiveButton(R.string.invoice_close, null)
-                    .show()
+                openNotification(item)
             }
             binding.llNotificationItems.addView(card)
         }
+    }
+
+    private fun openNotification(item: NotificationItem) {
+        val destinationAndArgs = when (item.type.uppercase(Locale.getDefault())) {
+            "SUPPORT_REPLY" -> R.id.queriesFragment to bundleOf(
+                "conversationId" to item.metadata["conversation_id"]?.toString()
+            )
+            "INVOICE_CREATED" -> R.id.invoicesFragment to null
+            "PAYMENT_RECEIVED" -> R.id.paymentHistoryFragment to null
+            "TENANCY_ASSIGNED" -> R.id.rentalInfoFragment to null
+            "MAINTENANCE" -> R.id.maintenanceFragment to null
+            else -> null
+        }
+
+        if (destinationAndArgs != null) {
+            findNavController().navigate(destinationAndArgs.first, destinationAndArgs.second)
+            return
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(item.title)
+            .setMessage(item.message)
+            .setPositiveButton(R.string.invoice_close, null)
+            .show()
     }
 
     private fun buildMeta(item: NotificationItem): String {

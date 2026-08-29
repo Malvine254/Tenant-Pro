@@ -29,7 +29,8 @@ data class NotificationItem(
     @SerializedName("message") val message: String = "",
     @SerializedName("isRead") val isRead: Boolean = false,
     @SerializedName("createdAt") val createdAt: String = "",
-    @SerializedName("readAt") val readAt: String? = null
+    @SerializedName("readAt") val readAt: String? = null,
+    @SerializedName("metadata") val metadata: Map<String, Any?> = emptyMap()
 )
 
 data class SupportMessageRequest(

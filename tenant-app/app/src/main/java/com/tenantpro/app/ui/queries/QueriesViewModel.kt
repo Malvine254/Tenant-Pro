@@ -80,6 +80,7 @@ class QueriesViewModel @Inject constructor(
     val events = _events.asSharedFlow()
 
     private var pollingJob: Job? = null
+    private var pendingConversationId: String? = null
 
     val topics = listOf("General", "Billing", "Maintenance", "Lease", "Security", "Utilities")
 
@@ -125,6 +126,11 @@ class QueriesViewModel @Inject constructor(
         _selectedPropertyId.value = propertyId
     }
 
+    fun focusConversation(conversationId: String) {
+        pendingConversationId = conversationId.takeIf { it.isNotBlank() }
+        resolvePendingConversation()
+    }
+
     fun startPolling() {
         if (pollingJob?.isActive == true) return
 
@@ -145,6 +151,7 @@ class QueriesViewModel @Inject constructor(
         val cached = parseMessages(dataStoreManager.queryChatHistoryJson.firstOrNull())
         if (showCached && cached.isNotEmpty() && _messages.value != cached) {
             _messages.value = cached
+            resolvePendingConversation()
         }
 
         when (val result = repository.getSupportMessages()) {
@@ -154,6 +161,7 @@ class QueriesViewModel @Inject constructor(
                     _messages.value = mapped
                     persist(mapped)
                 }
+                resolvePendingConversation()
             }
             is Resource.Error -> {
                 if (emitErrors && cached.isEmpty()) _events.emit(result.message)
@@ -254,6 +262,17 @@ class QueriesViewModel @Inject constructor(
 
     private suspend fun persist(list: List<QueryChatMessage>) {
         dataStoreManager.saveQueryChatHistory(toJson(list))
+    }
+
+    private fun resolvePendingConversation() {
+        val conversationId = pendingConversationId ?: return
+        val propertyId = _messages.value
+            .firstOrNull { it.conversationId == conversationId }
+            ?.propertyId
+            ?: return
+
+        _selectedPropertyId.value = propertyId
+        pendingConversationId = null
     }
 
     private suspend fun flushPendingQueue() {

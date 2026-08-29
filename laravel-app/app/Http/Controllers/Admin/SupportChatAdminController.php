@@ -53,7 +53,15 @@ class SupportChatAdminController extends Controller
         ]);
         $supportConversation->update(['is_open' => true]);
         $supportConversation->loadMissing('tenant');
-        app(TenantAppNotificationService::class)->supportReply($supportConversation->tenant, $supportConversation->topic ?: 'Support', $message->body ?: 'Sent an attachment', $supportConversation->id);
+        app(TenantAppNotificationService::class)->supportReply(
+            $supportConversation->tenant,
+            $request->user()->name ?: 'Property manager',
+            $supportConversation->topic ?: 'Support',
+            $message->body ?: 'Sent an attachment',
+            $supportConversation->id,
+            $supportConversation->property_id,
+            $message->id
+        );
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json(['ok' => true], 201);
         }

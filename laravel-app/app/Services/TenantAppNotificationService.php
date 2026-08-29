@@ -61,13 +61,32 @@ class TenantAppNotificationService
         ]);
     }
 
-    public function supportReply(User $tenant, string $topic, string $body, ?string $conversationId = null): ?Notification
+    public function supportReply(
+        User $tenant,
+        string $senderName,
+        string $topic,
+        string $body,
+        ?string $conversationId = null,
+        ?string $propertyId = null,
+        ?string $messageId = null
+    ): ?Notification
     {
-        return $this->notify($tenant, 'SUPPORT_REPLY', 'New chat reply', sprintf(
-            '%s: %s',
-            $topic ?: 'Support',
-            str($body)->limit(120)
-        ), ['conversation_id' => $conversationId]);
+        $sender = trim($senderName) ?: 'your property manager';
+        $topicLabel = trim($topic) ?: 'Support';
+        $preview = trim((string) str($body)->squish()->limit(120));
+
+        return $this->notify(
+            $tenant,
+            'SUPPORT_REPLY',
+            "You have a new message from {$sender}",
+            "{$topicLabel}: {$preview}",
+            [
+                'conversation_id' => $conversationId,
+                'property_id' => $propertyId,
+                'message_id' => $messageId,
+                'sender_name' => $sender,
+            ]
+        );
     }
 
     public function notify(?User $user, string $type, string $title, string $body, array $metadata = []): ?Notification

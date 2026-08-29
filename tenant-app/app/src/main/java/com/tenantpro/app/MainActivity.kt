@@ -34,6 +34,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.navigation.NavigationView
 import com.tenantpro.app.databinding.ActivityMainBinding
 import com.tenantpro.app.ui.auth.LoginViewModel
+import com.tenantpro.app.ui.queries.QueriesFragment
 import com.tenantpro.app.utils.DataStoreManager
 import com.tenantpro.app.utils.SessionManager
 import com.tenantpro.app.utils.toAbsoluteAssetUrl
@@ -380,12 +381,27 @@ class MainActivity : AppCompatActivity() {
         }
         if (navController.graph.findNode(destinationId) == null) return
 
-        val args = pendingNotificationEntityId?.let { bundleOf("notificationEntityId" to it) }
+        val entityId = pendingNotificationEntityId
+        val args = entityId?.let {
+            if (destination.equals("CHAT", ignoreCase = true)) {
+                bundleOf("conversationId" to it)
+            } else {
+                bundleOf("notificationEntityId" to it)
+            }
+        }
         pendingNotificationDestination = null
         pendingNotificationEntityId = null
-        if (navController.currentDestination?.id != destinationId) {
-            navController.navigate(destinationId, args)
+
+        if (navController.currentDestination?.id == destinationId) {
+            if (destinationId == R.id.queriesFragment && entityId != null) {
+                val navHost = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
+                (navHost?.childFragmentManager?.primaryNavigationFragment as? QueriesFragment)
+                    ?.openConversation(entityId)
+            }
+            return
         }
+
+        navController.navigate(destinationId, args)
     }
 
     private fun bindDrawerHeader(navView: NavigationView) {

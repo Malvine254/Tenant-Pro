@@ -211,7 +211,13 @@
         android:id="@+id/queriesFragment"
         android:name="com.tenantpro.app.ui.queries.QueriesFragment"
         android:label="@string/label_queries"
-        tools:layout="@layout/fragment_queries" />
+        tools:layout="@layout/fragment_queries">
+        <argument
+            android:name="conversationId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
 
     <fragment
         android:id="@+id/accountSettingsFragment"

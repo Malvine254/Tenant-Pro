@@ -64,6 +64,9 @@ class QueriesFragment : Fragment() {
         setupChatList()
         setupLandlordDropdown()
         bindUi()
+        arguments?.getString("conversationId")
+            ?.takeIf { it.isNotBlank() }
+            ?.let(viewModel::focusConversation)
 
         binding.btnAttachment.setOnClickListener {
             pickFileLauncher.launch("*/*")
@@ -105,6 +108,10 @@ class QueriesFragment : Fragment() {
                 true
             } else false
         }
+    }
+
+    fun openConversation(conversationId: String) {
+        if (conversationId.isNotBlank()) viewModel.focusConversation(conversationId)
     }
 
     private fun onFilePicked(uri: Uri) {
