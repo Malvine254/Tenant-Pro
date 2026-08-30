@@ -20,13 +20,24 @@ class PaymentHistoryViewModel @Inject constructor(
     private val _historyState = MutableStateFlow<Resource<List<Payment>>>(Resource.Loading)
     val historyState: StateFlow<Resource<List<Payment>>> = _historyState.asStateFlow()
 
-    fun load(invoiceId: String, forceRefresh: Boolean = false) {
+    fun load(invoiceId: String, forceRefresh: Boolean = false, silent: Boolean = false) {
         viewModelScope.launch {
-            _historyState.value = Resource.Loading
-            _historyState.value = if (invoiceId.isBlank()) {
+            val hasVisibleContent = _historyState.value is Resource.Success
+            if (!silent) _historyState.value = Resource.Loading
+            val result = if (invoiceId.isBlank()) {
                 paymentRepository.getPayments(forceRefresh)
             } else {
                 paymentRepository.getPaymentsByInvoice(invoiceId, forceRefresh)
+            }
+            when (result) {
+                is Resource.Success -> {
+                    _historyState.value = result
+                    if (result.fromCache && !forceRefresh) {
+                        load(invoiceId, forceRefresh = true, silent = true)
+                    }
+                }
+                is Resource.Error -> if (!hasVisibleContent) _historyState.value = result
+                Resource.Loading -> Unit
             }
         }
     }

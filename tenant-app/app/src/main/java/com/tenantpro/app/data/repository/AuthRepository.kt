@@ -216,11 +216,12 @@ class AuthRepository @Inject constructor(
 
     suspend fun claimMatchingInvitations(): Boolean = runCatching {
         val response = api.claimMatchingInvitations()
-        if (response.isSuccessful && (response.body()?.connectedCount ?: 0) > 0) {
+        val connected = response.isSuccessful && (response.body()?.connectedCount ?: 0) > 0
+        if (connected) {
             cache.remove(CacheKeys.PROFILE)
             cache.remove(CacheKeys.INVOICES)
         }
-        response.isSuccessful
+        connected
     }.getOrDefault(false)
 
     private suspend fun syncUserProfileToStore(user: UserProfile) {

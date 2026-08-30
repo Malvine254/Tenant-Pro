@@ -36,17 +36,16 @@ class PaymentViewModel @Inject constructor(
             val cachedMpesaPhone = cachedPhone.asMpesaDisplayNumber()
             if (cachedMpesaPhone != null) {
                 _savedPhone.value = cachedMpesaPhone
-                return@launch
             }
 
-            // A direct payment action can open before Home has refreshed the
-            // profile into DataStore. Fetch it once so the M-Pesa number still
-            // pre-fills on a fresh install or biometric unlock.
+            // Show the locally saved number immediately, then reconcile it with
+            // the server without clearing a usable value when the device is offline.
             when (val profile = authRepository.getMyProfile(forceRefresh = true)) {
                 is Resource.Success -> _savedPhone.value = profile.data.phoneNumber
                     .trim()
                     .asMpesaDisplayNumber()
-                is Resource.Error, Resource.Loading -> _savedPhone.value = null
+                    ?: _savedPhone.value
+                is Resource.Error, Resource.Loading -> Unit
             }
         }
     }

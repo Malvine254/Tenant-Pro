@@ -80,6 +80,14 @@ class HomeViewModel @Inject constructor(
     init {
         loadSummary()
 
+        // Invitation claiming must not hold up cached dashboard rendering. If a
+        // new tenancy is connected, reconcile the dashboard quietly afterwards.
+        viewModelScope.launch {
+            if (authRepository.claimMatchingInvitations()) {
+                loadSummary(forceRefresh = true, silent = true)
+            }
+        }
+
         viewModelScope.launch {
             connectivity.isConnected.collect { connected ->
                 _isOffline.value = !connected
@@ -90,13 +98,14 @@ class HomeViewModel @Inject constructor(
             connectivity.isConnected
                 .drop(1)
                 .filter { it }
-                .collect { loadSummary(forceRefresh = true) }
+                .collect { loadSummary(forceRefresh = true, silent = true) }
         }
     }
 
-    fun loadSummary(forceRefresh: Boolean = false) {
+    fun loadSummary(forceRefresh: Boolean = false, silent: Boolean = false) {
         viewModelScope.launch {
-            _summaryState.value = Resource.Loading
+            val previousSummary = _summaryState.value as? Resource.Success<HomeSummary>
+            if (!silent) _summaryState.value = Resource.Loading
 
             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
             val cal = Calendar.getInstance()
@@ -118,7 +127,6 @@ class HomeViewModel @Inject constructor(
             var profileLoaded = false
             var profileFromCache = false
 
-            authRepository.claimMatchingInvitations()
             when (val profileResult = authRepository.getMyProfile(forceRefresh)) {
                 is Resource.Success -> {
                     profileLoaded = true
@@ -323,7 +331,11 @@ class HomeViewModel @Inject constructor(
                     )
                 }
                 is Resource.Error -> {
-                    if (rentalLabel.isNotBlank()) {
+                    if (silent && previousSummary != null) {
+                        // Keep the last successfully rendered dashboard when a
+                        // background reconciliation cannot reach the server.
+                        _summaryState.value = previousSummary
+                    } else if (rentalLabel.isNotBlank()) {
                         _summaryState.value = Resource.Success(
                             HomeSummary(
                                 userName = userName,
@@ -349,6 +361,11 @@ class HomeViewModel @Inject constructor(
                     }
                 }
                 Resource.Loading -> { }
+            }
+
+            val displayed = _summaryState.value
+            if (!forceRefresh && displayed is Resource.Success && displayed.fromCache) {
+                loadSummary(forceRefresh = true, silent = true)
             }
         }
     }

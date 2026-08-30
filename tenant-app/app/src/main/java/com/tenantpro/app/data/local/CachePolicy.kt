@@ -5,6 +5,8 @@ object CacheKeys {
     const val PAYMENTS = "payments:v1"
     const val PROFILE = "profile:v1"
     const val PROFILE_BASIC = "profile:basic:v1"
+    const val NOTIFICATIONS = "notifications:v1"
+    const val MAINTENANCE = "maintenance:v1"
 
     fun paymentsForInvoice(invoiceId: String): String = "payments:invoice:$invoiceId:v1"
 }

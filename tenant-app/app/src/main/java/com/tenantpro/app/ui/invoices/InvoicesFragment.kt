@@ -105,7 +105,7 @@ class InvoicesFragment : Fragment() {
         if (hasResumedOnce) {
             // Refresh after returning from Make Payment so a completed real or
             // simulated payment immediately updates the balance and status.
-            viewModel.loadInvoices(forceRefresh = true)
+            viewModel.loadInvoices(forceRefresh = true, silent = true)
         } else {
             hasResumedOnce = true
         }

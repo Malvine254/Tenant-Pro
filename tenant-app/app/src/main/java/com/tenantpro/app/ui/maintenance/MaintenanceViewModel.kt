@@ -30,30 +30,40 @@ class MaintenanceViewModel @Inject constructor(
         refresh()
     }
 
-    fun refresh() {
+    fun refresh(forceRefresh: Boolean = false) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(loading = true)
-            when (val result = repository.getMaintenanceRequests()) {
+            val hasVisibleContent = _uiState.value.requests.isNotEmpty()
+            if (!hasVisibleContent) _uiState.value = _uiState.value.copy(loading = true)
+            when (val result = repository.getMaintenanceRequests(forceRefresh)) {
                 is Resource.Success -> {
-                    val requests = result.data
-                        .sortedByDescending { it.createdAt }
-                        .map { it.toUiModel() }
-
-                    _uiState.value = MaintenanceUiState(
-                        loading = false,
-                        requests = requests,
-                        openCount = requests.count { it.statusKey == "OPEN" },
-                        inProgressCount = requests.count { it.statusKey == "IN_PROGRESS" },
-                        resolvedCount = requests.count { it.statusKey in setOf("RESOLVED", "CLOSED") }
-                    )
+                    applyRequests(result.data)
+                    if (result.fromCache && !forceRefresh) {
+                        when (val fresh = repository.getMaintenanceRequests(forceRefresh = true)) {
+                            is Resource.Success -> applyRequests(fresh.data)
+                            is Resource.Error, Resource.Loading -> Unit
+                        }
+                    }
                 }
                 is Resource.Error -> {
                     _uiState.value = _uiState.value.copy(loading = false)
-                    _events.emit(result.message)
+                    if (!hasVisibleContent) _events.emit(result.message)
                 }
                 Resource.Loading -> Unit
             }
         }
+    }
+
+    private fun applyRequests(items: List<MaintenanceRequestItem>) {
+        val requests = items
+            .sortedByDescending { it.createdAt }
+            .map { it.toUiModel() }
+        _uiState.value = MaintenanceUiState(
+            loading = false,
+            requests = requests,
+            openCount = requests.count { it.statusKey == "OPEN" },
+            inProgressCount = requests.count { it.statusKey == "IN_PROGRESS" },
+            resolvedCount = requests.count { it.statusKey in setOf("RESOLVED", "CLOSED") }
+        )
     }
 
     fun submitRequest(title: String, description: String, priority: String) {

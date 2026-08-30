@@ -33,14 +33,27 @@ class InvoicesViewModel @Inject constructor(
             connectivity.isConnected
                 .drop(1)
                 .filter { it }
-                .collect { loadInvoices(forceRefresh = true) }
+                .collect { loadInvoices(forceRefresh = true, silent = true) }
         }
     }
 
-    fun loadInvoices(forceRefresh: Boolean = false) {
+    fun loadInvoices(forceRefresh: Boolean = false, silent: Boolean = false) {
         viewModelScope.launch {
-            _invoicesState.value = Resource.Loading
-            _invoicesState.value = invoiceRepository.getInvoices(forceRefresh)
+            val hasVisibleContent = _invoicesState.value is Resource.Success
+            if (!silent) _invoicesState.value = Resource.Loading
+            when (val result = invoiceRepository.getInvoices(forceRefresh)) {
+                is Resource.Success -> {
+                    _invoicesState.value = result
+                    if (result.fromCache && !forceRefresh) {
+                        when (val fresh = invoiceRepository.getInvoices(forceRefresh = true)) {
+                            is Resource.Success -> _invoicesState.value = fresh
+                            is Resource.Error, Resource.Loading -> Unit
+                        }
+                    }
+                }
+                is Resource.Error -> if (!hasVisibleContent) _invoicesState.value = result
+                Resource.Loading -> Unit
+            }
         }
     }
 

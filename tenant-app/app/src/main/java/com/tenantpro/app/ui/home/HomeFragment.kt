@@ -594,7 +594,7 @@ class HomeFragment : Fragment() {
         super.onResume()
         if (hasResumedOnce) {
             // Reconcile totals after returning from M-Pesa or another billing screen.
-            viewModel.loadSummary(forceRefresh = true)
+            viewModel.loadSummary(forceRefresh = true, silent = true)
         } else {
             hasResumedOnce = true
         }

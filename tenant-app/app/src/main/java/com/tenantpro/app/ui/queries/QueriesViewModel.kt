@@ -422,8 +422,8 @@ class QueriesViewModel @Inject constructor(
         )
     }
 
-    private suspend fun loadAvailableProperties() {
-        when (val profileResult = authRepository.getMyProfile()) {
+    private suspend fun loadAvailableProperties(forceRefresh: Boolean = false) {
+        when (val profileResult = authRepository.getMyProfile(forceRefresh)) {
             is Resource.Success -> {
                 val options = profileResult.data.tenantProfiles
                     .ifEmpty { listOfNotNull(profileResult.data.tenantProfile) }
@@ -442,6 +442,9 @@ class QueriesViewModel @Inject constructor(
                 _propertyOptions.value = options
                 if (_selectedPropertyId.value.isNullOrBlank()) {
                     _selectedPropertyId.value = options.firstOrNull()?.propertyId
+                }
+                if (profileResult.fromCache && !forceRefresh) {
+                    loadAvailableProperties(forceRefresh = true)
                 }
             }
             is Resource.Error -> if (_propertyOptions.value.isEmpty()) {

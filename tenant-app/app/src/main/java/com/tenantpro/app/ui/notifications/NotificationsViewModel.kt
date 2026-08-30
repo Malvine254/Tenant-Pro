@@ -52,7 +52,7 @@ class NotificationsViewModel @Inject constructor(
                     pollingJob = null
                     break
                 }
-                loadNotifications(emitErrors = false, notifyDevice = true, showLoading = false)
+                loadNotifications(emitErrors = false, notifyDevice = true, showLoading = false, forceRefresh = true)
                 delay(POLLING_INTERVAL_MS)
             }
         }
@@ -67,6 +67,7 @@ class NotificationsViewModel @Inject constructor(
         emitErrors: Boolean = true,
         notifyDevice: Boolean = true,
         showLoading: Boolean = true,
+        forceRefresh: Boolean = false,
     ) {
         viewModelScope.launch {
             if (dataStoreManager.accessToken.firstOrNull().isNullOrBlank()) {
@@ -75,13 +76,19 @@ class NotificationsViewModel @Inject constructor(
                 return@launch
             }
 
-            if (showLoading) _loading.value = true
-            when (val result = repository.getNotifications()) {
+            if (showLoading && _items.value.isEmpty()) _loading.value = true
+            when (val result = repository.getNotifications(forceRefresh)) {
                 is Resource.Success -> {
                     // FCM is the single device-alert source. Polling only refreshes the inbox.
                     handleDeviceAlerts(result.data, false)
                     if (_items.value != result.data) {
                         _items.value = result.data
+                    }
+                    if (result.fromCache && !forceRefresh) {
+                        when (val fresh = repository.getNotifications(forceRefresh = true)) {
+                            is Resource.Success -> if (_items.value != fresh.data) _items.value = fresh.data
+                            is Resource.Error, Resource.Loading -> Unit
+                        }
                     }
                 }
                 is Resource.Error -> {
@@ -102,7 +109,7 @@ class NotificationsViewModel @Inject constructor(
             when (val result = repository.markAllNotificationsRead()) {
                 is Resource.Success -> {
                     _events.emit(result.data)
-                    loadNotifications()
+                    loadNotifications(emitErrors = false, showLoading = false, forceRefresh = true)
                 }
                 is Resource.Error -> _events.emit(result.message)
                 Resource.Loading -> Unit

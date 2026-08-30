@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,7 +33,7 @@ class AccountSettingsViewModel @Inject constructor(
     private val _apartmentInfo = MutableStateFlow(ApartmentInfo())
     private val _subscriptionInfo = MutableStateFlow(SubscriptionInfoUi())
     private val _saving = MutableStateFlow(false)
-    private val _loading = MutableStateFlow(true)
+    private val _loading = MutableStateFlow(false)
     private val _events = MutableSharedFlow<String>()
 
     val events = _events.asSharedFlow()
@@ -121,7 +122,9 @@ class AccountSettingsViewModel @Inject constructor(
 
     private fun fetchUserProfile() {
         viewModelScope.launch {
-            _loading.value = true
+            val hasCachedProfile = !dataStoreManager.userEmail.firstOrNull().isNullOrBlank() ||
+                !dataStoreManager.userName.firstOrNull().isNullOrBlank()
+            _loading.value = !hasCachedProfile
             // Settings must reflect the database, not a potentially stale
             // profile cache from another screen or an earlier app session.
             when (val result = authRepository.getMyProfile(forceRefresh = true)) {
@@ -176,16 +179,16 @@ class AccountSettingsViewModel @Inject constructor(
                 }
                 is Resource.Error -> {
                     _loading.value = false
-                    _events.emit("Could not load profile: ${result.message}")
+                    if (!hasCachedProfile) _events.emit("Could not load profile: ${result.message}")
                 }
                 Resource.Loading -> Unit
             }
         }
     }
 
-    fun refreshApartmentInfo() {
+    fun refreshApartmentInfo(forceRefresh: Boolean = false) {
         viewModelScope.launch {
-            when (val result = invoiceRepository.getInvoices()) {
+            when (val result = invoiceRepository.getInvoices(forceRefresh)) {
                 is Resource.Success -> {
                     val invoices = result.data
                     val currentInfo = _apartmentInfo.value
@@ -213,6 +216,9 @@ class AccountSettingsViewModel @Inject constructor(
                         pendingCount = pendingCount,
                         overdueCount = overdueCount
                     )
+                    if (result.fromCache && !forceRefresh) {
+                        refreshApartmentInfo(forceRefresh = true)
+                    }
                 }
 
                 is Resource.Error -> {
@@ -313,6 +319,7 @@ class AccountSettingsViewModel @Inject constructor(
                 }
                 Resource.Loading -> Unit
             }
+            _saving.value = false
         }
     }
 
@@ -324,7 +331,6 @@ class AccountSettingsViewModel @Inject constructor(
                 is Resource.Error -> _events.emit(result.message)
                 Resource.Loading -> Unit
             }
-            _saving.value = false
             _saving.value = false
         }
     }
@@ -429,7 +435,7 @@ data class AccountUiState(
     val emailNotificationsEnabled: Boolean = true,
     val biometricLockEnabled: Boolean = false,
     val saving: Boolean = false,
-    val loading: Boolean = true
+    val loading: Boolean = false
 )
 
 data class ApartmentInfo(
