@@ -92,11 +92,13 @@ class EmailVerificationFragment : Fragment() {
                     binding.progressBar.visible()
                     binding.btnVerify.isEnabled = false
                     binding.btnVerify.setText(R.string.auth_verifying)
+                    binding.btnVerify.icon = null
                     binding.tvResend.isEnabled = false
                 }
                 is Resource.Success -> {
                     binding.progressBar.gone()
                     binding.btnVerify.setText(R.string.auth_verify_email)
+                    binding.btnVerify.setIconResource(R.drawable.ic_arrow_forward)
                     viewModel.resetVerifyState()
                     toast("Email verified! Welcome.")
                     findNavController().navigate(
@@ -110,6 +112,7 @@ class EmailVerificationFragment : Fragment() {
                 is Resource.Error -> {
                     binding.progressBar.gone()
                     binding.btnVerify.setText(R.string.auth_verify_email)
+                    binding.btnVerify.setIconResource(R.drawable.ic_arrow_forward)
                     binding.btnVerify.isEnabled = binding.etCode.text?.length == 6
                     binding.tvResend.isEnabled = true
                     binding.tilCode.error = state.message
@@ -118,6 +121,7 @@ class EmailVerificationFragment : Fragment() {
                 null -> {
                     binding.progressBar.gone()
                     binding.btnVerify.setText(R.string.auth_verify_email)
+                    binding.btnVerify.setIconResource(R.drawable.ic_arrow_forward)
                     binding.tvResend.isEnabled = true
                 }
             }
