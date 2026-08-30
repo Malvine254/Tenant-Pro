@@ -494,7 +494,7 @@ class InvoicesFragment : Fragment() {
                 }
             }
 
-            val dir = File(requireContext().externalCacheDir, "invoices").also { it.mkdirs() }
+            val dir = File(requireContext().cacheDir, "invoices").also { it.mkdirs() }
             val file = File(dir, filename)
             file.outputStream().use { doc.writeTo(it) }
             doc.close()
@@ -601,8 +601,8 @@ class InvoicesFragment : Fragment() {
                 }
             }
 
-            // Fallback for API 26–28: write to external cache then share via FileProvider
-            val dir  = File(requireContext().externalCacheDir, "invoices").also { it.mkdirs() }
+            // Fallback for API 26–28: keep the temporary PDF in private internal cache.
+            val dir  = File(requireContext().cacheDir, "invoices").also { it.mkdirs() }
             val file = File(dir, filename)
             file.outputStream().use { doc.writeTo(it) }
             doc.close()

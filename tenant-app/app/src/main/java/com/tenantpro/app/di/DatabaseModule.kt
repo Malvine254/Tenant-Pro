@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.tenantpro.app.data.local.dao.InvoiceDao
 import com.tenantpro.app.data.local.dao.CachedResponseDao
 import com.tenantpro.app.data.local.db.AppDatabase
 import dagger.Module
@@ -32,16 +31,21 @@ object DatabaseModule {
         }
     }
 
+    private val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Version 2 response payloads and the unused legacy invoice table
+            // were plaintext. Purge them so only encrypted cache is retained.
+            db.execSQL("DELETE FROM `cached_responses`")
+            db.execSQL("DROP TABLE IF EXISTS `invoices`")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "tenantpro.db")
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
-
-    @Provides
-    @Singleton
-    fun provideInvoiceDao(db: AppDatabase): InvoiceDao = db.invoiceDao()
 
     @Provides
     @Singleton
