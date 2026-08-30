@@ -67,6 +67,16 @@
         <item name="endIconMinSize">40dp</item>
     </style>
 
+    <style name="Theme.TenantPro.TextInputLayout.Settings" parent="Theme.TenantPro.TextInputLayout.Auth">
+        <item name="startIconMinSize">48dp</item>
+        <item name="endIconMinSize">48dp</item>
+    </style>
+
+    <style name="Theme.TenantPro.TextInputEditText.Settings" parent="Theme.TenantPro.TextInputEditText">
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+    </style>
+
     <style name="Theme.TenantPro.TextInputLayout.Search" parent="Widget.Material3.TextInputLayout.FilledBox">
         <item name="boxStrokeColor">@android:color/transparent</item>
         <item name="boxStrokeWidth">0dp</item>

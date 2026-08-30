@@ -15,7 +15,7 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilPaymentPhone"
-        style="@style/Theme.TenantPro.TextInputLayout.Auth"
+        style="@style/Theme.TenantPro.TextInputLayout.Settings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Payment phone"
@@ -23,6 +23,7 @@
         app:startIconDrawable="@drawable/ic_phone">
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etPaymentPhone"
+            style="@style/Theme.TenantPro.TextInputEditText.Settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="phone"

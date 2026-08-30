@@ -43,13 +43,14 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilAccountName"
-            style="@style/Theme.TenantPro.TextInputLayout.Auth"
+            style="@style/Theme.TenantPro.TextInputLayout.Settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Full name"
             app:startIconDrawable="@drawable/ic_person">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etAccountName"
+                style="@style/Theme.TenantPro.TextInputEditText.Settings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textCapWords"
@@ -59,7 +60,7 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilAccountEmail"
-            style="@style/Theme.TenantPro.TextInputLayout.Auth"
+            style="@style/Theme.TenantPro.TextInputLayout.Settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -67,6 +68,7 @@
             app:startIconDrawable="@drawable/ic_email">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etAccountEmail"
+                style="@style/Theme.TenantPro.TextInputEditText.Settings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textEmailAddress"
@@ -76,7 +78,7 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilEmergencyPhone"
-            style="@style/Theme.TenantPro.TextInputLayout.Auth"
+            style="@style/Theme.TenantPro.TextInputLayout.Settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -84,6 +86,7 @@
             app:startIconDrawable="@drawable/ic_phone">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etEmergencyPhone"
+                style="@style/Theme.TenantPro.TextInputEditText.Settings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="phone"
@@ -93,13 +96,14 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilAccountBio"
-            style="@style/Theme.TenantPro.TextInputLayout.Auth"
+            style="@style/Theme.TenantPro.TextInputLayout.Settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:hint="About you">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etAccountBio"
+                style="@style/Theme.TenantPro.TextInputEditText.Settings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="top"
