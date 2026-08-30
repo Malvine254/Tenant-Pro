@@ -30,6 +30,7 @@ import com.tenantpro.app.databinding.FragmentAccountSettingsBinding
 import com.tenantpro.app.utils.toast
 import com.tenantpro.app.utils.toAbsoluteAssetUrl
 import com.tenantpro.app.utils.normalizeKenyanPhone
+import com.tenantpro.app.utils.dismissKeyboard
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -144,15 +145,17 @@ class AccountSettingsFragment : Fragment() {
     }
 
     private fun showRemovePhotoDialog() {
-        MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
-            .setTitle(R.string.remove_photo_title)
-            .setMessage(R.string.remove_photo_message)
-            .setPositiveButton(R.string.remove) { _, _ ->
-                viewModel.removeProfileImage()
-                binding.ivProfile.setImageResource(R.drawable.ic_account_circle)
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+        val content = layoutInflater.inflate(R.layout.dialog_remove_profile_photo, null)
+        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
+            .setView(content)
+            .create()
+        content.findViewById<View>(R.id.btnKeepPhoto).setOnClickListener { dialog.dismiss() }
+        content.findViewById<View>(R.id.btnRemovePhoto).setOnClickListener {
+            viewModel.removeProfileImage()
+            binding.ivProfile.setImageResource(R.drawable.ic_account_circle)
+            dialog.dismiss()
+        }
+        dialog.show()
     }
 
     private fun updateUI(state: AccountUiState) {
@@ -230,27 +233,24 @@ class AccountSettingsFragment : Fragment() {
         val emailLayout = content.findViewById<TextInputLayout>(R.id.tilAccountEmail)
 
         val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
-            .setTitle("Account details")
             .setView(content)
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Save", null)
             .create()
-        dialog.setOnShowListener {
-            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val nameValue = name.text?.toString()?.trim().orEmpty()
-                val emailValue = email.text?.toString()?.trim().orEmpty()
-                nameLayout.error = if (nameValue.length < 2) "Enter your full name" else null
-                emailLayout.error = if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailValue).matches()) "Enter a valid email" else null
-                if (nameLayout.error != null || emailLayout.error != null) return@setOnClickListener
-                viewModel.saveProfile(
-                    name = nameValue,
-                    phone = latestState.phone,
-                    email = emailValue,
-                    emergencyContact = emergency.text?.toString().orEmpty(),
-                    bio = bio.text?.toString().orEmpty()
-                )
-                dialog.dismiss()
-            }
+        content.findViewById<View>(R.id.btnAccountCancel).setOnClickListener { dialog.dismiss() }
+        content.findViewById<View>(R.id.btnAccountSave).setOnClickListener {
+            val nameValue = name.text?.toString()?.trim().orEmpty()
+            val emailValue = email.text?.toString()?.trim().orEmpty()
+            nameLayout.error = if (nameValue.length < 2) "Enter your full name" else null
+            emailLayout.error = if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailValue).matches()) "Enter a valid email" else null
+            if (nameLayout.error != null || emailLayout.error != null) return@setOnClickListener
+            dismissKeyboard()
+            viewModel.saveProfile(
+                name = nameValue,
+                phone = latestState.phone,
+                email = emailValue,
+                emergencyContact = emergency.text?.toString().orEmpty(),
+                bio = bio.text?.toString().orEmpty()
+            )
+            dialog.dismiss()
         }
         dialog.show()
     }
@@ -260,25 +260,22 @@ class AccountSettingsFragment : Fragment() {
         val phone = content.findViewById<TextInputEditText>(R.id.etPaymentPhone).apply { setText(latestState.phone) }
         val phoneLayout = content.findViewById<TextInputLayout>(R.id.tilPaymentPhone)
         val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
-            .setTitle("Payment phone")
             .setView(content)
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Save", null)
             .create()
-        dialog.setOnShowListener {
-            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val normalizedPhone = phone.text?.toString().orEmpty().normalizeKenyanPhone()
-                phoneLayout.error = if (normalizedPhone == null) "Enter a valid Kenyan mobile number" else null
-                if (normalizedPhone == null) return@setOnClickListener
-                viewModel.saveProfile(
-                    name = latestState.name,
-                    phone = normalizedPhone,
-                    email = latestState.email,
-                    emergencyContact = latestState.emergencyContact,
-                    bio = latestState.bio
-                )
-                dialog.dismiss()
-            }
+        content.findViewById<View>(R.id.btnPhoneCancel).setOnClickListener { dialog.dismiss() }
+        content.findViewById<View>(R.id.btnPhoneSave).setOnClickListener {
+            val normalizedPhone = phone.text?.toString().orEmpty().normalizeKenyanPhone()
+            phoneLayout.error = if (normalizedPhone == null) "Enter a valid Kenyan mobile number" else null
+            if (normalizedPhone == null) return@setOnClickListener
+            dismissKeyboard()
+            viewModel.saveProfile(
+                name = latestState.name,
+                phone = normalizedPhone,
+                email = latestState.email,
+                emergencyContact = latestState.emergencyContact,
+                bio = latestState.bio
+            )
+            dialog.dismiss()
         }
         dialog.show()
     }
@@ -293,35 +290,32 @@ class AccountSettingsFragment : Fragment() {
         val confirmationLayout = content.findViewById<TextInputLayout>(R.id.tilConfirmPassword)
 
         val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
-            .setTitle("Change password")
             .setView(content)
-            .setNegativeButton("Cancel", null)
-            .setNeutralButton("Forgot password?", null)
-            .setPositiveButton("Update password", null)
             .create()
-        dialog.setOnShowListener {
-            dialog.getButton(android.app.AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
-                dialog.dismiss()
-                findNavController().navigate(
-                    R.id.forgotPasswordFragment,
-                    bundleOf("email" to latestState.email)
-                )
+        content.findViewById<View>(R.id.btnPasswordCancel).setOnClickListener { dialog.dismiss() }
+        content.findViewById<View>(R.id.btnForgotPassword).setOnClickListener {
+            dismissKeyboard()
+            dialog.dismiss()
+            findNavController().navigate(
+                R.id.forgotPasswordFragment,
+                bundleOf("email" to latestState.email)
+            )
+        }
+        content.findViewById<View>(R.id.btnPasswordSave).setOnClickListener {
+            val currentValue = current.text?.toString().orEmpty()
+            val passwordValue = password.text?.toString().orEmpty()
+            val confirmationValue = confirmation.text?.toString().orEmpty()
+            currentLayout.error = if (currentValue.isBlank()) "Enter your current password" else null
+            passwordLayout.error = when {
+                passwordValue.length < 8 -> "Use at least 8 characters"
+                passwordValue == currentValue -> "Choose a different password"
+                else -> null
             }
-            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val currentValue = current.text?.toString().orEmpty()
-                val passwordValue = password.text?.toString().orEmpty()
-                val confirmationValue = confirmation.text?.toString().orEmpty()
-                currentLayout.error = if (currentValue.isBlank()) "Enter your current password" else null
-                passwordLayout.error = when {
-                    passwordValue.length < 8 -> "Use at least 8 characters"
-                    passwordValue == currentValue -> "Choose a different password"
-                    else -> null
-                }
-                confirmationLayout.error = if (confirmationValue != passwordValue) "Passwords do not match" else null
-                if (currentLayout.error != null || passwordLayout.error != null || confirmationLayout.error != null) return@setOnClickListener
-                viewModel.changePassword(currentValue, passwordValue, confirmationValue)
-                dialog.dismiss()
-            }
+            confirmationLayout.error = if (confirmationValue != passwordValue) "Passwords do not match" else null
+            if (currentLayout.error != null || passwordLayout.error != null || confirmationLayout.error != null) return@setOnClickListener
+            dismissKeyboard()
+            viewModel.changePassword(currentValue, passwordValue, confirmationValue)
+            dialog.dismiss()
         }
         dialog.show()
     }
@@ -330,12 +324,18 @@ class AccountSettingsFragment : Fragment() {
         val device = listOf(Build.MANUFACTURER, Build.MODEL)
             .filter { it.isNotBlank() }
             .joinToString(" ")
-        MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
-            .setTitle("Current session")
-            .setMessage("$device\nAndroid ${Build.VERSION.RELEASE}\n\nThis is the device currently signed in to your account.")
-            .setNegativeButton("Close", null)
-            .setPositiveButton("Sign out") { _, _ -> binding.btnLogout.performClick() }
-            .show()
+        val content = layoutInflater.inflate(R.layout.dialog_settings_session, null)
+        content.findViewById<TextView>(R.id.tvSessionDevice).text = device
+        content.findViewById<TextView>(R.id.tvSessionSystem).text = "Android ${Build.VERSION.RELEASE}"
+        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
+            .setView(content)
+            .create()
+        content.findViewById<View>(R.id.btnSessionClose).setOnClickListener { dialog.dismiss() }
+        content.findViewById<View>(R.id.btnSessionSignOut).setOnClickListener {
+            dialog.dismiss()
+            binding.btnLogout.performClick()
+        }
+        dialog.show()
     }
 
     private fun persistReadPermission(uri: Uri) {
