@@ -23,7 +23,7 @@ class QueryChatAdapter(var outgoingInitials: String = "U") :
     ListAdapter<QueryChatMessage, RecyclerView.ViewHolder>(
         object : DiffUtil.ItemCallback<QueryChatMessage>() {
             override fun areItemsTheSame(oldItem: QueryChatMessage, newItem: QueryChatMessage) =
-                oldItem.id == newItem.id
+                (oldItem.clientMessageId ?: oldItem.id) == (newItem.clientMessageId ?: newItem.id)
 
             override fun areContentsTheSame(oldItem: QueryChatMessage, newItem: QueryChatMessage) =
                 oldItem == newItem
@@ -148,12 +148,13 @@ class QueryChatAdapter(var outgoingInitials: String = "U") :
         attachment: View,
         attachmentName: android.widget.TextView
     ) {
+        val attachmentSource = (item.attachmentUri ?: item.localAttachmentUri).orEmpty()
         when {
-            isImage(item.attachmentUri, item.attachmentName) && !item.attachmentUri.isNullOrBlank() -> {
+            attachmentSource.isNotBlank() && isImage(attachmentSource, item.attachmentName) -> {
                 image.visibility = View.VISIBLE
                 attachment.visibility = View.GONE
                 Glide.with(image)
-                    .load(buildFullUrl(item.attachmentUri))
+                    .load(if (attachmentSource.startsWith("content://")) attachmentSource else buildFullUrl(attachmentSource))
                     .centerCrop()
                     .into(image)
             }
@@ -194,7 +195,7 @@ class QueryChatAdapter(var outgoingInitials: String = "U") :
         return when {
             isSameDay(timestamp, now.timeInMillis) -> "Today"
             isSameDay(timestamp, yesterday.timeInMillis) -> "Yesterday"
-            else -> SimpleDateFormat("EEE, d MMM", Locale.getDefault()).format(Date(timestamp))
+            else -> SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date(timestamp))
         }
     }
 
@@ -218,7 +219,15 @@ class QueryChatAdapter(var outgoingInitials: String = "U") :
 
         private fun formatMeta(timestamp: Long, status: String): String {
             val time = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
-            return "$time  $status"
+            val delivery = when (status.uppercase(Locale.ROOT)) {
+                "UPLOADING" -> "Uploading…"
+                "SENDING" -> "Sending…"
+                "QUEUED" -> "Queued"
+                "READ" -> "✓✓"
+                "SENT" -> "✓"
+                else -> status
+            }
+            return "$time  $delivery"
         }
     }
 }

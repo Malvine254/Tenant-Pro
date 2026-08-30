@@ -315,6 +315,18 @@ class AccountSettingsViewModel @Inject constructor(
         }
     }
 
+    fun changePassword(currentPassword: String, newPassword: String, confirmation: String) {
+        viewModelScope.launch {
+            _saving.value = true
+            when (val result = authRepository.changePassword(currentPassword, newPassword, confirmation)) {
+                is Resource.Success -> _events.emit(result.data)
+                is Resource.Error -> _events.emit(result.message)
+                Resource.Loading -> Unit
+            }
+            _saving.value = false
+        }
+    }
+
     fun setEmailNotificationsEnabled(enabled: Boolean) {
         viewModelScope.launch {
             val current = uiState.value

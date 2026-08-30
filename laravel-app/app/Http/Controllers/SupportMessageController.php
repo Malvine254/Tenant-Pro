@@ -238,6 +238,7 @@ class SupportMessageController extends Controller
             'isFromTenant' => (bool) $message->is_from_tenant,
             'timestamp' => $message->created_at?->getTimestampMs() ?? 0,
             'status' => $message->status,
+            'clientMessageId' => $message->client_message_id,
             'propertyId' => $property?->id,
             'propertyName' => $property?->name,
             'attachmentUri' => $message->attachment_uri,

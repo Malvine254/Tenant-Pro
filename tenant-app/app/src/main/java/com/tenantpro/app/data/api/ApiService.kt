@@ -17,6 +17,7 @@ import com.tenantpro.app.data.model.RegisterRequest
 import com.tenantpro.app.data.model.RequestEmailOtpRequest
 import com.tenantpro.app.data.model.RequestOtpRequest
 import com.tenantpro.app.data.model.ResetPasswordRequest
+import com.tenantpro.app.data.model.ChangePasswordRequest
 import com.tenantpro.app.data.model.SupportMessageDto
 import com.tenantpro.app.data.model.SupportMessageRequest
 import com.tenantpro.app.data.model.UploadAttachmentResponse
@@ -84,6 +85,9 @@ interface ApiService {
     /** PATCH /users/me/profile — update profile on backend */
     @PATCH("users/me/profile")
     suspend fun updateMyProfile(@Body body: UpdateProfileRequest): Response<UserProfile>
+
+    @POST("users/me/password")
+    suspend fun changePassword(@Body body: ChangePasswordRequest): Response<MessageResponse>
 
     @Multipart
     @POST("users/me/profile-image")

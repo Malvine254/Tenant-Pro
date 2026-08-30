@@ -1,15 +1,11 @@
 package com.tenantpro.app.ui.account
 
-import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
-import android.text.InputType
-import android.view.ContextThemeWrapper
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricManager
@@ -22,8 +18,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.core.os.bundleOf
 import com.bumptech.glide.Glide
-import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputEditText
@@ -33,6 +29,7 @@ import com.tenantpro.app.MainActivity
 import com.tenantpro.app.databinding.FragmentAccountSettingsBinding
 import com.tenantpro.app.utils.toast
 import com.tenantpro.app.utils.toAbsoluteAssetUrl
+import com.tenantpro.app.utils.normalizeKenyanPhone
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -107,18 +104,11 @@ class AccountSettingsFragment : Fragment() {
         binding.root.findViewById<View>(R.id.rowPaymentPhone).setOnClickListener {
             showPaymentPhoneDialog()
         }
-        binding.root.findViewById<View>(R.id.rowQuietHours).setOnClickListener {
-            toast("Quiet hours are set to 10:00 PM - 7:00 AM")
-        }
         binding.root.findViewById<View>(R.id.rowSecurity).setOnClickListener {
-            MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
-                .setTitle("Security")
-                .setMessage("Password changes are managed through password recovery for now.")
-                .setPositiveButton("OK", null)
-                .show()
+            showChangePasswordDialog()
         }
         binding.root.findViewById<View>(R.id.rowSessions).setOnClickListener {
-            toast("This is your current signed-in session.")
+            showCurrentSessionDialog()
         }
         binding.root.findViewById<View>(R.id.rowHelp).setOnClickListener {
             runCatching { findNavController().navigate(R.id.queriesFragment) }
@@ -167,7 +157,7 @@ class AccountSettingsFragment : Fragment() {
 
     private fun updateUI(state: AccountUiState) {
         latestState = state
-        binding.progressLoading.visibility = if (state.loading) View.VISIBLE else View.GONE
+        binding.progressLoading.visibility = if (state.loading || state.saving) View.VISIBLE else View.GONE
 
         val displayName = state.name.ifBlank { "Tenant User" }
         val displayEmail = state.email.ifBlank { "No email added" }
@@ -231,129 +221,122 @@ class AccountSettingsFragment : Fragment() {
     }
 
     private fun showAccountDetailsDialog() {
-        val name = dialogField("Name", latestState.name)
-        val email = dialogField("Email", latestState.email).apply {
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
-        }
-        val emergency = dialogField("Emergency contact", latestState.emergencyContact).apply {
-            inputType = InputType.TYPE_CLASS_PHONE
-        }
-        val bio = dialogField("Bio", latestState.bio).apply {
-            minLines = 2
-            maxLines = 3
-        }
+        val content = layoutInflater.inflate(R.layout.dialog_account_details, null)
+        val name = content.findViewById<TextInputEditText>(R.id.etAccountName).apply { setText(latestState.name) }
+        val email = content.findViewById<TextInputEditText>(R.id.etAccountEmail).apply { setText(latestState.email) }
+        val emergency = content.findViewById<TextInputEditText>(R.id.etEmergencyPhone).apply { setText(latestState.emergencyContact) }
+        val bio = content.findViewById<TextInputEditText>(R.id.etAccountBio).apply { setText(latestState.bio) }
+        val nameLayout = content.findViewById<TextInputLayout>(R.id.tilAccountName)
+        val emailLayout = content.findViewById<TextInputLayout>(R.id.tilAccountEmail)
 
-        val content = LinearLayout(dialogContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24, 8, 24, 0)
-            addView(wrapField("Name", name))
-            addView(wrapField("Email", email))
-            addView(wrapField("Emergency contact", emergency))
-            addView(wrapField("Bio", bio))
-        }
-
-        MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
+        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
             .setTitle("Account details")
             .setView(content)
             .setNegativeButton("Cancel", null)
-            .setPositiveButton("Save") { _, _ ->
+            .setPositiveButton("Save", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val nameValue = name.text?.toString()?.trim().orEmpty()
+                val emailValue = email.text?.toString()?.trim().orEmpty()
+                nameLayout.error = if (nameValue.length < 2) "Enter your full name" else null
+                emailLayout.error = if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailValue).matches()) "Enter a valid email" else null
+                if (nameLayout.error != null || emailLayout.error != null) return@setOnClickListener
                 viewModel.saveProfile(
-                    name = name.text?.toString().orEmpty(),
+                    name = nameValue,
                     phone = latestState.phone,
-                    email = email.text?.toString().orEmpty(),
+                    email = emailValue,
                     emergencyContact = emergency.text?.toString().orEmpty(),
                     bio = bio.text?.toString().orEmpty()
                 )
+                dialog.dismiss()
             }
-            .show()
+        }
+        dialog.show()
     }
 
     private fun showPaymentPhoneDialog() {
-        val phone = dialogField("Payment phone", latestState.phone).apply {
-            inputType = InputType.TYPE_CLASS_PHONE
-        }
-        val content = LinearLayout(dialogContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24, 8, 24, 0)
-            addView(wrapField("Payment phone", phone))
-        }
-
-        MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
+        val content = layoutInflater.inflate(R.layout.dialog_payment_phone, null)
+        val phone = content.findViewById<TextInputEditText>(R.id.etPaymentPhone).apply { setText(latestState.phone) }
+        val phoneLayout = content.findViewById<TextInputLayout>(R.id.tilPaymentPhone)
+        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
             .setTitle("Payment phone")
-            .setMessage("This number is used for M-Pesa prompts and payment updates.")
             .setView(content)
             .setNegativeButton("Cancel", null)
-            .setPositiveButton("Save") { _, _ ->
+            .setPositiveButton("Save", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val normalizedPhone = phone.text?.toString().orEmpty().normalizeKenyanPhone()
+                phoneLayout.error = if (normalizedPhone == null) "Enter a valid Kenyan mobile number" else null
+                if (normalizedPhone == null) return@setOnClickListener
                 viewModel.saveProfile(
                     name = latestState.name,
-                    phone = phone.text?.toString().orEmpty(),
+                    phone = normalizedPhone,
                     email = latestState.email,
                     emergencyContact = latestState.emergencyContact,
                     bio = latestState.bio
                 )
+                dialog.dismiss()
             }
+        }
+        dialog.show()
+    }
+
+    private fun showChangePasswordDialog() {
+        val content = layoutInflater.inflate(R.layout.dialog_change_password, null)
+        val current = content.findViewById<TextInputEditText>(R.id.etCurrentPassword)
+        val password = content.findViewById<TextInputEditText>(R.id.etNewPassword)
+        val confirmation = content.findViewById<TextInputEditText>(R.id.etConfirmPassword)
+        val currentLayout = content.findViewById<TextInputLayout>(R.id.tilCurrentPassword)
+        val passwordLayout = content.findViewById<TextInputLayout>(R.id.tilNewPassword)
+        val confirmationLayout = content.findViewById<TextInputLayout>(R.id.tilConfirmPassword)
+
+        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
+            .setTitle("Change password")
+            .setView(content)
+            .setNegativeButton("Cancel", null)
+            .setNeutralButton("Forgot password?", null)
+            .setPositiveButton("Update password", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(android.app.AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+                dialog.dismiss()
+                findNavController().navigate(
+                    R.id.forgotPasswordFragment,
+                    bundleOf("email" to latestState.email)
+                )
+            }
+            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val currentValue = current.text?.toString().orEmpty()
+                val passwordValue = password.text?.toString().orEmpty()
+                val confirmationValue = confirmation.text?.toString().orEmpty()
+                currentLayout.error = if (currentValue.isBlank()) "Enter your current password" else null
+                passwordLayout.error = when {
+                    passwordValue.length < 8 -> "Use at least 8 characters"
+                    passwordValue == currentValue -> "Choose a different password"
+                    else -> null
+                }
+                confirmationLayout.error = if (confirmationValue != passwordValue) "Passwords do not match" else null
+                if (currentLayout.error != null || passwordLayout.error != null || confirmationLayout.error != null) return@setOnClickListener
+                viewModel.changePassword(currentValue, passwordValue, confirmationValue)
+                dialog.dismiss()
+            }
+        }
+        dialog.show()
+    }
+
+    private fun showCurrentSessionDialog() {
+        val device = listOf(Build.MANUFACTURER, Build.MODEL)
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+        MaterialAlertDialogBuilder(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
+            .setTitle("Current session")
+            .setMessage("$device\nAndroid ${Build.VERSION.RELEASE}\n\nThis is the device currently signed in to your account.")
+            .setNegativeButton("Close", null)
+            .setPositiveButton("Sign out") { _, _ -> binding.btnLogout.performClick() }
             .show()
     }
-
-    private fun dialogField(label: String, value: String): TextInputEditText =
-        TextInputEditText(dialogContext()).apply {
-            hint = label
-            setText(value)
-            textSize = 14f
-            setTextColor(themedColor(com.google.android.material.R.attr.colorOnSurface, R.color.on_surface))
-            setHintTextColor(
-                themedColor(
-                    com.google.android.material.R.attr.colorOnSurfaceVariant,
-                    R.color.on_surface_variant
-                )
-            )
-            backgroundTintList = ColorStateList.valueOf(
-                themedColor(com.google.android.material.R.attr.colorPrimary, R.color.primary)
-            )
-            selectAll()
-        }
-
-    private fun wrapField(label: String, editText: EditText): TextInputLayout =
-        TextInputLayout(dialogContext()).apply {
-            hint = label
-            setPadding(0, 6, 0, 6)
-            boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
-            val radius = 14f * resources.displayMetrics.density
-            setBoxCornerRadii(radius, radius, radius, radius)
-            setBoxBackgroundColor(
-                themedColor(
-                    com.google.android.material.R.attr.colorSurface,
-                    R.color.surface
-                )
-            )
-            setBoxStrokeColorStateList(dialogStrokeColors())
-            hintTextColor = dialogHintColors()
-            setHelperTextColor(dialogHintColors())
-            addView(editText)
-        }
-
-    private fun dialogContext(): ContextThemeWrapper =
-        ContextThemeWrapper(requireContext(), R.style.Theme_TenantPro_Dialog_Form)
-
-    private fun dialogStrokeColors(): ColorStateList {
-        val primary = themedColor(com.google.android.material.R.attr.colorPrimary, R.color.primary)
-        val outline = themedColor(com.google.android.material.R.attr.colorOutline, R.color.outline_variant)
-        return ColorStateList(
-            arrayOf(
-                intArrayOf(android.R.attr.state_focused),
-                intArrayOf()
-            ),
-            intArrayOf(primary, outline)
-        )
-    }
-
-    private fun dialogHintColors(): ColorStateList =
-        ColorStateList.valueOf(
-            themedColor(com.google.android.material.R.attr.colorOnSurfaceVariant, R.color.on_surface_variant)
-        )
-
-    private fun themedColor(attr: Int, fallbackRes: Int): Int =
-        MaterialColors.getColor(requireContext(), attr, ContextCompat.getColor(requireContext(), fallbackRes))
 
     private fun persistReadPermission(uri: Uri) {
         val resolver = requireContext().contentResolver

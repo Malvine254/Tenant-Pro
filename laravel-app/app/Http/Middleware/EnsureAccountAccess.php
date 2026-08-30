@@ -63,6 +63,7 @@ class EnsureAccountAccess
         return match (true) {
             $request->isMethod('GET') && $request->is('api/auth/me') => true,
             in_array($request->method(), ['GET', 'PATCH'], true) && $request->is('api/users/me/profile') => true,
+            $request->isMethod('POST') && $request->is('api/users/me/password') => true,
             $request->isMethod('POST') && $request->is('api/users/me/profile-image') => true,
             $request->isMethod('POST') && $request->is('api/users/device-token') => true,
             $request->isMethod('POST') && $request->is('api/auth/logout') => true,

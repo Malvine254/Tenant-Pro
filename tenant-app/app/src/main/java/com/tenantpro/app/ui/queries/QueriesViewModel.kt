@@ -29,7 +29,6 @@ import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 import javax.inject.Inject
-import kotlin.random.Random
 
 @HiltViewModel
 class QueriesViewModel @Inject constructor(
@@ -157,9 +156,10 @@ class QueriesViewModel @Inject constructor(
         when (val result = repository.getSupportMessages()) {
             is Resource.Success -> {
                 val mapped = result.data.toChatMessages()
-                if (_messages.value != mapped) {
-                    _messages.value = mapped
-                    persist(mapped)
+                val reconciled = reconcileServerMessages(mapped)
+                if (_messages.value != reconciled) {
+                    _messages.value = reconciled
+                    persist(reconciled)
                 }
                 resolvePendingConversation()
             }
@@ -185,6 +185,20 @@ class QueriesViewModel @Inject constructor(
         viewModelScope.launch {
             _sending.value = true
             val clientMessageId = java.util.UUID.randomUUID().toString()
+            val outbound = QueryChatMessage(
+                id = clientMessageId,
+                propertyId = property.propertyId,
+                propertyName = property.propertyName,
+                topic = topic,
+                message = message.ifBlank { "Attachment shared" },
+                isFromTenant = true,
+                timestamp = System.currentTimeMillis(),
+                status = if (attachmentUri == null) "Sending" else "Uploading",
+                clientMessageId = clientMessageId,
+                attachmentName = attachmentName,
+                localAttachmentUri = attachmentUri?.toString()
+            )
+            appendOptimistic(outbound)
 
             // Upload file first to get a server-side path
             var serverUri: String? = null
@@ -196,21 +210,9 @@ class QueriesViewModel @Inject constructor(
                         serverName = upload.data.attachmentName
                     }
                     is Resource.Error -> {
-                        queueOfflineMessage(
-                            QueryChatMessage(
-                                id = generateId(),
-                                propertyId = property.propertyId,
-                                propertyName = property.propertyName,
-                                topic = topic,
-                                message = message.ifBlank { "Attachment shared" },
-                                isFromTenant = true,
-                                timestamp = System.currentTimeMillis(),
-                                status = "Queued",
-                                clientMessageId = clientMessageId,
-                                attachmentName = attachmentName,
-                                localAttachmentUri = attachmentUri.toString()
-                            )
-                        )
+                        val queued = outbound.copy(status = "Queued")
+                        queueOfflineMessage(queued)
+                        replaceOptimistic(queued)
                         _events.emit("Offline: queued message with attachment. Will resend automatically.")
                         _sending.value = false
                         return@launch
@@ -218,39 +220,25 @@ class QueriesViewModel @Inject constructor(
                     Resource.Loading -> Unit
                 }
             }
-
-            val outbound = QueryChatMessage(
-                id = generateId(),
-                propertyId = property.propertyId,
-                propertyName = property.propertyName,
-                topic = topic,
-                message = message.ifBlank { "Attachment shared" },
-                isFromTenant = true,
-                timestamp = System.currentTimeMillis(),
+            val readyToSend = outbound.copy(
                 status = "Sending",
-                clientMessageId = clientMessageId,
                 attachmentUri = serverUri,
-                attachmentName = serverName,
-                localAttachmentUri = attachmentUri?.toString()
+                attachmentName = serverName
             )
-
-            val updated = (_messages.value + outbound).takeLast(300)
-            _messages.value = updated
-            persist(updated)
+            replaceOptimistic(readyToSend)
 
             when (val result = repository.sendSupportMessage(property.propertyId, topic, message, serverUri, serverName, clientMessageId)) {
                 is Resource.Success -> {
                     val mapped = result.data.toChatMessages()
-                    _messages.value = mapped
-                    persist(mapped)
+                    val reconciled = reconcileServerMessages(mapped)
+                    _messages.value = reconciled
+                    persist(reconciled)
                     removeQueuedMessage(clientMessageId)
                 }
                 is Resource.Error -> {
-                    val queued = outbound.copy(status = "Queued")
+                    val queued = readyToSend.copy(status = "Queued")
                     queueOfflineMessage(queued)
-                    val withReply = (_messages.value.dropLast(1) + queued).takeLast(300)
-                    _messages.value = withReply
-                    persist(withReply)
+                    replaceOptimistic(queued)
                     _events.emit("Offline: message queued. Will resend when internet returns.")
                 }
                 Resource.Loading -> Unit
@@ -258,6 +246,33 @@ class QueriesViewModel @Inject constructor(
 
             _sending.value = false
         }
+    }
+
+    private suspend fun appendOptimistic(message: QueryChatMessage) {
+        val updated = (_messages.value + message).sortedBy { it.timestamp }.takeLast(300)
+        _messages.value = updated
+        persist(updated)
+    }
+
+    private suspend fun replaceOptimistic(message: QueryChatMessage) {
+        val updated = _messages.value.map {
+            if (it.clientMessageId == message.clientMessageId) message else it
+        }.takeLast(300)
+        _messages.value = updated
+        persist(updated)
+    }
+
+    private fun reconcileServerMessages(serverMessages: List<QueryChatMessage>): List<QueryChatMessage> {
+        val serverClientIds = serverMessages.mapNotNull { it.clientMessageId }.toSet()
+        val pending = _messages.value.filter {
+            it.clientMessageId != null &&
+                it.clientMessageId !in serverClientIds &&
+                it.status.uppercase() in setOf("UPLOADING", "SENDING", "QUEUED")
+        }
+        return (serverMessages + pending)
+            .distinctBy { it.clientMessageId ?: it.id }
+            .sortedBy { it.timestamp }
+            .takeLast(300)
     }
 
     private suspend fun persist(list: List<QueryChatMessage>) {
@@ -392,7 +407,7 @@ class QueriesViewModel @Inject constructor(
 
     private fun List<SupportMessageDto>.toChatMessages(): List<QueryChatMessage> = map {
         QueryChatMessage(
-            id = it.id,
+            id = it.clientMessageId ?: it.id,
             conversationId = it.conversationId,
             propertyId = it.propertyId,
             propertyName = it.propertyName,
@@ -401,13 +416,11 @@ class QueriesViewModel @Inject constructor(
             isFromTenant = it.isFromTenant,
             timestamp = it.timestamp,
             status = it.status,
-            clientMessageId = null,
+            clientMessageId = it.clientMessageId,
             attachmentUri = it.attachmentUri,
             attachmentName = it.attachmentName
         )
     }
-
-    private fun generateId(): String = "m_${System.currentTimeMillis()}_${Random.nextInt(1000, 9999)}"
 
     private suspend fun loadAvailableProperties() {
         when (val profileResult = authRepository.getMyProfile()) {

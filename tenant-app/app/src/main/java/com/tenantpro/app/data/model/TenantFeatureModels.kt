@@ -56,6 +56,7 @@ data class SupportMessageDto(
     @SerializedName("isFromTenant") val isFromTenant: Boolean = false,
     @SerializedName("timestamp") val timestamp: Long = 0L,
     @SerializedName("status") val status: String = "SENT",
+    @SerializedName(value = "clientMessageId", alternate = ["client_message_id"]) val clientMessageId: String? = null,
     @SerializedName("propertyId") val propertyId: String? = null,
     @SerializedName("propertyName") val propertyName: String? = null,
     @SerializedName("attachmentUri") val attachmentUri: String? = null,

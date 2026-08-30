@@ -5,6 +5,7 @@ import android.net.Uri
 import com.tenantpro.app.data.api.ApiService
 import com.tenantpro.app.data.model.AcceptInvitationRequest
 import com.tenantpro.app.data.model.AuthResponse
+import com.tenantpro.app.data.model.ChangePasswordRequest
 import com.tenantpro.app.data.model.RegisterResponse
 import com.tenantpro.app.data.model.EmailLoginRequest
 import com.tenantpro.app.data.model.ForgotPasswordRequest
@@ -386,6 +387,23 @@ class AuthRepository @Inject constructor(
         Resource.Error(ApiErrorMapper.fromThrowable(e))
     }
 
+    suspend fun changePassword(
+        currentPassword: String,
+        newPassword: String,
+        confirmation: String
+    ): Resource<String> = try {
+        val response = api.changePassword(
+            ChangePasswordRequest(currentPassword, newPassword, confirmation)
+        )
+        if (response.isSuccessful) {
+            Resource.Success(response.body()?.message ?: "Password changed successfully.")
+        } else {
+            Resource.Error(parseErrorMessage(response))
+        }
+    } catch (e: Exception) {
+        Resource.Error(ApiErrorMapper.fromThrowable(e))
+    }
+
     suspend fun uploadProfileImage(uri: Uri, context: Context): Resource<UserProfile> {
         return try {
             val mimeType = context.contentResolver.getType(uri).orEmpty()
@@ -533,6 +551,9 @@ class AuthRepository @Inject constructor(
             ResetPasswordRequest(normalizedEmail, code.trim(), newPassword)
         )
         if (response.isSuccessful) {
+            notificationWorkScheduler.cancel()
+            cache.clearCurrentUser()
+            dataStore.clearSession()
             Resource.Success(response.body()?.message ?: "Password reset successfully")
         } else {
             Resource.Error(parseErrorMessage(response))

@@ -54,6 +54,12 @@ data class AuthResponse(
     @SerializedName("requiresPasswordChange") val requiresPasswordChange: Boolean = false
 )
 
+data class ChangePasswordRequest(
+    @SerializedName("currentPassword") val currentPassword: String,
+    @SerializedName("password") val password: String,
+    @SerializedName("passwordConfirmation") val passwordConfirmation: String
+)
+
 data class RegisterResponse(
     @SerializedName("message") val message: String = "Registration successful",
     @SerializedName("email") val email: String = "",

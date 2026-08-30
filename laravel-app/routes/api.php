@@ -45,6 +45,7 @@ Route::middleware('mobile.api.key')->group(function () {
 		Route::get('/auth/me', [AuthController::class, 'me']);
 		Route::get('/users/me/profile', [AuthController::class, 'profile']);
 		Route::patch('/users/me/profile', [AuthController::class, 'updateProfile']);
+		Route::post('/users/me/password', [AuthController::class, 'changePassword']);
 		Route::post('/users/me/profile-image', [AuthController::class, 'uploadProfileImage']);
 		Route::post('/users/device-token', [AuthController::class, 'saveDeviceToken']);
 		Route::post('/auth/logout', [AuthController::class, 'logout']);

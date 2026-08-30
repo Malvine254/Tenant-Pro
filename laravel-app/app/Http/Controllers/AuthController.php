@@ -438,6 +438,38 @@ class AuthController extends Controller
         return response()->json($this->userPayload($user->fresh()->load(['role', 'tenancies.unit.property'])));
     }
 
+    public function changePassword(Request $request)
+    {
+        $request->merge([
+            'current_password' => $request->input('current_password', $request->input('currentPassword')),
+            'password_confirmation' => $request->input('password_confirmation', $request->input('passwordConfirmation')),
+        ]);
+
+        $data = $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed|different:current_password',
+        ]);
+        $user = $request->user();
+
+        if (!Hash::check($data['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['The current password is incorrect.'],
+            ]);
+        }
+
+        $currentTokenId = $user->currentAccessToken()?->id;
+        $user->forceFill([
+            'password' => Hash::make($data['password']),
+            'requires_password_change' => false,
+        ])->save();
+
+        if ($currentTokenId) {
+            $user->tokens()->where('id', '!=', $currentTokenId)->delete();
+        }
+
+        return response()->json(['message' => 'Password changed successfully.']);
+    }
+
     public function uploadProfileImage(Request $request)
     {
         $data = $request->validate(['file' => 'required|image|max:5120']);

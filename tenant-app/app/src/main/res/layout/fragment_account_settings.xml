@@ -215,15 +215,6 @@
                         android:id="@+id/rowEmailNotifications"
                         layout="@layout/row_settings_email_toggle" />
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginStart="44dp"
-                        android:background="@color/outline_variant" />
-
-                    <include
-                        android:id="@+id/rowQuietHours"
-                        layout="@layout/row_settings_quiet_hours" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
