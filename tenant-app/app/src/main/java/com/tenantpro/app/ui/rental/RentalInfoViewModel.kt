@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tenantpro.app.data.model.TenantTenancyProfile
 import com.tenantpro.app.data.repository.AuthRepository
-import com.tenantpro.app.data.repository.InvoiceRepository
 import com.tenantpro.app.utils.Resource
 import com.tenantpro.app.utils.toDisplayDate
 import com.tenantpro.app.utils.toKes
@@ -18,8 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RentalInfoViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
-    private val invoiceRepository: InvoiceRepository
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RentalInfoUiState())
@@ -33,9 +31,6 @@ class RentalInfoViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(loading = true)
 
             var units = emptyList<RentalUnitItem>()
-            var outstanding = 0.0.toKes()
-            var pendingCount = 0
-            var overdueCount = 0
 
             authRepository.claimMatchingInvitations()
             when (val profileResult = authRepository.getMyProfile(forceRefresh = true)) {
@@ -74,54 +69,8 @@ class RentalInfoViewModel @Inject constructor(
                 Resource.Loading -> Unit
             }
 
-            when (val invoiceResult = invoiceRepository.getInvoices(forceRefresh = true)) {
-                is Resource.Success -> {
-                    val invoices = invoiceResult.data
-                    if (units.isEmpty()) {
-                        units = invoices
-                            .mapNotNull { it.unit }
-                            .distinctBy { it.id }
-                            .map { unit ->
-                                val property = unit.property
-                                val address = listOfNotNull(
-                                    property?.addressLine,
-                                    property?.city
-                                ).joinToString(", ")
-                                RentalUnitItem(
-                                    tenancyId = "invoice-${unit.id}",
-                                    propertyName = property?.name ?: "—",
-                                    unitNumber = unit.unitName.ifBlank { "—" },
-                                    floor = unit.floor,
-                                    rentAmountText = unit.rentAmount?.toKes(),
-                                    moveInDate = "—",
-                                    address = address.ifBlank { "—" },
-                                    apartmentImageUrl = unit.displayImageUrl
-                                        ?: unit.imageUrls?.firstOrNull()
-                                        ?: property?.coverImageUrl,
-                                )
-                            }
-                    }
-                    val openStatuses = setOf("PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID", "OVERDUE")
-                    val total = invoices
-                        .filter { it.status.uppercase() in openStatuses }
-                        .sumOf { it.effectiveBalance() }
-                    outstanding = total.toKes()
-                    pendingCount = invoices.count {
-                        it.status.uppercase() in openStatuses - "OVERDUE" && it.effectiveBalance() > 0.0
-                    }
-                    overdueCount = invoices.count {
-                        it.status.equals("OVERDUE", ignoreCase = true) && it.effectiveBalance() > 0.0
-                    }
-                }
-                is Resource.Error -> Unit
-                Resource.Loading -> Unit
-            }
-
             _uiState.value = _uiState.value.copy(
                 units = units,
-                outstandingText = outstanding,
-                pendingCount = pendingCount,
-                overdueCount = overdueCount,
                 loading = false
             )
         }
@@ -158,8 +107,5 @@ data class RentalUnitItem(
 
 data class RentalInfoUiState(
     val units: List<RentalUnitItem> = emptyList(),
-    val outstandingText: String = 0.0.toKes(),
-    val pendingCount: Int = 0,
-    val overdueCount: Int = 0,
     val loading: Boolean = true
 )

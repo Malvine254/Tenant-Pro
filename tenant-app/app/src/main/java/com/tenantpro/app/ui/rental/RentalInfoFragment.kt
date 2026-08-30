@@ -18,7 +18,6 @@ import com.tenantpro.app.databinding.FragmentRentalInfoBinding
 import com.tenantpro.app.utils.showErrorSnackbar
 import com.tenantpro.app.utils.showSuccessSnackbar
 import com.tenantpro.app.utils.toAbsoluteAssetUrl
-import com.tenantpro.app.utils.toKes
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -57,11 +56,6 @@ class RentalInfoFragment : Fragment() {
                     viewModel.uiState.collect { state ->
                         binding.progressRental.visibility =
                             if (state.loading) View.VISIBLE else View.GONE
-                        binding.tvOutstandingValue.text = state.outstandingText
-                        binding.tvRentalUnitsValue.text = state.units.size.toString()
-                        binding.tvRentalPortfolioMeta.text = portfolioMeta(state.units)
-                        binding.tvPendingValue.text = state.pendingCount.toString()
-                        binding.tvOverdueValue.text = state.overdueCount.toString()
                         bindUnits(state.units)
                     }
                 }
@@ -141,21 +135,6 @@ class RentalInfoFragment : Fragment() {
         card.findViewById<MaterialTextView>(R.id.tvUnitRent).text = item.rentAmountText ?: "-"
         card.findViewById<MaterialTextView>(R.id.tvUnitMoveIn).text = item.moveInDate
         card.findViewById<MaterialTextView>(R.id.tvUnitAddress).text = item.address
-    }
-
-    private fun portfolioMeta(units: List<RentalUnitItem>): String {
-        if (units.isEmpty()) return "No active rooms"
-        val properties = units.map { it.propertyName }.distinct().size
-        val totalRent = units.sumOf { unit ->
-            unit.rentAmountText
-                ?.replace(Regex("[^0-9.]"), "")
-                ?.toDoubleOrNull()
-                ?: 0.0
-        }
-        val roomText = "${units.size} active room${if (units.size == 1) "" else "s"}"
-        val propertyText = "$properties propert${if (properties == 1) "y" else "ies"}"
-        val rentText = if (totalRent > 0.0) " - ${totalRent.toKes()} monthly" else ""
-        return "$roomText across $propertyText$rentText"
     }
 
     override fun onResume() {
