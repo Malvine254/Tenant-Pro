@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,53 +26,66 @@ class RentalInfoViewModel @Inject constructor(
 
     private val _events = MutableSharedFlow<String>()
     val events = _events.asSharedFlow()
+    private var refreshJob: Job? = null
 
     fun refreshRentalInfo() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(loading = true)
-
-            var units = emptyList<RentalUnitItem>()
-
-            authRepository.claimMatchingInvitations()
-            when (val profileResult = authRepository.getMyProfile(forceRefresh = true)) {
-                is Resource.Success -> {
-                    val profile = profileResult.data
-                    // Prefer tenantProfiles list; fall back to singular tenantProfile for old API
-                    val profiles: List<TenantTenancyProfile> =
-                        profile.tenantProfiles.ifEmpty {
-                            listOfNotNull(profile.tenantProfile)
-                        }
-
-                    units = profiles.filter { it.isActive }.map { tenancy ->
-                        val unit = tenancy.unit
-                        val property = unit?.property
-                        val address = listOfNotNull(
-                            property?.addressLine,
-                            property?.city
-                        ).joinToString(", ")
-                        RentalUnitItem(
-                            tenancyId = tenancy.id,
-                            propertyName = property?.name ?: "—",
-                            unitNumber = unit?.unitName ?: "—",
-                            floor = unit?.floor,
-                            rentAmountText = unit?.rentAmount?.toKes(),
-                            moveInDate = tenancy.moveInDate?.toDisplayDate() ?: "—",
-                            address = address.ifBlank { "—" },
-                            apartmentImageUrl = unit?.displayImageUrl
-                                ?: unit?.imageUrls?.firstOrNull()
-                                ?: property?.coverImageUrl,
-                        )
-                    }
-                }
-                is Resource.Error -> {
-                    _events.emit("Could not load rental profile: ${profileResult.message}")
-                }
-                Resource.Loading -> Unit
+        if (refreshJob?.isActive == true) return
+        refreshJob = viewModelScope.launch {
+            val hasVisibleContent = _uiState.value.units.isNotEmpty()
+            if (!hasVisibleContent) {
+                _uiState.value = _uiState.value.copy(loading = true)
             }
 
-            _uiState.value = _uiState.value.copy(
-                units = units,
+            val initialResult = authRepository.getMyProfile(forceRefresh = false)
+            applyProfileResult(initialResult, showError = !hasVisibleContent)
+
+            val connectedInvitation = authRepository.claimMatchingInvitations()
+            if ((initialResult as? Resource.Success<*>)?.fromCache == true || connectedInvitation) {
+                applyProfileResult(
+                    authRepository.getMyProfile(forceRefresh = true),
+                    showError = _uiState.value.units.isEmpty()
+                )
+            }
+
+            _uiState.value = _uiState.value.copy(loading = false)
+        }
+    }
+
+    private suspend fun applyProfileResult(
+        result: Resource<com.tenantpro.app.data.model.UserProfile>,
+        showError: Boolean
+    ) {
+        when (result) {
+            is Resource.Success -> _uiState.value = RentalInfoUiState(
+                units = result.data.toRentalUnits(),
                 loading = false
+            )
+            is Resource.Error -> if (showError) {
+                _events.emit("Could not load rental profile: ${result.message}")
+            }
+            Resource.Loading -> Unit
+        }
+    }
+
+    private fun com.tenantpro.app.data.model.UserProfile.toRentalUnits(): List<RentalUnitItem> {
+        val profiles: List<TenantTenancyProfile> = tenantProfiles.ifEmpty {
+            listOfNotNull(tenantProfile)
+        }
+        return profiles.filter { it.isActive }.map { tenancy ->
+            val unit = tenancy.unit
+            val property = unit?.property
+            val address = listOfNotNull(property?.addressLine, property?.city).joinToString(", ")
+            RentalUnitItem(
+                tenancyId = tenancy.id,
+                propertyName = property?.name ?: "—",
+                unitNumber = unit?.unitName ?: "—",
+                floor = unit?.floor,
+                rentAmountText = unit?.rentAmount?.toKes(),
+                moveInDate = tenancy.moveInDate?.toDisplayDate() ?: "—",
+                address = address.ifBlank { "—" },
+                apartmentImageUrl = unit?.displayImageUrl
+                    ?: unit?.imageUrls?.firstOrNull()
+                    ?: property?.coverImageUrl,
             )
         }
     }

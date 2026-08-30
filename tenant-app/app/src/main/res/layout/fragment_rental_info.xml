@@ -22,11 +22,13 @@
             android:paddingBottom="32dp">
 
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardRentalStatus"
+                android:id="@+id/cardRentalHelp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
-                android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
                 app:cardBackgroundColor="@color/surface"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="0dp"
@@ -49,8 +51,8 @@
                             android:layout_width="22dp"
                             android:layout_height="22dp"
                             android:layout_gravity="center"
-                            android:contentDescription="Rental status"
-                            android:src="@drawable/ic_apartment"
+                            android:contentDescription="Chat with property manager"
+                            android:src="@drawable/ic_chat"
                             android:tint="@color/secondary" />
                     </FrameLayout>
 
@@ -62,31 +64,29 @@
                         android:orientation="vertical">
 
                         <TextView
-                            android:id="@+id/tvRentalStatusTitle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif-medium"
+                            android:text="Need help with your rental?"
                             android:textColor="@color/on_surface"
                             android:textSize="15sp" />
 
                         <TextView
-                            android:id="@+id/tvRentalStatusMeta"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
+                            android:text="Message your property manager"
                             android:textColor="@color/on_surface_variant"
                             android:textSize="12sp" />
                     </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/tvRentalStatusBadge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:fontFamily="sans-serif-medium"
-                        android:paddingHorizontal="9dp"
-                        android:paddingVertical="5dp"
-                        android:textSize="9sp" />
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="10dp"
+                        android:contentDescription="Open chat"
+                        android:src="@drawable/ic_arrow_forward"
+                        android:tint="@color/on_surface_variant" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

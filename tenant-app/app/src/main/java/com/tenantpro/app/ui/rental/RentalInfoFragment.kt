@@ -11,6 +11,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.google.android.material.textview.MaterialTextView
 import com.tenantpro.app.R
@@ -49,17 +50,21 @@ class RentalInfoFragment : Fragment() {
         if (invitationCode.isNotBlank() && savedInstanceState == null) {
             viewModel.acceptInvitation(invitationCode)
         }
+        binding.cardRentalHelp.setOnClickListener {
+            findNavController().navigate(R.id.queriesFragment)
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.uiState.collect { state ->
-                        binding.progressRental.visibility =
-                            if (state.loading) View.VISIBLE else View.GONE
-                        binding.cardRentalStatus.visibility =
-                            if (state.loading) View.GONE else View.VISIBLE
-                        bindRentalStatus(state.units)
-                        bindUnits(state.units)
+                        val firstLoad = state.loading && state.units.isEmpty()
+                        binding.progressRental.visibility = if (firstLoad) View.VISIBLE else View.GONE
+                        if (firstLoad) {
+                            binding.llRentalEmpty.visibility = View.GONE
+                        } else {
+                            bindUnits(state.units)
+                        }
                     }
                 }
                 launch {
@@ -123,26 +128,6 @@ class RentalInfoFragment : Fragment() {
             }
             binding.llRentalUnits.addView(group)
         }
-    }
-
-    private fun bindRentalStatus(units: List<RentalUnitItem>) {
-        val hasActiveRental = units.isNotEmpty()
-        binding.tvRentalStatusTitle.text =
-            if (hasActiveRental) "Active rental" else "Rental setup pending"
-        binding.tvRentalStatusMeta.text = if (hasActiveRental) {
-            "${units.size} unit${if (units.size == 1) "" else "s"} linked · Synced automatically"
-        } else {
-            "Your unit will appear after your landlord assigns it"
-        }
-        binding.tvRentalStatusBadge.text = if (hasActiveRental) "ACTIVE" else "PENDING"
-        binding.tvRentalStatusBadge.setBackgroundResource(
-            if (hasActiveRental) R.drawable.bg_badge_green else R.drawable.bg_badge_yellow
-        )
-        binding.tvRentalStatusBadge.setTextColor(
-            requireContext().getColor(
-                if (hasActiveRental) R.color.badge_green_text else R.color.badge_yellow_text
-            )
-        )
     }
 
     private fun bindUnitCard(card: View, item: RentalUnitItem) {
