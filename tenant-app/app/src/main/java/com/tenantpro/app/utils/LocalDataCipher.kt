@@ -29,7 +29,7 @@ class LocalDataCipher @Inject constructor() {
         cipher.init(Cipher.ENCRYPT_MODE, getOrCreateKey())
         cipher.updateAAD(associatedData.toByteArray(StandardCharsets.UTF_8))
         val ciphertext = cipher.doFinal(value.toByteArray(StandardCharsets.UTF_8))
-        listOf(
+        return listOf(
             PREFIX,
             Base64.encodeToString(cipher.iv, Base64.NO_WRAP),
             Base64.encodeToString(ciphertext, Base64.NO_WRAP)
@@ -40,7 +40,9 @@ class LocalDataCipher @Inject constructor() {
         if (!isEncrypted(value)) return null
         return runCatching {
             val parts = value.split(':', limit = 4)
-            if (parts.size != 4 || "${parts[0]}:${parts[1]}" != PREFIX) return null
+            require(parts.size == 4 && "${parts[0]}:${parts[1]}" == PREFIX) {
+                "Invalid encrypted value format"
+            }
             val iv = Base64.decode(parts[2], Base64.NO_WRAP)
             val ciphertext = Base64.decode(parts[3], Base64.NO_WRAP)
             val cipher = Cipher.getInstance(TRANSFORMATION)
