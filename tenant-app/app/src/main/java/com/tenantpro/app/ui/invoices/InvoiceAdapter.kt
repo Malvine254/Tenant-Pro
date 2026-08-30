@@ -9,7 +9,7 @@ import com.tenantpro.app.R
 import com.tenantpro.app.data.model.Invoice
 import com.tenantpro.app.databinding.ItemInvoiceGroupBinding
 import com.tenantpro.app.utils.toBillingLabel
-import com.tenantpro.app.utils.toDisplayDate
+import com.tenantpro.app.utils.toInvoiceDate
 import com.tenantpro.app.utils.toKes
 import java.time.LocalDate
 
@@ -32,8 +32,8 @@ class InvoiceAdapter(
             val isUpcoming = earliestDueDate?.let { it > LocalDate.now().toString() } == true
             binding.tvGroupDueDate.text = when {
                 earliestDueDate == null -> "Due date not set"
-                isUpcoming -> "Upcoming  ·  Due ${earliestDueDate.toDisplayDate()}"
-                else -> "Due ${earliestDueDate.toDisplayDate()}"
+                isUpcoming -> "Upcoming  ·  Due ${earliestDueDate.toInvoiceDate()}"
+                else -> "Due ${earliestDueDate.toInvoiceDate()}"
             }
             binding.tvGroupDueDate.setTextColor(
                 binding.root.context.getColor(if (isUpcoming) R.color.info else R.color.on_surface_variant)

@@ -107,6 +107,15 @@ fun String?.toDisplayDate(): String {
     }
 }
 
+/** Formats an invoice date month-first, e.g. "Aug 31, 2026". */
+fun String?.toInvoiceDate(): String {
+    if (isNullOrBlank()) return "—"
+    return runCatching {
+        val date = java.time.LocalDate.parse(take(10))
+        date.format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault()))
+    }.getOrDefault(this)
+}
+
 /** Maps backend invoice status string to a user-friendly label. */
 fun String.toStatusLabel(): String = when (this.uppercase()) {
     "PENDING"   -> "Pending"

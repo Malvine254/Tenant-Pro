@@ -32,7 +32,7 @@ import com.tenantpro.app.databinding.FragmentInvoicesBinding
 import com.tenantpro.app.utils.Resource
 import com.tenantpro.app.utils.gone
 import com.tenantpro.app.utils.toBillingLabel
-import com.tenantpro.app.utils.toDisplayDate
+import com.tenantpro.app.utils.toInvoiceDate
 import com.tenantpro.app.utils.toKes
 import com.tenantpro.app.utils.toStatusLabel
 import com.tenantpro.app.utils.visible
@@ -384,7 +384,7 @@ class InvoicesFragment : Fragment() {
             appendLine("${getString(R.string.invoice_detail_paid)}:       ${invoice.paidAmount.toKes()}")
             appendLine("${getString(R.string.invoice_detail_balance)}:    ${remaining.toKes()}")
             appendLine()
-            appendLine("${getString(R.string.invoice_detail_due_date)}:   ${invoice.dueDate.toDisplayDate()}")
+            appendLine("${getString(R.string.invoice_detail_due_date)}:   ${invoice.dueDate.toInvoiceDate()}")
             appendLine("${getString(R.string.invoice_detail_status)}:     ${invoice.status.toStatusLabel()}")
         }
         MaterialAlertDialogBuilder(requireContext())
@@ -437,7 +437,7 @@ class InvoicesFragment : Fragment() {
             appendLine("${getString(R.string.invoice_detail_total)}:    ${invoice.effectiveTotalAmount().toKes()}")
             appendLine("${getString(R.string.invoice_detail_paid)}:     ${invoice.paidAmount.toKes()}")
             appendLine("${getString(R.string.invoice_detail_balance)}:  ${remaining.toKes()}")
-            appendLine("${getString(R.string.invoice_detail_due_date)}: ${invoice.dueDate.toDisplayDate()}")
+            appendLine("${getString(R.string.invoice_detail_due_date)}: ${invoice.dueDate.toInvoiceDate()}")
             appendLine("${getString(R.string.invoice_detail_status)}:   ${invoice.status.toStatusLabel()}")
         }
         val intent = Intent(Intent.ACTION_SEND).apply {
@@ -697,7 +697,7 @@ class InvoicesFragment : Fragment() {
         row("Period:",   invoice.billingPeriod ?: "—")
         row("Property:", invoice.unit?.property?.name ?: "—")
         row("Unit:",     invoice.unit?.unitName ?: "—")
-        row("Due Date:", invoice.dueDate.toDisplayDate())
+        row("Due Date:", invoice.dueDate.toInvoiceDate())
         y += 10f
 
         canvas.drawLine(m, y, pageWidth - m, y, divPaint)
