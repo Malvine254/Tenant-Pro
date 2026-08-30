@@ -57,6 +57,8 @@ class MainActivity : AppCompatActivity() {
     private var pendingNotificationEntityId: String? = null
     private var appUnlockedForSession = false
     private var unlockPromptInProgress = false
+    @Volatile
+    private var startupNavigationResolved = false
 
     @Inject
     lateinit var dataStoreManager: DataStoreManager
@@ -92,9 +94,18 @@ class MainActivity : AppCompatActivity() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Keep splash visible while we check the stored token
+        // Keep the native launch screen visible until the correct navigation
+        // graph has been installed. Releasing it when DataStore merely emits
+        // leaves a short frame where the XML default (Login) can be rendered.
         val splashScreen = installSplashScreen()
-        splashScreen.setKeepOnScreenCondition { loginViewModel.isCheckingToken.value }
+        splashScreen.setKeepOnScreenCondition { !startupNavigationResolved }
+        splashScreen.setOnExitAnimationListener { provider ->
+            provider.view.animate()
+                .alpha(0f)
+                .setDuration(180L)
+                .withEndAction { provider.remove() }
+                .start()
+        }
 
         super.onCreate(savedInstanceState)
         pendingInvitationCode = extractInvitationCode(intent)
@@ -221,22 +232,29 @@ class MainActivity : AppCompatActivity() {
             // persisted session decides the real start destination, avoiding a login flash.
             binding.navHostFragment.visibility = View.INVISIBLE
             lifecycleScope.launch {
-                val loggedIn = loginViewModel.hasSavedSession()
-                val biometricLockEnabled = dataStoreManager.biometricLockEnabled.firstOrNull() ?: false
-                val graph = navController.navInflater.inflate(R.navigation.nav_graph)
-                graph.setStartDestination(
-                    if (loggedIn && !biometricLockEnabled) R.id.homeFragment else R.id.loginFragment
-                )
-                navController.graph = graph
-                binding.navHostFragment.visibility = View.VISIBLE
-                handlePendingInvitationDeepLink()
-                handlePendingNotificationNavigation()
-                syncFcmTokenIfLoggedIn()
+                try {
+                    val loggedIn = loginViewModel.hasSavedSession()
+                    val biometricLockEnabled = dataStoreManager.biometricLockEnabled.firstOrNull() ?: false
+                    val graph = navController.navInflater.inflate(R.navigation.nav_graph)
+                    graph.setStartDestination(
+                        if (loggedIn && !biometricLockEnabled) R.id.homeFragment else R.id.loginFragment
+                    )
+                    navController.graph = graph
+                    handlePendingInvitationDeepLink()
+                    handlePendingNotificationNavigation()
+                    syncFcmTokenIfLoggedIn()
+                } finally {
+                    // Reveal content first, then allow the system splash to
+                    // animate away on the next frame.
+                    binding.navHostFragment.visibility = View.VISIBLE
+                    binding.navHostFragment.post { startupNavigationResolved = true }
+                }
             }
         } else {
             // Android restored the correct destination; reveal it without
             // rebuilding the graph or briefly displaying Login.
             binding.navHostFragment.visibility = View.VISIBLE
+            binding.navHostFragment.post { startupNavigationResolved = true }
         }
 
         // Navigate to login when the session expires (401 received on any request)
