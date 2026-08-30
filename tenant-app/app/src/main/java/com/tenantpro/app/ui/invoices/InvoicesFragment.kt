@@ -51,6 +51,7 @@ class InvoicesFragment : Fragment() {
         private const val FILTER_OPEN = "OPEN"
         private const val FILTER_PAID = "PAID"
         private const val FILTER_OVERDUE = "OVERDUE"
+        private const val FILTER_UPCOMING = "UPCOMING"
     }
 
     private var _binding: FragmentInvoicesBinding? = null
@@ -137,6 +138,7 @@ class InvoicesFragment : Fragment() {
                 checkedIds.contains(R.id.chipPending)   -> FILTER_OPEN
                 checkedIds.contains(R.id.chipOverdue)   -> FILTER_OVERDUE
                 checkedIds.contains(R.id.chipPaid)      -> FILTER_PAID
+                checkedIds.contains(R.id.chipUpcoming)  -> FILTER_UPCOMING
                 else -> null
             }
             applyFilters(resetPage = true)
@@ -148,6 +150,7 @@ class InvoicesFragment : Fragment() {
             FILTER_OPEN -> binding.chipGroupFilter.check(R.id.chipPending)
             FILTER_PAID -> binding.chipGroupFilter.check(R.id.chipPaid)
             FILTER_OVERDUE -> binding.chipGroupFilter.check(R.id.chipOverdue)
+            FILTER_UPCOMING -> binding.chipGroupFilter.check(R.id.chipUpcoming)
             else -> binding.chipGroupFilter.check(R.id.chipAll)
         }
         arguments?.remove(ARG_INITIAL_FILTER)
@@ -234,6 +237,7 @@ class InvoicesFragment : Fragment() {
             FILTER_OPEN -> searched.filter { isOpenStatus(it.status) }
             FILTER_PAID -> searched.filter { it.statusCode() == FILTER_PAID }
             FILTER_OVERDUE -> searched.filter { it.statusCode() == FILTER_OVERDUE }
+            FILTER_UPCOMING -> searched.filter { it.isUpcoming() }
             else -> searched
         }
 
@@ -292,6 +296,12 @@ class InvoicesFragment : Fragment() {
     private fun statusCode(status: String): String = status.uppercase(Locale.ROOT)
 
     private fun Invoice.statusCode(): String = statusCode(status)
+
+    private fun Invoice.isUpcoming(): Boolean =
+        isOpenStatus(status) && dueDate?.take(10)?.let { it > currentIsoDate() } == true
+
+    private fun currentIsoDate(): String =
+        SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
 
     private fun Invoice.groupKey(): String {
         val period = periodYear?.let { year ->

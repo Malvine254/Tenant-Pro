@@ -1,177 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    app:cardBackgroundColor="@color/surface"
-    app:cardCornerRadius="14dp"
-    app:cardElevation="0dp"
-    app:strokeColor="@color/outline_variant"
-    app:strokeWidth="1dp">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="10dp">
-
-        <FrameLayout
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:layout_marginEnd="9dp"
-            android:background="@drawable/bg_card_white_rounded">
-
-            <ImageView
-                android:id="@+id/ivUnitPhoto"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="Unit photo"
-                android:scaleType="centerCrop" />
-
-            <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_gravity="bottom|end"
-                android:layout_margin="3dp"
-                android:background="@drawable/bg_quick_action"
-                android:contentDescription="Unit"
-                android:padding="5dp"
-                android:src="@drawable/ic_home"
-                android:tint="@android:color/white" />
-        </FrameLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/tvUnitNumber"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textColor="@color/on_surface"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvUnitActiveBadge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_status_active"
-                    android:paddingHorizontal="9dp"
-                    android:paddingVertical="3dp"
-                    android:text="Active"
-                    android:textColor="@color/success_green"
-                    android:textSize="9sp"
-                    android:textStyle="bold" />
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" app:cardBackgroundColor="@color/surface_variant" app:cardCornerRadius="18dp" app:cardElevation="0dp" app:strokeColor="@color/outline_variant" app:strokeWidth="1dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+            <ImageView android:id="@+id/ivUnitPhoto" android:layout_width="72dp" android:layout_height="72dp" android:contentDescription="Unit photo" android:scaleType="centerCrop" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="13dp" android:layout_weight="1" android:orientation="vertical">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+                    <com.google.android.material.textview.MaterialTextView android:id="@+id/tvUnitNumber" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:fontFamily="sans-serif-medium" android:maxLines="1" android:textColor="@color/on_surface" android:textSize="16sp" />
+                    <TextView android:id="@+id/tvUnitActiveBadge" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/bg_badge_green" android:fontFamily="sans-serif-medium" android:paddingHorizontal="9dp" android:paddingVertical="4dp" android:text="Active" android:textColor="@color/badge_green_text" android:textSize="10sp" />
+                </LinearLayout>
+                <com.google.android.material.textview.MaterialTextView android:id="@+id/tvUnitPropertyName" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:ellipsize="end" android:maxLines="1" android:textColor="@color/on_surface_variant" android:textSize="13sp" />
+                <com.google.android.material.textview.MaterialTextView android:id="@+id/tvUnitAddress" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:ellipsize="end" android:maxLines="1" android:textColor="@color/on_surface_variant" android:textSize="12sp" />
             </LinearLayout>
-
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvUnitPropertyName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textColor="@color/on_surface_variant"
-                android:textSize="10sp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="FLOOR"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="8sp" />
-
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/tvUnitFloor"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/on_surface"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1.25"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="RENT / MONTH"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="8sp" />
-
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/tvUnitRent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/on_surface"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1.1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="MOVE-IN"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="8sp" />
-
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/tvUnitMoveIn"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/on_surface"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
+        </LinearLayout>
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="13dp" android:background="@color/outline_variant" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="horizontal">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="sans-serif-medium" android:text="Floor" android:textColor="@color/on_surface_variant" android:textSize="11sp" />
+                <com.google.android.material.textview.MaterialTextView android:id="@+id/tvUnitFloor" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:fontFamily="sans-serif-medium" android:textColor="@color/on_surface" android:textSize="14sp" />
             </LinearLayout>
-
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvUnitAddress"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textColor="@color/on_surface_variant"
-                android:textSize="10sp" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.35" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="sans-serif-medium" android:text="Monthly rent" android:textColor="@color/on_surface_variant" android:textSize="11sp" />
+                <com.google.android.material.textview.MaterialTextView android:id="@+id/tvUnitRent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:fontFamily="sans-serif-medium" android:textColor="@color/on_surface" android:textSize="14sp" />
+            </LinearLayout>
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.15" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="sans-serif-medium" android:text="Move-in" android:textColor="@color/on_surface_variant" android:textSize="11sp" />
+                <com.google.android.material.textview.MaterialTextView android:id="@+id/tvUnitMoveIn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:fontFamily="sans-serif-medium" android:textColor="@color/on_surface" android:textSize="14sp" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

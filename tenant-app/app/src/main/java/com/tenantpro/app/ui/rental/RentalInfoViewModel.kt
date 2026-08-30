@@ -38,7 +38,7 @@ class RentalInfoViewModel @Inject constructor(
             var overdueCount = 0
 
             authRepository.claimMatchingInvitations()
-            when (val profileResult = authRepository.getMyProfile()) {
+            when (val profileResult = authRepository.getMyProfile(forceRefresh = true)) {
                 is Resource.Success -> {
                     val profile = profileResult.data
                     // Prefer tenantProfiles list; fall back to singular tenantProfile for old API
@@ -74,7 +74,7 @@ class RentalInfoViewModel @Inject constructor(
                 Resource.Loading -> Unit
             }
 
-            when (val invoiceResult = invoiceRepository.getInvoices()) {
+            when (val invoiceResult = invoiceRepository.getInvoices(forceRefresh = true)) {
                 is Resource.Success -> {
                     val invoices = invoiceResult.data
                     if (units.isEmpty()) {
@@ -101,12 +101,17 @@ class RentalInfoViewModel @Inject constructor(
                                 )
                             }
                     }
+                    val openStatuses = setOf("PENDING", "PARTIAL", "PARTIALLY_PAID", "UNPAID", "OVERDUE")
                     val total = invoices
-                        .filter { it.status == "PENDING" || it.status == "OVERDUE" }
+                        .filter { it.status.uppercase() in openStatuses }
                         .sumOf { it.effectiveBalance() }
                     outstanding = total.toKes()
-                    pendingCount = invoices.count { it.status == "PENDING" }
-                    overdueCount = invoices.count { it.status == "OVERDUE" }
+                    pendingCount = invoices.count {
+                        it.status.uppercase() in openStatuses - "OVERDUE" && it.effectiveBalance() > 0.0
+                    }
+                    overdueCount = invoices.count {
+                        it.status.equals("OVERDUE", ignoreCase = true) && it.effectiveBalance() > 0.0
+                    }
                 }
                 is Resource.Error -> Unit
                 Resource.Loading -> Unit

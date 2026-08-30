@@ -27,7 +27,16 @@ class InvoiceController extends Controller
             ->when($request->tenant_id, fn($q) => $q->where('tenant_id', $request->tenant_id))
             ->when($request->unit_id, fn($q) => $q->where('unit_id', $request->unit_id))
             ->when($request->status, fn($q) => $q->where('status', $request->status));
-        return response()->json($query->latest()->paginate(min(max($request->integer('per_page', 15), 1), 100)));
+        // Prioritize actionable invoices, including invoices generated now for
+        // a future month, then order them by the date the tenant must pay.
+        $query
+            ->orderByRaw("CASE WHEN status IN ('PENDING', 'PARTIAL', 'PARTIALLY_PAID', 'UNPAID', 'OVERDUE') THEN 0 ELSE 1 END")
+            ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
+            ->orderByRaw("CASE WHEN status IN ('PENDING', 'PARTIAL', 'PARTIALLY_PAID', 'UNPAID', 'OVERDUE') THEN due_date END ASC")
+            ->orderByRaw("CASE WHEN status NOT IN ('PENDING', 'PARTIAL', 'PARTIALLY_PAID', 'UNPAID', 'OVERDUE') THEN due_date END DESC")
+            ->orderByDesc('created_at');
+
+        return response()->json($query->paginate(min(max($request->integer('per_page', 15), 1), 100)));
     }
 
     public function store(Request $request)

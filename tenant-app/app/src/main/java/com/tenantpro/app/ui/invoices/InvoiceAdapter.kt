@@ -9,7 +9,9 @@ import com.tenantpro.app.R
 import com.tenantpro.app.data.model.Invoice
 import com.tenantpro.app.databinding.ItemInvoiceGroupBinding
 import com.tenantpro.app.utils.toBillingLabel
+import com.tenantpro.app.utils.toDisplayDate
 import com.tenantpro.app.utils.toKes
+import java.time.LocalDate
 
 data class InvoiceGroup(val key: String, val title: String, val invoices: List<Invoice>) {
     val total: Double get() = invoices.sumOf { it.effectiveTotalAmount() }
@@ -26,6 +28,16 @@ class InvoiceAdapter(
         fun bind(group: InvoiceGroup) {
             binding.tvGroupTitle.text = group.title
             binding.tvGroupTypes.text = group.invoices.map { it.billingType.toBillingLabel() }.distinct().joinToString(" · ")
+            val earliestDueDate = group.invoices.mapNotNull { it.dueDate?.take(10) }.minOrNull()
+            val isUpcoming = earliestDueDate?.let { it > LocalDate.now().toString() } == true
+            binding.tvGroupDueDate.text = when {
+                earliestDueDate == null -> "Due date not set"
+                isUpcoming -> "Upcoming  ·  Due ${earliestDueDate.toDisplayDate()}"
+                else -> "Due ${earliestDueDate.toDisplayDate()}"
+            }
+            binding.tvGroupDueDate.setTextColor(
+                binding.root.context.getColor(if (isUpcoming) R.color.info else R.color.on_surface_variant)
+            )
             binding.tvGroupTotal.text = group.total.toKes()
             binding.tvGroupBalance.text = when {
                 group.balance <= 0.0 -> "All bills paid"
