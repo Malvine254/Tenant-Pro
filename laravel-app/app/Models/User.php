@@ -77,8 +77,8 @@ class User extends Authenticatable
                 return true;
             }
 
-            if ($this->service_paid_until && $this->service_paid_until->isFuture()) {
-                return true;
+            if ($this->service_paid_until || $this->subscription_started_at) {
+                return $this->service_paid_until && $this->service_paid_until->isFuture();
             }
 
             return $this->trial_ends_at && $this->trial_ends_at->isFuture();

@@ -75,7 +75,29 @@ Change password immediately after first login.
 - Admin login: `https://starmaxltd.com/admin/login`
 - API auth login: `POST https://starmaxltd.com/api/auth/login`
 
-## 6. Important Notes
+## 6. Required Scheduler Cron
+
+Subscription expiry enforcement and reminders require Laravel's scheduler. In
+cPanel Cron Jobs, add this command to run every minute (replace `USERNAME` and
+the PHP path with the values shown by your host):
+
+```cron
+* * * * * /usr/local/bin/php /home/USERNAME/laravel/artisan schedule:run > /dev/null 2>&1
+```
+
+Verify it from a terminal with:
+
+```bash
+cd ~/laravel
+php artisan schedule:list
+php artisan tenantpro:sync-landlord-subscriptions
+```
+
+The synchronization command applies an expiry lock at the exact stored time;
+the daily reminder command sends catch-up-safe notices at seven, three, one and
+zero days before renewal.
+
+## 7. Important Notes
 - Android app can keep using API endpoints under `/api/*`.
 - If Sanctum migration is missing, ensure `personal_access_tokens` table exists.
 - Keep `APP_DEBUG=false` in production.

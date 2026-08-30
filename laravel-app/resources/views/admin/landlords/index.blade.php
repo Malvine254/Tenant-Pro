@@ -309,10 +309,10 @@
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
                 <span class="badge badge-blue">Trial: first month included</span>
                 <span class="badge badge-green">Subscription: active after payment</span>
-                <span class="badge badge-red">Past due: access blocked</span>
+                <span class="badge badge-red">Past due: tenant operations locked</span>
             </div>
             <div style="font-size:12px;color:#475569;">
-                <strong>Admin action:</strong> <span class="badge badge-primary">Mark Paid +1M</span>
+                <strong>Admin action:</strong> <span class="badge badge-primary">Record renewal</span>
             </div>
         </div>
         <form method="GET" class="landlord-filter">
@@ -387,15 +387,22 @@
                                         'past_due' => 'Subscription overdue',
                                         default => 'Not required',
                                     };
-                                    $trialEnds = $landlord->trial_ends_at?->format('d M Y');
-                                    $paidUntil = $landlord->service_paid_until?->format('d M Y');
+                                    $subscriptionTimezone = config('deployment.subscription_timezone', 'Africa/Nairobi');
+                                    $trialEnds = $landlord->trial_ends_at?->timezone($subscriptionTimezone)->format('d M Y, H:i');
+                                    $paidUntil = $landlord->service_paid_until?->timezone($subscriptionTimezone)->format('d M Y, H:i');
                                 @endphp
-                                <div class="landlord-muted" style="display:grid;gap:5px;">
-                                    <span class="badge {{ $billingTone }}">{{ strtoupper(str_replace('_', ' ', $landlord->billing_status ?? 'not_required')) }}</span>
-                                    <span><strong>{{ $subscriptionLabel }}</strong></span>
-                                    <span>Trial ends: {{ $trialEnds ?? '-' }}</span>
-                                    <span>Paid until: {{ $paidUntil ?? '-' }}</span>
-                                </div>
+                                <details style="margin:0!important;min-width:190px;">
+                                    <summary style="padding:9px 11px!important;">
+                                        <span class="badge {{ $billingTone }}">{{ strtoupper(str_replace('_', ' ', $landlord->billing_status ?? 'not_required')) }}</span>
+                                        <span style="font-size:11px;color:#94a3b8;">Expand</span>
+                                    </summary>
+                                    <div class="landlord-muted" style="display:grid;gap:6px;padding:11px;">
+                                        <span><strong>{{ $subscriptionLabel }}</strong></span>
+                                        <span>Trial ends: {{ $trialEnds ?? '-' }}</span>
+                                        <span>Paid until: {{ $paidUntil ?? '-' }}</span>
+                                        <span>Monthly fee: KSh {{ number_format((float) $landlord->monthly_service_fee, 2) }}</span>
+                                    </div>
+                                </details>
                             </td>
                             <td><span class="landlord-money">KSh {{ number_format($landlord->collected_this_month, 2) }}</span></td>
                             <td><span class="landlord-money red">KSh {{ number_format($landlord->outstanding_balance, 2) }}</span></td>
@@ -409,9 +416,14 @@
                                     <a href="{{ route('admin.landlords.edit', $landlord) }}" class="btn btn-secondary">Edit</a>
                                     <form method="POST" action="{{ route('admin.landlords.payments.record', $landlord) }}">
                                         @csrf
-                                        <input type="hidden" name="months" value="1">
-                                        <button type="submit" class="btn btn-primary" onclick="return confirm('Record one month service payment for this landlord?')">
-                                            Mark Paid +1M
+                                        <select name="months" aria-label="Subscription months" style="padding:8px;border-radius:9px;background:#0f172a;color:#f8fafc;border:1px solid rgba(148,163,184,.25);">
+                                            <option value="1">1 month</option>
+                                            <option value="3">3 months</option>
+                                            <option value="6">6 months</option>
+                                            <option value="12">12 months</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary" onclick="return confirm('Record this service subscription payment? Access will update immediately.')">
+                                            Record renewal
                                         </button>
                                     </form>
                                     <form method="POST" action="{{ route('admin.landlords.status', $landlord) }}">

@@ -37,6 +37,10 @@ class LandlordAdminController extends Controller
             ->withQueryString();
 
         $landlords->getCollection()->transform(function (User $landlord) {
+            // Keep the admin list accurate even if the external scheduler has
+            // been temporarily unavailable.
+            $this->subscriptionService->evaluate($landlord);
+
             $invoiceQuery = Invoice::whereHas('unit.property', fn($property) => $property->where('landlord_id', $landlord->id));
             $paymentQuery = Payment::whereHas('invoice.unit.property', fn($property) => $property->where('landlord_id', $landlord->id));
 
@@ -73,6 +77,7 @@ class LandlordAdminController extends Controller
             'email' => 'required|email|unique:users,email',
             'phone_number' => 'nullable|string|unique:users,phone_number',
             'password' => 'required|string|min:8|confirmed',
+            'monthly_service_fee' => 'required|numeric|min:0|max:1000000',
         ]);
 
         $role = Role::firstOrCreate(
@@ -91,7 +96,7 @@ class LandlordAdminController extends Controller
             'is_active' => true,
         ]);
 
-        $this->subscriptionService->initializeTrial($user);
+        $this->subscriptionService->initializeTrial($user, (float) $data['monthly_service_fee']);
 
         return redirect()
             ->route('admin.properties.create', ['landlord_id' => $user->id])
@@ -118,6 +123,7 @@ class LandlordAdminController extends Controller
             'phone_number' => 'nullable|string|unique:users,phone_number,' . $landlord->id,
             'password' => 'nullable|string|min:8|confirmed',
             'is_active' => 'sometimes|boolean',
+            'monthly_service_fee' => 'required|numeric|min:0|max:1000000',
         ]);
 
         $updates = [
@@ -127,6 +133,7 @@ class LandlordAdminController extends Controller
             'email' => $data['email'],
             'phone_number' => $data['phone_number'] ?? null,
             'is_active' => $request->boolean('is_active'),
+            'monthly_service_fee' => $data['monthly_service_fee'],
         ];
 
         if (!empty($data['password'])) {

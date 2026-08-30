@@ -206,6 +206,24 @@
     .ops-health-healthy { background:#14532d;color:#bbf7d0; }
     .ops-health-attention { background:#78350f;color:#fef3c7; }
     .ops-health-risk { background:#7f1d1d;color:#fee2e2; }
+    .subscription-notice {
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto;
+        gap:18px;
+        align-items:center;
+        margin-bottom:16px;
+        padding:18px;
+        border-radius:16px;
+        border:1px solid rgba(251,191,36,.34);
+        background:linear-gradient(135deg,rgba(120,53,15,.4),rgba(15,23,42,.92));
+        box-shadow:0 14px 30px rgba(2,6,23,.22);
+    }
+    .subscription-notice.locked { border-color:rgba(248,113,113,.42);background:linear-gradient(135deg,rgba(127,29,29,.46),rgba(15,23,42,.94)); }
+    .subscription-notice h2 { font-size:18px;color:#fff;margin-bottom:6px; }
+    .subscription-notice p { color:#cbd5e1;line-height:1.55;font-size:13px;max-width:780px; }
+    .subscription-notice-meta { display:grid;gap:5px;min-width:190px;padding:12px 14px;border-radius:12px;background:rgba(2,6,23,.36); }
+    .subscription-notice-meta span { color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:.04em; }
+    .subscription-notice-meta strong { color:#f8fafc;font-size:15px; }
     .ops-exec-grid {
         display:grid;
         grid-template-columns:repeat(4,minmax(0,1fr));
@@ -262,10 +280,42 @@
         .ops-landlord-kpis { grid-template-columns:1fr; }
         .ops-exec-grid { grid-template-columns:1fr; }
         .ops-subscription-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .subscription-notice { grid-template-columns:1fr; }
     }
 </style>
 
 <div class="ops-dashboard">
+    @if($isLandlord && !($landlordAccess['allowed'] ?? true))
+        <section class="subscription-notice locked" role="alert">
+            <div>
+                <span class="badge badge-red" style="margin-bottom:9px;">Past due</span>
+                <h2>Tenant operations are locked</h2>
+                <p>{{ $landlordAccess['message'] }}</p>
+                <p style="margin-top:7px;">You can still access this dashboard, account settings and notifications. Ask the TenantPro administrator to record your renewal; access is restored immediately.</p>
+            </div>
+            <div class="subscription-notice-meta">
+                <span>Expired</span>
+                <strong>{{ ($landlordAccess['due_at'] ?? null)?->format('d M Y, H:i') ?? 'Renewal date reached' }}</strong>
+                <span style="margin-top:5px;">Monthly fee</span>
+                <strong>KSh {{ number_format((float) (auth()->user()->monthly_service_fee ?? 0), 2) }}</strong>
+            </div>
+        </section>
+    @elseif($isLandlord && ($landlordAccess['days_remaining'] ?? 99) <= 7)
+        <section class="subscription-notice">
+            <div>
+                <span class="badge badge-yellow" style="margin-bottom:9px;">Renewal approaching</span>
+                <h2>{{ ($landlordAccess['days_remaining'] ?? 0) === 0 ? 'Subscription due today' : 'Subscription due in '.$landlordAccess['days_remaining'].' '.(($landlordAccess['days_remaining'] ?? 0) === 1 ? 'day' : 'days') }}</h2>
+                <p>Renew before the due time to keep tenant billing, payments, maintenance, invitations and support available without interruption.</p>
+            </div>
+            <div class="subscription-notice-meta">
+                <span>Renewal date</span>
+                <strong>{{ ($landlordAccess['due_at'] ?? null)?->format('d M Y, H:i') }}</strong>
+                <span style="margin-top:5px;">Monthly fee</span>
+                <strong>KSh {{ number_format((float) (auth()->user()->monthly_service_fee ?? 0), 2) }}</strong>
+            </div>
+        </section>
+    @endif
+
     <div class="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
         <button class="dashboard-tab active" type="button" role="tab" aria-selected="true" data-target="overview-tab">Overview</button>
         <button class="dashboard-tab" type="button" role="tab" aria-selected="false" data-target="performance-tab">Performance</button>

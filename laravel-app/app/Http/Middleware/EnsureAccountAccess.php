@@ -32,7 +32,17 @@ class EnsureAccountAccess
         if ($user->isLandlord()) {
             $evaluation = $this->subscriptionService->evaluate($user);
             if (!$evaluation['allowed']) {
-                return response()->json(['message' => $evaluation['message'] ?? 'Your service subscription is inactive.'], 403);
+                if ($this->isRestrictedAccountRouteAllowed($request)) {
+                    return $next($request);
+                }
+
+                return response()->json([
+                    'message' => $evaluation['message'] ?? 'Your service subscription is inactive.',
+                    'code' => 'SUBSCRIPTION_PAST_DUE',
+                    'subscriptionStatus' => $evaluation['status'] ?? LandlordSubscriptionService::STATUS_PAST_DUE,
+                    'servicePaidUntil' => $user->service_paid_until?->toISOString(),
+                    'trialEndsAt' => $user->trial_ends_at?->toISOString(),
+                ], 403);
             }
         }
 
@@ -59,6 +69,11 @@ class EnsureAccountAccess
     }
 
     private function isRestrictedTenantRouteAllowed(Request $request): bool
+    {
+        return $this->isRestrictedAccountRouteAllowed($request);
+    }
+
+    private function isRestrictedAccountRouteAllowed(Request $request): bool
     {
         return match (true) {
             $request->isMethod('GET') && $request->is('api/auth/me') => true,

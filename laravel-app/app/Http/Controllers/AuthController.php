@@ -112,9 +112,11 @@ class AuthController extends Controller
             return response()->json(['message' => 'Account is inactive.'], 403);
         }
 
-        if ($user->isLandlord() && !$user->hasActiveServiceAccess()) {
-            $message = $this->subscriptionService->evaluate($user)['message'] ?? 'Your service subscription is inactive.';
-            return response()->json(['message' => $message], 403);
+        // Keep authentication available when a subscription expires. The API
+        // access middleware exposes account/notification routes while locking
+        // tenant operations with a structured SUBSCRIPTION_PAST_DUE response.
+        if ($user->isLandlord()) {
+            $this->subscriptionService->evaluate($user);
         }
 
         if (!$user->email_verified_at) {

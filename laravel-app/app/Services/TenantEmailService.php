@@ -16,6 +16,58 @@ use Throwable;
 
 class TenantEmailService
 {
+    public function sendSubscriptionLocked(User $landlord, ?\Illuminate\Support\Carbon $dueDate): bool
+    {
+        return $this->send($landlord, [
+            'subjectLine' => 'TenantPro tenant operations are locked',
+            'preheader' => 'Your subscription has expired and tenant operations are temporarily locked.',
+            'title' => 'Subscription expired',
+            'introLines' => [
+                'Hi '.$this->firstName($landlord).',',
+                'Your TenantPro subscription has expired. Tenant billing, payments, maintenance, invitations and support operations are now locked.',
+                'Your account remains available so you can review the subscription status. Operations unlock immediately after an administrator records your renewal.',
+            ],
+            'details' => [
+                'Expired on' => $dueDate?->format('d M Y, H:i') ?? 'Renewal date reached',
+                'Monthly service fee' => 'KES '.number_format((float) ($landlord->monthly_service_fee ?? 0), 2),
+                'Current status' => 'Past due — operations locked',
+            ],
+            'actionLabel' => 'View subscription status',
+            'actionUrl' => rtrim(config('app.url'), '/').'/admin/dashboard',
+            'footerText' => 'If you have already paid, contact the TenantPro administrator with your payment reference.',
+            'eyebrow' => 'Subscription notice',
+            'highlightLabel' => 'Access status',
+            'highlightValue' => 'Tenant operations locked',
+        ]);
+    }
+
+    public function sendSubscriptionRenewed(User $landlord): bool
+    {
+        return $this->send($landlord, [
+            'subjectLine' => 'TenantPro subscription renewed',
+            'preheader' => 'Your subscription is active and tenant operations are available again.',
+            'title' => 'Subscription active',
+            'introLines' => [
+                'Hi '.$this->firstName($landlord).',',
+                'Your TenantPro subscription renewal has been recorded successfully.',
+                'Tenant billing, payments, maintenance, invitations and support operations are available immediately.',
+            ],
+            'details' => [
+                'Paid until' => $landlord->service_paid_until
+                    ?->timezone(config('deployment.subscription_timezone', 'Africa/Nairobi'))
+                    ->format('d M Y, H:i') ?? 'Not specified',
+                'Subscription status' => 'Active',
+                'Monthly service fee' => 'KES '.number_format((float) ($landlord->monthly_service_fee ?? 0), 2),
+            ],
+            'actionLabel' => 'Open TenantPro portal',
+            'actionUrl' => rtrim(config('app.url'), '/').'/admin/dashboard',
+            'footerText' => 'Thank you for keeping your TenantPro subscription active.',
+            'eyebrow' => 'Payment confirmation',
+            'highlightLabel' => 'Access status',
+            'highlightValue' => 'All operations unlocked',
+        ]);
+    }
+
     public function sendSubscriptionDueReminder(User $landlord, \Illuminate\Support\Carbon $dueDate, int $daysUntilDue): bool
     {
         $dueText = $dueDate->format('d M Y');
@@ -31,7 +83,7 @@ class TenantEmailService
             'introLines' => [
                 'Hi '.$this->firstName($landlord).',',
                 $daysUntilDue === 0
-                    ? 'Your TenantPro service subscription is due today. Please renew to avoid an interruption to portal access.'
+                    ? 'Your TenantPro service subscription is due today. Please renew to avoid an interruption to tenant operations.'
                     : 'Your TenantPro service subscription is due in '.$daysUntilDue.' day'.($daysUntilDue === 1 ? '' : 's').'.',
             ],
             'details' => [

@@ -56,17 +56,10 @@ class AuthAdminController extends Controller
                     ->onlyInput('email');
             }
 
+            // Past-due landlords may sign in to see the lock reason and renewal
+            // status. Operational routes remain protected by admin.role.
             if ($role === 'LANDLORD') {
-                $evaluation = $this->subscriptionService->evaluate(Auth::user());
-                if (!$evaluation['allowed']) {
-                    Auth::logout();
-                    $request->session()->invalidate();
-                    $request->session()->regenerateToken();
-
-                    return back()
-                        ->withErrors(['email' => $evaluation['message']])
-                        ->onlyInput('email');
-                }
+                $this->subscriptionService->evaluate(Auth::user());
             }
 
             $request->session()->regenerate();

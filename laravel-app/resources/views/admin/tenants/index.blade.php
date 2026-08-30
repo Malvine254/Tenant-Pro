@@ -57,7 +57,7 @@
         padding: 18px;
     }
     .tenant-person{display:flex;align-items:center;gap:10px}.tenant-avatar{width:38px;height:38px;flex:0 0 38px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:linear-gradient(135deg,#7656d8,#4f46e5);color:#fff;font-size:12px;font-weight:800}.tenant-avatar img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
-    .tenancy-nested-wrap{padding:0!important;background:rgba(15,23,42,.4)}.tenancy-nested{width:100%;border-collapse:collapse}.tenancy-nested th,.tenancy-nested td{padding:10px 12px;border-top:1px solid rgba(148,163,184,.12);font-size:13px;text-align:left;vertical-align:middle}.tenancy-nested thead th{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#cbd5e1;background:rgba(15,23,42,.9)}.tenancy-summary{font-size:12px;color:#94a3b8}.tenant-parent-row td{background:rgba(15,23,42,.48)}
+    .tenancy-nested-wrap{padding:7px 12px 12px!important;background:rgba(15,23,42,.4)}.tenancy-nested{width:100%;border-collapse:collapse}.tenancy-nested th,.tenancy-nested td{padding:10px 12px;border-top:1px solid rgba(148,163,184,.12);font-size:13px;text-align:left;vertical-align:middle}.tenancy-nested thead th{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#cbd5e1;background:rgba(15,23,42,.9)}.tenancy-summary{font-size:12px;color:#94a3b8}.tenant-parent-row td{background:rgba(15,23,42,.48)}.tenancy-details{margin:0!important;border-color:rgba(148,163,184,.13)!important}.tenancy-details summary{padding:9px 12px!important;font-size:12px;color:#cbd5e1!important}.tenancy-details .table-scroll{border-top:1px solid rgba(148,163,184,.12)}
     .tenant-card table {
         width: 100%;
         border-collapse: collapse;
@@ -194,6 +194,12 @@
                         </tr>
                         <tr>
                             <td colspan="6" class="tenancy-nested-wrap">
+                                <details class="tenancy-details">
+                                <summary>
+                                    <span>Tenancy and unit details</span>
+                                    <span class="tenancy-summary">{{ $activeTenancies->count() }} {{ $activeTenancies->count() === 1 ? 'record' : 'records' }} · Expand</span>
+                                </summary>
+                                <div class="table-scroll">
                                 <table class="tenancy-nested">
                                     <thead>
                                         <tr>
@@ -222,6 +228,8 @@
                                         @endforelse
                                     </tbody>
                                 </table>
+                                </div>
+                                </details>
                             </td>
                         </tr>
                         @empty

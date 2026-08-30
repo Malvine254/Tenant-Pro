@@ -252,12 +252,12 @@
         </div>
 
         @forelse($property->units->groupBy(fn($unit) => $unit->floor === null ? 'Unassigned floor' : 'Floor '.$unit->floor) as $floorLabel => $floorUnits)
-            <details open>
+            <details>
                 <summary>
                     <span>{{ $floorLabel }}</span>
                     <span class="floor-meta">
                         {{ $floorUnits->count() }} {{ Str::plural('unit', $floorUnits->count()) }}
-                        · {{ $floorUnits->where('status', 'AVAILABLE')->count() }} available
+                        · {{ $floorUnits->where('status', 'AVAILABLE')->count() }} available · Expand
                     </span>
                 </summary>
                 <div class="table-scroll">

@@ -145,11 +145,12 @@
     $isCaretaker = $roleName === 'CARETAKER';
     $isSuperAdmin = $roleName === 'SUPER_ADMIN';
     $isPlatformAdmin = in_array($roleName, ['SUPER_ADMIN', 'ADMIN'], true);
+    $landlordLocked = $isLandlord && !auth()->user()->hasActiveServiceAccess();
 @endphp
 <div class="admin-shell">
 <aside class="sidebar" id="adminSidebar" aria-hidden="true">
     <div class="sidebar-logo">
-        <span>{{ $isLandlord ? 'Landlord Portal' : 'TenantPro Admin' }}</span>
+        <span>{{ $isLandlord ? 'Landlord Portal' : 'TenantPro Admin' }}@if($landlordLocked)<small style="display:block;color:#fca5a5;font-size:10px;margin-top:3px;">SUBSCRIPTION LOCKED</small>@endif</span>
         <button class="sidebar-close" type="button" data-close-menu aria-label="Close menu">×</button>
     </div>
     <nav>
@@ -157,6 +158,7 @@
         @if($isPlatformAdmin)
             <a href="{{ route('admin.landlords.index') }}" class="{{ request()->routeIs('admin.landlords*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></i><span>Landlords</span></a>
         @endif
+        @if(!$landlordLocked)
         @unless($isCaretaker)
             <a href="{{ route('admin.properties.index') }}" class="{{ request()->routeIs('admin.properties*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h2m4 0h2M8 11h2m4 0h2M9 21v-5h6v5"/></svg></i><span>Properties</span></a>
             <a href="{{ route('admin.units.index') }}" class="{{ request()->routeIs('admin.units*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 21V5l8-3 8 3v16M4 9h16M9 21v-5h6v5"/></svg></i><span>Units</span></a>
@@ -166,6 +168,7 @@
             <a href="{{ route('admin.payments.index') }}" class="{{ request()->routeIs('admin.payments*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></svg></i><span>Payments</span></a>
         @endunless
         <a href="{{ route('admin.chats.index') }}" class="{{ request()->routeIs('admin.chats*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 9h8m-8 4h5"/></svg></i><span>Chats</span></a>
+        @endif
         @if($isLandlord)
             <a href="{{ route('admin.settings.index') }}" class="{{ request()->routeIs('admin.settings*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.82 2.82l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .98 1.7 1.7 0 0 0-.2 1.02V22a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-.23-1.02 1.7 1.7 0 0 0-1-.98 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.82-2.82l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.98-1 1.7 1.7 0 0 0-1.02-.2H2.5a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 3.6 9a1.7 1.7 0 0 0 .98-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06A2 2 0 1 1 6.99 3.25l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.98 1.7 1.7 0 0 0 .2-1.02V2.5a2 2 0 1 1 4 0v.09c.04.35.1.7.23 1.02.18.42.52.76.98 1a1.7 1.7 0 0 0 1.87-.34l.06-.06A2 2 0 0 1 20.75 6.99l-.06.06A1.7 1.7 0 0 0 19.4 9c.25.39.35.84.31 1.3a1.7 1.7 0 0 0 .98 1 1.7 1.7 0 0 0 1.02.2h.09a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.02.2 1.7 1.7 0 0 0-.98 1z"/></svg></i><span>Settings</span></a>
         @endif
