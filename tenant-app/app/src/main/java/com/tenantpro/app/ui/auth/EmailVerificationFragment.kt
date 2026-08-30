@@ -14,6 +14,7 @@ import androidx.navigation.fragment.findNavController
 import com.tenantpro.app.R
 import com.tenantpro.app.databinding.FragmentEmailVerificationBinding
 import com.tenantpro.app.utils.Resource
+import com.tenantpro.app.utils.dismissKeyboard
 import com.tenantpro.app.utils.gone
 import com.tenantpro.app.utils.toast
 import com.tenantpro.app.utils.visible
@@ -50,14 +51,17 @@ class EmailVerificationFragment : Fragment() {
 
         binding.btnVerify.setOnClickListener {
             val code = binding.etCode.text?.toString()?.trim().orEmpty()
+            dismissKeyboard()
             viewModel.verify(email, code)
         }
 
         binding.tvResend.setOnClickListener {
+            dismissKeyboard()
             viewModel.resendCode(email)
         }
 
         binding.tvBackToLogin.setOnClickListener {
+            dismissKeyboard()
             findNavController().navigate(
                 R.id.loginFragment,
                 null,
@@ -87,10 +91,12 @@ class EmailVerificationFragment : Fragment() {
                 is Resource.Loading -> {
                     binding.progressBar.visible()
                     binding.btnVerify.isEnabled = false
+                    binding.btnVerify.setText(R.string.auth_verifying)
                     binding.tvResend.isEnabled = false
                 }
                 is Resource.Success -> {
                     binding.progressBar.gone()
+                    binding.btnVerify.setText(R.string.auth_verify_email)
                     viewModel.resetVerifyState()
                     toast("Email verified! Welcome.")
                     findNavController().navigate(
@@ -103,6 +109,7 @@ class EmailVerificationFragment : Fragment() {
                 }
                 is Resource.Error -> {
                     binding.progressBar.gone()
+                    binding.btnVerify.setText(R.string.auth_verify_email)
                     binding.btnVerify.isEnabled = binding.etCode.text?.length == 6
                     binding.tvResend.isEnabled = true
                     binding.tilCode.error = state.message
@@ -110,6 +117,7 @@ class EmailVerificationFragment : Fragment() {
                 }
                 null -> {
                     binding.progressBar.gone()
+                    binding.btnVerify.setText(R.string.auth_verify_email)
                     binding.tvResend.isEnabled = true
                 }
             }
@@ -119,12 +127,19 @@ class EmailVerificationFragment : Fragment() {
     private suspend fun collectResendState() {
         viewModel.resendState.collect { state ->
             when (state) {
-                is Resource.Loading -> binding.tvResend.isEnabled = false
+                is Resource.Loading -> {
+                    binding.tvResend.isEnabled = false
+                    binding.tvResend.setText(R.string.auth_sending_code)
+                }
                 is Resource.Success, is Resource.Error -> {
                     binding.tvResend.isEnabled = true
+                    binding.tvResend.setText(R.string.auth_send_again)
                     viewModel.resetResendState()
                 }
-                null -> binding.tvResend.isEnabled = true
+                null -> {
+                    binding.tvResend.isEnabled = true
+                    binding.tvResend.setText(R.string.auth_send_again)
+                }
             }
         }
     }

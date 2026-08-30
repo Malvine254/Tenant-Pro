@@ -7,6 +7,13 @@
     <string name="hint_email">Email address</string>
     <string name="hint_password">Password</string>
     <string name="btn_login">Login</string>
+    <string name="auth_signing_in">Signing in…</string>
+    <string name="auth_creating_account">Creating account…</string>
+    <string name="auth_sending_code">Sending code…</string>
+    <string name="auth_updating_password">Updating password…</string>
+    <string name="auth_verifying">Verifying…</string>
+    <string name="auth_verify_email">Verify email</string>
+    <string name="auth_send_again">Send again</string>
 
     <!-- OTP -->
     <string name="verify_otp_title">Verify OTP</string>

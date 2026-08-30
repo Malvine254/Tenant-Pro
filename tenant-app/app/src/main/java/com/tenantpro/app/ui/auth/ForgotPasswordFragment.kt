@@ -13,7 +13,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.tenantpro.app.databinding.FragmentForgotPasswordBinding
+import com.tenantpro.app.R
 import com.tenantpro.app.utils.Resource
+import com.tenantpro.app.utils.dismissKeyboard
 import com.tenantpro.app.utils.gone
 import com.tenantpro.app.utils.toast
 import com.tenantpro.app.utils.visible
@@ -31,6 +33,9 @@ class ForgotPasswordFragment : Fragment() {
     private var currentEmail: String = ""
     private var temporaryPasswordSetup: Boolean = false
     private var otpRequestInFlight: Boolean = false
+    private var passwordResetInFlight: Boolean = false
+    private var sendCodeIdleText: CharSequence = "Send Verification Code"
+    private var resetPasswordIdleText: CharSequence = "Update Password"
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -50,6 +55,8 @@ class ForgotPasswordFragment : Fragment() {
         if (temporaryPasswordSetup) {
             setupTemporaryPasswordCopy()
         }
+        sendCodeIdleText = binding.btnSendOtp.text
+        resetPasswordIdleText = binding.btnResetPassword.text
 
         setupRequestOtpScreen()
         observeRequestOtpState()
@@ -65,6 +72,7 @@ class ForgotPasswordFragment : Fragment() {
 
     private fun setupRequestOtpScreen() {
         binding.tvBackToLogin.setOnClickListener {
+            dismissKeyboard()
             findNavController().popBackStack()
         }
 
@@ -105,6 +113,7 @@ class ForgotPasswordFragment : Fragment() {
     private fun requestResetCode(email: String, showFormImmediately: Boolean = false) {
         currentEmail = email.trim()
         binding.tilEmail.error = null
+        dismissKeyboard()
         if (showFormImmediately) {
             showResetPasswordScreen()
             binding.tvResetSubtitle.text = "Enter the code sent to $currentEmail, then save your new password."
@@ -135,6 +144,7 @@ class ForgotPasswordFragment : Fragment() {
             return
         }
 
+        dismissKeyboard()
         viewModel.resetPassword(currentEmail, code, newPassword)
     }
 
@@ -147,10 +157,12 @@ class ForgotPasswordFragment : Fragment() {
                             otpRequestInFlight = true
                             binding.progressBar.visible()
                             binding.btnSendOtp.isEnabled = false
+                            binding.btnSendOtp.setText(R.string.auth_sending_code)
                         }
                         is Resource.Success -> {
                             otpRequestInFlight = false
                             binding.progressBar.gone()
+                            binding.btnSendOtp.text = sendCodeIdleText
                             viewModel.resetRequestOtpState()
                             toast(state.data)
                             showResetPasswordScreen()
@@ -159,6 +171,7 @@ class ForgotPasswordFragment : Fragment() {
                         is Resource.Error -> {
                             otpRequestInFlight = false
                             binding.progressBar.gone()
+                            binding.btnSendOtp.text = sendCodeIdleText
                             if (temporaryPasswordSetup) {
                                 showRequestOtpScreen()
                             }
@@ -169,6 +182,7 @@ class ForgotPasswordFragment : Fragment() {
                         null -> {
                             otpRequestInFlight = false
                             binding.progressBar.gone()
+                            binding.btnSendOtp.text = sendCodeIdleText
                             updateSendCodeButton()
                         }
                     }
@@ -183,11 +197,15 @@ class ForgotPasswordFragment : Fragment() {
                 viewModel.resetPasswordState.collect { state ->
                     when (state) {
                         is Resource.Loading -> {
+                            passwordResetInFlight = true
                             binding.progressBarReset.visible()
                             binding.btnResetPassword.isEnabled = false
+                            binding.btnResetPassword.setText(R.string.auth_updating_password)
                         }
                         is Resource.Success -> {
+                            passwordResetInFlight = false
                             binding.progressBarReset.gone()
+                            binding.btnResetPassword.text = resetPasswordIdleText
                             viewModel.resetResetPasswordState()
                             toast(if (temporaryPasswordSetup) "Password changed. Please sign in." else "Password reset and email verified. Please sign in.")
                             findNavController().navigate(
@@ -195,13 +213,17 @@ class ForgotPasswordFragment : Fragment() {
                             )
                         }
                         is Resource.Error -> {
+                            passwordResetInFlight = false
                             binding.progressBarReset.gone()
+                            binding.btnResetPassword.text = resetPasswordIdleText
                             toast(state.message)
                             viewModel.resetResetPasswordState()
                             updateResetButton()
                         }
                         null -> {
+                            passwordResetInFlight = false
                             binding.progressBarReset.gone()
+                            binding.btnResetPassword.text = resetPasswordIdleText
                             updateResetButton()
                         }
                     }
@@ -237,7 +259,10 @@ class ForgotPasswordFragment : Fragment() {
         val newPassword = binding.etNewPassword.text?.toString().orEmpty()
         val confirmPassword = binding.etConfirmPassword.text?.toString().orEmpty()
         binding.btnResetPassword.isEnabled =
-            code.length == 6 && newPassword.length >= 8 && confirmPassword.length >= 8
+            code.length == 6 &&
+                newPassword.length >= 8 &&
+                newPassword == confirmPassword &&
+                !passwordResetInFlight
     }
 
     private fun String.isValidEmail(): Boolean {

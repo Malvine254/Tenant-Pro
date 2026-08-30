@@ -14,6 +14,7 @@ import androidx.navigation.fragment.findNavController
 import com.tenantpro.app.R
 import com.tenantpro.app.databinding.FragmentOtpBinding
 import com.tenantpro.app.utils.Resource
+import com.tenantpro.app.utils.dismissKeyboard
 import com.tenantpro.app.utils.gone
 import com.tenantpro.app.utils.toast
 import com.tenantpro.app.utils.visible
@@ -46,6 +47,7 @@ class OtpFragment : Fragment() {
 
         binding.btnVerify.setOnClickListener {
             val code = binding.etOtp.text?.toString()?.trim() ?: return@setOnClickListener
+            dismissKeyboard()
             viewModel.verifyOtp(phoneNumber, code)
         }
 
@@ -56,9 +58,11 @@ class OtpFragment : Fragment() {
                         is Resource.Loading -> {
                             binding.progressBar.visible()
                             binding.btnVerify.isEnabled = false
+                            binding.btnVerify.setText(R.string.auth_verifying)
                         }
                         is Resource.Success -> {
                             binding.progressBar.gone()
+                            binding.btnVerify.setText(R.string.btn_verify_otp)
                             viewModel.reset()
                             // Navigate to home — clear back stack so user can't go back to login
                             findNavController().navigate(
@@ -72,10 +76,14 @@ class OtpFragment : Fragment() {
                         is Resource.Error -> {
                             binding.progressBar.gone()
                             binding.btnVerify.isEnabled = true
+                            binding.btnVerify.setText(R.string.btn_verify_otp)
                             toast(state.message)
                             viewModel.reset()
                         }
-                        null -> binding.progressBar.gone()
+                        null -> {
+                            binding.progressBar.gone()
+                            binding.btnVerify.setText(R.string.btn_verify_otp)
+                        }
                     }
                 }
             }

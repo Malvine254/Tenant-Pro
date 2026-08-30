@@ -22,6 +22,7 @@ import com.tenantpro.app.R
 import com.tenantpro.app.databinding.FragmentLoginBinding
 import com.tenantpro.app.utils.DataStoreManager
 import com.tenantpro.app.utils.Resource
+import com.tenantpro.app.utils.dismissKeyboard
 import com.tenantpro.app.utils.gone
 import com.tenantpro.app.utils.toast
 import com.tenantpro.app.utils.visible
@@ -37,6 +38,7 @@ class LoginFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: LoginViewModel by viewModels()
+    private var loginInFlight = false
 
     @Inject
     lateinit var dataStoreManager: DataStoreManager
@@ -54,7 +56,7 @@ class LoginFragment : Fragment() {
         val updateButtonState = {
             val email = binding.etEmail.text?.toString()?.trim().orEmpty()
             val password = binding.etPassword.text?.toString()?.trim().orEmpty()
-            binding.btnLogin.isEnabled = email.isNotBlank() && password.length >= 6
+            binding.btnLogin.isEnabled = email.isNotBlank() && password.length >= 6 && !loginInFlight
         }
 
         binding.etEmail.doAfterTextChanged { updateButtonState() }
@@ -73,6 +75,7 @@ class LoginFragment : Fragment() {
             }
             binding.tilEmail.error = null
             binding.tilPassword.error = null
+            dismissKeyboard()
             viewModel.login(email, password)
         }
 
@@ -82,10 +85,12 @@ class LoginFragment : Fragment() {
         updateBiometricLoginVisibility()
 
         binding.tvRegisterLink.setOnClickListener {
+            dismissKeyboard()
             findNavController().navigate(R.id.action_loginFragment_to_registerFragment)
         }
 
         binding.tvForgotPassword.setOnClickListener {
+            dismissKeyboard()
             findNavController().navigate(R.id.action_loginFragment_to_forgotPasswordFragment)
         }
 
@@ -94,11 +99,16 @@ class LoginFragment : Fragment() {
                 viewModel.loginState.collect { state ->
                     when (state) {
                         is Resource.Loading -> {
+                            loginInFlight = true
                             binding.progressBar.visible()
                             binding.btnLogin.isEnabled = false
+                            binding.btnLogin.setText(R.string.auth_signing_in)
+                            binding.btnBiometricLogin.isEnabled = false
                         }
                         is Resource.Success -> {
+                            loginInFlight = false
                             binding.progressBar.gone()
+                            binding.btnLogin.setText(R.string.btn_login)
                             val requiresPasswordChange = state.data.requiresPasswordChange
                             val email = binding.etEmail.text?.toString()?.trim().orEmpty()
                             viewModel.resetLoginState()
@@ -115,8 +125,11 @@ class LoginFragment : Fragment() {
                             }
                         }
                         is Resource.Error -> {
+                            loginInFlight = false
                             binding.progressBar.gone()
-                            binding.btnLogin.isEnabled = true
+                            updateButtonState()
+                            binding.btnLogin.setText(R.string.btn_login)
+                            updateBiometricLoginVisibility()
                             viewModel.resetLoginState()
                             if (state.message.contains("verify", ignoreCase = true)) {
                                 val email = binding.etEmail.text?.toString()?.trim().orEmpty()
@@ -126,7 +139,10 @@ class LoginFragment : Fragment() {
                             }
                         }
                         null -> {
+                            loginInFlight = false
                             binding.progressBar.gone()
+                            binding.btnLogin.setText(R.string.btn_login)
+                            updateButtonState()
                         }
                     }
                 }

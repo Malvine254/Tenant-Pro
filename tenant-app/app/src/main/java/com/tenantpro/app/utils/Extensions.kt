@@ -4,8 +4,11 @@ import android.graphics.Color
 import android.view.View
 import android.widget.Toast
 import android.content.Context
+import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.snackbar.Snackbar
 import com.tenantpro.app.BuildConfig
 import java.text.NumberFormat
@@ -16,6 +19,15 @@ import java.util.Locale
 fun View.visible() { visibility = View.VISIBLE }
 fun View.gone()    { visibility = View.GONE }
 fun View.invisible() { visibility = View.INVISIBLE }
+
+/** Clears field focus and closes the software keyboard when an action starts. */
+fun Fragment.dismissKeyboard() {
+    val root = view ?: return
+    root.findFocus()?.clearFocus()
+    ViewCompat.getWindowInsetsController(root)?.hide(WindowInsetsCompat.Type.ime())
+    (requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager)
+        ?.hideSoftInputFromWindow(root.windowToken, 0)
+}
 
 // ─── Toast shorthand ─────────────────────────────────────────────────────────
 

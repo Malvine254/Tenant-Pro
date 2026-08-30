@@ -15,6 +15,7 @@ import androidx.navigation.fragment.findNavController
 import com.tenantpro.app.R
 import com.tenantpro.app.databinding.FragmentRegisterBinding
 import com.tenantpro.app.utils.Resource
+import com.tenantpro.app.utils.dismissKeyboard
 import com.tenantpro.app.utils.gone
 import com.tenantpro.app.utils.normalizeKenyanPhone
 import com.tenantpro.app.utils.toast
@@ -29,6 +30,7 @@ class RegisterFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: RegisterViewModel by viewModels()
+    private var registrationInFlight = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -65,7 +67,8 @@ class RegisterFragment : Fragment() {
                 phone.isNotBlank() &&
                 password.length >= 8 &&
                 password == confirm &&
-                binding.cbTerms.isChecked
+                binding.cbTerms.isChecked &&
+                !registrationInFlight
         }
 
         binding.etRegEmail.doAfterTextChanged { updateButtonState() }
@@ -76,6 +79,7 @@ class RegisterFragment : Fragment() {
         binding.cbTerms.setOnCheckedChangeListener { _, _ -> updateButtonState() }
 
         binding.tvLoginLink.setOnClickListener {
+            dismissKeyboard()
             findNavController().popBackStack()
         }
 
@@ -102,6 +106,7 @@ class RegisterFragment : Fragment() {
             binding.tilRegName.error = null
             binding.tilRegPhone.error = null
 
+            dismissKeyboard()
             viewModel.register(
                 email = email,
                 password = password,
@@ -115,11 +120,16 @@ class RegisterFragment : Fragment() {
                 viewModel.registerState.collect { state ->
                     when (state) {
                         is Resource.Loading -> {
+                            registrationInFlight = true
                             binding.progressBar.visible()
                             binding.btnRegister.isEnabled = false
+                            binding.btnRegister.setText(R.string.auth_creating_account)
+                            binding.btnRegister.icon = null
                         }
                         is Resource.Success -> {
+                            registrationInFlight = false
                             binding.progressBar.gone()
+                            binding.btnRegister.setText(R.string.btn_register)
                             val email = state.data.email
                             viewModel.resetRegisterState()
                             findNavController().navigate(
@@ -131,13 +141,20 @@ class RegisterFragment : Fragment() {
                             )
                         }
                         is Resource.Error -> {
+                            registrationInFlight = false
                             binding.progressBar.gone()
-                            binding.btnRegister.isEnabled = true
+                            updateButtonState()
+                            binding.btnRegister.setText(R.string.btn_register)
+                            binding.btnRegister.setIconResource(R.drawable.ic_arrow_forward)
                             toast(state.message)
                             viewModel.resetRegisterState()
                         }
                         null -> {
+                            registrationInFlight = false
                             binding.progressBar.gone()
+                            binding.btnRegister.setText(R.string.btn_register)
+                            binding.btnRegister.setIconResource(R.drawable.ic_arrow_forward)
+                            updateButtonState()
                         }
                     }
                 }
