@@ -208,12 +208,16 @@ class AccountSettingsFragment : Fragment() {
 
     private fun bindSwitchStates(state: AccountUiState) {
         suppressSwitchEvents = true
-        binding.root.findViewById<SwitchMaterial>(R.id.switchNotifications)?.isChecked =
-            state.notificationsEnabled
-        binding.root.findViewById<SwitchMaterial>(R.id.switchEmailNotifications)?.isChecked =
-            state.emailNotificationsEnabled
-        binding.root.findViewById<SwitchMaterial>(R.id.switchBiometric)?.isChecked =
-            state.biometricLockEnabled
+        val notifications = binding.root.findViewById<SwitchMaterial>(R.id.switchNotifications)
+        val emailNotifications = binding.root.findViewById<SwitchMaterial>(R.id.switchEmailNotifications)
+        val biometric = binding.root.findViewById<SwitchMaterial>(R.id.switchBiometric)
+        notifications?.isChecked = state.notificationsEnabled
+        emailNotifications?.isChecked = state.emailNotificationsEnabled
+        biometric?.isChecked = state.biometricLockEnabled
+        val inputsEnabled = !state.loading && !state.saving
+        notifications?.isEnabled = inputsEnabled
+        emailNotifications?.isEnabled = inputsEnabled
+        biometric?.isEnabled = inputsEnabled
         suppressSwitchEvents = false
     }
 

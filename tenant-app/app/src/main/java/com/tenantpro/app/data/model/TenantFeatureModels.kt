@@ -19,7 +19,7 @@ data class UpdateProfileRequest(
     @SerializedName("emergencyContactPhone") val emergencyContactPhone: String? = null,
     @SerializedName("bio") val bio: String? = null,
     @SerializedName("profileImageUrl") val profileImageUrl: String? = null,
-    @SerializedName("appSettings") val appSettings: AppSettings? = null
+    @SerializedName("appSettings") val appSettings: AppSettingsUpdate? = null
 )
 
 data class NotificationItem(

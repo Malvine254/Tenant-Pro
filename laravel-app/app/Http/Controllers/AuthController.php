@@ -419,6 +419,7 @@ class AuthController extends Controller
         $data = $request->validate([
             'first_name' => 'nullable|string|max:100',
             'last_name' => 'nullable|string|max:100',
+            'email' => 'nullable|email|max:255|unique:users,email,'.$user->id,
             'phone_number' => 'nullable|string|max:30|unique:users,phone_number,'.$user->id,
             'profile_image_url' => 'nullable|string|max:2048',
             'emergency_contact_name' => 'nullable|string|max:255',
@@ -432,6 +433,14 @@ class AuthController extends Controller
 
         if (array_key_exists('first_name', $data) || array_key_exists('last_name', $data)) {
             $data['name'] = trim(($data['first_name'] ?? $user->first_name ?? '').' '.($data['last_name'] ?? $user->last_name ?? ''));
+        }
+
+        // Mobile account preferences share this JSON column with other
+        // account settings (for example landlord payment configuration).
+        // Merge the validated keys instead of replacing the entire document.
+        if (array_key_exists('app_settings', $data)) {
+            $existingSettings = is_array($user->app_settings) ? $user->app_settings : [];
+            $data['app_settings'] = array_replace_recursive($existingSettings, $data['app_settings'] ?? []);
         }
 
         $user->update($data);

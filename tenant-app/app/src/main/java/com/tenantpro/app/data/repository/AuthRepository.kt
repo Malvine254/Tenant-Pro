@@ -357,13 +357,13 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun updateAppSettings(
-        notificationsEnabled: Boolean,
-        emailNotificationsEnabled: Boolean,
-        biometricLockEnabled: Boolean
+        notificationsEnabled: Boolean? = null,
+        emailNotificationsEnabled: Boolean? = null,
+        biometricLockEnabled: Boolean? = null
     ): Resource<UserProfile> = try {
         val response = api.updateMyProfile(
             UpdateProfileRequest(
-                appSettings = com.tenantpro.app.data.model.AppSettings(
+                appSettings = com.tenantpro.app.data.model.AppSettingsUpdate(
                     notificationsEnabled = notificationsEnabled,
                     emailNotificationsEnabled = emailNotificationsEnabled,
                     biometricLockEnabled = biometricLockEnabled

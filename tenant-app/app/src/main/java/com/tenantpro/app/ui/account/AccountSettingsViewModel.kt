@@ -122,7 +122,9 @@ class AccountSettingsViewModel @Inject constructor(
     private fun fetchUserProfile() {
         viewModelScope.launch {
             _loading.value = true
-            when (val result = authRepository.getMyProfile()) {
+            // Settings must reflect the database, not a potentially stale
+            // profile cache from another screen or an earlier app session.
+            when (val result = authRepository.getMyProfile(forceRefresh = true)) {
                 is Resource.Success -> {
                     val profile = result.data
                     val role = profile.role.uppercase()
@@ -297,18 +299,17 @@ class AccountSettingsViewModel @Inject constructor(
 
     fun setNotificationsEnabled(enabled: Boolean) {
         viewModelScope.launch {
+            _saving.value = true
             val current = uiState.value
             when (val result = authRepository.updateAppSettings(
-                notificationsEnabled = enabled,
-                emailNotificationsEnabled = current.emailNotificationsEnabled,
-                biometricLockEnabled = current.biometricLockEnabled
+                notificationsEnabled = enabled
             )) {
                 is Resource.Success -> {
                     _events.emit(if (enabled) "Notifications enabled" else "Notifications muted")
                 }
                 is Resource.Error -> {
-                    dataStoreManager.saveNotificationsEnabled(enabled)
-                    _events.emit("${result.message} (saved on this device)")
+                    dataStoreManager.saveNotificationsEnabled(current.notificationsEnabled)
+                    _events.emit("${result.message}. Notification preference was not changed.")
                 }
                 Resource.Loading -> Unit
             }
@@ -324,41 +325,42 @@ class AccountSettingsViewModel @Inject constructor(
                 Resource.Loading -> Unit
             }
             _saving.value = false
+            _saving.value = false
         }
     }
 
     fun setEmailNotificationsEnabled(enabled: Boolean) {
         viewModelScope.launch {
+            _saving.value = true
             val current = uiState.value
             when (val result = authRepository.updateAppSettings(
-                notificationsEnabled = current.notificationsEnabled,
-                emailNotificationsEnabled = enabled,
-                biometricLockEnabled = current.biometricLockEnabled
+                emailNotificationsEnabled = enabled
             )) {
                 is Resource.Success -> {
                     _events.emit(if (enabled) "Email notifications enabled" else "Email notifications disabled")
                 }
                 is Resource.Error -> {
-                    dataStoreManager.saveEmailNotificationsEnabled(enabled)
-                    _events.emit("${result.message} (saved on this device)")
+                    dataStoreManager.saveEmailNotificationsEnabled(current.emailNotificationsEnabled)
+                    _events.emit("${result.message}. Email preference was not changed.")
                 }
                 Resource.Loading -> Unit
             }
+            _saving.value = false
         }
     }
 
     fun setBiometricLockEnabled(enabled: Boolean) {
         viewModelScope.launch {
+            _saving.value = true
             if (enabled && !dataStoreManager.saveCurrentSessionForBiometric()) {
                 dataStoreManager.saveBiometricLockEnabled(false)
                 _events.emit("Sign in again before enabling biometric login")
+                _saving.value = false
                 return@launch
             }
 
             val current = uiState.value
             when (val result = authRepository.updateAppSettings(
-                notificationsEnabled = current.notificationsEnabled,
-                emailNotificationsEnabled = current.emailNotificationsEnabled,
                 biometricLockEnabled = enabled
             )) {
                 is Resource.Success -> {
@@ -368,14 +370,15 @@ class AccountSettingsViewModel @Inject constructor(
                     _events.emit(if (enabled) "Biometric login enabled" else "Biometric login disabled")
                 }
                 is Resource.Error -> {
-                    dataStoreManager.saveBiometricLockEnabled(enabled)
-                    if (enabled) {
+                    dataStoreManager.saveBiometricLockEnabled(current.biometricLockEnabled)
+                    if (current.biometricLockEnabled) {
                         dataStoreManager.saveCurrentSessionForBiometric()
                     }
-                    _events.emit("${result.message} (saved on this device)")
+                    _events.emit("${result.message}. Biometric preference was not changed.")
                 }
                 Resource.Loading -> Unit
             }
+            _saving.value = false
         }
     }
 

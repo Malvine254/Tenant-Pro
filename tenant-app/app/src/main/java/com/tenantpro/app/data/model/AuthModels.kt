@@ -97,6 +97,13 @@ data class AppSettings(
     @SerializedName("biometricLockEnabled") val biometricLockEnabled: Boolean = false
 )
 
+/** Partial settings payload so changing one switch cannot overwrite another. */
+data class AppSettingsUpdate(
+    @SerializedName("notificationsEnabled") val notificationsEnabled: Boolean? = null,
+    @SerializedName("emailNotificationsEnabled") val emailNotificationsEnabled: Boolean? = null,
+    @SerializedName("biometricLockEnabled") val biometricLockEnabled: Boolean? = null
+)
+
 data class MessageResponse(
     @SerializedName("message") val message: String = "Operation successful",
     @SerializedName("email") val email: String? = null,
