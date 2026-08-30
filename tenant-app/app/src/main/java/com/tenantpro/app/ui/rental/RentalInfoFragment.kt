@@ -56,6 +56,9 @@ class RentalInfoFragment : Fragment() {
                     viewModel.uiState.collect { state ->
                         binding.progressRental.visibility =
                             if (state.loading) View.VISIBLE else View.GONE
+                        binding.cardRentalStatus.visibility =
+                            if (state.loading) View.GONE else View.VISIBLE
+                        bindRentalStatus(state.units)
                         bindUnits(state.units)
                     }
                 }
@@ -95,7 +98,7 @@ class RentalInfoFragment : Fragment() {
                     value.isNotBlank() && value.any { it.isLetterOrDigit() }
                 } ?: "Address not set"
             group.findViewById<MaterialTextView>(R.id.tvRentalPropertyCount).text =
-                "${propertyUnits.size} room${if (propertyUnits.size == 1) "" else "s"}"
+                "${propertyUnits.size} unit${if (propertyUnits.size == 1) "" else "s"}"
 
             val apartmentImageView = group.findViewById<ImageView>(R.id.ivRentalPropertyImage)
             val apartmentImage = propertyUnits
@@ -120,6 +123,26 @@ class RentalInfoFragment : Fragment() {
             }
             binding.llRentalUnits.addView(group)
         }
+    }
+
+    private fun bindRentalStatus(units: List<RentalUnitItem>) {
+        val hasActiveRental = units.isNotEmpty()
+        binding.tvRentalStatusTitle.text =
+            if (hasActiveRental) "Active rental" else "Rental setup pending"
+        binding.tvRentalStatusMeta.text = if (hasActiveRental) {
+            "${units.size} unit${if (units.size == 1) "" else "s"} linked · Synced automatically"
+        } else {
+            "Your unit will appear after your landlord assigns it"
+        }
+        binding.tvRentalStatusBadge.text = if (hasActiveRental) "ACTIVE" else "PENDING"
+        binding.tvRentalStatusBadge.setBackgroundResource(
+            if (hasActiveRental) R.drawable.bg_badge_green else R.drawable.bg_badge_yellow
+        )
+        binding.tvRentalStatusBadge.setTextColor(
+            requireContext().getColor(
+                if (hasActiveRental) R.color.badge_green_text else R.color.badge_yellow_text
+            )
+        )
     }
 
     private fun bindUnitCard(card: View, item: RentalUnitItem) {

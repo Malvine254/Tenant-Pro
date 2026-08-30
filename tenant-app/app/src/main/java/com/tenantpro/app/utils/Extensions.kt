@@ -9,9 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import com.tenantpro.app.BuildConfig
 import java.text.NumberFormat
-import java.text.SimpleDateFormat
 import java.util.Locale
-import java.util.TimeZone
 
 // ─── View helpers ────────────────────────────────────────────────────────────
 
@@ -91,20 +89,11 @@ fun String.toAbsoluteAssetUrl(): String {
 }
 
 /**
- * Parses an ISO-8601 date string and returns a human-readable date,
- * e.g. "26 Mar 2026".
+ * Parses an ISO date and returns the app-wide month-first format,
+ * e.g. "Aug 31, 2026".
  */
 fun String?.toDisplayDate(): String {
-    if (isNullOrBlank()) return "—"
-    return try {
-        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }
-        val parsed = sdf.parse(this) ?: return this
-        SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(parsed)
-    } catch (e: Exception) {
-        this
-    }
+    return toInvoiceDate()
 }
 
 /** Formats an invoice date month-first, e.g. "Aug 31, 2026". */
