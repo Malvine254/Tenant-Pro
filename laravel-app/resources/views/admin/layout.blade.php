@@ -170,6 +170,8 @@
 @php
     $roleName = auth()->user()?->role?->name;
     $isLandlord = $roleName === 'LANDLORD';
+    $isLandlordOwner = $isLandlord && auth()->user()->isLandlordOwner();
+    $isLandlordStaff = $isLandlord && auth()->user()->isLandlordStaff();
     $isCaretaker = $roleName === 'CARETAKER';
     $isSuperAdmin = $roleName === 'SUPER_ADMIN';
     $isPlatformAdmin = in_array($roleName, ['SUPER_ADMIN', 'ADMIN'], true);
@@ -180,7 +182,7 @@
 <aside class="sidebar" id="adminSidebar" aria-hidden="true">
     <div class="sidebar-logo">
         <span class="brand-mark" aria-hidden="true">TP</span>
-        <span class="brand-copy"><strong>{{ $isLandlord ? 'Landlord Portal' : 'TenantPro' }}</strong><small>{{ $landlordLocked ? 'Subscription locked' : ($isLandlord ? 'Property workspace' : 'Operations console') }}</small></span>
+        <span class="brand-copy"><strong>{{ $isLandlord ? 'Landlord Portal' : 'TenantPro' }}</strong><small>{{ $landlordLocked ? 'Subscription locked' : ($isLandlordStaff ? 'Team manager workspace' : ($isLandlord ? 'Property workspace' : 'Operations console')) }}</small></span>
         <button class="sidebar-close" type="button" data-close-menu aria-label="Close menu">×</button>
     </div>
     <nav aria-label="Primary navigation">
@@ -204,6 +206,9 @@
         @if($isLandlord || $isPlatformAdmin)
             <div class="nav-section">Account</div>
             <a href="{{ route('admin.settings.index') }}" class="{{ request()->routeIs('admin.settings*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.82 2.82l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .98 1.7 1.7 0 0 0-.2 1.02V22a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-.23-1.02 1.7 1.7 0 0 0-1-.98 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.82-2.82l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.98-1 1.7 1.7 0 0 0-1.02-.2H2.5a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 3.6 9a1.7 1.7 0 0 0 .98-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06A2 2 0 1 1 6.99 3.25l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.98 1.7 1.7 0 0 0 .2-1.02V2.5a2 2 0 1 1 4 0v.09c.04.35.1.7.23 1.02.18.42.52.76.98 1a1.7 1.7 0 0 0 1.87-.34l.06-.06A2 2 0 0 1 20.75 6.99l-.06.06A1.7 1.7 0 0 0 19.4 9c.25.39.35.84.31 1.3a1.7 1.7 0 0 0 .98 1 1.7 1.7 0 0 0 1.02.2h.09a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.02.2 1.7 1.7 0 0 0-.98 1z"/></svg></i><span>Settings</span></a>
+            @if($isLandlordOwner)
+                <a href="{{ route('admin.team.index') }}" class="{{ request()->routeIs('admin.team*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20v-2a6 6 0 0 1 12 0v2m1-6a5 5 0 0 1 7 4.6V20"/></svg></i><span>Team Access</span></a>
+            @endif
         @endif
         @if($isSuperAdmin && \Illuminate\Support\Facades\Route::has('admin.mpesa.sandbox-test.index'))
             <div class="nav-section">System</div>

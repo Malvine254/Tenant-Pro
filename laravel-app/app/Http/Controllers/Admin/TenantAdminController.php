@@ -29,7 +29,7 @@ class TenantAdminController extends Controller
                         ->with(['unit.property'])
                         ->when(
                             $this->isLandlord($user),
-                            fn ($query) => $query->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $user->id))
+                            fn ($query) => $query->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $user->landlordAccountId()))
                         )
                         ->orderByDesc('move_in_date');
                 },
@@ -39,7 +39,7 @@ class TenantAdminController extends Controller
                 $tenancyQuery->where('is_active', true)
                     ->when(
                         $this->isLandlord($user),
-                        fn ($query) => $query->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $user->id))
+                        fn ($query) => $query->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $user->landlordAccountId()))
                     );
             })
             ->when($request->search, fn ($query) => $query->where(function ($userQuery) use ($request) {
@@ -82,7 +82,7 @@ class TenantAdminController extends Controller
 
         $unit = Unit::with('property')->findOrFail($data['unit_id']);
         abort_if($unit->property_id !== $data['property_id'], 422, 'The selected unit does not belong to this property.');
-        abort_if($this->isLandlord($admin) && $unit->property?->landlord_id !== $admin->id, 403);
+        abort_if($this->isLandlord($admin) && $unit->property?->landlord_id !== $admin->landlordAccountId(), 403);
         abort_if($unit->tenant()->where('is_active', true)->exists(), 422, 'This unit already has an active tenant.');
 
         $role = Role::firstOrCreate(
@@ -159,14 +159,14 @@ class TenantAdminController extends Controller
             ->when($this->isLandlord($admin), fn ($query) => $query->whereHas(
                 'receivedInvitations',
                 fn ($invitations) => $invitations
-                    ->where('sent_by_id', $admin->id)
+                    ->whereIn('sent_by_id', $admin->landlordTeamUserIds())
                     ->where('invite_type', 'TENANT')
             ))
             ->firstOrFail();
 
         $unit = Unit::with('property')->findOrFail($data['unit_id']);
         abort_if($unit->property_id !== $data['property_id'], 422, 'The selected unit does not belong to this property.');
-        abort_if($this->isLandlord($admin) && $unit->property?->landlord_id !== $admin->id, 403);
+        abort_if($this->isLandlord($admin) && $unit->property?->landlord_id !== $admin->landlordAccountId(), 403);
         abort_if($unit->tenant()->where('is_active', true)->exists(), 422, 'This unit already has an active tenant.');
 
         $tenant = DB::transaction(function () use ($tenantUser, $unit, $data) {
@@ -213,7 +213,7 @@ class TenantAdminController extends Controller
     public function show(Tenant $tenant)
     {
         $user = request()->user();
-        abort_if($this->isLandlord($user) && $tenant->unit?->property?->landlord_id !== $user->id, 403);
+        abort_if($this->isLandlord($user) && $tenant->unit?->property?->landlord_id !== $user->landlordAccountId(), 403);
 
         $tenant->load(['user', 'unit.property', 'unit.invoices', 'unit.maintenanceRequests']);
         $allTenancies = Tenant::with(['unit.property'])
@@ -221,7 +221,7 @@ class TenantAdminController extends Controller
             ->where('is_active', true)
             ->when(
                 $this->isLandlord($user),
-                fn ($q) => $q->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $user->id))
+                fn ($q) => $q->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $user->landlordAccountId()))
             )
             ->orderByDesc('move_in_date')
             ->get();
@@ -233,7 +233,7 @@ class TenantAdminController extends Controller
     {
         $tenant->load('unit.property');
         abort_if(
-            $this->isLandlord($request->user()) && $tenant->unit?->property?->landlord_id !== $request->user()->id,
+            $this->isLandlord($request->user()) && $tenant->unit?->property?->landlord_id !== $request->user()->landlordAccountId(),
             403
         );
 
@@ -276,7 +276,7 @@ class TenantAdminController extends Controller
 
         return Unit::with('property')
             ->whereDoesntHave('tenant', fn ($tenant) => $tenant->where('is_active', true))
-            ->when($this->isLandlord($user), fn ($q) => $q->whereHas('property', fn ($property) => $property->where('landlord_id', $user->id)))
+            ->when($this->isLandlord($user), fn ($q) => $q->whereHas('property', fn ($property) => $property->where('landlord_id', $user->landlordAccountId())))
             ->orderBy('unit_number')
             ->get()
             ->sortBy(fn ($unit) => ($unit->property?->name ?? '').' '.$unit->unit_number);
@@ -287,7 +287,7 @@ class TenantAdminController extends Controller
         $user = $request->user();
 
         return Property::query()
-            ->when($this->isLandlord($user), fn ($query) => $query->where('landlord_id', $user->id))
+            ->when($this->isLandlord($user), fn ($query) => $query->where('landlord_id', $user->landlordAccountId()))
             ->whereHas('units', fn ($units) => $units->whereDoesntHave(
                 'tenant',
                 fn ($tenant) => $tenant->where('is_active', true)
@@ -306,7 +306,7 @@ class TenantAdminController extends Controller
             ->when($this->isLandlord($user), fn ($query) => $query->whereHas(
                 'receivedInvitations',
                 fn ($invitations) => $invitations
-                    ->where('sent_by_id', $user->id)
+                    ->whereIn('sent_by_id', $user->landlordTeamUserIds())
                     ->where('invite_type', 'TENANT')
             ))
             ->when($request->search, fn ($query) => $query->where(function ($userQuery) use ($request) {
@@ -327,7 +327,7 @@ class TenantAdminController extends Controller
             ->when($this->isLandlord($user), fn ($query) => $query->whereHas(
                 'receivedInvitations',
                 fn ($invitations) => $invitations
-                    ->where('sent_by_id', $user->id)
+                    ->whereIn('sent_by_id', $user->landlordTeamUserIds())
                     ->where('invite_type', 'TENANT')
             ))
             ->when($request->search, fn ($query) => $query->where(function ($userQuery) use ($request) {

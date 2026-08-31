@@ -17,7 +17,7 @@ class PaymentAdminController extends Controller
                 $user?->role?->name === 'LANDLORD',
                 fn ($query) => $query->whereHas(
                     'invoice.unit.property',
-                    fn ($property) => $property->where('landlord_id', $user->id)
+                    fn ($property) => $property->where('landlord_id', $user->landlordAccountId())
                 )
             )
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))

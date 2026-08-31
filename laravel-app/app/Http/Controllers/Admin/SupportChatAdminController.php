@@ -105,7 +105,7 @@ class SupportChatAdminController extends Controller
     {
         return SupportConversation::query()->when(
             $user?->role?->name === 'LANDLORD',
-            fn ($q) => $q->where('landlord_user_id', $user->id)
+            fn ($q) => $q->where('landlord_user_id', $user->landlordAccountId())
         );
     }
 
@@ -113,7 +113,7 @@ class SupportChatAdminController extends Controller
     {
         abort_if($user?->role?->name === 'CARETAKER', 403);
         if ($user?->role?->name === 'LANDLORD') {
-            abort_if($conversation->landlord_user_id !== $user->id, 403);
+            abort_if($conversation->landlord_user_id !== $user->landlordAccountId(), 403);
         }
     }
 }

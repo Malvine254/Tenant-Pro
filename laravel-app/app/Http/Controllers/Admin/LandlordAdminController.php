@@ -25,6 +25,7 @@ class LandlordAdminController extends Controller
 
         $landlords = User::withCount('properties')
             ->whereHas('role', fn ($query) => $query->where('name', 'LANDLORD'))
+            ->whereNull('managed_landlord_id')
             ->when($request->status === 'active', fn($query) => $query->where('is_active', true))
             ->when($request->status === 'suspended', fn($query) => $query->where('is_active', false))
             ->when($request->search, fn ($query) => $query->where(function ($userQuery) use ($request) {
@@ -106,7 +107,7 @@ class LandlordAdminController extends Controller
     public function edit(User $landlord)
     {
         abort_if($this->isLandlord(request()->user()), 403);
-        abort_unless($this->isLandlord($landlord), 404);
+        abort_unless($landlord->isLandlordOwner(), 404);
 
         return view('admin.landlords.edit', compact('landlord'));
     }
@@ -114,7 +115,7 @@ class LandlordAdminController extends Controller
     public function update(Request $request, User $landlord)
     {
         abort_if($this->isLandlord($request->user()), 403);
-        abort_unless($this->isLandlord($landlord), 404);
+        abort_unless($landlord->isLandlordOwner(), 404);
 
         $data = $request->validate([
             'first_name' => 'required|string|max:100',
@@ -154,7 +155,7 @@ class LandlordAdminController extends Controller
     public function updateStatus(Request $request, User $landlord)
     {
         abort_if($this->isLandlord($request->user()), 403);
-        abort_unless($this->isLandlord($landlord), 404);
+        abort_unless($landlord->isLandlordOwner(), 404);
 
         $data = $request->validate([
             'is_active' => 'required|boolean',
@@ -174,7 +175,7 @@ class LandlordAdminController extends Controller
     public function recordPayment(Request $request, User $landlord)
     {
         abort_if($this->isLandlord($request->user()), 403);
-        abort_unless($this->isLandlord($landlord), 404);
+        abort_unless($landlord->isLandlordOwner(), 404);
 
         $data = $request->validate([
             'months' => 'required|integer|min:1|max:24',

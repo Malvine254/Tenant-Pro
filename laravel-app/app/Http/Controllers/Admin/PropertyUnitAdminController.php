@@ -24,7 +24,7 @@ class PropertyUnitAdminController extends Controller
         ])
             ->when(
                 $user?->role?->name === 'LANDLORD',
-                fn($query) => $query->where('landlord_id', $user->id)
+                fn($query) => $query->where('landlord_id', $user->landlordAccountId())
             )
             ->orderBy('name')
             ->get();
@@ -145,7 +145,7 @@ class PropertyUnitAdminController extends Controller
     private function authorizeLandlordProperty(Property $property): void
     {
         $user = request()->user();
-        abort_if($user?->role?->name === 'LANDLORD' && $property->landlord_id !== $user->id, 403);
+        abort_if($user?->role?->name === 'LANDLORD' && $property->landlord_id !== $user->landlordAccountId(), 403);
     }
 
     private function billingOverrides(array $data): ?array

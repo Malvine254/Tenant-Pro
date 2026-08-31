@@ -22,15 +22,16 @@ class InvitationAdminController extends Controller
     {
         $user = $request->user();
         $isLandlord = $user?->role?->name === 'LANDLORD';
-        $tenantSettingValues = $isLandlord && is_array($user->app_settings['tenantSettings'] ?? null)
-            ? $user->app_settings['tenantSettings']
+        $landlordAccount = $isLandlord ? $user->landlordAccount() : null;
+        $tenantSettingValues = $isLandlord && is_array($landlordAccount->app_settings['tenantSettings'] ?? null)
+            ? $landlordAccount->app_settings['tenantSettings']
             : [];
         $tenantInviteExpiryDefault = now()->addDays((int) ($tenantSettingValues['default_invite_expiry_days'] ?? 7))->toDateString();
 
         $invitations = Invitation::with(['property', 'unit', 'sentBy'])
             ->when(
                 $isLandlord,
-                fn ($query) => $query->where('sent_by_id', $user->id)
+                fn ($query) => $query->whereIn('sent_by_id', $user->landlordTeamUserIds())
             )
             ->when($request->type, fn ($query) => $query->where('invite_type', $request->type))
             ->when($request->status, fn ($query) => $query->where('status', $request->status))
@@ -45,7 +46,7 @@ class InvitationAdminController extends Controller
             ->withQueryString();
 
         $properties = Property::query()
-            ->when($isLandlord, fn ($query) => $query->where('landlord_id', $user->id))
+            ->when($isLandlord, fn ($query) => $query->where('landlord_id', $user->landlordAccountId()))
             ->whereHas('units', fn ($units) => $units->whereDoesntHave(
                 'tenant',
                 fn ($tenant) => $tenant->where('is_active', true)
@@ -64,9 +65,9 @@ class InvitationAdminController extends Controller
                 fn ($query) => $query->where(function ($tenantQuery) use ($user) {
                     $tenantQuery
                         ->whereHas('receivedInvitations', fn ($invitations) => $invitations
-                            ->where('sent_by_id', $user->id)
+                            ->whereIn('sent_by_id', $user->landlordTeamUserIds())
                             ->where('invite_type', 'TENANT'))
-                        ->orWhereHas('tenancies.unit.property', fn ($property) => $property->where('landlord_id', $user->id));
+                        ->orWhereHas('tenancies.unit.property', fn ($property) => $property->where('landlord_id', $user->landlordAccountId()));
                 })
             )
             ->orderBy('name')
@@ -119,9 +120,9 @@ class InvitationAdminController extends Controller
                 ->when($user?->role?->name === 'LANDLORD', fn ($query) => $query->where(function ($tenantQuery) use ($user) {
                     $tenantQuery
                         ->whereHas('receivedInvitations', fn ($invitations) => $invitations
-                            ->where('sent_by_id', $user->id)
+                            ->whereIn('sent_by_id', $user->landlordTeamUserIds())
                             ->where('invite_type', 'TENANT'))
-                        ->orWhereHas('tenancies.unit.property', fn ($property) => $property->where('landlord_id', $user->id));
+                        ->orWhereHas('tenancies.unit.property', fn ($property) => $property->where('landlord_id', $user->landlordAccountId()));
                 }))
                 ->findOrFail($data['tenant_user_id']);
 
@@ -154,7 +155,7 @@ class InvitationAdminController extends Controller
         }
 
         abort_if($unit->property_id !== $property->id, 422, 'The selected unit does not belong to this property.');
-        abort_if($user?->role?->name === 'LANDLORD' && $property->landlord_id !== $user->id, 403);
+        abort_if($user?->role?->name === 'LANDLORD' && $property->landlord_id !== $user->landlordAccountId(), 403);
         abort_if($unit->tenant()->where('is_active', true)->exists(), 422, 'This unit is already occupied.');
 
         $autoAssignedTenant = null;
@@ -447,7 +448,7 @@ class InvitationAdminController extends Controller
     private function authorizeInvitation(Request $request, Invitation $invitation): void
     {
         abort_if(
-            $request->user()?->role?->name === 'LANDLORD' && $invitation->sent_by_id !== $request->user()->id,
+            $request->user()?->role?->name === 'LANDLORD' && ! in_array($invitation->sent_by_id, $request->user()->landlordTeamUserIds(), true),
             403
         );
     }

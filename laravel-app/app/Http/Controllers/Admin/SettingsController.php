@@ -35,6 +35,7 @@ class SettingsController extends Controller
         $isAdmin = in_array($user->role?->name, ['SUPER_ADMIN', 'ADMIN'], true);
         $isSuperAdmin = $user->role?->name === 'SUPER_ADMIN';
         $isLandlord = $user->isLandlord();
+        $isLandlordOwner = $user->isLandlordOwner();
         $settings = is_array($user->app_settings) ? $user->app_settings : [];
         $paymentSettings = is_array($settings['paymentSettings'] ?? null) ? $settings['paymentSettings'] : [];
         $tenantSettings = is_array($settings['tenantSettings'] ?? null) ? $settings['tenantSettings'] : [];
@@ -45,7 +46,7 @@ class SettingsController extends Controller
             'pendingInvites' => 0,
         ];
 
-        if ($isLandlord) {
+        if ($isLandlordOwner) {
             $tenantSummary = [
                 'properties' => $user->properties()->count(),
                 'units' => Unit::query()->whereHas('property', fn ($query) => $query->where('landlord_id', $user->id))->count(),
@@ -67,6 +68,7 @@ class SettingsController extends Controller
             'isAdmin' => $isAdmin,
             'isSuperAdmin' => $isSuperAdmin,
             'isLandlord' => $isLandlord,
+            'isLandlordOwner' => $isLandlordOwner,
             'paymentSettings' => $paymentSettings,
             'tenantSettings' => $tenantSettings,
             'tenantSummary' => $tenantSummary,
@@ -141,7 +143,7 @@ class SettingsController extends Controller
     public function updateTenantPreferences(Request $request)
     {
         $user = $this->currentUser();
-        abort_unless($user->isLandlord(), 403, 'Only landlords can manage tenant preferences.');
+        abort_unless($user->isLandlordOwner(), 403, 'Only the landlord account owner can manage tenant preferences.');
 
         $data = $request->validate([
             'default_invite_expiry_days' => ['required', 'integer', 'min:1', 'max:60'],
@@ -167,7 +169,7 @@ class SettingsController extends Controller
     public function updatePayment(Request $request)
     {
         $user = $this->currentUser();
-        abort_unless($user->isLandlord(), 403, 'Only landlords can manage payment settings.');
+        abort_unless($user->isLandlordOwner(), 403, 'Only the landlord account owner can manage payment settings.');
 
         $data = $request->validate([
             'payment_type' => ['required', 'string', 'in:PAYBILL,TILL'],

@@ -34,6 +34,7 @@ Route::get('/invite', function (Request $request) {
 
 // landlord inviotation flow
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\LandlordTeamController;
 use App\Http\Controllers\InvitationAcceptanceController;
 
 Route::get('/invite/{code}',
@@ -123,6 +124,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.security')->group(func
         Route::get('/chats/{supportConversation}/state', [SupportChatAdminController::class, 'state'])->name('chats.state');
         Route::post('/chats/{supportConversation}/typing', [SupportChatAdminController::class, 'typing'])->name('chats.typing');
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::get('/team', [LandlordTeamController::class, 'index'])->name('team.index');
+        Route::post('/team', [LandlordTeamController::class, 'store'])->name('team.store');
+        Route::put('/team/{member}', [LandlordTeamController::class, 'update'])->name('team.update');
+        Route::post('/team/{member}/setup-link', [LandlordTeamController::class, 'sendSetupLink'])->name('team.setup-link');
         Route::put('/settings/account', [SettingsController::class, 'updateAccount'])->name('settings.account');
         Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password');
         Route::put('/settings/tenant-preferences', [SettingsController::class, 'updateTenantPreferences'])->name('settings.tenant-preferences');

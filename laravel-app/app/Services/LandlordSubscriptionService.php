@@ -55,6 +55,21 @@ class LandlordSubscriptionService
             ];
         }
 
+        if ($user->isLandlordStaff()) {
+            $owner = $user->landlordAccountOwner;
+            if (! $owner || ! $owner->is_active) {
+                return [
+                    'allowed' => false,
+                    'status' => self::STATUS_PAST_DUE,
+                    'message' => 'The landlord account that granted your access is inactive.',
+                    'due_at' => null,
+                    'days_remaining' => 0,
+                ];
+            }
+
+            return $this->evaluate($owner);
+        }
+
         // Backfill legacy landlord records that missed trial initialization.
         if (!$user->trial_started_at && !$user->trial_ends_at && !$user->subscription_started_at && !$user->service_paid_until) {
             $this->initializeTrial($user);

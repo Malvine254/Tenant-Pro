@@ -237,7 +237,7 @@
         <nav class="settings-tabs" role="tablist" aria-label="Settings tabs">
             <button id="settings-tab-account" type="button" role="tab" aria-controls="settings-pane-account" class="settings-tab" data-tab-target="account">Account</button>
             <button id="settings-tab-security" type="button" role="tab" aria-controls="settings-pane-security" class="settings-tab" data-tab-target="security">Security</button>
-            @if($isLandlord)
+            @if($isLandlordOwner)
                 <button id="settings-tab-tenants" type="button" role="tab" aria-controls="settings-pane-tenants" class="settings-tab" data-tab-target="tenants">Tenant Preferences</button>
                 <button id="settings-tab-payment" type="button" role="tab" aria-controls="settings-pane-payment" class="settings-tab" data-tab-target="payment">Payment</button>
             @endif
@@ -306,7 +306,7 @@
             </form>
         </div>
 
-        @if($isLandlord)
+        @if($isLandlordOwner)
             <div id="settings-pane-tenants" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-tenants" data-tab-pane="tenants">
                 <form method="POST" action="{{ route('admin.settings.tenant-preferences') }}" class="settings-form">
                     @csrf
@@ -344,7 +344,7 @@
             </div>
         @endif
 
-        @if($isLandlord)
+        @if($isLandlordOwner)
         <div id="settings-pane-payment" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-payment" data-tab-pane="payment">
             <form method="POST" action="{{ route('admin.settings.payment') }}" class="settings-form">
                 @csrf
@@ -504,7 +504,7 @@
         <h4>{{ $isSuperAdmin ? 'Platform control centre' : 'Landlord workspace' }}</h4>
         <p>{{ $isSuperAdmin ? 'Sensitive system changes require your current password and are written to the administrative audit log.' : 'Configure payment, tenant onboarding defaults, and account details without leaving the admin module.' }}</p>
 
-        @if($isLandlord)
+        @if($isLandlordOwner)
             <div class="summary-grid">
                 <div class="summary-item">
                     <b>{{ $tenantSummary['properties'] ?? 0 }}</b>
@@ -540,7 +540,7 @@
             <li>Account tab updates your personal profile details used across the dashboard.</li>
             <li>Security tab allows changing password with current-password verification.</li>
             <li>Tenant Preferences sets landlord-level defaults for onboarding behavior.</li>
-            @if($isLandlord)
+            @if($isLandlordOwner)
                 <li>Payment stores the landlord-specific Daraja channel used by tenant billing flows.</li>
             @endif
             @if($isSuperAdmin)

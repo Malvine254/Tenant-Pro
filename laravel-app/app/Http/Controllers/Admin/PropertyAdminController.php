@@ -19,7 +19,7 @@ class PropertyAdminController extends Controller
     {
         $user = request()->user();
         $properties = Property::with(['landlord', 'units'])
-            ->when($this->isLandlord($user), fn($q) => $q->where('landlord_id', $user->id))
+            ->when($this->isLandlord($user), fn($q) => $q->where('landlord_id', $user->landlordAccountId()))
             ->latest()
             ->paginate(15);
         return view('admin.properties.index', compact('properties'));
@@ -29,7 +29,8 @@ class PropertyAdminController extends Controller
     {
         $user = request()->user();
         $landlords = User::whereHas('role', fn($q) => $q->where('name', 'LANDLORD'))
-            ->when($this->isLandlord($user), fn($q) => $q->where('id', $user->id))
+            ->whereNull('managed_landlord_id')
+            ->when($this->isLandlord($user), fn($q) => $q->where('id', $user->landlordAccountId()))
             ->orderBy('name')
             ->get();
         return view('admin.properties.create', compact('landlords'));
@@ -38,7 +39,7 @@ class PropertyAdminController extends Controller
     public function store(Request $request)
     {
         if ($this->isLandlord($request->user())) {
-            $request->merge(['landlord_id' => $request->user()->id]);
+            $request->merge(['landlord_id' => $request->user()->landlordAccountId()]);
         }
 
         $data = $request->validate([
@@ -151,7 +152,8 @@ class PropertyAdminController extends Controller
         ]);
         $user = request()->user();
         $landlords = User::whereHas('role', fn($q) => $q->where('name', 'LANDLORD'))
-            ->when($this->isLandlord($user), fn($q) => $q->where('id', $user->id))
+            ->whereNull('managed_landlord_id')
+            ->when($this->isLandlord($user), fn($q) => $q->where('id', $user->landlordAccountId()))
             ->orderBy('name')
             ->get();
         return view('admin.properties.edit', compact('property', 'landlords'));
@@ -161,7 +163,7 @@ class PropertyAdminController extends Controller
     {
         $this->authorizeLandlordProperty($property);
         if ($this->isLandlord($request->user())) {
-            $request->merge(['landlord_id' => $request->user()->id]);
+            $request->merge(['landlord_id' => $request->user()->landlordAccountId()]);
         }
 
         $data = $request->validate([
@@ -286,7 +288,7 @@ class PropertyAdminController extends Controller
     private function authorizeLandlordProperty(Property $property): void
     {
         $user = request()->user();
-        abort_if($this->isLandlord($user) && $property->landlord_id !== $user->id, 403);
+        abort_if($this->isLandlord($user) && $property->landlord_id !== $user->landlordAccountId(), 403);
     }
 
     private function buildInitialUnitNumbers(string $firstUnitNumber, int $count): array
@@ -350,7 +352,7 @@ class PropertyAdminController extends Controller
 
     private function assertLandlordId(string $landlordId): void
     {
-        if (!User::whereKey($landlordId)->whereHas('role', fn ($query) => $query->where('name', 'LANDLORD'))->exists()) {
+        if (!User::whereKey($landlordId)->whereNull('managed_landlord_id')->whereHas('role', fn ($query) => $query->where('name', 'LANDLORD'))->exists()) {
             throw ValidationException::withMessages([
                 'landlord_id' => 'Select a valid landlord account.',
             ]);

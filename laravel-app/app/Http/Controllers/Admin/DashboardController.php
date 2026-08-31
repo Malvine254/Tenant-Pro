@@ -27,25 +27,29 @@ class DashboardController extends Controller
         $roleName = $user?->role?->name;
         $isLandlord = $roleName === 'LANDLORD';
         $isSuperAdmin = $roleName === 'SUPER_ADMIN';
+        $landlordId = $isLandlord ? $user->landlordAccountId() : null;
+        $landlordTeamUserIds = $isLandlord ? $user->landlordTeamUserIds() : [];
         $landlordAccess = $isLandlord
             ? $this->subscriptionService->evaluate($user)
             : ['allowed' => true, 'status' => 'not_required', 'message' => null];
 
         $propertiesQuery = Property::query()
-            ->when($isLandlord, fn($q) => $q->where('landlord_id', $user->id));
+            ->when($isLandlord, fn($q) => $q->where('landlord_id', $landlordId));
         $unitsQuery = Unit::query()
-            ->when($isLandlord, fn($q) => $q->whereHas('property', fn($property) => $property->where('landlord_id', $user->id)));
+            ->when($isLandlord, fn($q) => $q->whereHas('property', fn($property) => $property->where('landlord_id', $landlordId)));
         $tenantsQuery = Tenant::query()
-            ->when($isLandlord, fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id)));
+            ->when($isLandlord, fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $landlordId)));
         $invoicesQuery = Invoice::query()
-            ->when($isLandlord, fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id)));
+            ->when($isLandlord, fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $landlordId)));
         $maintenanceQuery = MaintenanceRequest::query()
-            ->when($isLandlord, fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id)));
+            ->when($isLandlord, fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $landlordId)));
         $paymentsQuery = Payment::query()
-            ->when($isLandlord, fn($q) => $q->whereHas('invoice.unit.property', fn($property) => $property->where('landlord_id', $user->id)));
+            ->when($isLandlord, fn($q) => $q->whereHas('invoice.unit.property', fn($property) => $property->where('landlord_id', $landlordId)));
         $invitationsQuery = Invitation::query()
-            ->when($isLandlord, fn($q) => $q->where('sent_by_id', $user->id));
-        $landlordsQuery = User::query()->whereHas('role', fn($role) => $role->where('name', 'LANDLORD'));
+            ->when($isLandlord, fn($q) => $q->whereIn('sent_by_id', $landlordTeamUserIds));
+        $landlordsQuery = User::query()
+            ->whereHas('role', fn($role) => $role->where('name', 'LANDLORD'))
+            ->whereNull('managed_landlord_id');
 
         $totalUnits = (clone $unitsQuery)->count();
         $occupiedUnits = (clone $unitsQuery)->where('status', 'OCCUPIED')->count();

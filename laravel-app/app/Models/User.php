@@ -27,6 +27,7 @@ class User extends Authenticatable
         'subscription_started_at', 'subscription_last_paid_at',
         'monthly_service_fee',
         'requires_password_change',
+        'managed_landlord_id', 'team_invited_at',
     ];
 
     protected $hidden = [
@@ -49,6 +50,7 @@ class User extends Authenticatable
             'subscription_started_at' => 'datetime',
             'subscription_last_paid_at' => 'datetime',
             'monthly_service_fee' => 'decimal:2',
+            'team_invited_at' => 'datetime',
         ];
     }
 
@@ -92,6 +94,16 @@ class User extends Authenticatable
         return $this->hasMany(SupportConversation::class, 'tenant_user_id');
     }
 
+    public function landlordAccountOwner()
+    {
+        return $this->belongsTo(User::class, 'managed_landlord_id');
+    }
+
+    public function landlordTeamMembers()
+    {
+        return $this->hasMany(User::class, 'managed_landlord_id');
+    }
+
     public function receivedInvitations()
     {
         return $this->hasMany(Invitation::class, 'email', 'email');
@@ -102,6 +114,41 @@ class User extends Authenticatable
         return $this->role?->name === 'LANDLORD';
     }
 
+    public function isLandlordStaff(): bool
+    {
+        return $this->isLandlord() && filled($this->managed_landlord_id);
+    }
+
+    public function isLandlordOwner(): bool
+    {
+        return $this->isLandlord() && blank($this->managed_landlord_id);
+    }
+
+    public function landlordAccountId(): string
+    {
+        return (string) ($this->managed_landlord_id ?: $this->id);
+    }
+
+    public function landlordAccount(): User
+    {
+        if (! $this->isLandlordStaff()) {
+            return $this;
+        }
+
+        return $this->landlordAccountOwner()->firstOrFail();
+    }
+
+    public function landlordTeamUserIds(): array
+    {
+        $ownerId = $this->landlordAccountId();
+
+        return User::query()
+            ->whereKey($ownerId)
+            ->orWhere('managed_landlord_id', $ownerId)
+            ->pluck('id')
+            ->all();
+    }
+
     public function hasActiveServiceAccess(): bool
     {
         if (! $this->is_active) {
@@ -109,6 +156,11 @@ class User extends Authenticatable
         }
 
         if ($this->isLandlord()) {
+            if ($this->isLandlordStaff()) {
+                $owner = $this->landlordAccountOwner;
+
+                return (bool) ($owner?->is_active && $owner->hasActiveServiceAccess());
+            }
             if (! $this->requires_subscription) {
                 return true;
             }
