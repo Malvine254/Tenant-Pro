@@ -2,7 +2,9 @@
 @section('page-title', 'Deployment Tools')
 
 @section('content')
-<div class="page-title">Deployment Tools</div>
+<div class="admin-page-header">
+    <div><h2>Deployment tools</h2><p>Restricted production operations for super administrators. Every submitted action is recorded in the audit log.</p></div>
+</div>
 
 @if(!empty($isPublicTestingTool))
     <div class="alert-error">
@@ -28,8 +30,8 @@
 </div>
 
 <div class="card" style="margin-bottom:16px;">
-    <h3 style="margin-bottom:10px;">Run Operation</h3>
-    <p style="font-size:13px;color:#94a3b8;margin-bottom:14px;">Use this when GoDaddy terminal access is unavailable.</p>
+    <h3 style="margin-bottom:10px;">Run an operation</h3>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:14px;">Select one operation, review its command, and confirm intentionally. Destructive database and key operations are unavailable in production.</p>
 
     <form method="POST" action="{{ $formAction ?? route('admin.deployment-tools.run') }}">
         @csrf
@@ -53,27 +55,11 @@
             @endforeach
         </div>
 
-        <button type="submit" class="btn">Run Selected Command</button>
-    </form>
-</div>
-
-<div class="card" style="margin-bottom:16px;">
-    <h3 style="margin-bottom:10px;">Quick Run Buttons</h3>
-    <form method="POST" action="{{ $formAction ?? route('admin.deployment-tools.run') }}">
-        @csrf
-
-        @if($toolTokenRequired)
-            <div class="form-group" style="max-width:420px;">
-                <label>Deployment Tool Token</label>
-                <input type="password" name="tool_token" required placeholder="Value of DEPLOYMENT_TOOL_TOKEN">
-            </div>
-        @endif
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
-            @foreach($availableActions as $action => $label)
-                <button type="submit" name="action" value="{{ $action }}" class="btn btn-secondary" style="text-align:left;padding:10px 12px;">{{ $label }}</button>
-            @endforeach
-        </div>
+        <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;color:#cbd5e1;font-size:13px;">
+            <input type="checkbox" name="confirm_operation" value="1" required style="margin-top:3px;">
+            <span>I have reviewed the selected command and understand that it changes the production server.</span>
+        </label>
+        <button type="submit" class="btn btn-primary" data-loading-text="Running operation…">Run selected operation</button>
     </form>
 </div>
 

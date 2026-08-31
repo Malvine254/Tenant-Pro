@@ -50,6 +50,12 @@
         margin: -2px -2px 0;
         color: #e2e8f0;
     }
+    .dashboard-welcome {
+        display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:16px;
+    }
+    .dashboard-welcome h1 { font-size:25px;line-height:1.2;letter-spacing:-.04em;color:#f8fafc;margin-bottom:5px; }
+    .dashboard-welcome p { color:#94a3b8;font-size:13px;max-width:680px; }
+    .dashboard-quick-actions { display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap; }
 
     .dashboard-tabs {
         display: flex;
@@ -270,6 +276,8 @@
         .ops-exec-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
     @media (max-width:900px) {
+        .dashboard-welcome { flex-direction:column; }
+        .dashboard-quick-actions { justify-content:flex-start;width:100%; }
         .ops-insight-grid,.ops-table-grid { grid-template-columns:1fr; }
         .ops-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
         .ops-landlord-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -285,6 +293,24 @@
 </style>
 
 <div class="ops-dashboard">
+    <header class="dashboard-welcome">
+        <div>
+            <h1>{{ now()->hour < 12 ? 'Good morning' : (now()->hour < 17 ? 'Good afternoon' : 'Good evening') }}, {{ auth()->user()->first_name ?: \Illuminate\Support\Str::before(auth()->user()->name ?: 'there', ' ') }}</h1>
+            <p>{{ $isLandlord ? 'Here is the current position of your properties, tenants, invoices, and collections.' : 'Monitor portfolio health and move directly to the work that needs attention.' }}</p>
+        </div>
+        @if(!($isLandlord && !($landlordAccess['allowed'] ?? true)))
+            <div class="dashboard-quick-actions" aria-label="Quick actions">
+                @if($isLandlord)
+                    <a class="btn btn-secondary" href="{{ route('admin.properties.create') }}">Add property</a>
+                    <a class="btn btn-primary" href="{{ route('admin.invitations.index') }}">Invite tenant</a>
+                @else
+                    <a class="btn btn-secondary" href="{{ route('admin.landlords.index') }}">Review landlords</a>
+                    <a class="btn btn-primary" href="{{ route('admin.landlords.create') }}">Add landlord</a>
+                @endif
+            </div>
+        @endif
+    </header>
+
     @if($isLandlord && !($landlordAccess['allowed'] ?? true))
         <section class="subscription-notice locked" role="alert">
             <div>
@@ -317,15 +343,15 @@
     @endif
 
     <div class="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
-        <button class="dashboard-tab active" type="button" role="tab" aria-selected="true" data-target="overview-tab">Overview</button>
-        <button class="dashboard-tab" type="button" role="tab" aria-selected="false" data-target="performance-tab">Performance</button>
-        <button class="dashboard-tab" type="button" role="tab" aria-selected="false" data-target="portfolio-tab">Portfolio</button>
+        <button id="overview-tab-button" class="dashboard-tab active" type="button" role="tab" aria-selected="true" aria-controls="overview-tab" tabindex="0" data-target="overview-tab">Overview</button>
+        <button id="performance-tab-button" class="dashboard-tab" type="button" role="tab" aria-selected="false" aria-controls="performance-tab" tabindex="-1" data-target="performance-tab">Performance</button>
+        <button id="portfolio-tab-button" class="dashboard-tab" type="button" role="tab" aria-selected="false" aria-controls="portfolio-tab" tabindex="-1" data-target="portfolio-tab">Portfolio</button>
         @unless($isLandlord)
-            <button class="dashboard-tab" type="button" role="tab" aria-selected="false" data-target="landlords-tab">Landlords</button>
+            <button id="landlords-tab-button" class="dashboard-tab" type="button" role="tab" aria-selected="false" aria-controls="landlords-tab" tabindex="-1" data-target="landlords-tab">Landlords</button>
         @endunless
     </div>
 
-    <div id="overview-tab" class="dashboard-tab-panel active">
+    <div id="overview-tab" class="dashboard-tab-panel active" role="tabpanel" aria-labelledby="overview-tab-button">
         @if($isSuperAdmin)
             <div class="ops-panel" style="margin-bottom:16px;">
                 <div class="ops-panel-head">
@@ -462,7 +488,7 @@
         </div>
     </div>
 
-    <div id="performance-tab" class="dashboard-tab-panel">
+    <div id="performance-tab" class="dashboard-tab-panel" role="tabpanel" aria-labelledby="performance-tab-button">
         <div class="ops-chart-grid">
             <div class="ops-panel ops-chart-card">
                 <div class="ops-panel-head">
@@ -490,7 +516,7 @@
         </div>
     </div>
 
-    <div id="portfolio-tab" class="dashboard-tab-panel">
+    <div id="portfolio-tab" class="dashboard-tab-panel" role="tabpanel" aria-labelledby="portfolio-tab-button">
         <div class="ops-insight-grid">
             <div class="ops-panel">
                 <div class="ops-panel-head">
@@ -520,7 +546,7 @@
     </div>
 
     @unless($isLandlord)
-        <div id="landlords-tab" class="dashboard-tab-panel">
+        <div id="landlords-tab" class="dashboard-tab-panel" role="tabpanel" aria-labelledby="landlords-tab-button">
             <div class="ops-panel" style="margin-bottom:16px;">
                 <div class="ops-panel-head">
                     <div class="ops-panel-title">Landlord subscription lifecycle</div>
@@ -643,17 +669,31 @@
         chart.render();
     };
 
-    document.querySelectorAll('.dashboard-tab').forEach((button) => {
-        button.addEventListener('click', () => {
+    const dashboardTabs = Array.from(document.querySelectorAll('.dashboard-tab'));
+    const activateDashboardTab = (button) => {
             const target = button.dataset.target;
-            document.querySelectorAll('.dashboard-tab').forEach((tab) => {
+            dashboardTabs.forEach((tab) => {
                 const active = tab === button;
                 tab.classList.toggle('active', active);
                 tab.setAttribute('aria-selected', active ? 'true' : 'false');
+                tab.tabIndex = active ? 0 : -1;
             });
             document.querySelectorAll('.dashboard-tab-panel').forEach((panel) => {
                 panel.classList.toggle('active', panel.id === target);
             });
+    };
+    dashboardTabs.forEach((button, index) => {
+        button.addEventListener('click', () => activateDashboardTab(button));
+        button.addEventListener('keydown', event => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            let nextIndex = index;
+            if (event.key === 'ArrowRight') nextIndex = (index + 1) % dashboardTabs.length;
+            if (event.key === 'ArrowLeft') nextIndex = (index - 1 + dashboardTabs.length) % dashboardTabs.length;
+            if (event.key === 'Home') nextIndex = 0;
+            if (event.key === 'End') nextIndex = dashboardTabs.length - 1;
+            activateDashboardTab(dashboardTabs[nextIndex]);
+            dashboardTabs[nextIndex].focus();
         });
     });
 

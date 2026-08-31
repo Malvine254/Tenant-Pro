@@ -2,29 +2,28 @@
 @section('page-title', 'Login')
 
 @section('content')
-<div style="max-width:380px;margin:60px auto;">
+<div class="auth-shell">
+    <div class="auth-brand"><span class="brand-mark" aria-hidden="true">TP</span><strong>TenantPro</strong></div>
     <div class="card">
-        <h2 style="margin-bottom:20px;font-size:18px;">Admin Login</h2>
-        <div style="margin-bottom:14px;padding:10px 12px;border:1px solid rgba(255,255,255,.35);background:rgba(96,165,250,.12);border-radius:10px;font-size:12px;color:#dbeafe;line-height:1.5;">
-            Access policy: TENANT accounts are blocked from this portal. Only SUPER_ADMIN, ADMIN, and LANDLORD can sign in.
-        </div>
+        <h2 style="margin-bottom:6px;font-size:22px;">Welcome back</h2>
+        <p class="muted" style="font-size:13px;margin-bottom:20px;">Sign in to your secure property operations workspace.</p>
         <form method="POST" action="{{ url()->current() }}">
             @csrf
             <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" name="email" value="{{ old('email') }}" required autofocus>
+                <label for="admin-email">Email address</label>
+                <input id="admin-email" type="email" name="email" value="{{ old('email') }}" autocomplete="username" required autofocus>
                 @error('email')<div class="form-error">{{ $message }}</div>@enderror
             </div>
             <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" required>
+                <label for="admin-password">Password</label>
+                <input id="admin-password" type="password" name="password" autocomplete="current-password" required>
                 @error('password')<div class="form-error">{{ $message }}</div>@enderror
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;color:#e2e8f0;">
                 <input type="checkbox" name="remember" id="remember">
                 <label for="remember" style="font-size:13px;font-weight:normal;">Remember me</label>
             </div>
-            <button type="submit" class="btn btn-primary" style="width:100%;padding:10px;">Sign In</button>
+            <button type="submit" class="btn btn-primary" style="width:100%;" data-loading-text="Signing in…">Sign in securely</button>
         </form>
         <div style="text-align:center;margin-top:14px;">
             <a href="{{ route('admin.password.request') }}" style="font-size:13px;">Forgot password?</a>

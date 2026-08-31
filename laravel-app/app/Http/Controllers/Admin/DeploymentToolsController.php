@@ -7,13 +7,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\View\View;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class DeploymentToolsController extends Controller
 {
     public function once(Request $request): View
     {
+        abort_unless((bool) config('deployment.one_time_enabled'), 404);
+
         $token = (string) $request->query('token', '');
         $validToken = $this->deploymentUrlTokenValid($token);
 
@@ -30,6 +32,8 @@ class DeploymentToolsController extends Controller
 
     public function runOnce(Request $request): RedirectResponse
     {
+        abort_unless((bool) config('deployment.one_time_enabled'), 404);
+
         $request->validate([
             'token' => 'required|string',
             'action' => 'nullable|string',
@@ -38,15 +42,15 @@ class DeploymentToolsController extends Controller
         $token = (string) $request->input('token', '');
         $action = (string) $request->input('action', 'full_deploy');
 
-        if (!$this->deploymentUrlTokenConfigured()) {
+        if (! $this->deploymentUrlTokenConfigured()) {
             return back()->with('error', 'Set DEPLOYMENT_ONE_TIME_TOKEN or DEPLOYMENT_TOOL_TOKEN in .env.');
         }
 
-        if (!$this->deploymentUrlTokenValid($token)) {
+        if (! $this->deploymentUrlTokenValid($token)) {
             return back()->with('error', 'Invalid deployment token.');
         }
 
-        if ($action !== 'full_deploy' && !array_key_exists($action, $this->oneTimeMaintenanceActions())) {
+        if ($action !== 'full_deploy' && ! array_key_exists($action, $this->oneTimeMaintenanceActions())) {
             return back()->with('error', 'Unsupported maintenance action.');
         }
 
@@ -57,13 +61,13 @@ class DeploymentToolsController extends Controller
 
             $message = $action === 'full_deploy'
                 ? 'Full deployment sequence completed successfully.'
-                : $this->oneTimeMaintenanceActions()[$action] . ' completed successfully.';
+                : $this->oneTimeMaintenanceActions()[$action].' completed successfully.';
 
             return back()
                 ->with('success', $message)
                 ->with('command_output', $output);
         } catch (\Throwable $e) {
-            return back()->with('error', 'Deployment action failed: ' . $e->getMessage());
+            return back()->with('error', 'Deployment action failed: '.$e->getMessage());
         }
     }
 
@@ -100,29 +104,30 @@ class DeploymentToolsController extends Controller
         $request->validate([
             'action' => 'required|string',
             'tool_token' => 'nullable|string',
+            'confirm_operation' => 'accepted',
         ]);
 
         $expectedToken = $this->deploymentToolToken();
-        if ($expectedToken !== '' && !hash_equals($expectedToken, (string) $request->input('tool_token', ''))) {
+        if ($expectedToken !== '' && ! hash_equals($expectedToken, (string) $request->input('tool_token', ''))) {
             return back()->with('error', 'Invalid deployment tool token. Set DEPLOYMENT_TOOL_TOKEN in .env and use the same value here.');
         }
 
         $action = (string) $request->input('action');
 
-        if (!array_key_exists($action, $this->availableActions())) {
+        if (! array_key_exists($action, $this->availableActions())) {
             return back()->with('error', 'Unsupported action requested.');
         }
 
         try {
             $output = $this->executeAction($action);
-            $message = $this->availableActions()[$action] . ' completed successfully.';
+            $message = $this->availableActions()[$action].' completed successfully.';
 
             return back()
                 ->with('success', $message)
                 ->with('command_output', $output);
         } catch (\Throwable $e) {
             return back()
-                ->with('error', 'Action failed: ' . $e->getMessage());
+                ->with('error', 'Action failed: '.$e->getMessage());
         }
     }
 
@@ -138,27 +143,27 @@ class DeploymentToolsController extends Controller
             return back()->with('error', 'DEPLOYMENT_TOOL_TOKEN is not configured in .env.');
         }
 
-        if (!hash_equals($expectedToken, (string) $request->input('tool_token', ''))) {
+        if (! hash_equals($expectedToken, (string) $request->input('tool_token', ''))) {
             return back()->with('error', 'Invalid deployment tool token.');
         }
 
         $action = (string) $request->input('action');
         $availableActions = $this->publicAvailableActions();
 
-        if (!array_key_exists($action, $availableActions)) {
+        if (! array_key_exists($action, $availableActions)) {
             return back()->with('error', 'Unsupported action requested from testing tools.');
         }
 
         try {
             $output = $this->executeAction($action);
-            $message = $availableActions[$action] . ' completed successfully.';
+            $message = $availableActions[$action].' completed successfully.';
 
             return back()
                 ->with('success', $message)
                 ->with('command_output', $output);
         } catch (\Throwable $e) {
             return back()
-                ->with('error', 'Action failed: ' . $e->getMessage());
+                ->with('error', 'Action failed: '.$e->getMessage());
         }
     }
 
@@ -199,7 +204,7 @@ class DeploymentToolsController extends Controller
         $vendorPath = base_path('vendor');
         $autoloadPath = base_path('vendor/autoload.php');
 
-        if (!File::exists($vendorPath)) {
+        if (! File::exists($vendorPath)) {
             File::makeDirectory($vendorPath, 0755, true);
         }
 
@@ -212,7 +217,7 @@ class DeploymentToolsController extends Controller
 
     private function availableActions(): array
     {
-        return [
+        $actions = [
             'full_deploy' => 'Full deployment sequence',
             'clear_cache' => 'Clear all caches',
             'clear_app_cache' => 'Clear application cache',
@@ -226,12 +231,17 @@ class DeploymentToolsController extends Controller
             'storage_link' => 'Create storage symlink',
             'migrate_status' => 'Show migration status',
             'migrate_force' => 'Run migrations (--force)',
-            'migrate_rollback' => 'Rollback last migration batch',
-            'migrate_fresh_seed' => 'Fresh database + seed (deletes tables)',
             'seed_force' => 'Run database seeders (--force)',
-            'generate_key' => 'Generate app key',
             'ensure_vendor' => 'Ensure vendor folder exists',
         ];
+
+        if (app()->environment(['local', 'testing'])) {
+            $actions['migrate_rollback'] = 'Rollback last migration batch';
+            $actions['migrate_fresh_seed'] = 'Fresh database + seed (deletes tables)';
+            $actions['generate_key'] = 'Generate app key';
+        }
+
+        return $actions;
     }
 
     private function oneTimeMaintenanceActions(): array
@@ -303,7 +313,7 @@ class DeploymentToolsController extends Controller
             'app_url' => config('app.url'),
             'environment' => app()->environment(),
             'env_file_exists' => File::exists(base_path('.env')),
-            'app_key_set' => !empty((string) config('app.key')),
+            'app_key_set' => ! empty((string) config('app.key')),
             'vendor_autoload' => File::exists(base_path('vendor/autoload.php')),
             'storage_writable' => is_writable(storage_path()),
             'bootstrap_cache_writable' => is_writable(base_path('bootstrap/cache')),
@@ -313,14 +323,14 @@ class DeploymentToolsController extends Controller
     private function ensureAdmin(): void
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             throw new HttpException(403, 'Please login first.');
         }
 
         try {
             $roleName = $user->role?->name;
-            if ($roleName && !in_array(strtoupper((string) $roleName), ['SUPER_ADMIN', 'ADMIN'], true)) {
-                throw new HttpException(403, 'Only admin users can access deployment tools.');
+            if (strtoupper((string) $roleName) !== 'SUPER_ADMIN') {
+                throw new HttpException(403, 'Only super administrators can access deployment tools.');
             }
         } catch (HttpException $e) {
             throw $e;
@@ -333,20 +343,20 @@ class DeploymentToolsController extends Controller
     {
         $logs = [];
 
-        $logs[] = '[1/8] ' . $this->ensureVendorFolder();
+        $logs[] = '[1/8] '.$this->ensureVendorFolder();
 
         if (empty((string) config('app.key'))) {
-            $logs[] = '[2/8] ' . $this->runArtisanCommand('key:generate', ['--force' => true]);
+            $logs[] = '[2/8] '.$this->runArtisanCommand('key:generate', ['--force' => true]);
         } else {
             $logs[] = '[2/8] APP_KEY already set. Skipped key generation.';
         }
 
-        $logs[] = '[3/8] ' . $this->runArtisanCommand('storage:link');
-        $logs[] = '[4/8] ' . $this->runArtisanCommand('optimize:clear');
-        $logs[] = '[5/8] ' . $this->runArtisanCommand('migrate', ['--force' => true]);
-        $logs[] = '[6/8] ' . $this->runArtisanCommand('db:seed', ['--force' => true]);
-        $logs[] = '[7/8] ' . $this->runArtisanCommand('config:cache');
-        $logs[] = '[8/8] ' . $this->runArtisanCommand('route:cache');
+        $logs[] = '[3/8] '.$this->runArtisanCommand('storage:link');
+        $logs[] = '[4/8] '.$this->runArtisanCommand('optimize:clear');
+        $logs[] = '[5/8] '.$this->runArtisanCommand('migrate', ['--force' => true]);
+        $logs[] = '[6/8] '.$this->runArtisanCommand('db:seed', ['--force' => true]);
+        $logs[] = '[7/8] '.$this->runArtisanCommand('config:cache');
+        $logs[] = '[8/8] '.$this->runArtisanCommand('route:cache');
 
         return implode("\n\n", $logs);
     }

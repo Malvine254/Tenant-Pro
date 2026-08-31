@@ -3,26 +3,29 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\LandlordSubscriptionService;
 use App\Models\User;
+use App\Services\LandlordSubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class AuthAdminController extends Controller
 {
     public function __construct(
         private readonly LandlordSubscriptionService $subscriptionService,
-    ) {
-    }
+    ) {}
 
     public function showLogin()
     {
         if (Auth::check()) {
             return redirect()->route('admin.dashboard');
         }
+
         return view('admin.auth.login');
     }
 
@@ -33,23 +36,44 @@ class AuthAdminController extends Controller
             'password' => 'required|string',
         ]);
 
+        $rateKey = 'admin-login:'.Str::lower($credentials['email']).'|'.$request->ip();
+        if (RateLimiter::tooManyAttempts($rateKey, 5)) {
+            $seconds = RateLimiter::availableIn($rateKey);
+
+            return back()
+                ->withErrors(['email' => "Too many sign-in attempts. Try again in {$seconds} seconds."])
+                ->onlyInput('email');
+        }
+
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            
+
+            $authenticatedUserId = Auth::id();
             $role = Auth::user()?->role?->name;
-            if (!in_array($role, ['SUPER_ADMIN', 'ADMIN', 'LANDLORD'], true)) {
+            if (! in_array($role, ['SUPER_ADMIN', 'ADMIN', 'LANDLORD'], true)) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
+                RateLimiter::hit($rateKey, 300);
+                Log::warning('Admin portal sign-in rejected for unauthorized role.', [
+                    'user_id' => $authenticatedUserId,
+                    'role' => $role,
+                    'ip' => $request->ip(),
+                ]);
 
                 return back()
                     ->withErrors(['email' => 'This account does not have access to the admin portal.'])
                     ->onlyInput('email');
             }
 
-            if (!Auth::user()?->is_active) {
+            if (! Auth::user()?->is_active) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
+                RateLimiter::hit($rateKey, 300);
+                Log::warning('Admin portal sign-in rejected for inactive account.', [
+                    'user_id' => $authenticatedUserId,
+                    'ip' => $request->ip(),
+                ]);
 
                 return back()
                     ->withErrors(['email' => 'This account is inactive. Contact a system administrator.'])
@@ -63,17 +87,38 @@ class AuthAdminController extends Controller
             }
 
             $request->session()->regenerate();
+            RateLimiter::clear($rateKey);
+            Log::notice('Admin portal sign-in succeeded.', [
+                'user_id' => Auth::id(),
+                'role' => $role,
+                'ip' => $request->ip(),
+            ]);
+
             return redirect()->intended(route('admin.dashboard'));
         }
+
+        RateLimiter::hit($rateKey, 300);
+        Log::warning('Admin portal sign-in failed.', [
+            'email_hash' => hash('sha256', Str::lower($credentials['email'])),
+            'ip' => $request->ip(),
+        ]);
 
         return back()->withErrors(['email' => 'Invalid credentials.'])->onlyInput('email');
     }
 
     public function logout(Request $request)
     {
+        $userId = Auth::id();
+        $role = Auth::user()?->role?->name;
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        Log::notice('Admin portal sign-out completed.', [
+            'user_id' => $userId,
+            'role' => $role,
+            'ip' => $request->ip(),
+        ]);
+
         return redirect()->route('admin.login');
     }
 
@@ -104,13 +149,13 @@ class AuthAdminController extends Controller
         $data = $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', 'min:8'],
+            'password' => ['required', 'confirmed', PasswordRule::min(10)->mixedCase()->numbers()],
         ]);
 
         $eligible = User::query()->with('role')
             ->whereRaw('LOWER(email) = ?', [strtolower(trim($data['email']))])
             ->first();
-        if (!$eligible || !in_array($eligible->role?->name, ['SUPER_ADMIN', 'ADMIN', 'LANDLORD'], true)) {
+        if (! $eligible || ! in_array($eligible->role?->name, ['SUPER_ADMIN', 'ADMIN', 'LANDLORD'], true)) {
             return back()->withInput($request->only('email'))->withErrors(['email' => 'This reset link is not valid for the admin portal.']);
         }
 

@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Middleware\AddAdminSecurityHeaders;
+use App\Http\Middleware\EnsureAccountAccess;
+use App\Http\Middleware\EnsureAdminRole;
+use App\Http\Middleware\EnsureMobileApiKey;
+use App\Http\Middleware\RecordAdminAuditLog;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use App\Http\Middleware\EnsureAdminRole;
-use App\Http\Middleware\EnsureMobileApiKey;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -24,7 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'mobile.api.key' => EnsureMobileApiKey::class,
             'admin.role' => EnsureAdminRole::class,
-            'platform.access' => \App\Http\Middleware\EnsureAccountAccess::class,
+            'admin.security' => AddAdminSecurityHeaders::class,
+            'admin.audit' => RecordAdminAuditLog::class,
+            'platform.access' => EnsureAccountAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
