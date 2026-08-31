@@ -16,6 +16,31 @@
     .invitation-shell {
         color: #e2e8f0;
     }
+    .invitation-workspace-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 18px;
+        padding: 5px;
+        width: fit-content;
+        border: 1px solid rgba(148,163,184,.18);
+        border-radius: 14px;
+        background: rgba(15,23,42,.72);
+    }
+    .invitation-workspace-tab {
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 16px;
+        background: transparent;
+        color: #94a3b8;
+        font-weight: 750;
+        cursor: pointer;
+    }
+    .invitation-workspace-tab.active { background:#2563eb; color:#fff; }
+    .invitation-workspace-panel { display:none; }
+    .invitation-workspace-panel.active { display:block; }
+    .invitation-advanced { grid-column:1 / -1; border:1px solid rgba(148,163,184,.18); border-radius:14px; background:rgba(15,23,42,.45); }
+    .invitation-advanced summary { cursor:pointer; padding:14px 16px; color:#e2e8f0; font-weight:700; }
+    .invitation-advanced-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; padding:0 16px 16px; }
     .invitation-tabs {
         display: flex;
         flex-wrap: wrap;
@@ -112,7 +137,8 @@
     }
     @media (max-width: 720px) {
         .invitation-layout,
-        .tenant-invite-grid {
+        .tenant-invite-grid,
+        .invitation-advanced-grid {
             grid-template-columns: 1fr;
         }
         .tenant-invite-grid .full-width,
@@ -131,25 +157,14 @@
                 : 'Use email invitations for real onboarding. Platform admins can invite landlords; landlords invite tenants to vacant units.' }}
         </p>
     </div>
-    <form method="GET" class="admin-filter">
-        @unless($isLandlord)
-            <select name="type">
-                <option value="">All types</option>
-                @foreach(['LANDLORD', 'TENANT'] as $type)
-                    <option value="{{ $type }}" {{ request('type') === $type ? 'selected' : '' }}>{{ ucfirst(strtolower($type)) }}</option>
-                @endforeach
-            </select>
-        @endunless
-        <select name="status">
-            <option value="">All statuses</option>
-            @foreach(['PENDING', 'ACCEPTED', 'EXPIRED', 'CANCELLED', 'REVOKED'] as $status)
-                <option value="{{ $status }}" {{ request('status') === $status ? 'selected' : '' }}>{{ $status }}</option>
-            @endforeach
-        </select>
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search invitee...">
-        <button type="submit" class="btn btn-secondary">Filter</button>
-    </form>
 </div>
+
+<div class="invitation-workspace-tabs" role="tablist" aria-label="Invitation workspace">
+    <button id="workspace-tab-create" class="invitation-workspace-tab" type="button" role="tab" aria-controls="workspace-panel-create" data-workspace-tab="create">Create invitation</button>
+    <button id="workspace-tab-history" class="invitation-workspace-tab" type="button" role="tab" aria-controls="workspace-panel-history" data-workspace-tab="history">Invitation history <span class="badge badge-gray">{{ $invitations->total() }}</span></button>
+</div>
+
+<section id="workspace-panel-create" class="invitation-workspace-panel" role="tabpanel" aria-labelledby="workspace-tab-create" data-workspace-panel="create">
 
 <div class="invitation-shell">
     @unless($isLandlord)
@@ -262,25 +277,30 @@
                         <input id="tenantInvitePhone" name="phone_number" value="{{ old('phone_number') }}" placeholder="e.g. 2547XXXXXXXX">
                     </div>
                     <div class="form-group">
-                        <label>Move-in date, optional</label>
-                        <input type="date" name="move_in_date" value="{{ old('move_in_date') }}" placeholder="Select move-in date">
-                    </div>
-                    <div class="form-group">
-                        <label>Monthly rent</label>
-                        <input id="tenantInviteRent" type="number" step="0.01" min="0" name="rent_amount" value="{{ old('rent_amount') }}" placeholder="e.g. 25000">
-                    </div>
-                    <div class="form-group">
-                        <label>Deposit, optional</label>
-                        <input type="number" step="0.01" min="0" name="deposit_amount" value="{{ old('deposit_amount') }}" placeholder="e.g. 25000">
-                    </div>
-                    <div class="form-group">
                         <label>Invite expires</label>
                         <input type="date" name="expires_at" value="{{ old('expires_at', $tenantInviteExpiryDefault ?? now()->addDays(7)->toDateString()) }}" placeholder="Select expiry date" required>
                     </div>
-                    <div class="form-group full-width">
-                        <label>Optional message</label>
-                        <textarea name="message" rows="3" placeholder="Add a short message for the tenant">{{ old('message') }}</textarea>
-                    </div>
+                    <details class="invitation-advanced" {{ old('move_in_date') || old('rent_amount') || old('deposit_amount') || old('message') ? 'open' : '' }}>
+                        <summary>Optional tenancy details and message</summary>
+                        <div class="invitation-advanced-grid">
+                            <div class="form-group">
+                                <label>Move-in date</label>
+                                <input type="date" name="move_in_date" value="{{ old('move_in_date') }}">
+                            </div>
+                            <div class="form-group">
+                                <label>Monthly rent</label>
+                                <input id="tenantInviteRent" type="number" step="0.01" min="0" name="rent_amount" value="{{ old('rent_amount') }}" placeholder="e.g. 25000">
+                            </div>
+                            <div class="form-group">
+                                <label>Deposit</label>
+                                <input type="number" step="0.01" min="0" name="deposit_amount" value="{{ old('deposit_amount') }}" placeholder="e.g. 25000">
+                            </div>
+                            <div class="form-group">
+                                <label>Personal message</label>
+                                <textarea name="message" rows="3" placeholder="Add a short message for the tenant">{{ old('message') }}</textarea>
+                            </div>
+                        </div>
+                    </details>
                     <p class="full-width" style="font-size:12px;color:#94a3b8;margin:-4px 0 12px;">
                     M-Pesa details are not collected here. The tenant adds and controls their own payment phone in the Android app.
                     </p>
@@ -288,6 +308,33 @@
                 <button type="submit" class="btn btn-primary" {{ $properties->isEmpty() ? 'disabled' : '' }}>Send Tenant Invite</button>
             </form>
         </div>
+    </div>
+</div>
+</section>
+
+<section id="workspace-panel-history" class="invitation-workspace-panel" role="tabpanel" aria-labelledby="workspace-tab-history" data-workspace-panel="history">
+<div class="invitation-card invitation-shell" style="margin-bottom:18px;">
+    <div class="admin-page-header" style="margin-bottom:0;">
+        <div><h3 style="margin:0 0 5px;">Invitation history</h3><p>Search, review, resend, edit, or cancel invitations.</p></div>
+        <form method="GET" class="admin-filter">
+            <input type="hidden" name="workspace" value="history">
+            @unless($isLandlord)
+                <select name="type" aria-label="Invitation type">
+                    <option value="">All types</option>
+                    @foreach(['LANDLORD', 'TENANT'] as $type)
+                        <option value="{{ $type }}" {{ request('type') === $type ? 'selected' : '' }}>{{ ucfirst(strtolower($type)) }}</option>
+                    @endforeach
+                </select>
+            @endunless
+            <select name="status" aria-label="Invitation status">
+                <option value="">All statuses</option>
+                @foreach(['PENDING', 'ACCEPTED', 'EXPIRED', 'CANCELLED', 'REVOKED'] as $status)
+                    <option value="{{ $status }}" {{ request('status') === $status ? 'selected' : '' }}>{{ $status }}</option>
+                @endforeach
+            </select>
+            <input type="search" name="search" value="{{ request('search') }}" placeholder="Search invitee..." aria-label="Search invitations">
+            <button type="submit" class="btn btn-secondary">Apply filters</button>
+        </form>
     </div>
 </div>
 
@@ -370,7 +417,7 @@
                         <td>{{ $invitation->accepted_at?->format('d M Y') ?? '—' }}</td>
                         <td style="white-space:nowrap;">
                             @if(in_array($invitation->status, ['PENDING', 'EXPIRED'], true))
-                                <a href="{{ route('admin.invitations.index', ['edit' => $invitation->id]) }}" class="btn btn-secondary">Edit</a>
+                                <a href="{{ route('admin.invitations.index', array_filter(['edit' => $invitation->id, 'workspace' => 'history', 'type' => request('type'), 'status' => request('status'), 'search' => request('search')])) }}" class="btn btn-secondary">Edit</a>
                                 <form method="POST" action="{{ route('admin.invitations.resend', $invitation) }}" style="display:inline;">
                                     @csrf @method('PATCH')
                                     <button type="submit" class="btn btn-secondary">Resend</button>
@@ -398,19 +445,74 @@
     </div>
     <div class="pagination">{{ $invitations->links() }}</div>
 </div>
+</section>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    const workspaceTabs = document.querySelectorAll('.invitation-workspace-tab');
+    const workspacePanels = document.querySelectorAll('.invitation-workspace-panel');
+    const activateWorkspace = (target, focus = false) => {
+        const selected = Array.from(workspaceTabs).find(tab => tab.dataset.workspaceTab === target) || workspaceTabs[0];
+        workspaceTabs.forEach(tab => {
+            const active = tab === selected;
+            tab.classList.toggle('active', active);
+            tab.setAttribute('aria-selected', String(active));
+            tab.tabIndex = active ? 0 : -1;
+        });
+        workspacePanels.forEach(panel => {
+            const active = panel.dataset.workspacePanel === selected.dataset.workspaceTab;
+            panel.classList.toggle('active', active);
+            panel.hidden = !active;
+        });
+        const url = new URL(window.location.href);
+        url.searchParams.set('workspace', selected.dataset.workspaceTab);
+        history.replaceState({}, '', url);
+        if (focus) selected.focus();
+    };
+    workspaceTabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => activateWorkspace(tab.dataset.workspaceTab));
+        tab.addEventListener('keydown', event => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            let next = event.key === 'Home' ? 0 : event.key === 'End' ? workspaceTabs.length - 1 : index + (event.key === 'ArrowRight' ? 1 : -1);
+            next = (next + workspaceTabs.length) % workspaceTabs.length;
+            activateWorkspace(workspaceTabs[next].dataset.workspaceTab, true);
+        });
+    });
+    const requestedWorkspace = new URLSearchParams(window.location.search).get('workspace');
+    const hasHistoryContext = {{ request()->filled('edit') || request()->filled('search') || request()->filled('status') || request()->filled('type') ? 'true' : 'false' }};
+    activateWorkspace(requestedWorkspace === 'history' || hasHistoryContext ? 'history' : 'create');
+
     const tabs = document.querySelectorAll('.invitation-tab');
     const panels = document.querySelectorAll('.invitation-panel');
 
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const target = tab.dataset.tab;
-            tabs.forEach(btn => btn.classList.toggle('active', btn === tab));
-            panels.forEach(panel => panel.classList.toggle('active', panel.dataset.panel === target));
+    const activateInvitationType = (target, focus = false) => {
+        const selected = Array.from(tabs).find(tab => tab.dataset.tab === target) || tabs[0];
+        tabs.forEach(btn => {
+            const active = btn === selected;
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-selected', String(active));
+            btn.tabIndex = active ? 0 : -1;
+        });
+        panels.forEach(panel => {
+            const active = panel.dataset.panel === selected?.dataset.tab;
+            panel.classList.toggle('active', active);
+            panel.hidden = !active;
+        });
+        if (focus) selected?.focus();
+    };
+    tabs.forEach((tab, index) => {
+        tab.setAttribute('role', 'tab');
+        tab.addEventListener('click', () => activateInvitationType(tab.dataset.tab));
+        tab.addEventListener('keydown', event => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            let next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : index + (event.key === 'ArrowRight' ? 1 : -1);
+            next = (next + tabs.length) % tabs.length;
+            activateInvitationType(tabs[next].dataset.tab, true);
         });
     });
+    if (tabs.length) activateInvitationType({{ request()->filled('property_id') || request()->filled('unit_id') || $isLandlord ? "'tenant'" : "'landlord'" }});
 
     const property = document.getElementById('tenantInviteProperty');
     const unit = document.getElementById('tenantInviteUnit');

@@ -127,7 +127,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin.security')->group(func
         Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password');
         Route::put('/settings/tenant-preferences', [SettingsController::class, 'updateTenantPreferences'])->name('settings.tenant-preferences');
         Route::put('/settings/payment', [SettingsController::class, 'updatePayment'])->name('settings.payment');
-        Route::put('/settings/passkey', [SettingsController::class, 'updatePasskey'])->name('settings.passkey');
+        Route::middleware('admin.role:SUPER_ADMIN')->group(function () {
+            Route::put('/settings/daraja', [SettingsController::class, 'updateDaraja'])->name('settings.daraja');
+            Route::post('/settings/daraja/test', [SettingsController::class, 'testDaraja'])->name('settings.daraja.test');
+            Route::put('/settings/maintenance', [SettingsController::class, 'updateMaintenance'])->name('settings.maintenance');
+        });
         Route::get('/downloads', [DownloadsController::class, 'index'])->name('downloads.index');
         Route::get('/downloads/apk/download', [DownloadsController::class, 'downloadApk'])
             ->name('downloads.apk.download');

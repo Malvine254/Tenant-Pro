@@ -206,6 +206,11 @@
         color: #93c5fd;
         font-size: 13px;
     }
+    .settings-status-row { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px; }
+    .settings-status { padding:12px;border:1px solid rgba(148,163,184,.18);border-radius:12px;background:rgba(15,23,42,.65); }
+    .settings-status span { display:block;color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px; }
+    .settings-status strong { color:#f8fafc;font-size:13px;overflow-wrap:anywhere; }
+    .danger-zone { border-color:rgba(248,113,113,.28);background:linear-gradient(180deg,rgba(127,29,29,.15),rgba(15,23,42,.72)); }
     @media (max-width: 980px) {
         .settings-shell {
             grid-template-columns: 1fr;
@@ -218,6 +223,7 @@
         .tenant-preferences-grid {
             grid-template-columns: 1fr;
         }
+        .settings-status-row { grid-template-columns:1fr; }
     }
 </style>
 
@@ -225,23 +231,24 @@
     <section class="settings-card">
         <div class="settings-card-header">
             <h3>Account & platform settings</h3>
-            <p>Use tabs to manage your profile, security, tenant preferences, and payment operations from one place.</p>
+            <p>{{ $isSuperAdmin ? 'Manage your account, production integrations, and platform availability from one secured workspace.' : 'Manage your profile, security, tenant preferences, and payment operations from one place.' }}</p>
         </div>
 
-        <nav class="settings-tabs" aria-label="Settings tabs">
-            <button type="button" class="settings-tab" data-tab-target="account">Account</button>
-            <button type="button" class="settings-tab" data-tab-target="security">Security</button>
+        <nav class="settings-tabs" role="tablist" aria-label="Settings tabs">
+            <button id="settings-tab-account" type="button" role="tab" aria-controls="settings-pane-account" class="settings-tab" data-tab-target="account">Account</button>
+            <button id="settings-tab-security" type="button" role="tab" aria-controls="settings-pane-security" class="settings-tab" data-tab-target="security">Security</button>
             @if($isLandlord)
-                <button type="button" class="settings-tab" data-tab-target="tenants">Tenant Preferences</button>
-                <button type="button" class="settings-tab" data-tab-target="payment">Payment</button>
+                <button id="settings-tab-tenants" type="button" role="tab" aria-controls="settings-pane-tenants" class="settings-tab" data-tab-target="tenants">Tenant Preferences</button>
+                <button id="settings-tab-payment" type="button" role="tab" aria-controls="settings-pane-payment" class="settings-tab" data-tab-target="payment">Payment</button>
             @endif
-            @if($isAdmin)
-                <button type="button" class="settings-tab" data-tab-target="platform">Platform</button>
+            @if($isSuperAdmin)
+                <button id="settings-tab-daraja" type="button" role="tab" aria-controls="settings-pane-daraja" class="settings-tab" data-tab-target="daraja">Daraja API</button>
+                <button id="settings-tab-maintenance" type="button" role="tab" aria-controls="settings-pane-maintenance" class="settings-tab" data-tab-target="maintenance">Maintenance</button>
             @endif
         </nav>
         <div class="divider"></div>
 
-        <div class="settings-pane" data-tab-pane="account">
+        <div id="settings-pane-account" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-account" data-tab-pane="account">
             <form method="POST" action="{{ route('admin.settings.account') }}" class="settings-form">
                 @csrf
                 @method('PUT')
@@ -272,7 +279,7 @@
             </form>
         </div>
 
-        <div class="settings-pane" data-tab-pane="security">
+        <div id="settings-pane-security" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-security" data-tab-pane="security">
             <form method="POST" action="{{ route('admin.settings.password') }}" class="settings-form">
                 @csrf
                 @method('PUT')
@@ -300,7 +307,7 @@
         </div>
 
         @if($isLandlord)
-            <div class="settings-pane" data-tab-pane="tenants">
+            <div id="settings-pane-tenants" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-tenants" data-tab-pane="tenants">
                 <form method="POST" action="{{ route('admin.settings.tenant-preferences') }}" class="settings-form">
                     @csrf
                     @method('PUT')
@@ -338,7 +345,7 @@
         @endif
 
         @if($isLandlord)
-        <div class="settings-pane" data-tab-pane="payment">
+        <div id="settings-pane-payment" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-payment" data-tab-pane="payment">
             <form method="POST" action="{{ route('admin.settings.payment') }}" class="settings-form">
                 @csrf
                 @method('PUT')
@@ -391,24 +398,102 @@
         </div>
         @endif
 
-        @if($isAdmin)
-            <div class="settings-pane" data-tab-pane="platform">
-                <form method="POST" action="{{ route('admin.settings.passkey') }}" class="settings-form">
+        @if($isSuperAdmin)
+            <div id="settings-pane-daraja" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-daraja" data-tab-pane="daraja">
+                <form method="POST" action="{{ route('admin.settings.daraja') }}" class="settings-form">
                     @csrf
                     @method('PUT')
-                    <input type="hidden" name="_settings_tab" value="platform">
+                    <input type="hidden" name="_settings_tab" value="daraja">
+
+                    <div class="settings-status-row">
+                        <div class="settings-status"><span>Environment</span><strong>{{ ucfirst($darajaSettings['environment']) }}</strong></div>
+                        <div class="settings-status"><span>Credential status</span><strong style="color:{{ $darajaSettings['ready'] ? '#86efac' : '#fca5a5' }};">{{ $darajaSettings['ready'] ? 'Ready' : 'Incomplete' }}</strong></div>
+                        <div class="settings-status"><span>Consumer key</span><strong>{{ $darajaSettings['consumer_key_masked'] ?: 'Not configured' }}</strong></div>
+                    </div>
 
                     <div class="settings-grid">
-                        <div class="field" style="grid-column: 1 / -1;">
-                            <label for="passkey">Global Daraja passkey</label>
-                            <input id="passkey" name="passkey" value="{{ old('passkey', $globalPasskey ?? '') }}" placeholder="Paste the shared Daraja passkey" required>
+                        <div class="field">
+                            <label for="daraja_environment">Environment</label>
+                            <select id="daraja_environment" name="environment" required>
+                                <option value="sandbox" @selected(old('environment', $darajaSettings['environment']) === 'sandbox')>Sandbox</option>
+                                <option value="production" @selected(old('environment', $darajaSettings['environment']) === 'production')>Production</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="daraja_shortcode">Default shortcode</label>
+                            <input id="daraja_shortcode" inputmode="numeric" name="shortcode" value="{{ old('shortcode', $darajaSettings['shortcode']) }}" placeholder="Paybill or Till shortcode" required>
+                        </div>
+                        <div class="field" style="grid-column:1/-1;">
+                            <label for="daraja_callback_url">Callback URL</label>
+                            <input id="daraja_callback_url" type="url" name="callback_url" value="{{ old('callback_url', $darajaSettings['callback_url']) }}" placeholder="https://app.starmaxltd.com/api/payments/mpesa/callback" required>
+                        </div>
+                        <div class="field">
+                            <label for="daraja_consumer_key">Consumer key</label>
+                            <input id="daraja_consumer_key" type="password" name="consumer_key" autocomplete="new-password" placeholder="{{ $darajaSettings['consumer_key_masked'] ?: 'Enter consumer key' }}">
+                        </div>
+                        <div class="field">
+                            <label for="daraja_consumer_secret">Consumer secret</label>
+                            <input id="daraja_consumer_secret" type="password" name="consumer_secret" autocomplete="new-password" placeholder="{{ $darajaSettings['consumer_secret_configured'] ? 'Configured — leave blank to keep' : 'Enter consumer secret' }}">
+                        </div>
+                        <div class="field">
+                            <label for="daraja_passkey">Lipa na M-PESA passkey</label>
+                            <input id="daraja_passkey" type="password" name="passkey" autocomplete="new-password" placeholder="{{ $darajaSettings['passkey_configured'] ? 'Configured — leave blank to keep' : 'Enter passkey' }}">
+                        </div>
+                        <div class="field">
+                            <label for="daraja_current_password">Confirm your password</label>
+                            <input id="daraja_current_password" type="password" name="current_password" autocomplete="current-password" required>
                         </div>
                     </div>
 
-                    <p class="tab-note">Platform settings apply globally. Restrict changes to trusted operations administrators.</p>
+                    <label class="check-row" for="daraja_simulate" style="margin-top:14px;">
+                        <input id="daraja_simulate" name="simulate" type="checkbox" value="1" @checked(old('simulate', $darajaSettings['simulate']))>
+                        <span>Simulate payments locally when the environment is Sandbox. Production always disables simulation.</span>
+                    </label>
+                    <p class="tab-note">Credentials are encrypted in the database and never displayed again. Leave a secret field blank to retain its current value.</p>
 
                     <div class="actions-row">
-                        <button type="submit" class="btn btn-primary">Save global passkey</button>
+                        <button type="submit" class="btn btn-primary">Save Daraja configuration</button>
+                    </div>
+                </form>
+
+                <div class="divider"></div>
+                <form method="POST" action="{{ route('admin.settings.daraja.test') }}" class="settings-form">
+                    @csrf
+                    <div class="field" style="max-width:420px;">
+                        <label for="daraja_test_password">Confirm password to test connection</label>
+                        <input id="daraja_test_password" type="password" name="current_password" autocomplete="current-password" required>
+                    </div>
+                    <div class="actions-row"><button type="submit" class="btn btn-secondary" data-loading-text="Testing connection…">Test Daraja authentication</button></div>
+                </form>
+            </div>
+
+            <div id="settings-pane-maintenance" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-maintenance" data-tab-pane="maintenance">
+                <form method="POST" action="{{ route('admin.settings.maintenance') }}" class="settings-form">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="_settings_tab" value="maintenance">
+                    <div class="settings-status-row">
+                        <div class="settings-status"><span>Customer access</span><strong style="color:{{ $maintenanceSettings['enabled'] ? '#fca5a5' : '#86efac' }};">{{ $maintenanceSettings['enabled'] ? 'Maintenance active' : 'Online' }}</strong></div>
+                        <div class="settings-status"><span>Admin portal</span><strong>Remains available</strong></div>
+                        <div class="settings-status"><span>M-PESA callbacks</span><strong>Remain available</strong></div>
+                    </div>
+                    <div class="settings-card danger-zone" style="box-shadow:none;">
+                        <div class="settings-form">
+                            <label class="check-row" for="maintenance_enabled">
+                                <input id="maintenance_enabled" name="enabled" type="checkbox" value="1" @checked(old('enabled', $maintenanceSettings['enabled']))>
+                                <span>Put tenant-facing web and Android API operations into maintenance mode</span>
+                            </label>
+                            <div class="field" style="margin-top:14px;">
+                                <label for="maintenance_message">Customer message</label>
+                                <textarea id="maintenance_message" name="message" maxlength="500" required>{{ old('message', $maintenanceSettings['message']) }}</textarea>
+                            </div>
+                            <div class="field" style="margin-top:14px;">
+                                <label for="maintenance_password">Confirm your password</label>
+                                <input id="maintenance_password" type="password" name="current_password" autocomplete="current-password" required>
+                            </div>
+                            <p class="tab-note">Health checks, the admin portal, and M-PESA callbacks are deliberately excluded to prevent lockout and lost payment confirmations.</p>
+                            <div class="actions-row"><button type="submit" class="btn {{ $maintenanceSettings['enabled'] ? 'btn-secondary' : 'btn-danger' }}">{{ $maintenanceSettings['enabled'] ? 'Disable maintenance mode' : 'Apply maintenance setting' }}</button></div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -416,8 +501,8 @@
     </section>
 
     <aside class="helper-panel">
-        <h4>Landlord workspace</h4>
-        <p>Configure payment, tenant onboarding defaults, and account details without leaving the admin module.</p>
+        <h4>{{ $isSuperAdmin ? 'Platform control centre' : 'Landlord workspace' }}</h4>
+        <p>{{ $isSuperAdmin ? 'Sensitive system changes require your current password and are written to the administrative audit log.' : 'Configure payment, tenant onboarding defaults, and account details without leaving the admin module.' }}</p>
 
         @if($isLandlord)
             <div class="summary-grid">
@@ -440,6 +525,17 @@
             </div>
         @endif
 
+        @if($isSuperAdmin)
+            <div class="settings-card" style="padding:14px;box-shadow:none;margin-bottom:16px;">
+                <h4 style="margin:0 0 6px;">Operational safeguards</h4>
+                <p style="margin-bottom:12px;">Review privileged changes before deployment and use controlled tools for production operations.</p>
+                <div class="actions-row" style="margin:0;">
+                    <a class="btn btn-secondary" href="{{ route('admin.audit-logs.index') }}">Open audit log</a>
+                    <a class="btn btn-secondary" href="{{ route('admin.deployment-tools.index') }}">Deployment tools</a>
+                </div>
+            </div>
+        @endif
+
         <ul>
             <li>Account tab updates your personal profile details used across the dashboard.</li>
             <li>Security tab allows changing password with current-password verification.</li>
@@ -447,8 +543,9 @@
             @if($isLandlord)
                 <li>Payment stores the landlord-specific Daraja channel used by tenant billing flows.</li>
             @endif
-            @if($isAdmin)
-                <li>Platform tab is reserved for global Daraja passkey management.</li>
+            @if($isSuperAdmin)
+                <li>Daraja credentials are encrypted and masked after saving.</li>
+                <li>Maintenance mode preserves admin recovery, health endpoints, and payment callbacks.</li>
             @endif
         </ul>
     </aside>
@@ -471,22 +568,35 @@
             return validTabs[0] || 'account';
         }
 
-        function activateTab(tabName) {
+        function activateTab(tabName, focus = false) {
             tabs.forEach((tab) => {
-                tab.classList.toggle('is-active', tab.dataset.tabTarget === tabName);
+                const active = tab.dataset.tabTarget === tabName;
+                tab.classList.toggle('is-active', active);
+                tab.setAttribute('aria-selected', String(active));
+                tab.tabIndex = active ? 0 : -1;
             });
             panes.forEach((pane) => {
-                pane.classList.toggle('is-active', pane.dataset.tabPane === tabName);
+                const active = pane.dataset.tabPane === tabName;
+                pane.classList.toggle('is-active', active);
+                pane.hidden = !active;
             });
 
             const url = new URL(window.location.href);
             url.searchParams.set('tab', tabName);
             window.history.replaceState({}, '', url);
+            if (focus) tabs.find(tab => tab.dataset.tabTarget === tabName)?.focus();
         }
 
-        tabs.forEach((tab) => {
+        tabs.forEach((tab, index) => {
             tab.addEventListener('click', function () {
                 activateTab(this.dataset.tabTarget);
+            });
+            tab.addEventListener('keydown', function (event) {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                event.preventDefault();
+                let next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : index + (event.key === 'ArrowRight' ? 1 : -1);
+                next = (next + tabs.length) % tabs.length;
+                activateTab(tabs[next].dataset.tabTarget, true);
             });
         });
 

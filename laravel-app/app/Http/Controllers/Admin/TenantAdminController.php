@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Role;
 use App\Models\Property;
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
@@ -12,8 +12,9 @@ use App\Services\TenantAppNotificationService;
 use App\Services\TenantBillingService;
 use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class TenantAdminController extends Controller
 {
@@ -28,20 +29,20 @@ class TenantAdminController extends Controller
                         ->with(['unit.property'])
                         ->when(
                             $this->isLandlord($user),
-                            fn($query) => $query->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id))
+                            fn ($query) => $query->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $user->id))
                         )
                         ->orderByDesc('move_in_date');
                 },
             ])
-            ->whereHas('role', fn($role) => $role->where('name', 'TENANT'))
+            ->whereHas('role', fn ($role) => $role->where('name', 'TENANT'))
             ->whereHas('tenancies', function ($tenancyQuery) use ($user) {
                 $tenancyQuery->where('is_active', true)
                     ->when(
                         $this->isLandlord($user),
-                        fn($query) => $query->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id))
+                        fn ($query) => $query->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $user->id))
                     );
             })
-            ->when($request->search, fn($query) => $query->where(function ($userQuery) use ($request) {
+            ->when($request->search, fn ($query) => $query->where(function ($userQuery) use ($request) {
                 $userQuery->where('name', 'like', "%{$request->search}%")
                     ->orWhere('email', 'like', "%{$request->search}%")
                     ->orWhere('phone_number', 'like', "%{$request->search}%");
@@ -50,8 +51,8 @@ class TenantAdminController extends Controller
             ->paginate(15);
 
         $unassignedTenantUsers = $this->unassignedTenantUsers($request)
-            ->limit(10)
-            ->get();
+            ->paginate(15, ['*'], 'unassigned_page')
+            ->withQueryString();
 
         return view('admin.tenants.index', compact('tenantUsers', 'unassignedTenantUsers'));
     }
@@ -90,7 +91,7 @@ class TenantAdminController extends Controller
         );
 
         $tenantUser = User::create([
-            'name' => trim($data['first_name'] . ' ' . $data['last_name']),
+            'name' => trim($data['first_name'].' '.$data['last_name']),
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
             'email' => $data['email'],
@@ -111,6 +112,7 @@ class TenantAdminController extends Controller
                 ]
             );
             $unit->update(['status' => 'OCCUPIED']);
+
             return $tenant;
         });
 
@@ -153,7 +155,13 @@ class TenantAdminController extends Controller
         ]);
 
         $tenantUser = User::where('id', $data['user_id'])
-            ->whereHas('role', fn($role) => $role->where('name', 'TENANT'))
+            ->whereHas('role', fn ($role) => $role->where('name', 'TENANT'))
+            ->when($this->isLandlord($admin), fn ($query) => $query->whereHas(
+                'receivedInvitations',
+                fn ($invitations) => $invitations
+                    ->where('sent_by_id', $admin->id)
+                    ->where('invite_type', 'TENANT')
+            ))
             ->firstOrFail();
 
         $unit = Unit::with('property')->findOrFail($data['unit_id']);
@@ -213,7 +221,7 @@ class TenantAdminController extends Controller
             ->where('is_active', true)
             ->when(
                 $this->isLandlord($user),
-                fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $user->id))
+                fn ($q) => $q->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $user->id))
             )
             ->orderByDesc('move_in_date')
             ->get();
@@ -229,7 +237,7 @@ class TenantAdminController extends Controller
             403
         );
 
-        if (!$tenant->is_active) {
+        if (! $tenant->is_active) {
             return back()->with('error', 'This tenant is already unassigned.');
         }
 
@@ -252,7 +260,7 @@ class TenantAdminController extends Controller
             ->route('admin.tenants.index')
             ->with(
                 'success',
-                'Tenancy closed on '.\Illuminate\Support\Carbon::parse($data['move_out_date'])->format('d M Y').' and the unit was marked available.'
+                'Tenancy closed on '.Carbon::parse($data['move_out_date'])->format('d M Y').' and the unit was marked available.'
                 .($emailSent ? ' Tenant was notified by email.' : ' Email notification could not be sent; check mail logs.')
             );
     }
@@ -267,11 +275,11 @@ class TenantAdminController extends Controller
         $user = $request->user();
 
         return Unit::with('property')
-            ->whereDoesntHave('tenant', fn($tenant) => $tenant->where('is_active', true))
-            ->when($this->isLandlord($user), fn($q) => $q->whereHas('property', fn($property) => $property->where('landlord_id', $user->id)))
+            ->whereDoesntHave('tenant', fn ($tenant) => $tenant->where('is_active', true))
+            ->when($this->isLandlord($user), fn ($q) => $q->whereHas('property', fn ($property) => $property->where('landlord_id', $user->id)))
             ->orderBy('unit_number')
             ->get()
-            ->sortBy(fn($unit) => ($unit->property?->name ?? '') . ' ' . $unit->unit_number);
+            ->sortBy(fn ($unit) => ($unit->property?->name ?? '').' '.$unit->unit_number);
     }
 
     private function assignableProperties(Request $request)
@@ -279,10 +287,10 @@ class TenantAdminController extends Controller
         $user = $request->user();
 
         return Property::query()
-            ->when($this->isLandlord($user), fn($query) => $query->where('landlord_id', $user->id))
-            ->whereHas('units', fn($units) => $units->whereDoesntHave(
+            ->when($this->isLandlord($user), fn ($query) => $query->where('landlord_id', $user->id))
+            ->whereHas('units', fn ($units) => $units->whereDoesntHave(
                 'tenant',
-                fn($tenant) => $tenant->where('is_active', true)
+                fn ($tenant) => $tenant->where('is_active', true)
             ))
             ->orderBy('name')
             ->get();
@@ -290,10 +298,18 @@ class TenantAdminController extends Controller
 
     private function unassignedTenantUsers(Request $request)
     {
+        $user = $request->user();
+
         return User::with('role')
-            ->whereHas('role', fn($role) => $role->where('name', 'TENANT'))
-            ->whereDoesntHave('tenancies', fn($tenant) => $tenant->where('is_active', true))
-            ->when($request->search, fn($query) => $query->where(function ($userQuery) use ($request) {
+            ->whereHas('role', fn ($role) => $role->where('name', 'TENANT'))
+            ->whereDoesntHave('tenancies', fn ($tenant) => $tenant->where('is_active', true))
+            ->when($this->isLandlord($user), fn ($query) => $query->whereHas(
+                'receivedInvitations',
+                fn ($invitations) => $invitations
+                    ->where('sent_by_id', $user->id)
+                    ->where('invite_type', 'TENANT')
+            ))
+            ->when($request->search, fn ($query) => $query->where(function ($userQuery) use ($request) {
                 $userQuery->where('name', 'like', "%{$request->search}%")
                     ->orWhere('email', 'like', "%{$request->search}%")
                     ->orWhere('phone_number', 'like', "%{$request->search}%");
@@ -303,9 +319,18 @@ class TenantAdminController extends Controller
 
     private function tenantUsersForAssignment(Request $request)
     {
+        $user = $request->user();
+
         return User::with('role')
-            ->whereHas('role', fn($role) => $role->where('name', 'TENANT'))
-            ->when($request->search, fn($query) => $query->where(function ($userQuery) use ($request) {
+            ->whereHas('role', fn ($role) => $role->where('name', 'TENANT'))
+            ->whereDoesntHave('tenancies', fn ($tenant) => $tenant->where('is_active', true))
+            ->when($this->isLandlord($user), fn ($query) => $query->whereHas(
+                'receivedInvitations',
+                fn ($invitations) => $invitations
+                    ->where('sent_by_id', $user->id)
+                    ->where('invite_type', 'TENANT')
+            ))
+            ->when($request->search, fn ($query) => $query->where(function ($userQuery) use ($request) {
                 $userQuery->where('name', 'like', "%{$request->search}%")
                     ->orWhere('email', 'like', "%{$request->search}%")
                     ->orWhere('phone_number', 'like', "%{$request->search}%");

@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Payment;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Tenant;
+use App\Services\MpesaService;
 use App\Services\TenantAppNotificationService;
 use App\Services\TenantEmailService;
-use App\Services\MpesaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
@@ -18,9 +19,10 @@ class PaymentController extends Controller
     {
         $user = $request->user();
         $query = Payment::with(['invoice.tenant', 'invoice.unit', 'transactions'])
-            ->when($this->isTenant($user), fn($q) => $q->whereHas('invoice', fn($invoice) => $invoice->where('tenant_id', $user->id)))
-            ->when($user?->role?->name === 'LANDLORD', fn($q) => $q->whereHas('invoice.unit.property', fn($property) => $property->where('landlord_id', $user->id)))
-            ->when($request->invoice_id, fn($q) => $q->where('invoice_id', $request->invoice_id));
+            ->when($this->isTenant($user), fn ($q) => $q->whereHas('invoice', fn ($invoice) => $invoice->where('tenant_id', $user->id)))
+            ->when($user?->role?->name === 'LANDLORD', fn ($q) => $q->whereHas('invoice.unit.property', fn ($property) => $property->where('landlord_id', $user->id)))
+            ->when($request->invoice_id, fn ($q) => $q->where('invoice_id', $request->invoice_id));
+
         return response()->json($query->latest()->paginate(min(max($request->integer('per_page', 15), 1), 100)));
     }
 
@@ -37,7 +39,7 @@ class PaymentController extends Controller
             'status' => 'nullable|in:PENDING,SUCCESSFUL,FAILED,CANCELLED,EXPIRED,REVERSED',
             'reference' => 'nullable|string|unique:payments,reference',
         ]);
-        abort_if($this->isTenant($user) && !Invoice::where('id', $data['invoice_id'])->where('tenant_id', $user->id)->exists(), 403);
+        abort_if($this->isTenant($user) && ! Invoice::where('id', $data['invoice_id'])->where('tenant_id', $user->id)->exists(), 403);
         $this->requireUnitManager($user, Invoice::with('unit.property')->findOrFail($data['invoice_id'])->unit);
 
         $data['status'] = $data['status'] ?? 'SUCCESSFUL';
@@ -81,7 +83,9 @@ class PaymentController extends Controller
     {
         $user = request()->user();
         abort_if($this->isTenant($user) && $payment->invoice()->where('tenant_id', $user->id)->doesntExist(), 403);
-        if ($user?->role?->name === 'LANDLORD') $this->requireUnitManager($user, $payment->invoice->unit);
+        if ($user?->role?->name === 'LANDLORD') {
+            $this->requireUnitManager($user, $payment->invoice->unit);
+        }
 
         return response()->json($payment->load(['invoice.tenant', 'invoice.unit', 'transactions']));
     }
@@ -98,11 +102,14 @@ class PaymentController extends Controller
             $this->isTenant($request->user()) && ! $this->hasActiveTenancy($request->user()->id, $invoice->unit_id),
             404
         );
-        if ($request->user()?->role?->name === 'LANDLORD') $this->requireUnitManager($request->user(), $invoice->unit);
+        if ($request->user()?->role?->name === 'LANDLORD') {
+            $this->requireUnitManager($request->user(), $invoice->unit);
+        }
+
         return response()->json($invoice->payments()->with('transactions')->latest()->get());
     }
 
-    public function manualInstructions(Request $request)
+    public function manualInstructions(Request $request, MpesaService $mpesa)
     {
         abort_unless($this->isTenant($request->user()), 403, 'Only tenant accounts can view payment instructions.');
         $data = $request->validate([
@@ -135,7 +142,7 @@ class PaymentController extends Controller
             : ($settings['paybill_number'] ?? '')));
         $number = $configuredNumber;
         $reference = trim((string) ($settings['account_reference'] ?? ''));
-        $isProduction = config('services.mpesa.environment') === 'production';
+        $isProduction = $mpesa->environment() === 'production';
         $hasRequiredDetails = $number !== '' && (
             $type === 'TILL' || ($reference !== '' && strcasecmp($reference, 'Tenant Pro') !== 0)
         );
@@ -221,9 +228,13 @@ class PaymentController extends Controller
         $remaining = $amount;
         $allocations = [];
         foreach ($orderedInvoices as $selectedInvoice) {
-            if ($remaining <= 0) break;
+            if ($remaining <= 0) {
+                break;
+            }
             $allocated = min($remaining, (float) $balances[$selectedInvoice->id]);
-            if ($allocated > 0) $allocations[] = ['invoice_id' => $selectedInvoice->id, 'amount' => round($allocated, 2)];
+            if ($allocated > 0) {
+                $allocations[] = ['invoice_id' => $selectedInvoice->id, 'amount' => round($allocated, 2)];
+            }
             $remaining = round($remaining - $allocated, 2);
         }
         $invoice = $orderedInvoices->first();
@@ -239,12 +250,9 @@ class PaymentController extends Controller
             'metadata' => ['invoice_allocations' => $allocations],
         ]);
 
-        if (
-            config('services.mpesa.environment') === 'sandbox'
-            && filter_var(config('services.mpesa.simulate'), FILTER_VALIDATE_BOOL)
-        ) {
-            $checkoutId = 'SIM-'.strtoupper((string) \Illuminate\Support\Str::uuid());
-            $receipt = 'SIM'.strtoupper(substr(str_replace('-', '', (string) \Illuminate\Support\Str::uuid()), 0, 10));
+        if ($mpesa->simulationEnabled()) {
+            $checkoutId = 'SIM-'.strtoupper((string) Str::uuid());
+            $receipt = 'SIM'.strtoupper(substr(str_replace('-', '', (string) Str::uuid()), 0, 10));
 
             DB::transaction(function () use ($payment, $checkoutId, $receipt) {
                 $lockedPayment = Payment::whereKey($payment->id)->lockForUpdate()->firstOrFail();
@@ -353,6 +361,7 @@ class PaymentController extends Controller
                     'processed_at' => now(),
                     'raw_payload' => $callback,
                 ]);
+
                 return null;
             }
 
@@ -371,6 +380,7 @@ class PaymentController extends Controller
                     'raw_payload' => $callback,
                 ]);
                 Log::warning('Successful M-Pesa callback had no receipt', ['payment_id' => $payment->id]);
+
                 return null;
             }
 
@@ -392,6 +402,7 @@ class PaymentController extends Controller
                     'expected' => (float) $payment->amount,
                     'received' => $callbackAmount,
                 ]);
+
                 return null;
             }
 
@@ -408,6 +419,7 @@ class PaymentController extends Controller
                     'raw_payload' => $callback,
                 ]);
                 Log::warning('Duplicate M-Pesa receipt rejected', ['payment_id' => $payment->id]);
+
                 return null;
             }
 
@@ -495,7 +507,9 @@ class PaymentController extends Controller
     private function sendPaymentNotifications(string $paymentId): void
     {
         $payment = Payment::with('invoice.tenant', 'invoice.unit.property')->find($paymentId);
-        if (! $payment) return;
+        if (! $payment) {
+            return;
+        }
 
         try {
             app(TenantEmailService::class)->paymentReceived($payment);

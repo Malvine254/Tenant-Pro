@@ -11,29 +11,29 @@ class EnsureAdminRole
 {
     public function __construct(
         private readonly LandlordSubscriptionService $subscriptionService,
-    ) {
-    }
+    ) {}
 
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             abort(401);
         }
 
         $role = $user->role?->name;
-        if (!$role || !in_array($role, $roles, true)) {
+        if (! $role || ! in_array($role, $roles, true)) {
             abort(403, 'You are not authorized to access this area.');
         }
 
-        abort_if(!$user->is_active, 403, 'Your account is suspended.');
+        abort_if(! $user->is_active, 403, 'Your account is suspended.');
 
         if ($role === 'LANDLORD') {
             $evaluation = $this->subscriptionService->evaluate($user);
-            if (!$evaluation['allowed']) {
+            if (! $evaluation['allowed']) {
                 if ($this->isSubscriptionRecoveryRoute($request)) {
                     $request->attributes->set('subscription_evaluation', $evaluation);
+
                     return $next($request);
                 }
 
@@ -60,7 +60,6 @@ class EnsureAdminRole
             'admin.settings.index',
             'admin.settings.account',
             'admin.settings.password',
-            'admin.settings.passkey',
             'admin.downloads.index',
             'admin.downloads.apk.download',
         );

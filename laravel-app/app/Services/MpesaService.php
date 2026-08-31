@@ -9,12 +9,14 @@ use RuntimeException;
 
 class MpesaService
 {
+    public function __construct(private readonly PlatformSettingsService $platformSettings) {}
+
     public function stkPush(string $phone, float $amount, string $reference, string $description, ?array $landlordSettings = null): array
     {
         $timestamp = now()->format('YmdHis');
         $settings = $this->resolveDarajaConfig($landlordSettings);
         $shortCode = trim((string) ($settings['shortcode'] ?? ''));
-        $passkey = (string) ($settings['passkey'] ?? config('services.mpesa.passkey'));
+        $passkey = (string) ($settings['passkey'] ?? $this->platformSettings->daraja()['passkey']);
         $transactionType = (string) ($settings['transaction_type'] ?? 'CustomerPayBillOnline');
         $accountReference = trim((string) ($settings['account_reference'] ?? ''));
 
@@ -31,7 +33,7 @@ class MpesaService
             'PartyA' => $this->normalizePhone($phone),
             'PartyB' => (string) ($settings['party_b'] ?? $shortCode),
             'PhoneNumber' => $this->normalizePhone($phone),
-            'CallBackURL' => (string) config('services.mpesa.callback_url'),
+            'CallBackURL' => (string) $this->platformSettings->daraja()['callback_url'],
             'AccountReference' => substr($accountReference, 0, 12),
             'TransactionDesc' => substr($description, 0, 30),
         ]);
@@ -58,9 +60,10 @@ class MpesaService
             if ($shortcode === '') {
                 throw new RuntimeException('A Till number must be configured before requesting an STK Push.');
             }
+
             return [
                 'shortcode' => $shortcode,
-                'passkey' => (string) config('services.mpesa.passkey'),
+                'passkey' => (string) $this->platformSettings->daraja()['passkey'],
                 'transaction_type' => 'CustomerBuyGoodsOnline',
                 'party_b' => $shortcode,
                 'account_reference' => trim((string) ($settings['account_reference'] ?? '')) ?: 'Till payment',
@@ -72,9 +75,10 @@ class MpesaService
         if ($shortcode === '' || $accountReference === '' || strcasecmp($accountReference, 'Tenant Pro') === 0) {
             throw new RuntimeException('A Paybill number and account reference must be configured before requesting an STK Push.');
         }
+
         return [
             'shortcode' => $shortcode,
-            'passkey' => (string) config('services.mpesa.passkey'),
+            'passkey' => (string) $this->platformSettings->daraja()['passkey'],
             'transaction_type' => 'CustomerPayBillOnline',
             'party_b' => $shortcode,
             'account_reference' => $accountReference,
@@ -92,9 +96,12 @@ class MpesaService
 
     private function accessToken(): string
     {
-        return Cache::remember('mpesa.oauth_token', now()->addMinutes(55), function (): string {
-            $key = (string) config('services.mpesa.consumer_key');
-            $secret = (string) config('services.mpesa.consumer_secret');
+        $daraja = $this->platformSettings->daraja();
+        $key = (string) $daraja['consumer_key'];
+        $secret = (string) $daraja['consumer_secret'];
+        $cacheKey = 'mpesa.oauth_token.'.hash('sha256', $daraja['environment'].'|'.$key.'|'.$secret);
+
+        return Cache::remember($cacheKey, now()->addMinutes(55), function () use ($key, $secret): string {
             if ($key === '' || $secret === '') {
                 throw new RuntimeException('M-Pesa consumer credentials are not configured.');
             }
@@ -114,9 +121,25 @@ class MpesaService
 
     private function baseUrl(): string
     {
-        return config('services.mpesa.environment') === 'production'
+        return $this->platformSettings->daraja()['environment'] === 'production'
             ? 'https://api.safaricom.co.ke'
             : 'https://sandbox.safaricom.co.ke';
+    }
+
+    public function testConnection(): void
+    {
+        $this->accessToken();
+    }
+
+    public function environment(): string
+    {
+        return (string) $this->platformSettings->daraja()['environment'];
+    }
+
+    public function simulationEnabled(): bool
+    {
+        return $this->environment() === 'sandbox'
+            && (bool) $this->platformSettings->daraja()['simulate'];
     }
 
     private function normalizePhone(string $phone): string

@@ -4,6 +4,7 @@ use App\Http\Middleware\AddAdminSecurityHeaders;
 use App\Http\Middleware\EnsureAccountAccess;
 use App\Http\Middleware\EnsureAdminRole;
 use App\Http\Middleware\EnsureMobileApiKey;
+use App\Http\Middleware\EnsurePlatformAvailable;
 use App\Http\Middleware\RecordAdminAuditLog;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->append(EnsurePlatformAvailable::class);
         $middleware->redirectGuestsTo(fn (Request $request) => route('admin.login'));
         if (env('APP_ENV') === 'local') {
             $middleware->validateCsrfTokens(except: [

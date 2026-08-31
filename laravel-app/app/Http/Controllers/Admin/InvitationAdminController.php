@@ -30,11 +30,11 @@ class InvitationAdminController extends Controller
         $invitations = Invitation::with(['property', 'unit', 'sentBy'])
             ->when(
                 $isLandlord,
-                fn($query) => $query->where('sent_by_id', $user->id)
+                fn ($query) => $query->where('sent_by_id', $user->id)
             )
-            ->when($request->type, fn($query) => $query->where('invite_type', $request->type))
-            ->when($request->status, fn($query) => $query->where('status', $request->status))
-            ->when($request->search, fn($query) => $query->where(function ($search) use ($request) {
+            ->when($request->type, fn ($query) => $query->where('invite_type', $request->type))
+            ->when($request->status, fn ($query) => $query->where('status', $request->status))
+            ->when($request->search, fn ($query) => $query->where(function ($search) use ($request) {
                 $search->where('invitee_name', 'like', "%{$request->search}%")
                     ->orWhere('email', 'like', "%{$request->search}%")
                     ->orWhere('phone_number', 'like', "%{$request->search}%")
@@ -45,26 +45,28 @@ class InvitationAdminController extends Controller
             ->withQueryString();
 
         $properties = Property::query()
-            ->when($isLandlord, fn($query) => $query->where('landlord_id', $user->id))
-            ->whereHas('units', fn($units) => $units->whereDoesntHave(
+            ->when($isLandlord, fn ($query) => $query->where('landlord_id', $user->id))
+            ->whereHas('units', fn ($units) => $units->whereDoesntHave(
                 'tenant',
-                fn($tenant) => $tenant->where('is_active', true)
+                fn ($tenant) => $tenant->where('is_active', true)
             ))
-            ->with(['units' => fn($units) => $units
-                ->whereDoesntHave('tenant', fn($tenant) => $tenant->where('is_active', true))
+            ->with(['units' => fn ($units) => $units
+                ->whereDoesntHave('tenant', fn ($tenant) => $tenant->where('is_active', true))
                 ->orderBy('unit_number')])
             ->orderBy('name')
             ->get();
 
         $tenantUsers = User::query()
-            ->whereHas('role', fn($role) => $role->where('name', 'TENANT'))
+            ->whereHas('role', fn ($role) => $role->where('name', 'TENANT'))
             ->whereNotNull('email')
             ->when(
                 $isLandlord,
-                fn($query) => $query->where(function ($tenantQuery) use ($user) {
+                fn ($query) => $query->where(function ($tenantQuery) use ($user) {
                     $tenantQuery
-                        ->whereDoesntHave('tenancies', fn($tenancies) => $tenancies->where('is_active', true))
-                        ->orWhereHas('tenancies.unit.property', fn($property) => $property->where('landlord_id', $user->id));
+                        ->whereHas('receivedInvitations', fn ($invitations) => $invitations
+                            ->where('sent_by_id', $user->id)
+                            ->where('invite_type', 'TENANT'))
+                        ->orWhereHas('tenancies.unit.property', fn ($property) => $property->where('landlord_id', $user->id));
                 })
             )
             ->orderBy('name')
@@ -77,7 +79,7 @@ class InvitationAdminController extends Controller
                 ->findOrFail($request->string('edit'));
 
             $this->authorizeInvitation($request, $editingInvitation);
-            abort_if(!in_array($editingInvitation->status, ['PENDING', 'EXPIRED'], true), 422, 'Only pending or expired invitations can be edited.');
+            abort_if(! in_array($editingInvitation->status, ['PENDING', 'EXPIRED'], true), 422, 'Only pending or expired invitations can be edited.');
         }
 
         return view('admin.invitations.index', compact('invitations', 'properties', 'tenantUsers', 'isLandlord', 'tenantInviteExpiryDefault', 'editingInvitation'));
@@ -111,9 +113,16 @@ class InvitationAdminController extends Controller
         $allowMultiUnitAssignment = (bool) ($landlordSettings['allow_multi_unit_assignment'] ?? true);
 
         $selectedTenant = null;
-        if (!empty($data['tenant_user_id'])) {
+        if (! empty($data['tenant_user_id'])) {
             $selectedTenant = User::query()
                 ->with('role')
+                ->when($user?->role?->name === 'LANDLORD', fn ($query) => $query->where(function ($tenantQuery) use ($user) {
+                    $tenantQuery
+                        ->whereHas('receivedInvitations', fn ($invitations) => $invitations
+                            ->where('sent_by_id', $user->id)
+                            ->where('invite_type', 'TENANT'))
+                        ->orWhereHas('tenancies.unit.property', fn ($property) => $property->where('landlord_id', $user->id));
+                }))
                 ->findOrFail($data['tenant_user_id']);
 
             abort_if($selectedTenant->role?->name !== 'TENANT', 422, 'Selected user must be a tenant account.');
@@ -123,7 +132,7 @@ class InvitationAdminController extends Controller
             $data['phone_number'] = $data['phone_number'] ?: $selectedTenant->phone_number;
             $data['invitee_name'] = $data['invitee_name'] ?: $selectedTenant->name;
 
-            if (!$allowMultiUnitAssignment) {
+            if (! $allowMultiUnitAssignment) {
                 $hasActiveTenancy = Tenant::query()
                     ->where('user_id', $selectedTenant->id)
                     ->where('is_active', true)
@@ -140,7 +149,7 @@ class InvitationAdminController extends Controller
             $normalizedEmail,
             (string) ($data['invitee_name'] ?? '')
         );
-        if (!$selectedTenant && !$firstTimeSetup && $loginUser->role?->name === 'TENANT') {
+        if (! $selectedTenant && ! $firstTimeSetup && $loginUser->role?->name === 'TENANT') {
             $selectedTenant = $loginUser;
         }
 
@@ -150,7 +159,7 @@ class InvitationAdminController extends Controller
 
         $autoAssignedTenant = null;
 
-        $invitation = DB::transaction(function () use ($request, $data, $unit, $normalizedEmail, $firstTimeSetup, $selectedTenant, &$autoAssignedTenant) {
+        $invitation = DB::transaction(function () use ($request, $data, $unit, $normalizedEmail, $firstTimeSetup, &$autoAssignedTenant) {
             return Invitation::create([
                 'invite_type' => 'TENANT',
                 'code' => $this->uniqueCode(),
@@ -242,25 +251,25 @@ class InvitationAdminController extends Controller
 
         if ($existingUser) {
             $existingRole = $existingUser->role?->name;
-            if ($existingRole && !in_array($existingRole, ['TENANT', 'ADMIN', 'SUPER_ADMIN'], true)) {
+            if ($existingRole && ! in_array($existingRole, ['TENANT', 'ADMIN', 'SUPER_ADMIN'], true)) {
                 abort(422, 'The invite email already belongs to a non-tenant account. Use another email.');
             }
 
             $updates = [];
-            if (!$existingUser->role_id) {
+            if (! $existingUser->role_id) {
                 $updates['role_id'] = $tenantRole->id;
             }
-            if (!$existingUser->is_active) {
+            if (! $existingUser->is_active) {
                 $updates['is_active'] = true;
             }
-            if (!$existingUser->email_verified_at) {
+            if (! $existingUser->email_verified_at) {
                 $updates['email_verified_at'] = now();
             }
             if (blank($existingUser->name) && trim($inviteeName) !== '') {
                 $updates['name'] = trim($inviteeName);
             }
 
-            if (!empty($updates)) {
+            if (! empty($updates)) {
                 $existingUser->update($updates);
             }
 
@@ -333,7 +342,7 @@ class InvitationAdminController extends Controller
     public function update(Request $request, Invitation $invitation)
     {
         $this->authorizeInvitation($request, $invitation);
-        abort_if(!in_array($invitation->status, ['PENDING', 'EXPIRED'], true), 422, 'Only pending or expired invitations can be edited.');
+        abort_if(! in_array($invitation->status, ['PENDING', 'EXPIRED'], true), 422, 'Only pending or expired invitations can be edited.');
 
         $data = $request->validate([
             'invitee_name' => 'nullable|string|max:160',
@@ -405,7 +414,7 @@ class InvitationAdminController extends Controller
     public function resend(Request $request, Invitation $invitation)
     {
         $this->authorizeInvitation($request, $invitation);
-        abort_if(!in_array($invitation->status, ['PENDING', 'EXPIRED'], true), 422, 'Only pending or expired invitations can be resent.');
+        abort_if(! in_array($invitation->status, ['PENDING', 'EXPIRED'], true), 422, 'Only pending or expired invitations can be resent.');
 
         $invitation->update([
             'status' => 'PENDING',

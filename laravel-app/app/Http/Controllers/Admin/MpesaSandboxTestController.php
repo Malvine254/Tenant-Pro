@@ -4,18 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\MpesaService;
+use App\Services\PlatformSettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class MpesaSandboxTestController extends Controller
 {
-    public function index()
+    public function index(PlatformSettingsService $settings)
     {
         $this->ensureSuperAdmin();
 
         return view('admin.mpesa-sandbox-test', [
-            'environment' => config('services.mpesa.environment', 'sandbox'),
-            'simulate' => filter_var(config('services.mpesa.simulate', true), FILTER_VALIDATE_BOOL),
+            'environment' => $settings->daraja()['environment'],
+            'simulate' => $settings->daraja()['simulate'],
         ]);
     }
 
@@ -38,13 +39,13 @@ class MpesaSandboxTestController extends Controller
         $reference = 'sandbox-test-'.Str::uuid()->toString();
         $accountReference = trim((string) ($data['account_reference'] ?? 'Tenant Pro Sandbox'));
 
-        if (config('services.mpesa.environment') !== 'sandbox') {
+        if ($mpesa->environment() !== 'sandbox') {
             return back()->withErrors([
                 'mpesa' => 'This test page is enabled only for sandbox mode.',
             ])->withInput();
         }
 
-        if (filter_var(config('services.mpesa.simulate', true), FILTER_VALIDATE_BOOL)) {
+        if ($mpesa->simulationEnabled()) {
             return back()->with('success', sprintf(
                 'Sandbox payment simulated successfully. Phone: %s | %s: %s | Amount: KES %s | Receipt: SIM-%s',
                 $phoneNumber,

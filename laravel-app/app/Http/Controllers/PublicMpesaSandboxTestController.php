@@ -2,20 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\MpesaService;
+use App\Services\PlatformSettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class PublicMpesaSandboxTestController extends Controller
 {
-    public function index()
+    public function index(PlatformSettingsService $settings)
     {
         return view('public.mpesa-sandbox-test', [
-            'environment' => config('services.mpesa.environment', 'sandbox'),
-            'simulate' => filter_var(config('services.mpesa.simulate', true), FILTER_VALIDATE_BOOL),
+            'environment' => $settings->daraja()['environment'],
+            'simulate' => $settings->daraja()['simulate'],
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, MpesaService $mpesa)
     {
         $data = $request->validate([
             'payment_type' => ['required', 'string', 'in:PAYBILL,TILL'],
@@ -25,7 +27,7 @@ class PublicMpesaSandboxTestController extends Controller
             'account_reference' => ['nullable', 'string', 'max:50'],
         ]);
 
-        if (config('services.mpesa.environment') !== 'sandbox') {
+        if ($mpesa->environment() !== 'sandbox') {
             return back()->withErrors([
                 'mpesa' => 'This public sandbox test page is available only when the app is in sandbox mode.',
             ])->withInput();

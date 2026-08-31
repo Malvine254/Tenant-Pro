@@ -124,6 +124,7 @@
         </div>
         <div class="tenant-quick-actions">
             <form method="GET" class="admin-filter" style="margin:0;">
+                <input type="hidden" name="tab" value="{{ request('tab', 'active') }}">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name or email...">
                 <button type="submit" class="btn btn-secondary">Search</button>
             </form>
@@ -131,12 +132,13 @@
     </div>
 
     <div class="tenant-tabs" role="tablist" aria-label="Tenant management tabs">
-        <button class="tenant-tab active" type="button" data-tab="overview">Overview</button>
-        <button class="tenant-tab" type="button" data-tab="invite">Invite tenant</button>
-        <button class="tenant-tab" type="button" data-tab="link">Link existing account</button>
+        <button id="tenant-tab-active" class="tenant-tab" type="button" role="tab" aria-controls="tenant-panel-active" data-tab="active">Active tenants <span class="badge badge-gray">{{ $tenantUsers->total() }}</span></button>
+        <button id="tenant-tab-unassigned" class="tenant-tab" type="button" role="tab" aria-controls="tenant-panel-unassigned" data-tab="unassigned">Invited &amp; unassigned <span class="badge badge-gray">{{ $unassignedTenantUsers->total() }}</span></button>
+        <button id="tenant-tab-invite" class="tenant-tab" type="button" role="tab" aria-controls="tenant-panel-invite" data-tab="invite">Invite tenant</button>
+        <button id="tenant-tab-link" class="tenant-tab" type="button" role="tab" aria-controls="tenant-panel-link" data-tab="link">Link existing account</button>
     </div>
 
-    <div class="tenant-panel active" data-panel="overview">
+    <div id="tenant-panel-active" class="tenant-panel" role="tabpanel" aria-labelledby="tenant-tab-active" data-panel="active">
         <div class="tenant-card">
             <div class="table-scroll">
                 <table>
@@ -240,12 +242,14 @@
             </div>
             <div class="pagination">{{ $tenantUsers->links() }}</div>
         </div>
+    </div>
 
-        <div class="tenant-card" style="margin-top:18px;">
+    <div id="tenant-panel-unassigned" class="tenant-panel" role="tabpanel" aria-labelledby="tenant-tab-unassigned" data-panel="unassigned">
+        <div class="tenant-card">
             <div class="admin-page-header" style="margin-bottom:12px;">
                 <div>
                     <h2 style="font-size:17px;">Unassigned Tenant Accounts</h2>
-                    <p>Accounts registered from the Android app but not yet assigned to a unit.</p>
+                    <p>{{ request()->user()?->role?->name === 'LANDLORD' ? 'Tenant accounts created from invitations you sent and not yet linked to a unit.' : 'Invited tenant accounts that are not yet linked to a unit.' }}</p>
                 </div>
                 <div class="admin-actions">
                     <a href="{{ route('admin.invitations.index') }}" class="btn btn-primary">Invite Tenant to Unit</a>
@@ -281,10 +285,11 @@
                     </tbody>
                 </table>
             </div>
+            <div class="pagination">{{ $unassignedTenantUsers->links() }}</div>
         </div>
     </div>
 
-    <div class="tenant-panel" data-panel="invite">
+    <div id="tenant-panel-invite" class="tenant-panel" role="tabpanel" aria-labelledby="tenant-tab-invite" data-panel="invite">
         <div class="tenant-card tenant-mini-card">
             <div class="admin-page-header" style="margin-bottom:0;">
                 <div>
@@ -299,7 +304,7 @@
         </div>
     </div>
 
-    <div class="tenant-panel" data-panel="link">
+    <div id="tenant-panel-link" class="tenant-panel" role="tabpanel" aria-labelledby="tenant-tab-link" data-panel="link">
         <div class="tenant-card tenant-mini-card">
             <div class="admin-page-header" style="margin-bottom:0;">
                 <div>
@@ -320,13 +325,39 @@
         const tabs = document.querySelectorAll('.tenant-tab');
         const panels = document.querySelectorAll('.tenant-panel');
 
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const target = tab.dataset.tab;
-                tabs.forEach(btn => btn.classList.toggle('active', btn === tab));
-                panels.forEach(panel => panel.classList.toggle('active', panel.dataset.panel === target));
+        const activateTab = (target, focus = false) => {
+            const selected = Array.from(tabs).find(tab => tab.dataset.tab === target) || tabs[0];
+            tabs.forEach(btn => {
+                const active = btn === selected;
+                btn.classList.toggle('active', active);
+                btn.setAttribute('aria-selected', String(active));
+                btn.tabIndex = active ? 0 : -1;
+            });
+            panels.forEach(panel => {
+                const active = panel.dataset.panel === selected.dataset.tab;
+                panel.classList.toggle('active', active);
+                panel.hidden = !active;
+            });
+            document.querySelector('input[name="tab"]')?.setAttribute('value', selected.dataset.tab);
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', selected.dataset.tab);
+            history.replaceState({}, '', url);
+            if (focus) selected.focus();
+        };
+
+        tabs.forEach((tab, index) => {
+            tab.addEventListener('click', () => activateTab(tab.dataset.tab));
+            tab.addEventListener('keydown', event => {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                event.preventDefault();
+                let next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : index + (event.key === 'ArrowRight' ? 1 : -1);
+                next = (next + tabs.length) % tabs.length;
+                activateTab(tabs[next].dataset.tab, true);
             });
         });
+
+        const requested = new URLSearchParams(window.location.search).get('tab');
+        activateTab(['active', 'unassigned', 'invite', 'link'].includes(requested) ? requested : 'active');
     });
 </script>
 @endsection

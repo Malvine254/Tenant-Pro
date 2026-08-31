@@ -3,8 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -52,14 +52,50 @@ class User extends Authenticatable
         ];
     }
 
-    public function role() { return $this->belongsTo(Role::class); }
-    public function properties() { return $this->hasMany(Property::class, 'landlord_id'); }
-    public function tenant() { return $this->hasOne(Tenant::class); }
-    public function tenancies() { return $this->hasMany(Tenant::class); }
-    public function invoices() { return $this->hasMany(Invoice::class, 'user_id'); }
-    public function maintenanceRequests() { return $this->hasMany(MaintenanceRequest::class, 'tenant_id'); }
-    public function appNotifications() { return $this->hasMany(Notification::class); }
-    public function supportConversations() { return $this->hasMany(SupportConversation::class, 'tenant_user_id'); }
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function properties()
+    {
+        return $this->hasMany(Property::class, 'landlord_id');
+    }
+
+    public function tenant()
+    {
+        return $this->hasOne(Tenant::class);
+    }
+
+    public function tenancies()
+    {
+        return $this->hasMany(Tenant::class);
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'user_id');
+    }
+
+    public function maintenanceRequests()
+    {
+        return $this->hasMany(MaintenanceRequest::class, 'tenant_id');
+    }
+
+    public function appNotifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function supportConversations()
+    {
+        return $this->hasMany(SupportConversation::class, 'tenant_user_id');
+    }
+
+    public function receivedInvitations()
+    {
+        return $this->hasMany(Invitation::class, 'email', 'email');
+    }
 
     public function isLandlord(): bool
     {
@@ -68,12 +104,12 @@ class User extends Authenticatable
 
     public function hasActiveServiceAccess(): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
         if ($this->isLandlord()) {
-            if (!$this->requires_subscription) {
+            if (! $this->requires_subscription) {
                 return true;
             }
 
@@ -91,13 +127,13 @@ class User extends Authenticatable
             ->contains(function ($tenancy) {
                 $landlord = $tenancy->unit?->property?->landlord;
 
-                if (!$landlord) {
+                if (! $landlord) {
                     return false;
                 }
 
-                return !$landlord->is_active || !$landlord->hasActiveServiceAccess();
+                return ! $landlord->is_active || ! $landlord->hasActiveServiceAccess();
             });
 
-        return !$hasActiveTenancy;
+        return ! $hasActiveTenancy;
     }
 }
