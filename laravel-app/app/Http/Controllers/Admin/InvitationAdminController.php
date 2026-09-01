@@ -99,8 +99,6 @@ class InvitationAdminController extends Controller
             'email' => 'nullable|email|max:255|required_without:tenant_user_id',
             'phone_number' => 'nullable|string|max:30',
             'move_in_date' => 'nullable|date',
-            'rent_amount' => 'nullable|numeric|min:0',
-            'deposit_amount' => 'nullable|numeric|min:0',
             'expires_at' => 'required|date|after:today',
             'message' => 'nullable|string|max:1000',
         ]);
@@ -177,8 +175,9 @@ class InvitationAdminController extends Controller
                 'sent_via' => 'EMAIL',
                 'metadata' => [
                     'move_in_date' => $data['move_in_date'] ?? null,
-                    'rent_amount' => $data['rent_amount'] ?? $unit->rent_amount,
-                    'deposit_amount' => $data['deposit_amount'] ?? null,
+                    'rent_amount' => $unit->rent_amount,
+                    // Move-in deposit is always one month of the unit's rent.
+                    'deposit_amount' => $unit->rent_amount,
                     'first_time_setup' => $firstTimeSetup,
                     'auto_assigned' => false,
                 ],

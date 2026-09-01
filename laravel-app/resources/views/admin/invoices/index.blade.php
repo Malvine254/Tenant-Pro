@@ -153,6 +153,7 @@
         <thead>
             <tr>
                 <th>Invoice</th>
+                <th>Type</th>
                 <th>Tenant</th>
                 <th>Property / Unit</th>
                 <th>Amount</th>
@@ -166,6 +167,7 @@
             @forelse($invoices as $invoice)
             <tr>
                 <td class="invoice-period">{{ date('M Y', mktime(0,0,0,$invoice->period_month,1,$invoice->period_year)) }}</td>
+                <td>{{ ucfirst(strtolower(str_replace('_', ' ', $invoice->billing_type))) }}</td>
                 <td class="invoice-tenant">
                     <strong>{{ $invoice->tenant?->name ?? '—' }}</strong>
                     <span>{{ $invoice->tenant?->email ?? 'No email' }}</span>
@@ -184,7 +186,7 @@
                 <td><a href="{{ route('admin.invoices.show', $invoice) }}" class="btn btn-secondary">View</a></td>
             </tr>
             @empty
-            <tr><td colspan="8" class="invoice-empty">No invoices found.</td></tr>
+            <tr><td colspan="9" class="invoice-empty">No invoices found.</td></tr>
             @endforelse
         </tbody>
     </table>

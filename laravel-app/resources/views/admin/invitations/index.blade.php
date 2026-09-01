@@ -295,7 +295,7 @@
                         <label>Invite expires</label>
                         <input type="date" name="expires_at" value="{{ old('expires_at', $tenantInviteExpiryDefault ?? now()->addDays(7)->toDateString()) }}" placeholder="Select expiry date" required>
                     </div>
-                    <details class="invitation-advanced" {{ old('move_in_date') || old('rent_amount') || old('deposit_amount') || old('message') ? 'open' : '' }}>
+                    <details class="invitation-advanced" {{ old('move_in_date') || old('message') ? 'open' : '' }}>
                         <summary>Optional tenancy details and message</summary>
                         <div class="invitation-advanced-grid">
                             <div class="form-group">
@@ -304,11 +304,13 @@
                             </div>
                             <div class="form-group">
                                 <label>Monthly rent</label>
-                                <input id="tenantInviteRent" type="number" step="0.01" min="0" name="rent_amount" value="{{ old('rent_amount') }}" placeholder="e.g. 25000">
+                                <input id="tenantInviteRent" type="number" step="0.01" min="0" value="" readonly aria-describedby="tenantRentHelp">
+                                <small id="tenantRentHelp" style="display:block;margin-top:6px;color:#94a3b8;">Uses the rent saved on the selected unit.</small>
                             </div>
                             <div class="form-group">
                                 <label>Deposit</label>
-                                <input type="number" step="0.01" min="0" name="deposit_amount" value="{{ old('deposit_amount') }}" placeholder="e.g. 25000">
+                                <input type="text" value="Equal to one month of rent" readonly aria-describedby="tenantDepositHelp">
+                                <small id="tenantDepositHelp" style="display:block;margin-top:6px;color:#94a3b8;">Charged once on the move-in invoice and not repeated in later months.</small>
                             </div>
                             <div class="form-group">
                                 <label>Personal message</label>
@@ -485,13 +487,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const syncRent = () => {
         const selected = unit.selectedOptions[0];
-        if (selected?.dataset.rent && (!rent.value || rent.dataset.autofilled === '1')) {
+        if (selected?.dataset.rent) {
             rent.value = selected.dataset.rent;
-            rent.dataset.autofilled = '1';
+        } else if (rent) {
+            rent.value = '';
         }
     };
-
-    rent?.addEventListener('input', () => rent.dataset.autofilled = '0');
 
     const autofillTenant = () => {
         if (!tenantUser) return;

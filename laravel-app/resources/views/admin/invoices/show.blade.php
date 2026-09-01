@@ -12,6 +12,7 @@
     <div class="card">
         <h3 style="font-size:13px;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;">Invoice Summary</h3>
         <p style="font-size:14px;margin-bottom:4px;"><strong>Tenant:</strong> {{ $invoice->tenant?->name ?? '-' }}</p>
+        <p style="font-size:14px;margin-bottom:4px;"><strong>Type:</strong> {{ ucfirst(strtolower(str_replace('_', ' ', $invoice->billing_type))) }}</p>
         <p style="font-size:14px;margin-bottom:4px;"><strong>Unit:</strong> {{ $invoice->unit?->unit_number ?? '-' }} ({{ $invoice->unit?->property?->name ?? '-' }})</p>
         <p style="font-size:14px;margin-bottom:4px;"><strong>Issue Date:</strong> {{ $invoice->issue_date?->format('d M Y') }}</p>
         <p style="font-size:14px;margin-bottom:4px;"><strong>Due Date:</strong> {{ $invoice->due_date?->format('d M Y') }}</p>

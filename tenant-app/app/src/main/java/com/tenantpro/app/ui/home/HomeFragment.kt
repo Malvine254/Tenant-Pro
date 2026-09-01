@@ -32,6 +32,7 @@ import com.tenantpro.app.databinding.ItemRecentInvoiceBinding
 import com.tenantpro.app.utils.Resource
 import com.tenantpro.app.utils.gone
 import com.tenantpro.app.utils.toKes
+import com.tenantpro.app.utils.toBillingLabel
 import com.tenantpro.app.utils.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -317,7 +318,7 @@ class HomeFragment : Fragment() {
         }
         val title = TextView(context).apply {
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            text = bill.billingType.replaceFirstChar { it.uppercase() }
+            text = bill.billingType.toBillingLabel()
             setTextColor(context.getColor(R.color.on_surface))
             textSize = 14f
         }
@@ -342,7 +343,7 @@ class HomeFragment : Fragment() {
     private fun openPayment(bill: BillItem) {
         findNavController().navigate(R.id.paymentFragment, Bundle().apply {
             putString("invoiceId", bill.id)
-            putString("invoiceLabel", bill.billingType.replaceFirstChar { it.uppercase() })
+            putString("invoiceLabel", bill.billingType.toBillingLabel())
             putFloat("remainingAmount", bill.balance.toFloat())
         })
     }
@@ -350,7 +351,7 @@ class HomeFragment : Fragment() {
     private fun openCombinedPayment(bills: List<BillItem>) {
         val total = bills.sumOf { it.balance }
         val label = if (bills.size == 1) {
-            bills.first().billingType.replaceFirstChar { it.uppercase() }
+            bills.first().billingType.toBillingLabel()
         } else {
             "${bills.size} outstanding bills"
         }

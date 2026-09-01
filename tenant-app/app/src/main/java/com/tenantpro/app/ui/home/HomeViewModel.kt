@@ -257,7 +257,7 @@ class HomeViewModel @Inject constructor(
 
                     val billItems = invoiceBillItems
                         .filter { it.status.uppercase(Locale.ROOT) != "CANCELLED" }
-                        .sortedBy { when (it.billingType.uppercase()) { "RENT" -> 0; "WATER" -> 1; "GARBAGE" -> 2; else -> 3 } }
+                        .sortedBy { when (it.billingType.uppercase()) { "RENT" -> 0; "DEPOSIT" -> 1; "WATER" -> 2; "GARBAGE" -> 3; else -> 4 } }
 
                     val allOutstandingBills = invoices
                         .filter { inv ->
@@ -287,7 +287,7 @@ class HomeViewModel @Inject constructor(
                         }
                         .sortedWith(
                             compareBy<BillItem> { it.dueDate ?: "9999-12-31" }
-                                .thenBy { when (it.billingType.uppercase()) { "RENT" -> 0; "WATER" -> 1; "GARBAGE" -> 2; else -> 3 } }
+                                .thenBy { when (it.billingType.uppercase()) { "RENT" -> 0; "DEPOSIT" -> 1; "WATER" -> 2; "GARBAGE" -> 3; else -> 4 } }
                         )
 
                     val totalDueThisMonth = billItems

@@ -48,6 +48,11 @@ class InvitationController extends Controller
         abort_if($unit->tenant()->where('is_active', true)->exists(), 422, 'This unit already has an active tenant.');
         abort_if(empty($data['email']) && empty($data['phone_number']), 422, 'Provide an email address or phone number for the invitee.');
 
+        $data['metadata'] = array_merge($data['metadata'] ?? [], [
+            'rent_amount' => $unit->rent_amount,
+            'deposit_amount' => $unit->rent_amount,
+        ]);
+
         $data['sent_by_id'] = $request->user()->id;
         $data['invite_type'] = 'TENANT';
         $data['code'] = strtoupper(Str::random(8));
@@ -154,7 +159,7 @@ class InvitationController extends Controller
                     'unit_id' => $invitation->unit_id,
                 ],
                 [
-                    'move_in_date' => now()->toDateString(),
+                    'move_in_date' => data_get($invitation->metadata, 'move_in_date') ?: now()->toDateString(),
                     'move_out_date' => null,
                     'is_active' => true,
                 ]

@@ -44,6 +44,37 @@ class TenantBillingService
             ]
         )->load(['tenant', 'unit.property']);
 
+        // A security deposit is a separate financial obligation from rent. Keeping
+        // it on its own invoice makes payment allocation and future refunds
+        // auditable, while the shared period lets the tenant app pay all move-in
+        // charges together. firstOrCreate prevents a repeated onboarding request
+        // from charging the deposit twice.
+        $depositInvoice = Invoice::firstOrCreate(
+            [
+                'tenant_id' => $tenant->user_id,
+                'user_id' => $tenant->user_id,
+                'unit_id' => $tenant->unit_id,
+                'billing_type' => 'DEPOSIT',
+                'period_month' => (int) $moveInDate->month,
+                'period_year' => (int) $moveInDate->year,
+            ],
+            [
+                'issue_date' => now()->toDateString(),
+                'due_date' => $moveInDate->copy()->addDays(7)->toDateString(),
+                'amount' => $amount,
+                'penalty_amount' => 0,
+                'total_amount' => $amount,
+                'paid_amount' => 0,
+                'status' => 'PENDING',
+                'paid_at' => null,
+            ]
+        )->load(['tenant', 'unit.property']);
+
+        if ($depositInvoice->wasRecentlyCreated) {
+            $this->appNotificationService->invoiceCreated($depositInvoice);
+            $this->emailService->invoiceCreated($depositInvoice);
+        }
+
         $this->createRecurringUtilityInvoices($tenant, $moveInDate, $moveInDate->copy()->addDays(7), now());
 
         return $rentInvoice;

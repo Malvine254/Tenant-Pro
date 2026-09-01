@@ -136,6 +136,7 @@ fun String.toStatusLabel(): String = when (this.uppercase()) {
 /** Maps backend billing type to a user-friendly label. */
 fun String.toBillingLabel(): String = when (this.uppercase()) {
     "RENT"    -> "Rent"
+    "DEPOSIT" -> "Move-in deposit"
     "WATER"   -> "Water"
     "GARBAGE" -> "Garbage"
     "ELECTRIC" -> "Electricity"

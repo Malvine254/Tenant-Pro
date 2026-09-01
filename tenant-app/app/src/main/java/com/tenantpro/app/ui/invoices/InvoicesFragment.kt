@@ -363,10 +363,11 @@ class InvoicesFragment : Fragment() {
 
     private fun billingPriority(type: String): Int = when (type.uppercase(Locale.ROOT)) {
         "RENT" -> 0
-        "WATER" -> 1
-        "GARBAGE" -> 2
-        "ELECTRIC" -> 3
-        else -> 4
+        "DEPOSIT" -> 1
+        "WATER" -> 2
+        "GARBAGE" -> 3
+        "ELECTRIC" -> 4
+        else -> 5
     }
 
     // ── Detail dialog ─────────────────────────────────────────────────────────
