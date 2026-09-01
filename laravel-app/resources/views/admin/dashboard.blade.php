@@ -342,16 +342,16 @@
         </section>
     @endif
 
-    <div class="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
-        <button id="overview-tab-button" class="dashboard-tab active" type="button" role="tab" aria-selected="true" aria-controls="overview-tab" tabindex="0" data-target="overview-tab">Overview</button>
-        <button id="performance-tab-button" class="dashboard-tab" type="button" role="tab" aria-selected="false" aria-controls="performance-tab" tabindex="-1" data-target="performance-tab">Performance</button>
-        <button id="portfolio-tab-button" class="dashboard-tab" type="button" role="tab" aria-selected="false" aria-controls="portfolio-tab" tabindex="-1" data-target="portfolio-tab">Portfolio</button>
+    <div class="dashboard-tabs ui-tabs" role="tablist" aria-label="Dashboard sections" data-ui-tabs data-tab-param="dashboard_tab">
+        <button id="overview-tab-button" class="dashboard-tab ui-tab active" type="button" role="tab" aria-selected="true" aria-controls="overview-tab" data-ui-tab="overview" data-tab-panel="overview-tab">Overview</button>
+        <button id="performance-tab-button" class="dashboard-tab ui-tab" type="button" role="tab" aria-selected="false" aria-controls="performance-tab" data-ui-tab="performance" data-tab-panel="performance-tab">Performance</button>
+        <button id="portfolio-tab-button" class="dashboard-tab ui-tab" type="button" role="tab" aria-selected="false" aria-controls="portfolio-tab" data-ui-tab="portfolio" data-tab-panel="portfolio-tab">Portfolio</button>
         @unless($isLandlord)
-            <button id="landlords-tab-button" class="dashboard-tab" type="button" role="tab" aria-selected="false" aria-controls="landlords-tab" tabindex="-1" data-target="landlords-tab">Landlords</button>
+            <button id="landlords-tab-button" class="dashboard-tab ui-tab" type="button" role="tab" aria-selected="false" aria-controls="landlords-tab" data-ui-tab="landlords" data-tab-panel="landlords-tab">Landlords</button>
         @endunless
     </div>
 
-    <div id="overview-tab" class="dashboard-tab-panel active" role="tabpanel" aria-labelledby="overview-tab-button">
+    <div id="overview-tab" class="dashboard-tab-panel ui-tab-panel active" role="tabpanel" aria-labelledby="overview-tab-button">
         @if($isSuperAdmin)
             <div class="ops-panel" style="margin-bottom:16px;">
                 <div class="ops-panel-head">
@@ -488,7 +488,7 @@
         </div>
     </div>
 
-    <div id="performance-tab" class="dashboard-tab-panel" role="tabpanel" aria-labelledby="performance-tab-button">
+    <div id="performance-tab" class="dashboard-tab-panel ui-tab-panel" role="tabpanel" aria-labelledby="performance-tab-button">
         <div class="ops-chart-grid">
             <div class="ops-panel ops-chart-card">
                 <div class="ops-panel-head">
@@ -516,7 +516,7 @@
         </div>
     </div>
 
-    <div id="portfolio-tab" class="dashboard-tab-panel" role="tabpanel" aria-labelledby="portfolio-tab-button">
+    <div id="portfolio-tab" class="dashboard-tab-panel ui-tab-panel" role="tabpanel" aria-labelledby="portfolio-tab-button">
         <div class="ops-insight-grid">
             <div class="ops-panel">
                 <div class="ops-panel-head">
@@ -546,7 +546,7 @@
     </div>
 
     @unless($isLandlord)
-        <div id="landlords-tab" class="dashboard-tab-panel" role="tabpanel" aria-labelledby="landlords-tab-button">
+        <div id="landlords-tab" class="dashboard-tab-panel ui-tab-panel" role="tabpanel" aria-labelledby="landlords-tab-button">
             <div class="ops-panel" style="margin-bottom:16px;">
                 <div class="ops-panel-head">
                     <div class="ops-panel-title">Landlord subscription lifecycle</div>
@@ -668,34 +668,6 @@
         const chart = new ApexCharts(el, options);
         chart.render();
     };
-
-    const dashboardTabs = Array.from(document.querySelectorAll('.dashboard-tab'));
-    const activateDashboardTab = (button) => {
-            const target = button.dataset.target;
-            dashboardTabs.forEach((tab) => {
-                const active = tab === button;
-                tab.classList.toggle('active', active);
-                tab.setAttribute('aria-selected', active ? 'true' : 'false');
-                tab.tabIndex = active ? 0 : -1;
-            });
-            document.querySelectorAll('.dashboard-tab-panel').forEach((panel) => {
-                panel.classList.toggle('active', panel.id === target);
-            });
-    };
-    dashboardTabs.forEach((button, index) => {
-        button.addEventListener('click', () => activateDashboardTab(button));
-        button.addEventListener('keydown', event => {
-            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-            event.preventDefault();
-            let nextIndex = index;
-            if (event.key === 'ArrowRight') nextIndex = (index + 1) % dashboardTabs.length;
-            if (event.key === 'ArrowLeft') nextIndex = (index - 1 + dashboardTabs.length) % dashboardTabs.length;
-            if (event.key === 'Home') nextIndex = 0;
-            if (event.key === 'End') nextIndex = dashboardTabs.length - 1;
-            activateDashboardTab(dashboardTabs[nextIndex]);
-            dashboardTabs[nextIndex].focus();
-        });
-    });
 
     mount('#revenueTrendChart', {
         ...common,

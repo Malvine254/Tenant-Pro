@@ -245,21 +245,21 @@
             <p>{{ $isSuperAdmin ? 'Manage your account, production integrations, and platform availability from one secured workspace.' : 'Manage your profile, security, tenant preferences, and payment operations from one place.' }}</p>
         </div>
 
-        <nav class="settings-tabs" role="tablist" aria-label="Settings tabs">
-            <button id="settings-tab-account" type="button" role="tab" aria-controls="settings-pane-account" class="settings-tab" data-tab-target="account">Account</button>
-            <button id="settings-tab-security" type="button" role="tab" aria-controls="settings-pane-security" class="settings-tab" data-tab-target="security">Security</button>
+        <nav class="settings-tabs ui-tabs" role="tablist" aria-label="Settings tabs" data-ui-tabs data-tab-param="tab" data-initial-tab="{{ old('_settings_tab', request('tab', 'account')) }}">
+            <button id="settings-tab-account" type="button" role="tab" aria-controls="settings-pane-account" class="settings-tab ui-tab" data-ui-tab="account" data-tab-panel="settings-pane-account">Account</button>
+            <button id="settings-tab-security" type="button" role="tab" aria-controls="settings-pane-security" class="settings-tab ui-tab" data-ui-tab="security" data-tab-panel="settings-pane-security">Security</button>
             @if($isLandlordOwner)
-                <button id="settings-tab-tenants" type="button" role="tab" aria-controls="settings-pane-tenants" class="settings-tab" data-tab-target="tenants">Tenant Preferences</button>
-                <button id="settings-tab-payment" type="button" role="tab" aria-controls="settings-pane-payment" class="settings-tab" data-tab-target="payment">Payment</button>
+                <button id="settings-tab-tenants" type="button" role="tab" aria-controls="settings-pane-tenants" class="settings-tab ui-tab" data-ui-tab="tenants" data-tab-panel="settings-pane-tenants">Tenant Preferences</button>
+                <button id="settings-tab-payment" type="button" role="tab" aria-controls="settings-pane-payment" class="settings-tab ui-tab" data-ui-tab="payment" data-tab-panel="settings-pane-payment">Payment</button>
             @endif
             @if($isSuperAdmin)
-                <button id="settings-tab-daraja" type="button" role="tab" aria-controls="settings-pane-daraja" class="settings-tab" data-tab-target="daraja">Daraja API</button>
-                <button id="settings-tab-maintenance" type="button" role="tab" aria-controls="settings-pane-maintenance" class="settings-tab" data-tab-target="maintenance">Maintenance</button>
+                <button id="settings-tab-daraja" type="button" role="tab" aria-controls="settings-pane-daraja" class="settings-tab ui-tab" data-ui-tab="daraja" data-tab-panel="settings-pane-daraja">Daraja API</button>
+                <button id="settings-tab-maintenance" type="button" role="tab" aria-controls="settings-pane-maintenance" class="settings-tab ui-tab" data-ui-tab="maintenance" data-tab-panel="settings-pane-maintenance">Maintenance</button>
             @endif
         </nav>
         <div class="divider"></div>
 
-        <div id="settings-pane-account" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-account" data-tab-pane="account">
+        <div id="settings-pane-account" class="settings-pane ui-tab-panel" role="tabpanel" aria-labelledby="settings-tab-account">
             <form method="POST" action="{{ route('admin.settings.account') }}" class="settings-form">
                 @csrf
                 @method('PUT')
@@ -290,7 +290,7 @@
             </form>
         </div>
 
-        <div id="settings-pane-security" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-security" data-tab-pane="security">
+        <div id="settings-pane-security" class="settings-pane ui-tab-panel" role="tabpanel" aria-labelledby="settings-tab-security">
             <form method="POST" action="{{ route('admin.settings.password') }}" class="settings-form">
                 @csrf
                 @method('PUT')
@@ -318,7 +318,7 @@
         </div>
 
         @if($isLandlordOwner)
-            <div id="settings-pane-tenants" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-tenants" data-tab-pane="tenants">
+            <div id="settings-pane-tenants" class="settings-pane ui-tab-panel" role="tabpanel" aria-labelledby="settings-tab-tenants">
                 <form method="POST" action="{{ route('admin.settings.tenant-preferences') }}" class="settings-form">
                     @csrf
                     @method('PUT')
@@ -356,7 +356,7 @@
         @endif
 
         @if($isLandlordOwner)
-        <div id="settings-pane-payment" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-payment" data-tab-pane="payment">
+        <div id="settings-pane-payment" class="settings-pane ui-tab-panel" role="tabpanel" aria-labelledby="settings-tab-payment">
             <form method="POST" action="{{ route('admin.settings.payment') }}" class="settings-form">
                 @csrf
                 @method('PUT')
@@ -410,7 +410,7 @@
         @endif
 
         @if($isSuperAdmin)
-            <div id="settings-pane-daraja" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-daraja" data-tab-pane="daraja">
+            <div id="settings-pane-daraja" class="settings-pane ui-tab-panel" role="tabpanel" aria-labelledby="settings-tab-daraja">
                 <form method="POST" action="{{ route('admin.settings.daraja') }}" class="settings-form">
                     @csrf
                     @method('PUT')
@@ -477,7 +477,7 @@
                 </form>
             </div>
 
-            <div id="settings-pane-maintenance" class="settings-pane" role="tabpanel" aria-labelledby="settings-tab-maintenance" data-tab-pane="maintenance">
+            <div id="settings-pane-maintenance" class="settings-pane ui-tab-panel" role="tabpanel" aria-labelledby="settings-tab-maintenance">
                 <form method="POST" action="{{ route('admin.settings.maintenance') }}" class="settings-form">
                     @csrf
                     @method('PUT')
@@ -563,52 +563,9 @@
 
 <script>
     (function () {
-        const tabs = Array.from(document.querySelectorAll('[data-tab-target]'));
-        const panes = Array.from(document.querySelectorAll('[data-tab-pane]'));
         const paymentType = document.getElementById('payment_type');
         const paybillField = document.querySelector('[data-paybill-field]');
         const tillField = document.querySelector('[data-till-field]');
-
-        function resolveInitialTab() {
-            const validTabs = tabs.map((tab) => tab.dataset.tabTarget);
-            const queryTab = new URLSearchParams(window.location.search).get('tab');
-            const oldTab = "{{ old('_settings_tab', '') }}";
-            if (oldTab && validTabs.includes(oldTab)) return oldTab;
-            if (queryTab && validTabs.includes(queryTab)) return queryTab;
-            return validTabs[0] || 'account';
-        }
-
-        function activateTab(tabName, focus = false) {
-            tabs.forEach((tab) => {
-                const active = tab.dataset.tabTarget === tabName;
-                tab.classList.toggle('is-active', active);
-                tab.setAttribute('aria-selected', String(active));
-                tab.tabIndex = active ? 0 : -1;
-            });
-            panes.forEach((pane) => {
-                const active = pane.dataset.tabPane === tabName;
-                pane.classList.toggle('is-active', active);
-                pane.hidden = !active;
-            });
-
-            const url = new URL(window.location.href);
-            url.searchParams.set('tab', tabName);
-            window.history.replaceState({}, '', url);
-            if (focus) tabs.find(tab => tab.dataset.tabTarget === tabName)?.focus();
-        }
-
-        tabs.forEach((tab, index) => {
-            tab.addEventListener('click', function () {
-                activateTab(this.dataset.tabTarget);
-            });
-            tab.addEventListener('keydown', function (event) {
-                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-                event.preventDefault();
-                let next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : index + (event.key === 'ArrowRight' ? 1 : -1);
-                next = (next + tabs.length) % tabs.length;
-                activateTab(tabs[next].dataset.tabTarget, true);
-            });
-        });
 
         function syncPaymentFields() {
             if (!paymentType || !paybillField || !tillField) {
@@ -623,7 +580,6 @@
             paymentType.addEventListener('change', syncPaymentFields);
         }
 
-        activateTab(resolveInitialTab());
         syncPaymentFields();
     })();
 </script>

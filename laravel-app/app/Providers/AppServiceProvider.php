@@ -24,10 +24,12 @@ class AppServiceProvider extends ServiceProvider
     {
         View::composer('admin.layout', function ($view): void {
             $user = auth()->user();
-            $view->with(
-                'adminReadiness',
-                $user ? app(AdminReadinessService::class)->for($user) : null,
-            );
+            $view->with([
+                'adminReadiness' => $user ? app(AdminReadinessService::class)->for($user) : null,
+                'adminUnreadNotifications' => $user
+                    ? $user->appNotifications()->where('is_read', false)->count()
+                    : 0,
+            ]);
         });
 
         // Shared-hosting rewrites may execute public/index.php through an

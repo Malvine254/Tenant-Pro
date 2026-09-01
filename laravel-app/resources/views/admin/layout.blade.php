@@ -48,18 +48,26 @@
         .sidebar-bottom { margin-top:auto; padding:16px; border-top:1px solid rgba(148,163,184,.14); }
         .main { margin-left:224px; width:calc(100% - 224px); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
         .topbar { background: rgba(15,23,42,.9); backdrop-filter: blur(12px); padding:11px 24px; min-height:64px;border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between;gap:16px; }
-        .topbar-left { display:flex; align-items:center; gap:10px; min-width:0; }
+        .topbar-left { display:flex; align-items:center; gap:14px; min-width:0; }
         .topbar-title { font-weight:800;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+        .topbar-nav { display:flex;align-items:center;gap:4px;padding-left:12px;border-left:1px solid var(--line); }
+        .topbar-nav a { display:inline-flex;align-items:center;min-height:34px;padding:7px 10px;border:1px solid transparent;border-radius:9px;color:#94a3b8;text-decoration:none;font-size:12px;font-weight:700;transition:background .15s,border-color .15s,color .15s; }
+        .topbar-nav a:hover,.topbar-nav a.active { color:#f8fafc;background:rgba(148,163,184,.08);border-color:var(--line); }
         .topbar-meta { display:flex;align-items:center;gap:12px; }
         .topbar-date { font-size:12px;color:#94a3b8;white-space:nowrap; }
         .user-chip { display:flex;align-items:center;gap:9px;padding:6px 9px;border:1px solid var(--line);border-radius:12px;background:rgba(15,23,42,.72);min-width:0; }
         .user-avatar { width:30px;height:30px;border-radius:9px;background:rgba(96,165,250,.15);color:#bfdbfe;display:grid;place-items:center;font-size:11px;font-weight:900; }
         .user-chip strong { display:block;font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
         .user-chip small { display:block;font-size:10px;color:#94a3b8;margin-top:1px; }
+        .topbar-action { position:relative;width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;background:rgba(15,23,42,.72);color:#cbd5e1;text-decoration:none;transition:background .15s,border-color .15s,color .15s; }
+        .topbar-action:hover,.topbar-action.active { color:#f8fafc;background:rgba(148,163,184,.1);border-color:rgba(148,163,184,.3); }
+        .topbar-action svg { width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round; }
+        .topbar-count { position:absolute;right:-5px;top:-5px;min-width:17px;height:17px;padding:0 4px;display:grid;place-items:center;border-radius:999px;background:#2563eb;color:#fff;font-size:9px;font-weight:900;border:2px solid #0f172a; }
         .menu-toggle { display:none; width:38px; height:38px; border:1px solid rgba(148,163,184,.2); border-radius:9px; background: rgba(15,23,42,.8); color:#f8fafc; font-size:20px; cursor:pointer; align-items:center; justify-content:center; }
         .sidebar-close { display:none; margin-left:auto; background:rgba(15,23,42,.9); color:#f8fafc; border:1px solid rgba(148,163,184,.18); border-radius:8px; padding:5px 9px; cursor:pointer; }
         .sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(15,23,42,.48); z-index:30; }
         .content { flex:1; padding:24px; overflow-y:auto; background:linear-gradient(180deg, rgba(15,23,42,.8), rgba(2,6,23,.85)); scroll-behavior:smooth; }
+        .content-inner { width:min(100%,1480px);margin-inline:auto; }
         .guest-main { margin-left:0;width:100%;min-height:100vh;height:100vh;overflow-y:auto; }
         .guest-main .content { min-height:100vh;display:grid;align-items:center;padding:28px 16px; }
         .auth-shell { width:min(440px,100%);margin:auto; }
@@ -123,6 +131,14 @@
         .admin-filter input, .admin-filter select { padding:9px 12px;border:1px solid rgba(255,255,255,.62);border-radius:10px;background:transparent;color:var(--text);font-size:13px;min-height:38px; }
         .admin-filter input::placeholder { color:rgba(248,250,252,.68); }
         .admin-filter input:focus, .admin-filter select:focus { border-color:#fff; background:rgba(255,255,255,.03); box-shadow:0 0 0 3px rgba(255,255,255,.12); outline:none; }
+        .ui-tabs { display:flex;align-items:center;gap:5px;width:fit-content;max-width:100%;margin-bottom:18px;padding:5px;border:1px solid var(--line);border-radius:13px;background:rgba(15,23,42,.72);overflow-x:auto;scrollbar-width:thin; }
+        .ui-tab { min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 14px;border:1px solid transparent;border-radius:9px;background:transparent;color:#94a3b8;font:inherit;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer;transition:background .15s,border-color .15s,color .15s,box-shadow .15s; }
+        .ui-tab:hover { color:#e2e8f0;background:rgba(148,163,184,.07); }
+        .ui-tab.active { color:#fff;background:#2563eb;border-color:rgba(96,165,250,.4);box-shadow:0 7px 16px rgba(37,99,235,.2); }
+        .ui-tabs-compact { padding:4px; }
+        .ui-tabs-compact .ui-tab { min-height:34px;padding:7px 12px; }
+        .ui-tab-panel { display:none; }
+        .ui-tab-panel.active { display:block; }
         input[type="file"] { color:#f8fafc; }
         input[type="checkbox"], input[type="radio"] { accent-color:#60a5fa; }
         select option, optgroup { background:#0f172a; color:#f8fafc; }
@@ -136,6 +152,9 @@
         .metric-card strong { display:block;font-size:22px;letter-spacing:-.04em;color:var(--text); }
         a { color:var(--blue); }
         code { color:#bfdbfe;background:rgba(96,165,250,.08);padding:2px 5px;border-radius:5px;overflow-wrap:anywhere; }
+        @media (max-width: 1200px) {
+            .topbar-nav { display:none; }
+        }
         @media (max-width: 900px) {
             body { display:block; }
             .admin-shell { display:block; }
@@ -149,6 +168,7 @@
             .topbar { position:sticky; top:0; z-index:20; padding:10px 14px; }
             .menu-toggle { display:inline-flex; flex-shrink:0; }
             .topbar-left span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+            .topbar-nav { display:none; }
             .content { padding:14px; }
             .stat-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
             .stat { padding:12px; }
@@ -256,9 +276,26 @@
         <div class="topbar-left">
             <button class="menu-toggle" type="button" id="menuToggle" aria-controls="adminSidebar" aria-expanded="false" aria-label="Open menu">☰</button>
             <span class="topbar-title">@yield('page-title', 'Dashboard')</span>
+            <nav class="topbar-nav" aria-label="Quick navigation">
+                <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a>
+                @if(!$landlordLocked && !$isCaretaker)
+                    <a href="{{ route('admin.invitations.index') }}" class="{{ request()->routeIs('admin.invitations*') ? 'active' : '' }}">Invitations</a>
+                    <a href="{{ route('admin.payments.index') }}" class="{{ request()->routeIs('admin.payments*') ? 'active' : '' }}">Payments</a>
+                @endif
+                @if(!$landlordLocked)
+                    <a href="{{ route('admin.chats.index') }}" class="{{ request()->routeIs('admin.chats*') ? 'active' : '' }}">Chats</a>
+                @endif
+            </nav>
         </div>
         <div class="topbar-meta">
             <span class="topbar-date">{{ now()->format('D, d M Y') }}</span>
+            <a class="topbar-action {{ request()->routeIs('admin.notifications*') ? 'active' : '' }}" href="{{ route('admin.notifications.index') }}" aria-label="Notifications{{ $adminUnreadNotifications ? ', '.$adminUnreadNotifications.' unread' : '' }}" title="Notifications">
+                <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+                @if($adminUnreadNotifications > 0)<span class="topbar-count">{{ min($adminUnreadNotifications, 99) }}</span>@endif
+            </a>
+            <a class="topbar-action {{ request()->routeIs('admin.settings*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}" aria-label="Settings" title="Settings">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1A8 8 0 0 0 15 6l-.3-2.5h-4L10.5 6A8 8 0 0 0 9 7.1l-2.4-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1A8 8 0 0 0 10.5 18l.2 2.5h4L15 18a8 8 0 0 0 1.5-1.1l2.4 1 2-3.4-2-1.5a7 7 0 0 0 .1-1z"/></svg>
+            </a>
             <div class="user-chip" title="{{ auth()->user()->email }}">
                 <span class="user-avatar" aria-hidden="true">{{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(auth()->user()->name ?: auth()->user()->email, 0, 2)) }}</span>
                 <span><strong>{{ auth()->user()->name ?: auth()->user()->email }}</strong><small>{{ str_replace('_', ' ', \Illuminate\Support\Str::title($roleName ?? 'User')) }}</small></span>
@@ -267,6 +304,7 @@
     </div>
     @endauth
     <main class="content" id="main-content" tabindex="-1">
+        <div class="content-inner">
         @if(session('success'))
             <div class="alert-success" role="status" aria-live="polite">{{ session('success') }}</div>
         @endif
@@ -295,11 +333,65 @@
             </section>
         @endif
         @yield('content')
+        </div>
     </main>
 </div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-ui-tabs]').forEach(tabList => {
+        const tabs = Array.from(tabList.querySelectorAll(':scope > [data-ui-tab]'));
+        if (!tabs.length) return;
+
+        const activate = (value, focus = false, updateUrl = true) => {
+            const selected = tabs.find(tab => tab.dataset.uiTab === value) || tabs[0];
+            tabs.forEach(tab => {
+                const active = tab === selected;
+                tab.classList.toggle('active', active);
+                tab.setAttribute('aria-selected', String(active));
+                tab.tabIndex = active ? 0 : -1;
+                const panel = document.getElementById(tab.dataset.tabPanel);
+                if (panel) {
+                    panel.classList.toggle('active', active);
+                    panel.hidden = !active;
+                }
+            });
+
+            const parameter = tabList.dataset.tabParam;
+            if (updateUrl && parameter) {
+                const url = new URL(window.location.href);
+                url.searchParams.set(parameter, selected.dataset.uiTab);
+                window.history.replaceState({}, '', url);
+            }
+            if (parameter) {
+                document.querySelectorAll(`input[type="hidden"][name="${parameter}"]`).forEach(input => {
+                    input.value = selected.dataset.uiTab;
+                });
+            }
+            if (focus) selected.focus();
+        };
+
+        const parameter = tabList.dataset.tabParam;
+        const queryValue = parameter ? new URLSearchParams(window.location.search).get(parameter) : null;
+        const configuredInitial = tabList.dataset.initialTab;
+        const activeInitial = tabs.find(tab => tab.classList.contains('active'))?.dataset.uiTab || tabs[0].dataset.uiTab;
+        const initial = tabs.some(tab => tab.dataset.uiTab === queryValue)
+            ? queryValue
+            : (tabs.some(tab => tab.dataset.uiTab === configuredInitial) ? configuredInitial : activeInitial);
+        activate(initial, false, false);
+
+        tabs.forEach((tab, index) => {
+            tab.addEventListener('click', () => activate(tab.dataset.uiTab));
+            tab.addEventListener('keydown', event => {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                event.preventDefault();
+                let next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : index + (event.key === 'ArrowRight' ? 1 : -1);
+                next = (next + tabs.length) % tabs.length;
+                activate(tabs[next].dataset.uiTab, true);
+            });
+        });
+    });
+
     const sidebar = document.getElementById('adminSidebar');
     const toggle = document.getElementById('menuToggle');
     const closeButtons = document.querySelectorAll('[data-close-menu]');

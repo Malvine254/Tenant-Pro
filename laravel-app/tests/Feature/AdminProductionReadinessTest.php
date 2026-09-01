@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\AdminAuditLog;
+use App\Models\Notification;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -83,6 +84,43 @@ class AdminProductionReadinessTest extends TestCase
             ->post(route('admin.invitations.tenants.store'), [])
             ->assertRedirect(route('admin.settings.index', ['tab' => 'payment']))
             ->assertSessionHas('error');
+    }
+
+    public function test_admin_notifications_are_private_and_can_be_marked_as_read(): void
+    {
+        $admin = $this->userWithRole('ADMIN', [
+            'first_name' => 'Ready',
+            'last_name' => 'Admin',
+            'phone_number' => '254712345678',
+        ]);
+        $otherAdmin = $this->userWithRole('ADMIN');
+        $ownNotification = Notification::query()->create([
+            'user_id' => $admin->id,
+            'type' => 'SYSTEM',
+            'title' => 'Your notification',
+            'body' => 'Visible only to the intended administrator.',
+        ]);
+        $otherNotification = Notification::query()->create([
+            'user_id' => $otherAdmin->id,
+            'type' => 'SYSTEM',
+            'title' => 'Another administrator notification',
+            'body' => 'This must remain private.',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.notifications.index'))
+            ->assertOk()
+            ->assertSee('Your notification')
+            ->assertDontSee('Another administrator notification');
+
+        $this->actingAs($admin)
+            ->patch(route('admin.notifications.read', $ownNotification))
+            ->assertRedirect();
+        $this->assertTrue($ownNotification->fresh()->is_read);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.notifications.read', $otherNotification))
+            ->assertForbidden();
     }
 
     private function userWithRole(string $roleName, array $attributes = []): User

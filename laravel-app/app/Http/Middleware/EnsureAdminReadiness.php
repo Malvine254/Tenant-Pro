@@ -62,6 +62,8 @@ class EnsureAdminReadiness
             'admin.settings.daraja',
             'admin.settings.tenant-preferences',
             'admin.settings.maintenance',
+            'admin.notifications.read',
+            'admin.notifications.read-all',
         ], true);
     }
 }

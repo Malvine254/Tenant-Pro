@@ -25,66 +25,10 @@
     .invitation-shell {
         color: #e2e8f0;
     }
-    .invitation-workspace-tabs {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 18px;
-        padding: 5px;
-        width: fit-content;
-        border: 1px solid rgba(148,163,184,.18);
-        border-radius: 14px;
-        background: rgba(15,23,42,.72);
-    }
-    .invitation-workspace-tab {
-        border: 0;
-        border-radius: 10px;
-        padding: 10px 16px;
-        background: transparent;
-        color: #94a3b8;
-        font-weight: 750;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .invitation-workspace-tab.active { background:#2563eb; color:#fff; }
-    .invitation-workspace-panel { display:none; }
-    .invitation-workspace-panel.active { display:block; }
     .invitation-advanced { grid-column:1 / -1; border:1px solid rgba(148,163,184,.18); border-radius:14px; background:rgba(15,23,42,.45); }
     .invitation-advanced summary { cursor:pointer; padding:14px 16px; color:#e2e8f0; font-weight:700; }
-    .invitation-advanced-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; padding:0 16px 16px; }
-    .invitation-tabs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 18px;
-    }
-    .invitation-tab {
-        border: 1px solid rgba(148,163,184,.18);
-        background: rgba(15,23,42,.7);
-        color: #cbd5e1;
-        border-radius: 999px;
-        padding: 9px 14px;
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: .02em;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-    }
-    .invitation-tab.active {
-        background: linear-gradient(180deg,#2563eb,#1d4ed8);
-        border-color: rgba(96,165,250,.4);
-        color: #eff6ff;
-        box-shadow: 0 10px 18px rgba(37,99,235,.2);
-    }
-    .invitation-panel {
-        display: none;
-    }
-    .invitation-panel.active {
-        display: block;
-    }
+    .invitation-advanced-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; padding:0 16px 16px; }
+    .invitation-advanced-grid .full-width { grid-column:1 / -1; }
     .invitation-card {
         background: linear-gradient(180deg,#111827,#0b1220);
         border: 1px solid rgba(148,163,184,.2);
@@ -101,9 +45,11 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 16px;
     }
+    .invitation-layout .full-width,
+    .invitation-layout .span-2 { grid-column:1 / -1; }
     .tenant-invite-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 16px;
     }
     .tenant-invite-grid .full-width {
@@ -142,7 +88,7 @@
         background: rgba(148,163,184,.1);
         color: #e2e8f0;
     }
-    @media (max-width: 980px) {
+    @media (max-width: 1100px) {
         .tenant-invite-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -157,7 +103,9 @@
             grid-template-columns: 1fr;
         }
         .tenant-invite-grid .full-width,
-        .tenant-invite-grid .span-2 {
+        .tenant-invite-grid .span-2,
+        .invitation-layout .full-width,
+        .invitation-layout .span-2 {
             grid-column: auto;
         }
     }
@@ -174,22 +122,22 @@
     </div>
 </div>
 
-<div class="invitation-workspace-tabs" role="tablist" aria-label="Invitation workspace">
-    <a id="workspace-tab-create" class="invitation-workspace-tab {{ $workspace === 'create' ? 'active' : '' }}" role="tab" aria-selected="{{ $workspace === 'create' ? 'true' : 'false' }}" aria-controls="workspace-panel-create" href="{{ route('admin.invitations.index', array_filter(['workspace' => 'create', 'property_id' => request('property_id'), 'unit_id' => request('unit_id')])) }}">Create invitation</a>
-    <a id="workspace-tab-history" class="invitation-workspace-tab {{ $workspace === 'history' ? 'active' : '' }}" role="tab" aria-selected="{{ $workspace === 'history' ? 'true' : 'false' }}" aria-controls="workspace-panel-history" href="{{ route('admin.invitations.index', ['workspace' => 'history']) }}">Invitation history <span class="badge badge-gray">{{ $invitations->total() }}</span></a>
+<div class="ui-tabs" role="tablist" aria-label="Invitation workspace" data-ui-tabs data-tab-param="workspace">
+    <button id="workspace-tab-create" class="ui-tab {{ $workspace === 'create' ? 'active' : '' }}" type="button" role="tab" aria-selected="{{ $workspace === 'create' ? 'true' : 'false' }}" aria-controls="workspace-panel-create" data-ui-tab="create" data-tab-panel="workspace-panel-create">Create invitation</button>
+    <button id="workspace-tab-history" class="ui-tab {{ $workspace === 'history' ? 'active' : '' }}" type="button" role="tab" aria-selected="{{ $workspace === 'history' ? 'true' : 'false' }}" aria-controls="workspace-panel-history" data-ui-tab="history" data-tab-panel="workspace-panel-history">Invitation history <span class="badge badge-gray">{{ $invitations->total() }}</span></button>
 </div>
 
-<section id="workspace-panel-create" class="invitation-workspace-panel {{ $workspace === 'create' ? 'active' : '' }}" role="tabpanel" aria-labelledby="workspace-tab-create">
+<section id="workspace-panel-create" class="ui-tab-panel {{ $workspace === 'create' ? 'active' : '' }}" role="tabpanel" aria-labelledby="workspace-tab-create">
 
 <div class="invitation-shell">
     @unless($isLandlord)
-        <div class="invitation-tabs" role="tablist" aria-label="Invitation types">
-            <a class="invitation-tab {{ $inviteTypeTab === 'landlord' ? 'active' : '' }}" role="tab" aria-selected="{{ $inviteTypeTab === 'landlord' ? 'true' : 'false' }}" href="{{ route('admin.invitations.index', ['workspace' => 'create', 'invite_type_tab' => 'landlord']) }}">Landlord invite</a>
-            <a class="invitation-tab {{ $inviteTypeTab === 'tenant' ? 'active' : '' }}" role="tab" aria-selected="{{ $inviteTypeTab === 'tenant' ? 'true' : 'false' }}" href="{{ route('admin.invitations.index', ['workspace' => 'create', 'invite_type_tab' => 'tenant']) }}">Tenant invite</a>
+        <div class="ui-tabs ui-tabs-compact" role="tablist" aria-label="Invitation types" data-ui-tabs data-tab-param="invite_type_tab">
+            <button id="invite-type-landlord" class="ui-tab {{ $inviteTypeTab === 'landlord' ? 'active' : '' }}" type="button" role="tab" aria-selected="{{ $inviteTypeTab === 'landlord' ? 'true' : 'false' }}" aria-controls="invite-panel-landlord" data-ui-tab="landlord" data-tab-panel="invite-panel-landlord">Landlord invite</button>
+            <button id="invite-type-tenant" class="ui-tab {{ $inviteTypeTab === 'tenant' ? 'active' : '' }}" type="button" role="tab" aria-selected="{{ $inviteTypeTab === 'tenant' ? 'true' : 'false' }}" aria-controls="invite-panel-tenant" data-ui-tab="tenant" data-tab-panel="invite-panel-tenant">Tenant invite</button>
         </div>
     @endunless
 
-    <div class="invitation-panel {{ $inviteTypeTab === 'landlord' ? 'active' : '' }}" data-panel="landlord">
+    <div id="invite-panel-landlord" class="ui-tab-panel {{ $inviteTypeTab === 'landlord' ? 'active' : '' }}" role="tabpanel" aria-labelledby="invite-type-landlord">
         @unless($isLandlord)
             <div class="invitation-card">
                 <h3>Invite Landlord</h3>
@@ -219,7 +167,7 @@
                             <input type="date" name="expires_at" value="{{ old('expires_at', $tenantInviteExpiryDefault ?? now()->addDays(7)->toDateString()) }}" placeholder="Select expiry date" required>
                             @error('expires_at')<div class="form-error">{{ $message }}</div>@enderror
                         </div>
-                        <div class="form-group span-2">
+                        <div class="form-group full-width">
                             <label>Optional message</label>
                             <textarea name="message" rows="3" placeholder="Add a short welcome message">{{ old('message') }}</textarea>
                         </div>
@@ -230,7 +178,7 @@
         @endunless
     </div>
 
-    <div class="invitation-panel {{ $inviteTypeTab === 'tenant' ? 'active' : '' }}" data-panel="tenant">
+    <div id="invite-panel-tenant" class="ui-tab-panel {{ $inviteTypeTab === 'tenant' ? 'active' : '' }}" role="tabpanel" aria-labelledby="invite-type-tenant">
         <div class="invitation-card">
             <h3>Invite Tenant to Vacant Unit</h3>
             <form method="POST" action="{{ route('admin.invitations.tenants.store') }}">
@@ -312,7 +260,7 @@
                                 <input type="text" value="Equal to one month of rent" readonly aria-describedby="tenantDepositHelp">
                                 <small id="tenantDepositHelp" style="display:block;margin-top:6px;color:#94a3b8;">Charged once on the move-in invoice and not repeated in later months.</small>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group full-width">
                                 <label>Personal message</label>
                                 <textarea name="message" rows="3" placeholder="Add a short message for the tenant">{{ old('message') }}</textarea>
                             </div>
@@ -329,7 +277,7 @@
 </div>
 </section>
 
-<section id="workspace-panel-history" class="invitation-workspace-panel {{ $workspace === 'history' ? 'active' : '' }}" role="tabpanel" aria-labelledby="workspace-tab-history">
+<section id="workspace-panel-history" class="ui-tab-panel {{ $workspace === 'history' ? 'active' : '' }}" role="tabpanel" aria-labelledby="workspace-tab-history">
 <div class="invitation-card invitation-shell" style="margin-bottom:18px;">
     <div class="admin-page-header" style="margin-bottom:0;">
         <div><h3 style="margin:0 0 5px;">Invitation history</h3><p>Search, review, resend, edit, or cancel invitations.</p></div>

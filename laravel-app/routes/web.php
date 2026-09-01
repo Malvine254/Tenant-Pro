@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\InvoiceAdminController;
 use App\Http\Controllers\Admin\LandlordAdminController;
 use App\Http\Controllers\Admin\LandlordTeamController;
 use App\Http\Controllers\Admin\MpesaSandboxTestController;
+use App\Http\Controllers\Admin\NotificationAdminController;
 use App\Http\Controllers\Admin\PaymentAdminController;
 use App\Http\Controllers\Admin\PropertyAdminController;
 use App\Http\Controllers\Admin\PropertyUnitAdminController;
@@ -116,6 +117,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin.security')->group(func
         Route::get('/invoices', [InvoiceAdminController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{invoice}', [InvoiceAdminController::class, 'show'])->name('invoices.show');
         Route::get('/payments', [PaymentAdminController::class, 'index'])->name('payments.index');
+        Route::get('/notifications', [NotificationAdminController::class, 'index'])->name('notifications.index');
+        Route::patch('/notifications/read-all', [NotificationAdminController::class, 'markAllRead'])->name('notifications.read-all');
+        Route::patch('/notifications/{notification}/read', [NotificationAdminController::class, 'markRead'])->name('notifications.read');
         Route::get('/chats', [SupportChatAdminController::class, 'index'])->name('chats.index');
         Route::post('/chats/{supportConversation}/reply', [SupportChatAdminController::class, 'reply'])->name('chats.reply');
         Route::patch('/chats/{supportConversation}/toggle', [SupportChatAdminController::class, 'toggle'])->name('chats.toggle');
