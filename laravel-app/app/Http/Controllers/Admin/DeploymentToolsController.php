@@ -209,15 +209,15 @@ class DeploymentToolsController extends Controller
 
         $lines = [];
         $lines[] = $result['marked'] === []
-            ? 'No migrations needed reconciling — every pending migration still has tables to create.'
+            ? 'No migrations needed reconciling — every pending migration still has schema changes to apply.'
             : $verb.' ('.count($result['marked']).'):'.PHP_EOL.'  - '.implode(PHP_EOL.'  - ', $result['marked']);
 
         if ($result['pending'] !== []) {
             $lines[] = 'Still pending, will run on next migrate ('.count($result['pending']).'):'.PHP_EOL.'  - '.implode(PHP_EOL.'  - ', $result['pending']);
         }
 
-        if ($result['missing_tables'] !== []) {
-            $lines[] = 'Tables not found yet: '.implode(', ', $result['missing_tables']);
+        if ($result['missing'] !== []) {
+            $lines[] = 'Not present in the database yet: '.implode(', ', $result['missing']);
         }
 
         return implode(PHP_EOL.PHP_EOL, $lines);
