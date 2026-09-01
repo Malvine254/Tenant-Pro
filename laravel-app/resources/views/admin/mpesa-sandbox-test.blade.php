@@ -38,6 +38,12 @@
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 14px 16px;
     }
+    .sandbox-payment-row {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: minmax(180px, .65fr) minmax(280px, 1.35fr);
+        gap: 14px 16px;
+    }
     .field { display: flex; flex-direction: column; gap: 6px; }
     .field label {
         font-size: 12px;
@@ -98,6 +104,9 @@
     @media (max-width: 900px) {
         .sandbox-wrap { grid-template-columns: 1fr; }
     }
+    @media (max-width: 620px) {
+        .sandbox-payment-row { grid-template-columns: 1fr; }
+    }
 </style>
 
 <div class="sandbox-wrap">
@@ -136,14 +145,16 @@
                         <input id="phone_number" name="phone_number" value="{{ old('phone_number', '254712345678') }}" placeholder="e.g. 254712345678" required>
                     </div>
 
-                    <div class="field">
-                        <label for="amount">Amount</label>
-                        <input id="amount" name="amount" type="number" min="1" step="0.01" value="{{ old('amount', 500) }}" required>
-                    </div>
+                    <div class="sandbox-payment-row">
+                        <div class="field">
+                            <label for="amount">Amount</label>
+                            <input id="amount" name="amount" type="number" min="1" step="0.01" value="{{ old('amount', 500) }}" required>
+                        </div>
 
-                    <div class="field" style="grid-column: 1 / -1;">
-                        <label for="account_reference">Account reference</label>
-                        <input id="account_reference" name="account_reference" value="{{ old('account_reference', 'Tenant Pro Sandbox') }}" placeholder="Tenant Pro Sandbox">
+                        <div class="field">
+                            <label for="account_reference">Account reference</label>
+                            <input id="account_reference" name="account_reference" value="{{ old('account_reference', 'Tenant Pro Sandbox') }}" placeholder="Tenant Pro Sandbox">
+                        </div>
                     </div>
                 </div>
 
