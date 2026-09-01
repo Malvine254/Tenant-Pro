@@ -11,6 +11,16 @@ class MpesaService
 {
     public function __construct(private readonly PlatformSettingsService $platformSettings) {}
 
+    public function isConfigured(): bool
+    {
+        $daraja = $this->platformSettings->daraja();
+
+        return filled($daraja['consumer_key'])
+            && filled($daraja['consumer_secret'])
+            && filled($daraja['passkey'])
+            && filled($daraja['callback_url']);
+    }
+
     public function stkPush(string $phone, float $amount, string $reference, string $description, ?array $landlordSettings = null): array
     {
         $timestamp = now()->format('YmdHis');
@@ -99,6 +109,9 @@ class MpesaService
         $daraja = $this->platformSettings->daraja();
         $key = (string) $daraja['consumer_key'];
         $secret = (string) $daraja['consumer_secret'];
+        if ($key === '' || $secret === '') {
+            throw new RuntimeException('M-Pesa API credentials are incomplete. Configure the consumer key and secret first.');
+        }
         $cacheKey = 'mpesa.oauth_token.'.hash('sha256', $daraja['environment'].'|'.$key.'|'.$secret);
 
         return Cache::remember($cacheKey, now()->addMinutes(55), function () use ($key, $secret): string {

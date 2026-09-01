@@ -96,6 +96,16 @@
         .section-heading { font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.04em; }
         .alert-success { background: rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.25); color:#bbf7d0; padding:10px 14px; border-radius:10px; margin-bottom:16px; font-size:14px; }
         .alert-error { background: rgba(248,113,113,.12); border:1px solid rgba(248,113,113,.25); color:#fecaca; padding:10px 14px; border-radius:10px; margin-bottom:16px; font-size:14px; }
+        .readiness-alert { display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;padding:14px 16px;border:1px solid rgba(251,191,36,.3);border-radius:14px;background:linear-gradient(135deg,rgba(120,53,15,.2),rgba(15,23,42,.92));box-shadow:0 12px 28px rgba(2,6,23,.2); }
+        .readiness-main { display:flex;align-items:flex-start;gap:12px;min-width:0; }
+        .readiness-icon { width:34px;height:34px;display:grid;place-items:center;flex:0 0 34px;border-radius:10px;background:rgba(251,191,36,.14);color:#fcd34d;font-weight:900; }
+        .readiness-copy strong { display:block;color:#fef3c7;font-size:13px;margin-bottom:4px; }
+        .readiness-copy p { color:#cbd5e1;font-size:12px;line-height:1.5; }
+        .readiness-items { display:flex;gap:7px;flex-wrap:wrap;margin-top:9px; }
+        .readiness-item { display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:8px;background:rgba(15,23,42,.72);border:1px solid rgba(251,191,36,.16);color:#e2e8f0;font-size:11px; }
+        .readiness-item::before { content:'!';display:grid;place-items:center;width:15px;height:15px;border-radius:50%;background:rgba(251,191,36,.16);color:#fcd34d;font-size:10px;font-weight:900; }
+        .readiness-actions { display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;flex:0 0 auto; }
+        .readiness-actions a { min-height:34px;padding:6px 10px;font-size:11px; }
         .form-group, .field { margin-bottom:15px; }
         .form-group label, .field label { display:block; font-size:12px; font-weight:800; margin-bottom:6px; color:#e2e8f0; }
         .form-group input, .form-group select, .form-group textarea, .field input, .field select, .field textarea { width:100%; min-height:44px;padding:10px 12px; border:1px solid rgba(148,163,184,.48); border-radius:11px; font-size:14px; background:rgba(2,6,23,.18); color:var(--text); outline:none; transition:border-color .14s, box-shadow .14s, background .14s; }
@@ -150,6 +160,8 @@
             .admin-actions { justify-content:flex-start; width:100%; }
             .admin-filter { width:100%; }
             .admin-filter input, .admin-filter select, .admin-filter .btn { width:100%; }
+            .readiness-alert { flex-direction:column; }
+            .readiness-actions { width:100%;justify-content:flex-start; }
             .content div[style*="grid-template-columns:1fr 1fr"],
             .content div[style*="grid-template-columns:1fr 1fr 1fr"],
             .content form[style*="grid-template-columns"] {
@@ -260,6 +272,27 @@
         @endif
         @if(session('error'))
             <div class="alert-error" role="alert">{{ session('error') }}</div>
+        @endif
+        @if(($adminReadiness['missing_count'] ?? 0) > 0)
+            <section class="readiness-alert" role="alert" aria-label="Account setup warning">
+                <div class="readiness-main">
+                    <span class="readiness-icon" aria-hidden="true">!</span>
+                    <div class="readiness-copy">
+                        <strong>{{ $adminReadiness['missing_count'] }} setup {{ $adminReadiness['missing_count'] === 1 ? 'checkpoint needs' : 'checkpoints need' }} attention</strong>
+                        <p>Complete the missing information to unlock all dependent operations safely.</p>
+                        <div class="readiness-items">
+                            @foreach($adminReadiness['missing'] as $checkpoint)
+                                <span class="readiness-item" title="{{ $checkpoint['message'] }}">{{ $checkpoint['label'] }}</span>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                <div class="readiness-actions">
+                    @foreach(collect($adminReadiness['missing'])->filter(fn($checkpoint) => filled($checkpoint['tab'] ?? null))->unique('tab') as $checkpoint)
+                        <a class="btn btn-secondary" href="{{ route('admin.settings.index', ['tab' => $checkpoint['tab']]) }}">Fix {{ $checkpoint['label'] }}</a>
+                    @endforeach
+                </div>
+            </section>
         @endif
         @yield('content')
     </main>

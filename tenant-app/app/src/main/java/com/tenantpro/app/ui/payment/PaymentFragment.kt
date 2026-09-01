@@ -104,7 +104,13 @@ class PaymentFragment : Fragment() {
                                     ?: "Manual payment details are not available. Contact your property manager in Chat."
                                 binding.tvManualStatus.visible()
                             } else {
-                                binding.tvManualStatus.gone()
+                                if (details.stkAvailable) {
+                                    binding.tvManualStatus.gone()
+                                } else {
+                                    binding.tvManualStatus.text = details.stkMessage
+                                        ?: "STK Push is unavailable. Use the manual payment details below."
+                                    binding.tvManualStatus.visible()
+                                }
                                 showManualInstructions(details)
                             }
                         }

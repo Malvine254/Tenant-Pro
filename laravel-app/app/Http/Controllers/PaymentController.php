@@ -146,10 +146,14 @@ class PaymentController extends Controller
         $hasRequiredDetails = $number !== '' && (
             $type === 'TILL' || ($reference !== '' && strcasecmp($reference, 'Tenant Pro') !== 0)
         );
+        $stkConfigured = $mpesa->isConfigured();
 
         return response()->json([
             'available' => $isProduction && $hasRequiredDetails,
-            'stkAvailable' => $hasRequiredDetails,
+            'stkAvailable' => $hasRequiredDetails && $stkConfigured,
+            'stkMessage' => ! $stkConfigured
+                ? 'STK Push is temporarily unavailable because the platform payment setup is incomplete. Use the manual payment details below.'
+                : null,
             'paymentType' => $type,
             'businessNumber' => $number,
             'accountReference' => $type === 'PAYBILL' ? $reference : null,
@@ -177,6 +181,12 @@ class PaymentController extends Controller
             'phone_number' => ['required', 'string', 'regex:/^(?:254|\\+254|0)?[17]\\d{8}$/'],
             'amount' => 'nullable|numeric|min:1',
         ]);
+
+        abort_unless(
+            $mpesa->isConfigured(),
+            503,
+            'M-Pesa STK payments are temporarily unavailable because the platform setup is incomplete. Use the manual payment instructions or contact support.'
+        );
 
         $invoiceIds = collect($data['invoice_ids'] ?? [])->filter()->unique()->values();
         if ($invoiceIds->isEmpty() && filled($data['invoice_id'] ?? null)) {

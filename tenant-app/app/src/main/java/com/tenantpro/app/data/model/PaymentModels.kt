@@ -25,6 +25,7 @@ data class ManualPaymentInstructionsRequest(
 data class ManualPaymentInstructions(
     @SerializedName("available") val available: Boolean = false,
     @SerializedName("stkAvailable") val stkAvailable: Boolean = false,
+    @SerializedName("stkMessage") val stkMessage: String? = null,
     @SerializedName("paymentType") val paymentType: String = "PAYBILL",
     @SerializedName("businessNumber") val businessNumber: String = "",
     @SerializedName("accountReference") val accountReference: String? = null,

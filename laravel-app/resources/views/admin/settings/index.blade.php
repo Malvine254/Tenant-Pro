@@ -40,6 +40,14 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px 16px;
     }
+    .daraja-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: end;
+    }
+    .daraja-simulation {
+        grid-column: span 2;
+        min-height: 42px;
+    }
     .field {
         display: flex;
         flex-direction: column;
@@ -215,11 +223,14 @@
         .settings-shell {
             grid-template-columns: 1fr;
         }
+        .daraja-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .daraja-simulation { grid-column: auto; }
     }
     @media (max-width: 760px) {
         .settings-grid {
             grid-template-columns: 1fr;
         }
+        .daraja-grid { grid-template-columns:1fr; }
         .tenant-preferences-grid {
             grid-template-columns: 1fr;
         }
@@ -411,7 +422,7 @@
                         <div class="settings-status"><span>Consumer key</span><strong>{{ $darajaSettings['consumer_key_masked'] ?: 'Not configured' }}</strong></div>
                     </div>
 
-                    <div class="settings-grid">
+                    <div class="settings-grid daraja-grid">
                         <div class="field">
                             <label for="daraja_environment">Environment</label>
                             <select id="daraja_environment" name="environment" required>
@@ -423,7 +434,7 @@
                             <label for="daraja_shortcode">Default shortcode</label>
                             <input id="daraja_shortcode" inputmode="numeric" name="shortcode" value="{{ old('shortcode', $darajaSettings['shortcode']) }}" placeholder="Paybill or Till shortcode" required>
                         </div>
-                        <div class="field" style="grid-column:1/-1;">
+                        <div class="field">
                             <label for="daraja_callback_url">Callback URL</label>
                             <input id="daraja_callback_url" type="url" name="callback_url" value="{{ old('callback_url', $darajaSettings['callback_url']) }}" placeholder="https://app.starmaxltd.com/api/payments/mpesa/callback" required>
                         </div>
@@ -443,12 +454,11 @@
                             <label for="daraja_current_password">Confirm your password</label>
                             <input id="daraja_current_password" type="password" name="current_password" autocomplete="current-password" required>
                         </div>
+                        <label class="check-row daraja-simulation" for="daraja_simulate">
+                            <input id="daraja_simulate" name="simulate" type="checkbox" value="1" @checked(old('simulate', $darajaSettings['simulate']))>
+                            <span>Simulate payments locally in Sandbox. Production always disables simulation.</span>
+                        </label>
                     </div>
-
-                    <label class="check-row" for="daraja_simulate" style="margin-top:14px;">
-                        <input id="daraja_simulate" name="simulate" type="checkbox" value="1" @checked(old('simulate', $darajaSettings['simulate']))>
-                        <span>Simulate payments locally when the environment is Sandbox. Production always disables simulation.</span>
-                    </label>
                     <p class="tab-note">Credentials are encrypted in the database and never displayed again. Leave a secret field blank to retain its current value.</p>
 
                     <div class="actions-row">

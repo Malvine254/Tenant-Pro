@@ -52,6 +52,39 @@ class AdminProductionReadinessTest extends TestCase
         $this->assertArrayNotHasKey('password', $event->getAttributes());
     }
 
+    public function test_incomplete_profile_is_warned_on_every_admin_page_and_blocks_operations(): void
+    {
+        $admin = $this->userWithRole('ADMIN', [
+            'first_name' => null,
+            'phone_number' => null,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('setup checkpoint needs attention')
+            ->assertSee('Account profile');
+
+        $this->actingAs($admin)
+            ->post(route('admin.properties.store'), [])
+            ->assertRedirect(route('admin.settings.index', ['tab' => 'account']))
+            ->assertSessionHas('error', 'Complete your account profile before performing operational actions.');
+    }
+
+    public function test_landlord_payment_checkpoint_blocks_tenant_onboarding_until_configured(): void
+    {
+        $landlord = $this->userWithRole('LANDLORD', [
+            'first_name' => 'Ready',
+            'phone_number' => '254712345678',
+            'app_settings' => [],
+        ]);
+
+        $this->actingAs($landlord)
+            ->post(route('admin.invitations.tenants.store'), [])
+            ->assertRedirect(route('admin.settings.index', ['tab' => 'payment']))
+            ->assertSessionHas('error');
+    }
+
     private function userWithRole(string $roleName, array $attributes = []): User
     {
         $role = Role::firstOrCreate(['name' => $roleName]);

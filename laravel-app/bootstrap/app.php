@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AddAdminSecurityHeaders;
 use App\Http\Middleware\EnsureAccountAccess;
+use App\Http\Middleware\EnsureAdminReadiness;
 use App\Http\Middleware\EnsureAdminRole;
 use App\Http\Middleware\EnsureMobileApiKey;
 use App\Http\Middleware\EnsurePlatformAvailable;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'mobile.api.key' => EnsureMobileApiKey::class,
             'admin.role' => EnsureAdminRole::class,
+            'admin.readiness' => EnsureAdminReadiness::class,
             'admin.security' => AddAdminSecurityHeaders::class,
             'admin.audit' => RecordAdminAuditLog::class,
             'platform.access' => EnsureAccountAccess::class,

@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use App\Services\AdminReadinessService;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,6 +22,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        View::composer('admin.layout', function ($view): void {
+            $user = auth()->user();
+            $view->with(
+                'adminReadiness',
+                $user ? app(AdminReadinessService::class)->for($user) : null,
+            );
+        });
+
         // Shared-hosting rewrites may execute public/index.php through an
         // internal /laravel-app/public path. Never let that filesystem path
         // leak into generated links, redirects, assets, or form actions.

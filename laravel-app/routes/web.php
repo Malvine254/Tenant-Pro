@@ -74,7 +74,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.security')->group(func
     Route::post('/logout', [AuthAdminController::class, 'logout'])->name('logout');
 
     // Protected admin routes
-    Route::middleware(['auth', 'admin.role:SUPER_ADMIN,ADMIN,LANDLORD', 'admin.audit'])->group(function () {
+    Route::middleware(['auth', 'admin.role:SUPER_ADMIN,ADMIN,LANDLORD', 'admin.audit', 'admin.readiness'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::middleware('admin.role:SUPER_ADMIN,ADMIN')->group(function () {
