@@ -12,6 +12,7 @@ use App\Services\PlatformSettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -62,6 +63,13 @@ class SettingsController extends Controller
         }
 
         $daraja = $this->platformSettings->daraja();
+        $darajaMissingFields = collect([
+            'Consumer key' => filled($daraja['consumer_key']),
+            'Consumer secret' => filled($daraja['consumer_secret']),
+            'Default shortcode' => filled($daraja['shortcode']),
+            'Lipa na M-PESA passkey' => filled($daraja['passkey']),
+            'Callback URL' => filled($daraja['callback_url']),
+        ])->reject()->keys()->values()->all();
 
         return view('admin.settings.index', [
             'user' => $user,
@@ -80,11 +88,8 @@ class SettingsController extends Controller
                 'consumer_key_masked' => $this->maskSecret($daraja['consumer_key']),
                 'consumer_secret_configured' => filled($daraja['consumer_secret']),
                 'passkey_configured' => filled($daraja['passkey']),
-                'ready' => filled($daraja['consumer_key'])
-                    && filled($daraja['consumer_secret'])
-                    && filled($daraja['shortcode'])
-                    && filled($daraja['passkey'])
-                    && filled($daraja['callback_url']),
+                'missing_fields' => $darajaMissingFields,
+                'ready' => $darajaMissingFields === [],
             ],
             'maintenanceSettings' => $this->platformSettings->maintenance(),
         ]);
@@ -99,22 +104,51 @@ class SettingsController extends Controller
             'last_name' => ['nullable', 'string', 'max:80'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'phone_number' => ['required', 'string', 'max:20'],
+            'profile_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'remove_profile_image' => ['nullable', 'boolean'],
         ]);
 
         $firstName = trim((string) $data['first_name']);
         $lastName = trim((string) ($data['last_name'] ?? ''));
         $fullName = trim($firstName.' '.$lastName);
 
-        $user->update([
+        $attributes = [
             'first_name' => $firstName,
             'last_name' => $lastName,
             'name' => $fullName,
             'email' => trim((string) $data['email']),
             'phone_number' => trim((string) $data['phone_number']),
-        ]);
+        ];
+
+        if ($request->hasFile('profile_image')) {
+            $this->deleteStoredProfileImage($user->profile_image_url);
+            $path = $request->file('profile_image')->store('profile-images', 'public');
+            // Stored relative so the avatar keeps resolving if the app domain changes.
+            $attributes['profile_image_url'] = 'storage/'.$path;
+        } elseif ($request->boolean('remove_profile_image')) {
+            $this->deleteStoredProfileImage($user->profile_image_url);
+            $attributes['profile_image_url'] = null;
+        }
+
+        $user->update($attributes);
 
         return redirect()->route('admin.settings.index', ['tab' => 'account'])
             ->with('success', 'Account details updated successfully.');
+    }
+
+    /** Only removes files this app stored on the public disk; ignores external URLs. */
+    private function deleteStoredProfileImage(?string $url): void
+    {
+        if (! $url) {
+            return;
+        }
+
+        $path = ltrim((string) parse_url($url, PHP_URL_PATH), '/');
+        if (! str_starts_with($path, 'storage/profile-images/')) {
+            return;
+        }
+
+        Storage::disk('public')->delete(substr($path, strlen('storage/')));
     }
 
     public function updatePassword(Request $request)

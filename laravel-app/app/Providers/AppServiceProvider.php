@@ -29,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
                 'adminUnreadNotifications' => $user
                     ? $user->appNotifications()->where('is_read', false)->count()
                     : 0,
+                'adminNotificationPreview' => $user
+                    ? $user->appNotifications()->latest()->limit(5)->get()
+                    : collect(),
             ]);
         });
 

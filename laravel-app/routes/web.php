@@ -47,6 +47,8 @@ Route::post('/invite/{code}',
 // Public download endpoint (no auth required)
 Route::get('/download/apk', [DownloadsController::class, 'publicDownloadApk'])
     ->name('downloads.apk.public');
+Route::get('/download/latest-version', [DownloadsController::class, 'latestVersion'])
+    ->name('downloads.apk.latest-version');
 
 // Send the app subdomain straight to the Laravel admin area.
 Route::redirect('/', '/admin');
@@ -118,6 +120,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.security')->group(func
         Route::get('/invoices/{invoice}', [InvoiceAdminController::class, 'show'])->name('invoices.show');
         Route::get('/payments', [PaymentAdminController::class, 'index'])->name('payments.index');
         Route::get('/notifications', [NotificationAdminController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/summary', [NotificationAdminController::class, 'summary'])->name('notifications.summary');
         Route::patch('/notifications/read-all', [NotificationAdminController::class, 'markAllRead'])->name('notifications.read-all');
         Route::patch('/notifications/{notification}/read', [NotificationAdminController::class, 'markRead'])->name('notifications.read');
         Route::get('/chats', [SupportChatAdminController::class, 'index'])->name('chats.index');
@@ -142,6 +145,14 @@ Route::prefix('admin')->name('admin.')->middleware('admin.security')->group(func
         Route::get('/downloads', [DownloadsController::class, 'index'])->name('downloads.index');
         Route::get('/downloads/apk/download', [DownloadsController::class, 'downloadApk'])
             ->name('downloads.apk.download');
+        Route::get('/downloads/releases/{release}/download', [DownloadsController::class, 'downloadRelease'])
+            ->name('downloads.release.download');
+        Route::middleware('admin.role:SUPER_ADMIN')->group(function () {
+            Route::post('/downloads/releases', [DownloadsController::class, 'store'])->name('downloads.releases.store');
+            Route::patch('/downloads/releases/{release}/current', [DownloadsController::class, 'makeCurrent'])->name('downloads.releases.current');
+            Route::post('/downloads/releases/{release}/notify', [DownloadsController::class, 'notify'])->name('downloads.releases.notify');
+            Route::delete('/downloads/releases/{release}', [DownloadsController::class, 'destroy'])->name('downloads.releases.destroy');
+        });
     });
 });
 

@@ -46,7 +46,8 @@
                     <tr>
                         <th scope="col">Date and time</th>
                         <th scope="col">Administrator</th>
-                        <th scope="col">Action</th>
+                        <th scope="col">Operation</th>
+                        <th scope="col">What was done</th>
                         <th scope="col">Target</th>
                         <th scope="col">Outcome</th>
                         <th scope="col">Request ID</th>
@@ -57,7 +58,11 @@
                         <tr>
                             <td><strong>{{ $log->created_at?->format('d M Y, H:i:s') }}</strong><br><span class="muted">{{ $log->ip_address ?: 'IP unavailable' }}</span></td>
                             <td>{{ $log->actor?->name ?: 'Deleted account' }}<br><span class="muted">{{ $log->actor_role ?: 'Unknown role' }}</span></td>
-                            <td><code>{{ $log->action }}</code><br><span class="muted">{{ $log->method }} {{ $log->path }}</span></td>
+                            <td>
+                                <span class="badge {{ $log->status_code < 400 ? 'badge-blue' : 'badge-red' }}">{{ $log->operationLabel() }}</span>
+                                <br><span class="muted">{{ $log->method }}</span>
+                            </td>
+                            <td><strong>{{ $log->operationDescription() }}</strong><br><span class="muted">{{ $log->path }}</span></td>
                             <td>{{ $log->target_type ?: '—' }}@if($log->target_id)<br><span class="muted">{{ $log->target_id }}</span>@endif</td>
                             <td><span class="badge {{ $log->status_code < 400 ? 'badge-green' : 'badge-red' }}">HTTP {{ $log->status_code }}</span></td>
                             <td><code title="{{ $log->request_id }}">{{ \Illuminate\Support\Str::limit($log->request_id, 16) }}</code></td>

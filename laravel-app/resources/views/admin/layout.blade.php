@@ -49,20 +49,31 @@
         .main { margin-left:224px; width:calc(100% - 224px); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
         .topbar { background: rgba(15,23,42,.9); backdrop-filter: blur(12px); padding:11px 24px; min-height:64px;border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between;gap:16px; }
         .topbar-left { display:flex; align-items:center; gap:14px; min-width:0; }
-        .topbar-title { font-weight:800;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-        .topbar-nav { display:flex;align-items:center;gap:4px;padding-left:12px;border-left:1px solid var(--line); }
-        .topbar-nav a { display:inline-flex;align-items:center;min-height:34px;padding:7px 10px;border:1px solid transparent;border-radius:9px;color:#94a3b8;text-decoration:none;font-size:12px;font-weight:700;transition:background .15s,border-color .15s,color .15s; }
-        .topbar-nav a:hover,.topbar-nav a.active { color:#f8fafc;background:rgba(148,163,184,.08);border-color:var(--line); }
-        .topbar-meta { display:flex;align-items:center;gap:12px; }
+        .topbar-meta { display:flex;align-items:center;gap:12px;margin-left:auto; }
+        .topbar-action.has-notifications { animation:pulse-notification 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse-notification { 0%, 100% { opacity:1; } 50% { opacity:.7; } }
+        .notification-tooltip { position:absolute;top:calc(100% + 10px);right:0;width:280px;background:linear-gradient(180deg,#111827,#0b1220);border:1px solid rgba(96,165,250,.25);border-radius:12px;padding:10px;color:#e2e8f0;font-size:12px;z-index:1000;box-shadow:0 12px 32px rgba(2,6,23,.5);display:none;text-align:left; }
+        .notification-tooltip-head { display:block;font-weight:800;font-size:12px;color:#f8fafc;padding:2px 6px 8px;border-bottom:1px solid rgba(148,163,184,.14);margin-bottom:6px; }
+        .notification-tooltip-item { display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:8px; }
+        .notification-tooltip-item.is-unread { background:rgba(59,130,246,.1); }
+        .notification-tooltip-title { color:#e2e8f0;font-weight:600;line-height:1.3; }
+        .notification-tooltip-time { color:#94a3b8;font-size:11px; }
+        .topbar-action:hover .notification-tooltip,.topbar-action:focus-visible .notification-tooltip { display:block; }
+        @media (max-width: 900px) {
+            .notification-tooltip { display:none !important; }
+        }
         .topbar-date { font-size:12px;color:#94a3b8;white-space:nowrap; }
-        .user-chip { display:flex;align-items:center;gap:9px;padding:6px 9px;border:1px solid var(--line);border-radius:12px;background:rgba(15,23,42,.72);min-width:0; }
-        .user-avatar { width:30px;height:30px;border-radius:9px;background:rgba(96,165,250,.15);color:#bfdbfe;display:grid;place-items:center;font-size:11px;font-weight:900; }
-        .user-chip strong { display:block;font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-        .user-chip small { display:block;font-size:10px;color:#94a3b8;margin-top:1px; }
-        .topbar-action { position:relative;width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;background:rgba(15,23,42,.72);color:#cbd5e1;text-decoration:none;transition:background .15s,border-color .15s,color .15s; }
-        .topbar-action:hover,.topbar-action.active { color:#f8fafc;background:rgba(148,163,184,.1);border-color:rgba(148,163,184,.3); }
+        .user-chip { display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px solid rgba(96,165,250,.25);border-radius:14px;background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(139,92,246,.08));min-width:0;cursor:pointer;text-decoration:none;transition:all .2s ease;backdrop-filter:blur(4px); }
+        .user-chip:hover { border-color:rgba(96,165,250,.45);background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(139,92,246,.12));box-shadow:0 4px 16px rgba(59,130,246,.15); }
+        .user-chip-copy { min-width:0; }
+        .user-avatar { position:relative;width:34px;height:34px;border-radius:11px;overflow:hidden;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:900;letter-spacing:.02em;flex:0 0 34px;box-shadow:0 4px 12px rgba(59,130,246,.25); }
+        .user-avatar img { width:100%;height:100%;object-fit:cover;display:block; }
+        .user-chip strong { display:block;font-size:13px;font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f8fafc;letter-spacing:-.01em; }
+        .user-chip small { display:block;font-size:11px;color:#94a3b8;margin-top:2px;letter-spacing:.02em;text-transform:uppercase;font-weight:600; }
+        .topbar-action { position:relative;width:36px;height:36px;display:grid;place-items:center;border:1px solid rgba(96,165,250,.25);border-radius:10px;background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(139,92,246,.08));color:#cbd5e1;text-decoration:none;transition:all .2s ease;backdrop-filter:blur(4px); }
+        .topbar-action:hover { color:#f8fafc;background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(139,92,246,.15));border-color:rgba(96,165,250,.45);box-shadow:0 4px 16px rgba(59,130,246,.15); }
         .topbar-action svg { width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round; }
-        .topbar-count { position:absolute;right:-5px;top:-5px;min-width:17px;height:17px;padding:0 4px;display:grid;place-items:center;border-radius:999px;background:#2563eb;color:#fff;font-size:9px;font-weight:900;border:2px solid #0f172a; }
+        .topbar-count { position:absolute;right:-5px;top:-5px;min-width:18px;height:18px;padding:0 4px;display:grid;place-items:center;border-radius:999px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:9px;font-weight:900;border:2px solid #0f172a;box-shadow:0 3px 10px rgba(239,68,68,.4); }
         .menu-toggle { display:none; width:38px; height:38px; border:1px solid rgba(148,163,184,.2); border-radius:9px; background: rgba(15,23,42,.8); color:#f8fafc; font-size:20px; cursor:pointer; align-items:center; justify-content:center; }
         .sidebar-close { display:none; margin-left:auto; background:rgba(15,23,42,.9); color:#f8fafc; border:1px solid rgba(148,163,184,.18); border-radius:8px; padding:5px 9px; cursor:pointer; }
         .sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(15,23,42,.48); z-index:30; }
@@ -110,8 +121,10 @@
         .readiness-copy strong { display:block;color:#fef3c7;font-size:13px;margin-bottom:4px; }
         .readiness-copy p { color:#cbd5e1;font-size:12px;line-height:1.5; }
         .readiness-items { display:flex;gap:7px;flex-wrap:wrap;margin-top:9px; }
-        .readiness-item { display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:8px;background:rgba(15,23,42,.72);border:1px solid rgba(251,191,36,.16);color:#e2e8f0;font-size:11px; }
+        .readiness-item { display:inline-grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:2px 7px;padding:7px 9px;border-radius:8px;background:rgba(15,23,42,.72);border:1px solid rgba(251,191,36,.16);color:#e2e8f0;font-size:11px; }
         .readiness-item::before { content:'!';display:grid;place-items:center;width:15px;height:15px;border-radius:50%;background:rgba(251,191,36,.16);color:#fcd34d;font-size:10px;font-weight:900; }
+        .readiness-item strong { color:#fef3c7;grid-column:2;font-size:11px;margin:0; }
+        .readiness-item span { color:#cbd5e1;grid-column:2; }
         .readiness-actions { display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;flex:0 0 auto; }
         .readiness-actions a { min-height:34px;padding:6px 10px;font-size:11px; }
         .form-group, .field { margin-bottom:15px; }
@@ -152,9 +165,6 @@
         .metric-card strong { display:block;font-size:22px;letter-spacing:-.04em;color:var(--text); }
         a { color:var(--blue); }
         code { color:#bfdbfe;background:rgba(96,165,250,.08);padding:2px 5px;border-radius:5px;overflow-wrap:anywhere; }
-        @media (max-width: 1200px) {
-            .topbar-nav { display:none; }
-        }
         @media (max-width: 900px) {
             body { display:block; }
             .admin-shell { display:block; }
@@ -168,7 +178,6 @@
             .topbar { position:sticky; top:0; z-index:20; padding:10px 14px; }
             .menu-toggle { display:inline-flex; flex-shrink:0; }
             .topbar-left span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-            .topbar-nav { display:none; }
             .content { padding:14px; }
             .stat-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
             .stat { padding:12px; }
@@ -247,7 +256,7 @@
             <a href="{{ route('admin.mpesa.sandbox-test.index') }}" class="{{ request()->routeIs('admin.mpesa.sandbox-test*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 12h18M12 3v18"/><rect x="5" y="5" width="14" height="14" rx="2"/></svg></i><span>Sandbox Pay Test</span></a>
         @endif
         @if(\Illuminate\Support\Facades\Route::has('admin.downloads.index'))
-            <a href="{{ route('admin.downloads.index') }}" class="{{ request()->routeIs('admin.downloads*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></i><span>Download App</span></a>
+            <a href="{{ route('admin.downloads.index') }}" class="{{ request()->routeIs('admin.downloads*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></i><span>App Releases</span></a>
         @endif
         @unless($isCaretaker)
         @endunless
@@ -275,31 +284,45 @@
     <div class="topbar">
         <div class="topbar-left">
             <button class="menu-toggle" type="button" id="menuToggle" aria-controls="adminSidebar" aria-expanded="false" aria-label="Open menu">☰</button>
-            <span class="topbar-title">@yield('page-title', 'Dashboard')</span>
-            <nav class="topbar-nav" aria-label="Quick navigation">
-                <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a>
-                @if(!$landlordLocked && !$isCaretaker)
-                    <a href="{{ route('admin.invitations.index') }}" class="{{ request()->routeIs('admin.invitations*') ? 'active' : '' }}">Invitations</a>
-                    <a href="{{ route('admin.payments.index') }}" class="{{ request()->routeIs('admin.payments*') ? 'active' : '' }}">Payments</a>
-                @endif
-                @if(!$landlordLocked)
-                    <a href="{{ route('admin.chats.index') }}" class="{{ request()->routeIs('admin.chats*') ? 'active' : '' }}">Chats</a>
-                @endif
-            </nav>
         </div>
         <div class="topbar-meta">
             <span class="topbar-date">{{ now()->format('D, d M Y') }}</span>
-            <a class="topbar-action {{ request()->routeIs('admin.notifications*') ? 'active' : '' }}" href="{{ route('admin.notifications.index') }}" aria-label="Notifications{{ $adminUnreadNotifications ? ', '.$adminUnreadNotifications.' unread' : '' }}" title="Notifications">
+            <a class="topbar-action {{ request()->routeIs('admin.notifications*') ? 'active' : '' }}{{ $adminUnreadNotifications > 0 ? ' has-notifications' : '' }}" href="{{ route('admin.notifications.index') }}" aria-label="Notifications{{ $adminUnreadNotifications ? ', '.$adminUnreadNotifications.' unread' : '' }}" title="Notifications" data-notification-count="{{ $adminUnreadNotifications }}">
                 <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
-                @if($adminUnreadNotifications > 0)<span class="topbar-count">{{ min($adminUnreadNotifications, 99) }}</span>@endif
+                @if($adminUnreadNotifications > 0)<span class="topbar-count" aria-label="Unread notifications count">{{ min($adminUnreadNotifications, 99) }}</span>@endif
+                <span class="notification-tooltip" role="tooltip">
+                    <span class="notification-tooltip-head">{{ $adminUnreadNotifications > 0 ? $adminUnreadNotifications.' unread notification'.($adminUnreadNotifications === 1 ? '' : 's') : 'No unread notifications' }}</span>
+                    @forelse($adminNotificationPreview as $preview)
+                        <span class="notification-tooltip-item {{ $preview->is_read ? '' : 'is-unread' }}">
+                            <span class="notification-tooltip-title">{{ \Illuminate\Support\Str::limit($preview->title ?: 'Notification', 42) }}</span>
+                            <span class="notification-tooltip-time">{{ $preview->created_at?->diffForHumans() }}</span>
+                        </span>
+                    @empty
+                        <span class="notification-tooltip-item"><span class="notification-tooltip-title">Nothing here yet.</span></span>
+                    @endforelse
+                </span>
             </a>
             <a class="topbar-action {{ request()->routeIs('admin.settings*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}" aria-label="Settings" title="Settings">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1A8 8 0 0 0 15 6l-.3-2.5h-4L10.5 6A8 8 0 0 0 9 7.1l-2.4-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1A8 8 0 0 0 10.5 18l.2 2.5h4L15 18a8 8 0 0 0 1.5-1.1l2.4 1 2-3.4-2-1.5a7 7 0 0 0 .1-1z"/></svg>
             </a>
-            <div class="user-chip" title="{{ auth()->user()->email }}">
-                <span class="user-avatar" aria-hidden="true">{{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(auth()->user()->name ?: auth()->user()->email, 0, 2)) }}</span>
-                <span><strong>{{ auth()->user()->name ?: auth()->user()->email }}</strong><small>{{ str_replace('_', ' ', \Illuminate\Support\Str::title($roleName ?? 'User')) }}</small></span>
-            </div>
+            @php
+                $chipUser = auth()->user();
+                $chipName = trim((string) ($chipUser->name ?: trim(($chipUser->first_name ?? '').' '.($chipUser->last_name ?? ''))));
+                $chipDisplay = $chipName !== '' ? $chipName : \Illuminate\Support\Str::before($chipUser->email, '@');
+                $chipParts = preg_split('/\s+/', $chipDisplay, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                $chipInitials = count($chipParts) > 1
+                    ? \Illuminate\Support\Str::upper(mb_substr($chipParts[0], 0, 1).mb_substr(end($chipParts), 0, 1))
+                    : \Illuminate\Support\Str::upper(mb_substr($chipDisplay, 0, 2));
+                $chipPhoto = $chipUser->profile_image_url
+                    ? (\Illuminate\Support\Str::startsWith($chipUser->profile_image_url, 'http') ? $chipUser->profile_image_url : asset(ltrim($chipUser->profile_image_url, '/')))
+                    : null;
+            @endphp
+            <a class="user-chip" href="{{ route('admin.settings.index', ['tab' => 'account']) }}" title="{{ $chipDisplay }} — {{ $chipUser->email }}">
+                <span class="user-avatar" aria-hidden="true">
+                    @if($chipPhoto)<img src="{{ $chipPhoto }}" alt="">@else{{ $chipInitials }}@endif
+                </span>
+                <span class="user-chip-copy"><strong>{{ $chipDisplay }}</strong><small>{{ str_replace('_', ' ', \Illuminate\Support\Str::title($roleName ?? 'User')) }}</small></span>
+            </a>
         </div>
     </div>
     @endauth
@@ -320,7 +343,10 @@
                         <p>Complete the missing information to unlock all dependent operations safely.</p>
                         <div class="readiness-items">
                             @foreach($adminReadiness['missing'] as $checkpoint)
-                                <span class="readiness-item" title="{{ $checkpoint['message'] }}">{{ $checkpoint['label'] }}</span>
+                                <span class="readiness-item">
+                                    <strong>{{ $checkpoint['label'] }}</strong>
+                                    <span>{{ $checkpoint['message'] }}</span>
+                                </span>
                             @endforeach
                         </div>
                     </div>

@@ -141,6 +141,7 @@ class TenantAppNotificationService
             'PAYMENT_RECEIVED' => 'PAYMENTS',
             'MAINTENANCE' => 'MAINTENANCE',
             'TENANCY_ASSIGNED' => 'RENTAL',
+            'APP_UPDATE' => 'APP_UPDATE',
             default => 'NOTIFICATIONS',
         };
     }

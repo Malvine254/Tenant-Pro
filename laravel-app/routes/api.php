@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DownloadsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\InvitationController;
@@ -25,6 +26,8 @@ Route::get('/health', fn () => response()->json([
 	'mobile_api_key_configured' => (string) config('deployment.mobile_api_key', '') !== '',
 	'timestamp' => now()->toISOString(),
 ]));
+
+Route::get('/app/latest-version', [DownloadsController::class, 'latestVersion']);
 
 // Safaricom cannot provide the mobile API key or a user access token.
 Route::post('/payments/mpesa/callback', [PaymentController::class, 'mpesaCallback']);

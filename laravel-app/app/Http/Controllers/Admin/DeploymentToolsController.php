@@ -256,6 +256,12 @@ class DeploymentToolsController extends Controller
             'cache_routes' => 'Rebuild route cache',
             'cache_views' => 'Rebuild compiled views',
             'optimize_cache' => 'Optimize/cache app',
+            'migrate_status' => 'Show migration status',
+            'migrate_force' => 'Run migrations (--force)',
+            'seed_force' => 'Run database seeders (--force)',
+            'storage_link' => 'Create storage symlink',
+            'generate_key' => 'Generate app key',
+            'ensure_vendor' => 'Ensure vendor folder exists',
         ];
     }
 

@@ -139,6 +139,62 @@
         flex: 0 0 16px;
         accent-color: #60a5fa;
     }
+    .profile-photo-row {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin: 0 18px 18px;
+        padding: 16px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 14px;
+        flex-wrap: wrap;
+    }
+    .profile-photo-preview {
+        width: 84px;
+        height: 84px;
+        flex: 0 0 84px;
+        border-radius: 20px;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        color: #fff;
+        font-size: 26px;
+        font-weight: 900;
+        letter-spacing: 0.02em;
+        box-shadow: 0 10px 26px rgba(59, 130, 246, 0.28);
+    }
+    .profile-photo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .profile-photo-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 240px;
+        flex: 1;
+    }
+    .profile-photo-copy label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #cbd5e1;
+    }
+    .profile-photo-copy small {
+        color: #94a3b8;
+        font-size: 12px;
+    }
+    .profile-photo-copy input[type="file"] {
+        padding: 9px;
+        background: rgba(2, 6, 23, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 10px;
+        color: #e2e8f0;
+        font-size: 13px;
+    }
     .tenant-preferences-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         align-items: stretch;
@@ -260,10 +316,39 @@
         <div class="divider"></div>
 
         <div id="settings-pane-account" class="settings-pane ui-tab-panel" role="tabpanel" aria-labelledby="settings-tab-account">
-            <form method="POST" action="{{ route('admin.settings.account') }}" class="settings-form">
+            <form method="POST" action="{{ route('admin.settings.account') }}" class="settings-form" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="_settings_tab" value="account">
+
+                @php
+                    $accountName = trim((string) ($user->name ?: trim(($user->first_name ?? '').' '.($user->last_name ?? ''))));
+                    $accountDisplay = $accountName !== '' ? $accountName : \Illuminate\Support\Str::before($user->email, '@');
+                    $accountParts = preg_split('/\s+/', $accountDisplay, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                    $accountInitials = count($accountParts) > 1
+                        ? \Illuminate\Support\Str::upper(mb_substr($accountParts[0], 0, 1).mb_substr(end($accountParts), 0, 1))
+                        : \Illuminate\Support\Str::upper(mb_substr($accountDisplay, 0, 2));
+                    $accountPhoto = $user->profile_image_url
+                        ? (\Illuminate\Support\Str::startsWith($user->profile_image_url, 'http') ? $user->profile_image_url : asset(ltrim($user->profile_image_url, '/')))
+                        : null;
+                @endphp
+
+                <div class="profile-photo-row">
+                    <span class="profile-photo-preview" id="profilePhotoPreview" data-initials="{{ $accountInitials }}">
+                        @if($accountPhoto)<img src="{{ $accountPhoto }}" alt="{{ $accountDisplay }}">@else{{ $accountInitials }}@endif
+                    </span>
+                    <div class="profile-photo-copy">
+                        <label for="profile_image">Profile picture</label>
+                        <input id="profile_image" type="file" name="profile_image" accept="image/png,image/jpeg,image/webp">
+                        <small>PNG, JPG or WEBP up to 5 MB. Shown next to your name across the portal.</small>
+                        @if($accountPhoto)
+                            <label class="check-row" for="remove_profile_image">
+                                <input id="remove_profile_image" type="checkbox" name="remove_profile_image" value="1">
+                                <span>Remove current picture and show initials instead</span>
+                            </label>
+                        @endif
+                    </div>
+                </div>
 
                 <div class="settings-grid">
                     <div class="field">
@@ -421,6 +506,12 @@
                         <div class="settings-status"><span>Credential status</span><strong style="color:{{ $darajaSettings['ready'] ? '#86efac' : '#fca5a5' }};">{{ $darajaSettings['ready'] ? 'Ready' : 'Incomplete' }}</strong></div>
                         <div class="settings-status"><span>Consumer key</span><strong>{{ $darajaSettings['consumer_key_masked'] ?: 'Not configured' }}</strong></div>
                     </div>
+
+                    @if(!$darajaSettings['ready'])
+                        <div class="alert-error" style="margin:0 18px 4px;">
+                            <strong>Still required:</strong> {{ implode(', ', $darajaSettings['missing_fields']) }}.
+                        </div>
+                    @endif
 
                     <div class="settings-grid daraja-grid">
                         <div class="field">
@@ -581,6 +672,40 @@
         }
 
         syncPaymentFields();
+    })();
+
+    (function () {
+        const input = document.getElementById('profile_image');
+        const preview = document.getElementById('profilePhotoPreview');
+        const remove = document.getElementById('remove_profile_image');
+        if (!input || !preview) {
+            return;
+        }
+
+        input.addEventListener('change', function () {
+            const file = input.files && input.files[0];
+            if (!file) {
+                return;
+            }
+            if (remove) {
+                remove.checked = false;
+            }
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                preview.innerHTML = '<img alt="Selected profile picture">';
+                preview.querySelector('img').src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        if (remove) {
+            remove.addEventListener('change', function () {
+                if (remove.checked) {
+                    input.value = '';
+                    preview.textContent = preview.dataset.initials || '';
+                }
+            });
+        }
     })();
 </script>
 @endsection
