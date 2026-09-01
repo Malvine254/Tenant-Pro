@@ -123,22 +123,6 @@
         margin: 8px 18px 0;
         background: rgba(148, 163, 184, 0.12);
     }
-    .check-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 12px 14px;
-        background: rgba(15, 23, 42, 0.7);
-        border: 1px solid rgba(148, 163, 184, 0.18);
-        border-radius: 12px;
-        color: #e2e8f0;
-    }
-    .check-row input {
-        width: 16px;
-        height: 16px;
-        flex: 0 0 16px;
-        accent-color: #60a5fa;
-    }
     .profile-photo-row {
         display: flex;
         align-items: center;
