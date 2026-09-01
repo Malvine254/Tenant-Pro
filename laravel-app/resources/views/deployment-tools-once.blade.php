@@ -67,7 +67,7 @@
 
     <div class="card">
         <h2>Run Full Deployment Sequence</h2>
-        <p class="note">Sequence: vendor check, APP_KEY generation (if missing), storage link, cache clear, migrate, seed, config cache, route cache.</p>
+        <p class="note">Sequence: vendor check, APP_KEY generation (if missing), storage link, cache clear, migration log repair, migrate, seed, config cache, route cache.</p>
 
         @if($isConfigured && $isValidToken)
             <form method="POST" action="{{ route('deployment-tools.once.run') }}">

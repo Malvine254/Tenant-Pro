@@ -2,7 +2,7 @@
 
 return [
     'deployment_tool_token' => env('DEPLOYMENT_TOOL_TOKEN', ''),
-    'one_time_enabled' => env('DEPLOYMENT_ONE_TIME_ENABLED', false),
+    'one_time_enabled' => env('DEPLOYMENT_ONE_TIME_ENABLED'),
     'deployment_one_time_token' => env('DEPLOYMENT_ONE_TIME_TOKEN', ''),
     'mobile_api_key' => env('MOBILE_API_KEY', ''),
     'subscription_timezone' => env('SUBSCRIPTION_TIMEZONE', 'Africa/Nairobi'),

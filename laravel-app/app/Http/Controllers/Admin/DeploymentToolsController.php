@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\MigrationRepairService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -14,7 +15,7 @@ class DeploymentToolsController extends Controller
 {
     public function once(Request $request): View
     {
-        abort_unless((bool) config('deployment.one_time_enabled'), 404);
+        abort_unless($this->oneTimeToolsEnabled(), 404);
 
         $token = (string) $request->query('token', '');
         $validToken = $this->deploymentUrlTokenValid($token);
@@ -32,7 +33,7 @@ class DeploymentToolsController extends Controller
 
     public function runOnce(Request $request): RedirectResponse
     {
-        abort_unless((bool) config('deployment.one_time_enabled'), 404);
+        abort_unless($this->oneTimeToolsEnabled(), 404);
 
         $request->validate([
             'token' => 'required|string',
@@ -182,6 +183,8 @@ class DeploymentToolsController extends Controller
             'cache_views' => $this->runArtisanCommand('view:cache'),
             'storage_link' => $this->runArtisanCommand('storage:link'),
             'migrate_status' => $this->runArtisanCommand('migrate:status'),
+            'migrate_repair' => $this->repairMigrationLog(true),
+            'migrate_repair_preview' => $this->repairMigrationLog(false),
             'migrate_force' => $this->runArtisanCommand('migrate', ['--force' => true]),
             'migrate_rollback' => $this->runArtisanCommand('migrate:rollback', ['--force' => true]),
             'migrate_fresh_seed' => $this->runArtisanCommand('migrate:fresh', ['--seed' => true, '--force' => true]),
@@ -197,6 +200,27 @@ class DeploymentToolsController extends Controller
         Artisan::call($command, $params);
 
         return trim(Artisan::output()) ?: 'Command executed with no output.';
+    }
+
+    private function repairMigrationLog(bool $apply): string
+    {
+        $result = app(MigrationRepairService::class)->repair($apply);
+        $verb = $apply ? 'Marked as already run' : 'Would be marked as already run';
+
+        $lines = [];
+        $lines[] = $result['marked'] === []
+            ? 'No migrations needed reconciling — every pending migration still has tables to create.'
+            : $verb.' ('.count($result['marked']).'):'.PHP_EOL.'  - '.implode(PHP_EOL.'  - ', $result['marked']);
+
+        if ($result['pending'] !== []) {
+            $lines[] = 'Still pending, will run on next migrate ('.count($result['pending']).'):'.PHP_EOL.'  - '.implode(PHP_EOL.'  - ', $result['pending']);
+        }
+
+        if ($result['missing_tables'] !== []) {
+            $lines[] = 'Tables not found yet: '.implode(', ', $result['missing_tables']);
+        }
+
+        return implode(PHP_EOL.PHP_EOL, $lines);
     }
 
     private function ensureVendorFolder(): string
@@ -230,6 +254,8 @@ class DeploymentToolsController extends Controller
             'cache_views' => 'Rebuild compiled views',
             'storage_link' => 'Create storage symlink',
             'migrate_status' => 'Show migration status',
+            'migrate_repair_preview' => 'Preview migration log repair',
+            'migrate_repair' => 'Repair migration log (skip existing tables)',
             'migrate_force' => 'Run migrations (--force)',
             'seed_force' => 'Run database seeders (--force)',
             'ensure_vendor' => 'Ensure vendor folder exists',
@@ -257,6 +283,8 @@ class DeploymentToolsController extends Controller
             'cache_views' => 'Rebuild compiled views',
             'optimize_cache' => 'Optimize/cache app',
             'migrate_status' => 'Show migration status',
+            'migrate_repair_preview' => 'Preview migration log repair',
+            'migrate_repair' => 'Repair migration log (skip existing tables)',
             'migrate_force' => 'Run migrations (--force)',
             'seed_force' => 'Run database seeders (--force)',
             'storage_link' => 'Create storage symlink',
@@ -280,6 +308,8 @@ class DeploymentToolsController extends Controller
             'cache_views' => 'Rebuild compiled views',
             'storage_link' => 'Create storage symlink',
             'migrate_status' => 'Show migration status',
+            'migrate_repair_preview' => 'Preview migration log repair',
+            'migrate_repair' => 'Repair migration log (skip existing tables)',
             'migrate_force' => 'Run migrations (--force)',
             'seed_force' => 'Run database seeders (--force)',
             'generate_key' => 'Generate app key',
@@ -290,7 +320,7 @@ class DeploymentToolsController extends Controller
     private function commandHints(): array
     {
         return [
-            'full_deploy' => 'storage:link, optimize:clear, migrate --force, db:seed --force, config:cache, route:cache',
+            'full_deploy' => 'storage:link, optimize:clear, repair migration log, migrate --force, db:seed --force, config:cache, route:cache',
             'clear_cache' => 'php artisan optimize:clear',
             'clear_app_cache' => 'php artisan cache:clear',
             'clear_config' => 'php artisan config:clear',
@@ -302,6 +332,8 @@ class DeploymentToolsController extends Controller
             'cache_views' => 'php artisan view:cache',
             'storage_link' => 'php artisan storage:link',
             'migrate_status' => 'php artisan migrate:status',
+            'migrate_repair_preview' => 'Dry run: list migrations whose tables already exist',
+            'migrate_repair' => 'Logs already-created tables as migrated so migrate skips them',
             'migrate_force' => 'php artisan migrate --force',
             'migrate_rollback' => 'php artisan migrate:rollback --force',
             'migrate_fresh_seed' => 'php artisan migrate:fresh --seed --force',
@@ -349,20 +381,21 @@ class DeploymentToolsController extends Controller
     {
         $logs = [];
 
-        $logs[] = '[1/8] '.$this->ensureVendorFolder();
+        $logs[] = '[1/9] '.$this->ensureVendorFolder();
 
         if (empty((string) config('app.key'))) {
-            $logs[] = '[2/8] '.$this->runArtisanCommand('key:generate', ['--force' => true]);
+            $logs[] = '[2/9] '.$this->runArtisanCommand('key:generate', ['--force' => true]);
         } else {
-            $logs[] = '[2/8] APP_KEY already set. Skipped key generation.';
+            $logs[] = '[2/9] APP_KEY already set. Skipped key generation.';
         }
 
-        $logs[] = '[3/8] '.$this->runArtisanCommand('storage:link');
-        $logs[] = '[4/8] '.$this->runArtisanCommand('optimize:clear');
-        $logs[] = '[5/8] '.$this->runArtisanCommand('migrate', ['--force' => true]);
-        $logs[] = '[6/8] '.$this->runArtisanCommand('db:seed', ['--force' => true]);
-        $logs[] = '[7/8] '.$this->runArtisanCommand('config:cache');
-        $logs[] = '[8/8] '.$this->runArtisanCommand('route:cache');
+        $logs[] = '[3/9] '.$this->runArtisanCommand('storage:link');
+        $logs[] = '[4/9] '.$this->runArtisanCommand('optimize:clear');
+        $logs[] = '[5/9] '.$this->repairMigrationLog(true);
+        $logs[] = '[6/9] '.$this->runArtisanCommand('migrate', ['--force' => true]);
+        $logs[] = '[7/9] '.$this->runArtisanCommand('db:seed', ['--force' => true]);
+        $logs[] = '[8/9] '.$this->runArtisanCommand('config:cache');
+        $logs[] = '[9/9] '.$this->runArtisanCommand('route:cache');
 
         return implode("\n\n", $logs);
     }
@@ -370,6 +403,26 @@ class DeploymentToolsController extends Controller
     private function deploymentUrlTokenConfigured(): bool
     {
         return $this->deploymentUrlToken() !== '';
+    }
+
+    /**
+     * The page exists whenever a token is configured. DEPLOYMENT_ONE_TIME_ENABLED
+     * is only an explicit kill switch, so a missing flag can never lock an operator
+     * out of the recovery tools on hosting without shell access.
+     */
+    private function oneTimeToolsEnabled(): bool
+    {
+        if (! $this->deploymentUrlTokenConfigured()) {
+            return false;
+        }
+
+        $flag = config('deployment.one_time_enabled');
+
+        if ($flag === null || $flag === '') {
+            return true;
+        }
+
+        return filter_var($flag, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) !== false;
     }
 
     private function deploymentUrlTokenValid(string $token): bool
