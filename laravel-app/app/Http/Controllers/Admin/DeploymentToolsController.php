@@ -186,6 +186,7 @@ class DeploymentToolsController extends Controller
             'migrate_repair' => $this->repairMigrationLog(true),
             'migrate_repair_preview' => $this->repairMigrationLog(false),
             'migrate_force' => $this->runArtisanCommand('migrate', ['--force' => true]),
+            'migrate_safe' => $this->migrateIndividually(),
             'migrate_rollback' => $this->runArtisanCommand('migrate:rollback', ['--force' => true]),
             'migrate_fresh_seed' => $this->runArtisanCommand('migrate:fresh', ['--seed' => true, '--force' => true]),
             'seed_force' => $this->runArtisanCommand('db:seed', ['--force' => true]),
@@ -218,6 +219,31 @@ class DeploymentToolsController extends Controller
 
         if ($result['missing'] !== []) {
             $lines[] = 'Not present in the database yet: '.implode(', ', $result['missing']);
+        }
+
+        return implode(PHP_EOL.PHP_EOL, $lines);
+    }
+
+    private function migrateIndividually(): string
+    {
+        $result = app(MigrationRepairService::class)->migrateIndividually();
+
+        $lines = [];
+        $lines[] = sprintf(
+            'Applied %d, skipped %d already-present, failed %d.',
+            count($result['applied']),
+            count($result['skipped']),
+            count($result['failed'])
+        );
+
+        foreach (['applied' => 'Applied', 'skipped' => 'Skipped (already in database)', 'failed' => 'Failed'] as $key => $heading) {
+            if ($result[$key] !== []) {
+                $lines[] = $heading.':'.PHP_EOL.'  - '.implode(PHP_EOL.'  - ', $result[$key]);
+            }
+        }
+
+        if ($result['failed'] !== []) {
+            $lines[] = 'Failed migrations were left pending. Fix the cause, then run this action again.';
         }
 
         return implode(PHP_EOL.PHP_EOL, $lines);
@@ -257,6 +283,7 @@ class DeploymentToolsController extends Controller
             'migrate_repair_preview' => 'Preview migration log repair',
             'migrate_repair' => 'Repair migration log (skip existing tables)',
             'migrate_force' => 'Run migrations (--force)',
+            'migrate_safe' => 'Run migrations one by one (skip failures)',
             'seed_force' => 'Run database seeders (--force)',
             'ensure_vendor' => 'Ensure vendor folder exists',
         ];
@@ -286,6 +313,7 @@ class DeploymentToolsController extends Controller
             'migrate_repair_preview' => 'Preview migration log repair',
             'migrate_repair' => 'Repair migration log (skip existing tables)',
             'migrate_force' => 'Run migrations (--force)',
+            'migrate_safe' => 'Run migrations one by one (skip failures)',
             'seed_force' => 'Run database seeders (--force)',
             'storage_link' => 'Create storage symlink',
             'generate_key' => 'Generate app key',
@@ -311,6 +339,7 @@ class DeploymentToolsController extends Controller
             'migrate_repair_preview' => 'Preview migration log repair',
             'migrate_repair' => 'Repair migration log (skip existing tables)',
             'migrate_force' => 'Run migrations (--force)',
+            'migrate_safe' => 'Run migrations one by one (skip failures)',
             'seed_force' => 'Run database seeders (--force)',
             'generate_key' => 'Generate app key',
             'ensure_vendor' => 'Ensure vendor folder exists',
@@ -335,6 +364,7 @@ class DeploymentToolsController extends Controller
             'migrate_repair_preview' => 'Dry run: list migrations whose tables already exist',
             'migrate_repair' => 'Logs already-created tables as migrated so migrate skips them',
             'migrate_force' => 'php artisan migrate --force',
+            'migrate_safe' => 'Runs each pending migration separately and continues past errors',
             'migrate_rollback' => 'php artisan migrate:rollback --force',
             'migrate_fresh_seed' => 'php artisan migrate:fresh --seed --force',
             'seed_force' => 'php artisan db:seed --force',
@@ -392,7 +422,7 @@ class DeploymentToolsController extends Controller
         $logs[] = '[3/9] '.$this->runArtisanCommand('storage:link');
         $logs[] = '[4/9] '.$this->runArtisanCommand('optimize:clear');
         $logs[] = '[5/9] '.$this->repairMigrationLog(true);
-        $logs[] = '[6/9] '.$this->runArtisanCommand('migrate', ['--force' => true]);
+        $logs[] = '[6/9] '.$this->migrateIndividually();
         $logs[] = '[7/9] '.$this->runArtisanCommand('db:seed', ['--force' => true]);
         $logs[] = '[8/9] '.$this->runArtisanCommand('config:cache');
         $logs[] = '[9/9] '.$this->runArtisanCommand('route:cache');

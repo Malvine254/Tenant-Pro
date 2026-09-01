@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use Illuminate\Database\Migrations\Migrator;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 /**
  * Reconciles the migrations log with the database for deployments where schema changes
@@ -81,6 +83,82 @@ class MigrationRepairService
             'pending' => $pending,
             'missing' => array_values(array_unique($missing)),
         ];
+    }
+
+    /**
+     * Runs each pending migration on its own so one failure cannot block the rest.
+     * Errors that mean "this change is already in the database" are logged as ran;
+     * genuine failures are reported and left pending.
+     *
+     * @return array{applied: list<string>, skipped: list<string>, failed: list<string>}
+     */
+    public function migrateIndividually(): array
+    {
+        $repository = $this->migrator->getRepository();
+
+        if (! $repository->repositoryExists()) {
+            $repository->createRepository();
+        }
+
+        $ran = $repository->getRan();
+        $files = $this->migrator->getMigrationFiles($this->migrator->paths() ?: [database_path('migrations')]);
+
+        $applied = [];
+        $skipped = [];
+        $failed = [];
+
+        foreach ($files as $name => $path) {
+            if (in_array($name, $ran, true)) {
+                continue;
+            }
+
+            try {
+                Artisan::call('migrate', [
+                    '--force' => true,
+                    '--path' => $path,
+                    '--realpath' => true,
+                ]);
+
+                $applied[] = $name;
+            } catch (Throwable $e) {
+                if ($this->isAlreadyAppliedError($e)) {
+                    $repository->log($name, $repository->getNextBatchNumber());
+                    $skipped[] = $name.' — already in database ('.$this->summarize($e).')';
+
+                    continue;
+                }
+
+                $failed[] = $name.' — '.$this->summarize($e);
+            }
+        }
+
+        return [
+            'applied' => $applied,
+            'skipped' => $skipped,
+            'failed' => $failed,
+        ];
+    }
+
+    /** MySQL duplicate table/column/index/constraint errors mean the change is already present. */
+    private function isAlreadyAppliedError(Throwable $e): bool
+    {
+        $duplicateCodes = ['1050', '1060', '1061', '1826', '1022'];
+        $message = $e->getMessage();
+
+        foreach ($duplicateCodes as $code) {
+            if (str_contains($message, $code.' ')) {
+                return true;
+            }
+        }
+
+        return str_contains(strtolower($message), 'already exists');
+    }
+
+    private function summarize(Throwable $e): string
+    {
+        $message = (string) preg_replace('/\s*\(Connection:.*$/s', '', $e->getMessage());
+
+        return trim(mb_substr($message, 0, 240));
     }
 
     /**
