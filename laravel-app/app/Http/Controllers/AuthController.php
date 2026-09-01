@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Mail\TenantProUpdateMail;
-use App\Models\User;
+use App\Models\Invitation;
 use App\Models\Role;
 use App\Models\Tenant;
-use App\Models\Invitation;
+use App\Models\User;
 use App\Services\LandlordSubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -20,14 +20,13 @@ class AuthController extends Controller
 {
     public function __construct(
         private readonly LandlordSubscriptionService $subscriptionService,
-    ) {
-    }
+    ) {}
 
     public function register(Request $request)
     {
         $firstName = (string) $request->input('first_name', $request->input('firstName', ''));
         $lastName = (string) $request->input('last_name', $request->input('lastName', ''));
-        $name = (string) $request->input('name', trim($firstName . ' ' . $lastName));
+        $name = (string) $request->input('name', trim($firstName.' '.$lastName));
         $phoneNumber = $request->input('phone_number', $request->input('phoneNumber'));
         $roleName = $request->input('role_name', $request->input('role', 'TENANT'));
 
@@ -51,7 +50,7 @@ class AuthController extends Controller
         ]);
 
         $roleName = $data['role_name'] ?? 'TENANT';
-        if (!in_array($roleName, ['TENANT', 'LANDLORD'], true)) {
+        if (! in_array($roleName, ['TENANT', 'LANDLORD'], true)) {
             throw ValidationException::withMessages([
                 'role_name' => ['Only TENANT and LANDLORD self-registration is allowed.'],
             ]);
@@ -92,7 +91,7 @@ class AuthController extends Controller
         $email = strtolower(trim($data['email']));
         $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
 
-        if (!$user || !Hash::check($data['password'], $user->password)) {
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
@@ -101,15 +100,23 @@ class AuthController extends Controller
         // Temporary credentials are delivered only to the invitation email.
         // Treat a successful temporary-password sign-in as proof of email access,
         // including invitation accounts created before this flow marked emails verified.
-        if (!$user->email_verified_at && $this->isTemporaryTenantLogin($user, $email)) {
+        if (! $user->email_verified_at && $this->isTemporaryTenantLogin($user, $email)) {
             $user->forceFill([
                 'is_active' => true,
                 'email_verified_at' => now(),
             ])->save();
         }
 
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             return response()->json(['message' => 'Account is inactive.'], 403);
+        }
+
+        if ($user->isLandlordStaff()) {
+            return response()->json([
+                'message' => 'Team-member accounts use the secure web management portal.',
+                'code' => 'LANDLORD_TEAM_PORTAL_ONLY',
+                'portalUrl' => route('admin.login'),
+            ], 403);
         }
 
         // Keep authentication available when a subscription expires. The API
@@ -119,7 +126,7 @@ class AuthController extends Controller
             $this->subscriptionService->evaluate($user);
         }
 
-        if (!$user->email_verified_at) {
+        if (! $user->email_verified_at) {
             return response()->json([
                 'message' => 'Please verify your email before signing in.',
                 'email' => $user->email,
@@ -127,6 +134,7 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('api-token')->plainTextToken;
+
         return response()->json([
             'user' => $this->userPayload($user->load(['role', 'tenant.unit.property'])),
             'token' => $token,
@@ -155,7 +163,7 @@ class AuthController extends Controller
         $email = strtolower(trim($data['email']));
         $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'message' => 'If the account exists, a verification code has been sent.',
                 'email' => $email,
@@ -199,7 +207,7 @@ class AuthController extends Controller
         $data = $request->validate(['phone_number' => 'required|string']);
         $user = User::where('phone_number', $data['phone_number'])->first();
 
-        if (!$user || !$user->email) {
+        if (! $user || ! $user->email) {
             return response()->json(['message' => 'No account with an email address was found for this phone number.'], 404);
         }
 
@@ -235,11 +243,12 @@ class AuthController extends Controller
         ]);
         $user = User::where('phone_number', $data['phone_number'])->first();
 
-        if (!$user || !$user->email) {
+        if (! $user || ! $user->email) {
             throw ValidationException::withMessages(['code' => ['The login code is invalid or expired.']]);
         }
 
         $request->merge(['email' => $user->email]);
+
         return $this->verifyEmailOtp($request);
     }
 
@@ -254,7 +263,7 @@ class AuthController extends Controller
         $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
         $record = Cache::get($this->otpCacheKey($email));
 
-        if (!$user || !$record || !Hash::check($data['code'], $record['hash'])) {
+        if (! $user || ! $record || ! Hash::check($data['code'], $record['hash'])) {
             throw ValidationException::withMessages([
                 'code' => ['The verification code is invalid or has expired.'],
             ]);
@@ -317,7 +326,7 @@ class AuthController extends Controller
         $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
         $record = Cache::get($this->passwordResetCacheKey($email));
 
-        if (!$user || !$record || !Hash::check($data['code'], $record['hash'])) {
+        if (! $user || ! $record || ! Hash::check($data['code'], $record['hash'])) {
             throw ValidationException::withMessages([
                 'code' => ['The password reset code is invalid or has expired.'],
             ]);
@@ -446,6 +455,7 @@ class AuthController extends Controller
         }
 
         $user->update($data);
+
         return response()->json($this->userPayload($user->fresh()->load(['role', 'tenancies.unit.property'])));
     }
 
@@ -462,7 +472,7 @@ class AuthController extends Controller
         ]);
         $user = $request->user();
 
-        if (!Hash::check($data['current_password'], $user->password)) {
+        if (! Hash::check($data['current_password'], $user->password)) {
             throw ValidationException::withMessages([
                 'current_password' => ['The current password is incorrect.'],
             ]);
@@ -495,6 +505,7 @@ class AuthController extends Controller
     {
         $data = $request->validate(['token' => 'required|string|max:4096']);
         $request->user()->update(['fcm_token' => $data['token']]);
+
         return response()->json(['message' => 'Device token saved.']);
     }
 
@@ -502,6 +513,7 @@ class AuthController extends Controller
     {
         $request->user()->update(['fcm_token' => null]);
         $request->user()->currentAccessToken()->delete();
+
         return response()->json(['message' => 'Logged out successfully.']);
     }
 
@@ -526,7 +538,7 @@ class AuthController extends Controller
         }
 
         $tenant = $user->relationLoaded('tenant') ? $user->tenant : null;
-        if ($tenant && !$tenant->is_active) {
+        if ($tenant && ! $tenant->is_active) {
             $tenant = null;
         }
 
@@ -543,7 +555,7 @@ class AuthController extends Controller
 
         // Never return suspended landlord, property or unit details in a
         // restricted tenant's login/profile payload.
-        if (!$user->isLandlord() && !($subscriptionState['allowed'] ?? true)) {
+        if (! $user->isLandlord() && ! ($subscriptionState['allowed'] ?? true)) {
             $tenancies = collect();
         }
 

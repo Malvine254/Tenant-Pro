@@ -60,6 +60,7 @@ class EnsureAdminRole
             'admin.settings.index',
             'admin.settings.account',
             'admin.settings.password',
+            'admin.team.*',
             'admin.downloads.index',
             'admin.downloads.apk.download',
         );

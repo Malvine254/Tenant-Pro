@@ -7,13 +7,16 @@ use App\Http\Controllers\Admin\DeploymentToolsController;
 use App\Http\Controllers\Admin\InvitationAdminController;
 use App\Http\Controllers\Admin\InvoiceAdminController;
 use App\Http\Controllers\Admin\LandlordAdminController;
+use App\Http\Controllers\Admin\LandlordTeamController;
 use App\Http\Controllers\Admin\MpesaSandboxTestController;
 use App\Http\Controllers\Admin\PaymentAdminController;
 use App\Http\Controllers\Admin\PropertyAdminController;
 use App\Http\Controllers\Admin\PropertyUnitAdminController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SupportChatAdminController;
 use App\Http\Controllers\Admin\TenantAdminController;
 use App\Http\Controllers\DownloadsController;
+use App\Http\Controllers\InvitationAcceptanceController;
 use App\Http\Controllers\SiteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -31,11 +34,6 @@ Route::get('/invite', function (Request $request) {
         'deepLink' => $deepLink,
     ]);
 })->name('tenant.invite.open');
-
-// landlord inviotation flow
-use App\Http\Controllers\Admin\SettingsController;
-use App\Http\Controllers\Admin\LandlordTeamController;
-use App\Http\Controllers\InvitationAcceptanceController;
 
 Route::get('/invite/{code}',
     [InvitationAcceptanceController::class, 'show']

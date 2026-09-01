@@ -11,18 +11,17 @@ class EnsureAccountAccess
 {
     public function __construct(
         private readonly LandlordSubscriptionService $subscriptionService,
-    ) {
-    }
+    ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             return response()->json([
                 'message' => 'Account is inactive.',
                 'code' => 'ACCOUNT_SUSPENDED',
@@ -31,7 +30,7 @@ class EnsureAccountAccess
 
         if ($user->isLandlord()) {
             $evaluation = $this->subscriptionService->evaluate($user);
-            if (!$evaluation['allowed']) {
+            if (! $evaluation['allowed']) {
                 if ($this->isRestrictedAccountRouteAllowed($request)) {
                     return $next($request);
                 }
@@ -46,9 +45,17 @@ class EnsureAccountAccess
             }
         }
 
-        if (!$user->hasActiveServiceAccess()) {
+        if ($user->isLandlordStaff() && ! $this->isRestrictedAccountRouteAllowed($request)) {
+            return response()->json([
+                'message' => 'Team-member accounts use the secure web management portal.',
+                'code' => 'LANDLORD_TEAM_PORTAL_ONLY',
+            ], 403);
+        }
+
+        if (! $user->hasActiveServiceAccess()) {
             if ($user->isLandlord()) {
                 $message = $this->subscriptionService->evaluate($user)['message'] ?? 'Your service subscription is inactive.';
+
                 return response()->json(['message' => $message], 403);
             }
 

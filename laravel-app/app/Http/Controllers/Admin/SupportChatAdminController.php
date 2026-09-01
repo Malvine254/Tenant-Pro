@@ -8,8 +8,8 @@ use App\Models\SupportMessage;
 use App\Models\User;
 use App\Services\TenantAppNotificationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class SupportChatAdminController extends Controller
 {
@@ -31,6 +31,7 @@ class SupportChatAdminController extends Controller
             $selectedConversation->messages()->where('is_from_tenant', true)->whereNull('read_at')
                 ->update(['status' => 'READ', 'read_at' => now()]);
         }
+
         return view('admin.chats.index', compact('conversations', 'selectedConversation'));
     }
 
@@ -77,6 +78,7 @@ class SupportChatAdminController extends Controller
         $this->authorizeConversation($request->user(), $supportConversation);
         $data = $request->validate(['is_open' => 'required|boolean']);
         $supportConversation->update(['is_open' => $data['is_open']]);
+
         return response()->json(['ok' => true, 'is_open' => $supportConversation->is_open]);
     }
 
@@ -85,6 +87,7 @@ class SupportChatAdminController extends Controller
         $this->authorizeConversation($request->user(), $supportConversation);
         Cache::put('chat:admin:online', now()->timestamp, now()->addSeconds(45));
         $tenantId = $supportConversation->tenant_user_id;
+
         return response()->json([
             'online' => Cache::has('chat:online:'.$tenantId),
             'typing' => Cache::has('chat:typing:'.$tenantId),
@@ -98,6 +101,7 @@ class SupportChatAdminController extends Controller
         $key = 'chat:admin:typing';
         $data['typing'] ? Cache::put($key, true, now()->addSeconds(4)) : Cache::forget($key);
         Cache::put('chat:admin:online', now()->timestamp, now()->addSeconds(45));
+
         return response()->json(['ok' => true]);
     }
 

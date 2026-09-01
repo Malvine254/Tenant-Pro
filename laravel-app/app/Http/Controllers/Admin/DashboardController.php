@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Invoice;
 use App\Models\Invitation;
+use App\Models\Invoice;
 use App\Models\MaintenanceRequest;
 use App\Models\Payment;
 use App\Models\Property;
@@ -12,14 +12,12 @@ use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\LandlordSubscriptionService;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     public function __construct(
         private readonly LandlordSubscriptionService $subscriptionService,
-    ) {
-    }
+    ) {}
 
     public function index()
     {
@@ -34,21 +32,21 @@ class DashboardController extends Controller
             : ['allowed' => true, 'status' => 'not_required', 'message' => null];
 
         $propertiesQuery = Property::query()
-            ->when($isLandlord, fn($q) => $q->where('landlord_id', $landlordId));
+            ->when($isLandlord, fn ($q) => $q->where('landlord_id', $landlordId));
         $unitsQuery = Unit::query()
-            ->when($isLandlord, fn($q) => $q->whereHas('property', fn($property) => $property->where('landlord_id', $landlordId)));
+            ->when($isLandlord, fn ($q) => $q->whereHas('property', fn ($property) => $property->where('landlord_id', $landlordId)));
         $tenantsQuery = Tenant::query()
-            ->when($isLandlord, fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $landlordId)));
+            ->when($isLandlord, fn ($q) => $q->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $landlordId)));
         $invoicesQuery = Invoice::query()
-            ->when($isLandlord, fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $landlordId)));
+            ->when($isLandlord, fn ($q) => $q->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $landlordId)));
         $maintenanceQuery = MaintenanceRequest::query()
-            ->when($isLandlord, fn($q) => $q->whereHas('unit.property', fn($property) => $property->where('landlord_id', $landlordId)));
+            ->when($isLandlord, fn ($q) => $q->whereHas('unit.property', fn ($property) => $property->where('landlord_id', $landlordId)));
         $paymentsQuery = Payment::query()
-            ->when($isLandlord, fn($q) => $q->whereHas('invoice.unit.property', fn($property) => $property->where('landlord_id', $landlordId)));
+            ->when($isLandlord, fn ($q) => $q->whereHas('invoice.unit.property', fn ($property) => $property->where('landlord_id', $landlordId)));
         $invitationsQuery = Invitation::query()
-            ->when($isLandlord, fn($q) => $q->whereIn('sent_by_id', $landlordTeamUserIds));
+            ->when($isLandlord, fn ($q) => $q->whereIn('sent_by_id', $landlordTeamUserIds));
         $landlordsQuery = User::query()
-            ->whereHas('role', fn($role) => $role->where('name', 'LANDLORD'))
+            ->whereHas('role', fn ($role) => $role->where('name', 'LANDLORD'))
             ->whereNull('managed_landlord_id');
 
         $totalUnits = (clone $unitsQuery)->count();
@@ -97,12 +95,12 @@ class DashboardController extends Controller
             ];
         });
 
-        $invoiceStatus = collect(['PENDING', 'PARTIAL', 'PAID', 'OVERDUE'])->map(fn($status) => [
+        $invoiceStatus = collect(['PENDING', 'PARTIAL', 'PAID', 'OVERDUE'])->map(fn ($status) => [
             'label' => $status,
             'count' => (clone $invoicesQuery)->where('status', $status)->count(),
         ]);
 
-        $maintenanceStatus = collect(['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'])->map(fn($status) => [
+        $maintenanceStatus = collect(['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'])->map(fn ($status) => [
             'label' => str_replace('_', ' ', $status),
             'count' => (clone $maintenanceQuery)->where('status', $status)->count(),
         ]);
@@ -129,7 +127,7 @@ class DashboardController extends Controller
 
         $landlordPerformance = collect();
 
-        if (!$isLandlord) {
+        if (! $isLandlord) {
             $landlordSubscription = [
                 'trial' => (clone $landlordsQuery)->where('billing_status', 'trial')->count(),
                 'active' => (clone $landlordsQuery)->where('billing_status', 'active')->count(),
@@ -146,30 +144,30 @@ class DashboardController extends Controller
 
                 $landlordPerformance = $landlords->map(function ($landlord) {
                     $unitsCount = Unit::query()
-                        ->whereHas('property', fn($q) => $q->where('landlord_id', $landlord->id))
+                        ->whereHas('property', fn ($q) => $q->where('landlord_id', $landlord->id))
                         ->count();
 
                     $activeTenants = Tenant::query()
                         ->where('is_active', true)
-                        ->whereHas('unit.property', fn($q) => $q->where('landlord_id', $landlord->id))
+                        ->whereHas('unit.property', fn ($q) => $q->where('landlord_id', $landlord->id))
                         ->count();
 
                     $billed = (float) Invoice::query()
-                        ->whereHas('unit.property', fn($q) => $q->where('landlord_id', $landlord->id))
+                        ->whereHas('unit.property', fn ($q) => $q->where('landlord_id', $landlord->id))
                         ->sum('total_amount');
 
                     $paid = (float) Invoice::query()
-                        ->whereHas('unit.property', fn($q) => $q->where('landlord_id', $landlord->id))
+                        ->whereHas('unit.property', fn ($q) => $q->where('landlord_id', $landlord->id))
                         ->sum('paid_amount');
 
                     $monthlyCollection = (float) Payment::query()
-                        ->whereHas('invoice.unit.property', fn($q) => $q->where('landlord_id', $landlord->id))
+                        ->whereHas('invoice.unit.property', fn ($q) => $q->where('landlord_id', $landlord->id))
                         ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
                         ->sum('amount');
 
                     $overdueInvoices = Invoice::query()
                         ->where('status', 'OVERDUE')
-                        ->whereHas('unit.property', fn($q) => $q->where('landlord_id', $landlord->id))
+                        ->whereHas('unit.property', fn ($q) => $q->where('landlord_id', $landlord->id))
                         ->count();
 
                     $outstanding = max(0, $billed - $paid);
@@ -215,9 +213,9 @@ class DashboardController extends Controller
             'invoiceStatusValues' => $invoiceStatus->pluck('count')->values()->all(),
             'maintenanceStatusLabels' => $maintenanceStatus->pluck('label')->values()->all(),
             'maintenanceStatusValues' => $maintenanceStatus->pluck('count')->values()->all(),
-            'landlordPerformanceLabels' => $landlordPerformance->take(8)->map(fn($item) => $item['name'])->values()->all(),
-            'landlordPerformanceCollectionValues' => $landlordPerformance->take(8)->map(fn($item) => (float) $item['monthly_collection'])->values()->all(),
-            'landlordPerformanceOutstandingValues' => $landlordPerformance->take(8)->map(fn($item) => (float) $item['outstanding'])->values()->all(),
+            'landlordPerformanceLabels' => $landlordPerformance->take(8)->map(fn ($item) => $item['name'])->values()->all(),
+            'landlordPerformanceCollectionValues' => $landlordPerformance->take(8)->map(fn ($item) => (float) $item['monthly_collection'])->values()->all(),
+            'landlordPerformanceOutstandingValues' => $landlordPerformance->take(8)->map(fn ($item) => (float) $item['outstanding'])->values()->all(),
             'landlordHealthLabels' => ['Healthy', 'Needs attention', 'At risk'],
             'landlordHealthValues' => [
                 $landlordPerformance->where('health', 'healthy')->count(),

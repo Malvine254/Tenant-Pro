@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Role;
+use App\Models\Tenant;
+use App\Models\Unit;
 use App\Models\User;
 use App\Services\LandlordSubscriptionService;
 use Illuminate\Http\Request;
@@ -16,8 +18,7 @@ class LandlordAdminController extends Controller
 {
     public function __construct(
         private readonly LandlordSubscriptionService $subscriptionService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request)
     {
@@ -26,8 +27,8 @@ class LandlordAdminController extends Controller
         $landlords = User::withCount('properties')
             ->whereHas('role', fn ($query) => $query->where('name', 'LANDLORD'))
             ->whereNull('managed_landlord_id')
-            ->when($request->status === 'active', fn($query) => $query->where('is_active', true))
-            ->when($request->status === 'suspended', fn($query) => $query->where('is_active', false))
+            ->when($request->status === 'active', fn ($query) => $query->where('is_active', true))
+            ->when($request->status === 'suspended', fn ($query) => $query->where('is_active', false))
             ->when($request->search, fn ($query) => $query->where(function ($userQuery) use ($request) {
                 $userQuery->where('name', 'like', "%{$request->search}%")
                     ->orWhere('email', 'like', "%{$request->search}%")
@@ -42,14 +43,14 @@ class LandlordAdminController extends Controller
             // been temporarily unavailable.
             $this->subscriptionService->evaluate($landlord);
 
-            $invoiceQuery = Invoice::whereHas('unit.property', fn($property) => $property->where('landlord_id', $landlord->id));
-            $paymentQuery = Payment::whereHas('invoice.unit.property', fn($property) => $property->where('landlord_id', $landlord->id));
+            $invoiceQuery = Invoice::whereHas('unit.property', fn ($property) => $property->where('landlord_id', $landlord->id));
+            $paymentQuery = Payment::whereHas('invoice.unit.property', fn ($property) => $property->where('landlord_id', $landlord->id));
 
             $totalBilled = (float) (clone $invoiceQuery)->sum('total_amount');
             $totalPaid = (float) (clone $invoiceQuery)->sum('paid_amount');
 
-            $landlord->units_count = \App\Models\Unit::whereHas('property', fn($property) => $property->where('landlord_id', $landlord->id))->count();
-            $landlord->tenants_count = \App\Models\Tenant::whereHas('unit.property', fn($property) => $property->where('landlord_id', $landlord->id))->where('is_active', true)->count();
+            $landlord->units_count = Unit::whereHas('property', fn ($property) => $property->where('landlord_id', $landlord->id))->count();
+            $landlord->tenants_count = Tenant::whereHas('unit.property', fn ($property) => $property->where('landlord_id', $landlord->id))->where('is_active', true)->count();
             $landlord->collected_this_month = (float) (clone $paymentQuery)
                 ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
                 ->sum('amount');
@@ -87,7 +88,7 @@ class LandlordAdminController extends Controller
         );
 
         $user = User::create([
-            'name' => trim($data['first_name'] . ' ' . $data['last_name']),
+            'name' => trim($data['first_name'].' '.$data['last_name']),
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
             'email' => $data['email'],
@@ -120,15 +121,15 @@ class LandlordAdminController extends Controller
         $data = $request->validate([
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
-            'email' => 'required|email|unique:users,email,' . $landlord->id,
-            'phone_number' => 'nullable|string|unique:users,phone_number,' . $landlord->id,
+            'email' => 'required|email|unique:users,email,'.$landlord->id,
+            'phone_number' => 'nullable|string|unique:users,phone_number,'.$landlord->id,
             'password' => 'nullable|string|min:8|confirmed',
             'is_active' => 'sometimes|boolean',
             'monthly_service_fee' => 'required|numeric|min:0|max:1000000',
         ]);
 
         $updates = [
-            'name' => trim($data['first_name'] . ' ' . $data['last_name']),
+            'name' => trim($data['first_name'].' '.$data['last_name']),
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
             'email' => $data['email'],
@@ -137,14 +138,14 @@ class LandlordAdminController extends Controller
             'monthly_service_fee' => $data['monthly_service_fee'],
         ];
 
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             $updates['password'] = Hash::make($data['password']);
         }
 
         DB::transaction(function () use ($landlord, $updates) {
             $landlord->update($updates);
 
-            if (!$landlord->is_active) {
+            if (! $landlord->is_active) {
                 $this->revokeSuspendedLandlordSessions($landlord);
             }
         });
@@ -164,7 +165,7 @@ class LandlordAdminController extends Controller
         DB::transaction(function () use ($landlord, $data) {
             $landlord->update(['is_active' => (bool) $data['is_active']]);
 
-            if (!$landlord->is_active) {
+            if (! $landlord->is_active) {
                 $this->revokeSuspendedLandlordSessions($landlord);
             }
         });
@@ -194,5 +195,6 @@ class LandlordAdminController extends Controller
     private function revokeSuspendedLandlordSessions(User $landlord): void
     {
         $landlord->tokens()->delete();
+        $landlord->landlordTeamMembers()->each(fn (User $member) => $member->tokens()->delete());
     }
 }

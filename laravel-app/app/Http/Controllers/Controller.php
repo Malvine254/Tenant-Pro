@@ -15,7 +15,7 @@ abstract class Controller
     protected function requirePropertyManager($user, Property $property): void
     {
         $this->requireManager($user);
-        abort_if($user?->role?->name === 'LANDLORD' && $property->landlord_id !== $user->id, 403);
+        abort_if($user?->role?->name === 'LANDLORD' && $property->landlord_id !== $user->landlordAccountId(), 403);
     }
 
     protected function requireUnitManager($user, Unit $unit): void

@@ -8,19 +8,21 @@ use Illuminate\Support\Carbon;
 class LandlordSubscriptionService
 {
     public const STATUS_NOT_REQUIRED = 'not_required';
+
     public const STATUS_TRIAL = 'trial';
+
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_PAST_DUE = 'past_due';
 
     public function __construct(
         private readonly TenantEmailService $emailService,
         private readonly TenantAppNotificationService $notificationService,
-    ) {
-    }
+    ) {}
 
     public function initializeTrial(User $landlord, float $monthlyFee = 2500.00): User
     {
-        if (!$landlord->isLandlord()) {
+        if (! $landlord->isLandlord()) {
             return $landlord;
         }
 
@@ -45,7 +47,7 @@ class LandlordSubscriptionService
 
     public function evaluate(User $user): array
     {
-        if (!$user->isLandlord()) {
+        if (! $user->isLandlord()) {
             return [
                 'allowed' => true,
                 'status' => self::STATUS_NOT_REQUIRED,
@@ -71,13 +73,13 @@ class LandlordSubscriptionService
         }
 
         // Backfill legacy landlord records that missed trial initialization.
-        if (!$user->trial_started_at && !$user->trial_ends_at && !$user->subscription_started_at && !$user->service_paid_until) {
+        if (! $user->trial_started_at && ! $user->trial_ends_at && ! $user->subscription_started_at && ! $user->service_paid_until) {
             $this->initializeTrial($user);
             $user->refresh();
         }
 
         if ($user->service_paid_until instanceof Carbon && $user->service_paid_until->isFuture()) {
-            if ($user->billing_status !== self::STATUS_ACTIVE || !$user->requires_subscription) {
+            if ($user->billing_status !== self::STATUS_ACTIVE || ! $user->requires_subscription) {
                 $user->update([
                     'requires_subscription' => true,
                     'billing_status' => self::STATUS_ACTIVE,
@@ -85,6 +87,7 @@ class LandlordSubscriptionService
             }
 
             $dueAt = $this->localDueAt($user->service_paid_until);
+
             return [
                 'allowed' => true,
                 'status' => self::STATUS_ACTIVE,
@@ -94,9 +97,9 @@ class LandlordSubscriptionService
             ];
         }
 
-        if (!$user->service_paid_until && !$user->subscription_started_at
+        if (! $user->service_paid_until && ! $user->subscription_started_at
             && $user->trial_ends_at instanceof Carbon && $user->trial_ends_at->isFuture()) {
-            if ($user->billing_status !== self::STATUS_TRIAL || !$user->requires_subscription) {
+            if ($user->billing_status !== self::STATUS_TRIAL || ! $user->requires_subscription) {
                 $user->update([
                     'requires_subscription' => true,
                     'billing_status' => self::STATUS_TRIAL,
@@ -104,6 +107,7 @@ class LandlordSubscriptionService
             }
 
             $dueAt = $this->localDueAt($user->trial_ends_at);
+
             return [
                 'allowed' => true,
                 'status' => self::STATUS_TRIAL,
@@ -113,7 +117,7 @@ class LandlordSubscriptionService
             ];
         }
 
-        if (!$user->requires_subscription && !$user->trial_ends_at) {
+        if (! $user->requires_subscription && ! $user->trial_ends_at) {
             return [
                 'allowed' => true,
                 'status' => self::STATUS_NOT_REQUIRED,
@@ -147,7 +151,7 @@ class LandlordSubscriptionService
 
     public function recordPayment(User $landlord, int $months = 1): User
     {
-        if (!$landlord->isLandlord()) {
+        if (! $landlord->isLandlord()) {
             return $landlord;
         }
 
@@ -183,6 +187,7 @@ class LandlordSubscriptionService
     private function daysRemaining(Carbon $dueAt): int
     {
         $timezone = config('deployment.subscription_timezone', 'Africa/Nairobi');
+
         return max(0, Carbon::today($timezone)->diffInDays($dueAt->copy()->startOfDay(), false));
     }
 

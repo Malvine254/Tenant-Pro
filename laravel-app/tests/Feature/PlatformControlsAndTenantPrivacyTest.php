@@ -9,8 +9,10 @@ use App\Models\Role;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\PlatformSettingsService;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class PlatformControlsAndTenantPrivacyTest extends TestCase
@@ -106,6 +108,61 @@ class PlatformControlsAndTenantPrivacyTest extends TestCase
             ->assertOk()
             ->assertSee('invited@example.test')
             ->assertDontSee('unrelated@example.test');
+    }
+
+    public function test_landlord_owner_can_add_a_team_member_with_scoped_access(): void
+    {
+        Notification::fake();
+        $owner = $this->userWithRole('LANDLORD');
+        $otherOwner = $this->userWithRole('LANDLORD');
+        Property::create([
+            'landlord_id' => $owner->id,
+            'name' => 'Owner Property',
+            'address_line' => '1 Owner Road',
+            'city' => 'Nairobi',
+        ]);
+        Property::create([
+            'landlord_id' => $otherOwner->id,
+            'name' => 'Hidden Property',
+            'address_line' => '2 Other Road',
+            'city' => 'Nairobi',
+        ]);
+
+        $this->actingAs($owner)->post(route('admin.team.store'), [
+            'first_name' => 'Property',
+            'last_name' => 'Manager',
+            'email' => 'manager@example.test',
+            'current_password' => 'password',
+        ])->assertRedirect();
+
+        $member = User::where('email', 'manager@example.test')->firstOrFail();
+        $this->assertSame($owner->id, $member->managed_landlord_id);
+        Notification::assertSentTo($member, ResetPassword::class);
+
+        $this->actingAs($member)
+            ->get(route('admin.properties.index'))
+            ->assertOk()
+            ->assertSee('Owner Property')
+            ->assertDontSee('Hidden Property');
+        $this->actingAs($member)->get(route('admin.team.index'))->assertForbidden();
+        $this->actingAs($member)->put(route('admin.settings.payment'), [])->assertForbidden();
+    }
+
+    public function test_invitation_workspace_renders_without_javascript(): void
+    {
+        $owner = $this->userWithRole('LANDLORD');
+
+        $this->actingAs($owner)
+            ->get(route('admin.invitations.index', ['workspace' => 'create']))
+            ->assertOk()
+            ->assertSee('class="invitation-workspace-panel active"', false)
+            ->assertSee('Invite Tenant to Vacant Unit');
+
+        $this->actingAs($owner)
+            ->get(route('admin.invitations.index', ['workspace' => 'history']))
+            ->assertOk()
+            ->assertSee('class="invitation-workspace-panel active"', false)
+            ->assertSee('Invitation history');
     }
 
     private function userWithRole(string $roleName, array $attributes = []): User

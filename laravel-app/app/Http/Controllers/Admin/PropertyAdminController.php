@@ -19,20 +19,22 @@ class PropertyAdminController extends Controller
     {
         $user = request()->user();
         $properties = Property::with(['landlord', 'units'])
-            ->when($this->isLandlord($user), fn($q) => $q->where('landlord_id', $user->landlordAccountId()))
+            ->when($this->isLandlord($user), fn ($q) => $q->where('landlord_id', $user->landlordAccountId()))
             ->latest()
             ->paginate(15);
+
         return view('admin.properties.index', compact('properties'));
     }
 
     public function create()
     {
         $user = request()->user();
-        $landlords = User::whereHas('role', fn($q) => $q->where('name', 'LANDLORD'))
+        $landlords = User::whereHas('role', fn ($q) => $q->where('name', 'LANDLORD'))
             ->whereNull('managed_landlord_id')
-            ->when($this->isLandlord($user), fn($q) => $q->where('id', $user->landlordAccountId()))
+            ->when($this->isLandlord($user), fn ($q) => $q->where('id', $user->landlordAccountId()))
             ->orderBy('name')
             ->get();
+
         return view('admin.properties.create', compact('landlords'));
     }
 
@@ -71,7 +73,7 @@ class PropertyAdminController extends Controller
                 ]);
             }
 
-            if (!array_key_exists('initial_rent_amount', $data) || $data['initial_rent_amount'] === null) {
+            if (! array_key_exists('initial_rent_amount', $data) || $data['initial_rent_amount'] === null) {
                 throw ValidationException::withMessages([
                     'initial_rent_amount' => 'Enter the monthly rent for these units.',
                 ]);
@@ -131,12 +133,13 @@ class PropertyAdminController extends Controller
 
         $property->load([
             'landlord',
-            'units' => fn($query) => $query
+            'units' => fn ($query) => $query
                 ->orderByRaw('floor IS NULL')
                 ->orderBy('floor')
                 ->orderBy('unit_number'),
             'units.tenant.user',
         ]);
+
         return view('admin.properties.show', compact('property'));
     }
 
@@ -151,11 +154,12 @@ class PropertyAdminController extends Controller
             'units.tenant',
         ]);
         $user = request()->user();
-        $landlords = User::whereHas('role', fn($q) => $q->where('name', 'LANDLORD'))
+        $landlords = User::whereHas('role', fn ($q) => $q->where('name', 'LANDLORD'))
             ->whereNull('managed_landlord_id')
-            ->when($this->isLandlord($user), fn($q) => $q->where('id', $user->landlordAccountId()))
+            ->when($this->isLandlord($user), fn ($q) => $q->where('id', $user->landlordAccountId()))
             ->orderBy('name')
             ->get();
+
         return view('admin.properties.edit', compact('property', 'landlords'));
     }
 
@@ -204,7 +208,7 @@ class PropertyAdminController extends Controller
         $submittedUnits = collect($data['units'] ?? []);
 
         foreach ($submittedUnits as $index => $unitData) {
-            if (!$unitsById->has($unitData['id'])) {
+            if (! $unitsById->has($unitData['id'])) {
                 throw ValidationException::withMessages([
                     "units.{$index}.id" => 'This unit does not belong to the selected property.',
                 ]);
@@ -277,6 +281,7 @@ class PropertyAdminController extends Controller
         }
 
         $property->delete();
+
         return redirect()->route('admin.properties.index')->with('success', 'Property deleted.');
     }
 
@@ -299,7 +304,7 @@ class PropertyAdminController extends Controller
             return [$firstUnitNumber];
         }
 
-        if (!preg_match('/^(.*?)(\d+)$/', $firstUnitNumber, $matches)) {
+        if (! preg_match('/^(.*?)(\d+)$/', $firstUnitNumber, $matches)) {
             throw ValidationException::withMessages([
                 'first_unit_number' => 'For multiple units, use a number ending such as 101 or A01.',
             ]);
@@ -310,7 +315,7 @@ class PropertyAdminController extends Controller
         $width = strlen($matches[2]);
 
         return array_map(
-            fn(int $offset) => $prefix.str_pad(
+            fn (int $offset) => $prefix.str_pad(
                 (string) ($start + $offset),
                 $width,
                 '0',
@@ -335,7 +340,7 @@ class PropertyAdminController extends Controller
     private function storePropertyImage($file): string
     {
         $path = Storage::disk('public')->put('properties', $file);
-        if (!$path) {
+        if (! $path) {
             throw new RuntimeException('The property image could not be stored.');
         }
 
@@ -352,7 +357,7 @@ class PropertyAdminController extends Controller
 
     private function assertLandlordId(string $landlordId): void
     {
-        if (!User::whereKey($landlordId)->whereNull('managed_landlord_id')->whereHas('role', fn ($query) => $query->where('name', 'LANDLORD'))->exists()) {
+        if (! User::whereKey($landlordId)->whereNull('managed_landlord_id')->whereHas('role', fn ($query) => $query->where('name', 'LANDLORD'))->exists()) {
             throw ValidationException::withMessages([
                 'landlord_id' => 'Select a valid landlord account.',
             ]);

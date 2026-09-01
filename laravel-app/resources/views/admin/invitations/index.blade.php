@@ -10,6 +10,15 @@
         'CANCELLED' => 'badge-gray',
         'REVOKED' => 'badge-gray',
     ];
+    $workspace = request('workspace');
+    if (! in_array($workspace, ['create', 'history'], true)) {
+        $workspace = request()->filled('edit') || request()->filled('search') || request()->filled('status') || request()->filled('type')
+            ? 'history'
+            : 'create';
+    }
+    $inviteTypeTab = $isLandlord || request()->filled('property_id') || request()->filled('unit_id')
+        ? 'tenant'
+        : (request('invite_type_tab') === 'tenant' ? 'tenant' : 'landlord');
 @endphp
 
 <style>
@@ -34,6 +43,10 @@
         color: #94a3b8;
         font-weight: 750;
         cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
     }
     .invitation-workspace-tab.active { background:#2563eb; color:#fff; }
     .invitation-workspace-panel { display:none; }
@@ -57,6 +70,8 @@
         font-weight: 700;
         letter-spacing: .02em;
         cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
     }
     .invitation-tab.active {
         background: linear-gradient(180deg,#2563eb,#1d4ed8);
@@ -160,21 +175,21 @@
 </div>
 
 <div class="invitation-workspace-tabs" role="tablist" aria-label="Invitation workspace">
-    <button id="workspace-tab-create" class="invitation-workspace-tab" type="button" role="tab" aria-controls="workspace-panel-create" data-workspace-tab="create">Create invitation</button>
-    <button id="workspace-tab-history" class="invitation-workspace-tab" type="button" role="tab" aria-controls="workspace-panel-history" data-workspace-tab="history">Invitation history <span class="badge badge-gray">{{ $invitations->total() }}</span></button>
+    <a id="workspace-tab-create" class="invitation-workspace-tab {{ $workspace === 'create' ? 'active' : '' }}" role="tab" aria-selected="{{ $workspace === 'create' ? 'true' : 'false' }}" aria-controls="workspace-panel-create" href="{{ route('admin.invitations.index', array_filter(['workspace' => 'create', 'property_id' => request('property_id'), 'unit_id' => request('unit_id')])) }}">Create invitation</a>
+    <a id="workspace-tab-history" class="invitation-workspace-tab {{ $workspace === 'history' ? 'active' : '' }}" role="tab" aria-selected="{{ $workspace === 'history' ? 'true' : 'false' }}" aria-controls="workspace-panel-history" href="{{ route('admin.invitations.index', ['workspace' => 'history']) }}">Invitation history <span class="badge badge-gray">{{ $invitations->total() }}</span></a>
 </div>
 
-<section id="workspace-panel-create" class="invitation-workspace-panel" role="tabpanel" aria-labelledby="workspace-tab-create" data-workspace-panel="create">
+<section id="workspace-panel-create" class="invitation-workspace-panel {{ $workspace === 'create' ? 'active' : '' }}" role="tabpanel" aria-labelledby="workspace-tab-create">
 
 <div class="invitation-shell">
     @unless($isLandlord)
         <div class="invitation-tabs" role="tablist" aria-label="Invitation types">
-            <button class="invitation-tab active" type="button" data-tab="landlord">Landlord invite</button>
-            <button class="invitation-tab" type="button" data-tab="tenant">Tenant invite</button>
+            <a class="invitation-tab {{ $inviteTypeTab === 'landlord' ? 'active' : '' }}" role="tab" aria-selected="{{ $inviteTypeTab === 'landlord' ? 'true' : 'false' }}" href="{{ route('admin.invitations.index', ['workspace' => 'create', 'invite_type_tab' => 'landlord']) }}">Landlord invite</a>
+            <a class="invitation-tab {{ $inviteTypeTab === 'tenant' ? 'active' : '' }}" role="tab" aria-selected="{{ $inviteTypeTab === 'tenant' ? 'true' : 'false' }}" href="{{ route('admin.invitations.index', ['workspace' => 'create', 'invite_type_tab' => 'tenant']) }}">Tenant invite</a>
         </div>
     @endunless
 
-    <div class="invitation-panel {{ !$isLandlord ? 'active' : '' }}" data-panel="landlord">
+    <div class="invitation-panel {{ $inviteTypeTab === 'landlord' ? 'active' : '' }}" data-panel="landlord">
         @unless($isLandlord)
             <div class="invitation-card">
                 <h3>Invite Landlord</h3>
@@ -215,7 +230,7 @@
         @endunless
     </div>
 
-    <div class="invitation-panel {{ $isLandlord ? 'active' : '' }}" data-panel="tenant">
+    <div class="invitation-panel {{ $inviteTypeTab === 'tenant' ? 'active' : '' }}" data-panel="tenant">
         <div class="invitation-card">
             <h3>Invite Tenant to Vacant Unit</h3>
             <form method="POST" action="{{ route('admin.invitations.tenants.store') }}">
@@ -312,7 +327,7 @@
 </div>
 </section>
 
-<section id="workspace-panel-history" class="invitation-workspace-panel" role="tabpanel" aria-labelledby="workspace-tab-history" data-workspace-panel="history">
+<section id="workspace-panel-history" class="invitation-workspace-panel {{ $workspace === 'history' ? 'active' : '' }}" role="tabpanel" aria-labelledby="workspace-tab-history">
 <div class="invitation-card invitation-shell" style="margin-bottom:18px;">
     <div class="admin-page-header" style="margin-bottom:0;">
         <div><h3 style="margin:0 0 5px;">Invitation history</h3><p>Search, review, resend, edit, or cancel invitations.</p></div>
@@ -449,71 +464,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const workspaceTabs = document.querySelectorAll('.invitation-workspace-tab');
-    const workspacePanels = document.querySelectorAll('.invitation-workspace-panel');
-    const activateWorkspace = (target, focus = false) => {
-        const selected = Array.from(workspaceTabs).find(tab => tab.dataset.workspaceTab === target) || workspaceTabs[0];
-        workspaceTabs.forEach(tab => {
-            const active = tab === selected;
-            tab.classList.toggle('active', active);
-            tab.setAttribute('aria-selected', String(active));
-            tab.tabIndex = active ? 0 : -1;
-        });
-        workspacePanels.forEach(panel => {
-            const active = panel.dataset.workspacePanel === selected.dataset.workspaceTab;
-            panel.classList.toggle('active', active);
-            panel.hidden = !active;
-        });
-        const url = new URL(window.location.href);
-        url.searchParams.set('workspace', selected.dataset.workspaceTab);
-        history.replaceState({}, '', url);
-        if (focus) selected.focus();
-    };
-    workspaceTabs.forEach((tab, index) => {
-        tab.addEventListener('click', () => activateWorkspace(tab.dataset.workspaceTab));
-        tab.addEventListener('keydown', event => {
-            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-            event.preventDefault();
-            let next = event.key === 'Home' ? 0 : event.key === 'End' ? workspaceTabs.length - 1 : index + (event.key === 'ArrowRight' ? 1 : -1);
-            next = (next + workspaceTabs.length) % workspaceTabs.length;
-            activateWorkspace(workspaceTabs[next].dataset.workspaceTab, true);
-        });
-    });
-    const requestedWorkspace = new URLSearchParams(window.location.search).get('workspace');
-    const hasHistoryContext = {{ request()->filled('edit') || request()->filled('search') || request()->filled('status') || request()->filled('type') ? 'true' : 'false' }};
-    activateWorkspace(requestedWorkspace === 'history' || hasHistoryContext ? 'history' : 'create');
-
-    const tabs = document.querySelectorAll('.invitation-tab');
-    const panels = document.querySelectorAll('.invitation-panel');
-
-    const activateInvitationType = (target, focus = false) => {
-        const selected = Array.from(tabs).find(tab => tab.dataset.tab === target) || tabs[0];
-        tabs.forEach(btn => {
-            const active = btn === selected;
-            btn.classList.toggle('active', active);
-            btn.setAttribute('aria-selected', String(active));
-            btn.tabIndex = active ? 0 : -1;
-        });
-        panels.forEach(panel => {
-            const active = panel.dataset.panel === selected?.dataset.tab;
-            panel.classList.toggle('active', active);
-            panel.hidden = !active;
-        });
-        if (focus) selected?.focus();
-    };
-    tabs.forEach((tab, index) => {
-        tab.setAttribute('role', 'tab');
-        tab.addEventListener('click', () => activateInvitationType(tab.dataset.tab));
-        tab.addEventListener('keydown', event => {
-            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-            event.preventDefault();
-            let next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : index + (event.key === 'ArrowRight' ? 1 : -1);
-            next = (next + tabs.length) % tabs.length;
-            activateInvitationType(tabs[next].dataset.tab, true);
-        });
-    });
-    if (tabs.length) activateInvitationType({{ request()->filled('property_id') || request()->filled('unit_id') || $isLandlord ? "'tenant'" : "'landlord'" }});
-
     const property = document.getElementById('tenantInviteProperty');
     const unit = document.getElementById('tenantInviteUnit');
     const rent = document.getElementById('tenantInviteRent');

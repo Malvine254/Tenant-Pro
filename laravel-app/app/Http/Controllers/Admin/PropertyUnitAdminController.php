@@ -16,7 +16,7 @@ class PropertyUnitAdminController extends Controller
     {
         $user = request()->user();
         $properties = Property::with([
-            'units' => fn($query) => $query
+            'units' => fn ($query) => $query
                 ->orderByRaw('floor IS NULL')
                 ->orderBy('floor')
                 ->orderBy('unit_number'),
@@ -24,7 +24,7 @@ class PropertyUnitAdminController extends Controller
         ])
             ->when(
                 $user?->role?->name === 'LANDLORD',
-                fn($query) => $query->where('landlord_id', $user->landlordAccountId())
+                fn ($query) => $query->where('landlord_id', $user->landlordAccountId())
             )
             ->orderBy('name')
             ->get();
@@ -166,7 +166,7 @@ class PropertyUnitAdminController extends Controller
             return [$firstUnitNumber];
         }
 
-        if (!preg_match('/^(.*?)(\d+)$/', $firstUnitNumber, $matches)) {
+        if (! preg_match('/^(.*?)(\d+)$/', $firstUnitNumber, $matches)) {
             throw ValidationException::withMessages([
                 'unit_number' => 'For multiple units, the first unit number must end in a number, such as 101 or A01.',
             ]);
@@ -177,7 +177,7 @@ class PropertyUnitAdminController extends Controller
         $numberWidth = strlen($matches[2]);
 
         return array_map(
-            fn(int $offset) => $prefix.str_pad(
+            fn (int $offset) => $prefix.str_pad(
                 (string) ($startingNumber + $offset),
                 $numberWidth,
                 '0',

@@ -501,8 +501,8 @@
     </section>
 
     <aside class="helper-panel">
-        <h4>{{ $isSuperAdmin ? 'Platform control centre' : 'Landlord workspace' }}</h4>
-        <p>{{ $isSuperAdmin ? 'Sensitive system changes require your current password and are written to the administrative audit log.' : 'Configure payment, tenant onboarding defaults, and account details without leaving the admin module.' }}</p>
+        <h4>{{ $isSuperAdmin ? 'Platform control centre' : ($isLandlordOwner ? 'Landlord workspace' : 'Team member account') }}</h4>
+        <p>{{ $isSuperAdmin ? 'Sensitive system changes require your current password and are written to the administrative audit log.' : ($isLandlordOwner ? 'Configure payment, tenant onboarding defaults, and account details without leaving the admin module.' : 'Update your personal profile and password here. Owner-level payment and team settings remain protected.') }}</p>
 
         @if($isLandlordOwner)
             <div class="summary-grid">
@@ -539,8 +539,8 @@
         <ul>
             <li>Account tab updates your personal profile details used across the dashboard.</li>
             <li>Security tab allows changing password with current-password verification.</li>
-            <li>Tenant Preferences sets landlord-level defaults for onboarding behavior.</li>
             @if($isLandlordOwner)
+                <li>Tenant Preferences sets landlord-level defaults for onboarding behavior.</li>
                 <li>Payment stores the landlord-specific Daraja channel used by tenant billing flows.</li>
             @endif
             @if($isSuperAdmin)

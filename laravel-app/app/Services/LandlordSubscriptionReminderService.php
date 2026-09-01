@@ -15,8 +15,7 @@ class LandlordSubscriptionReminderService
         private readonly TenantEmailService $emailService,
         private readonly TenantAppNotificationService $notificationService,
         private readonly LandlordSubscriptionService $subscriptionService,
-    ) {
-    }
+    ) {}
 
     public function runDailyReminders(): array
     {
@@ -31,17 +30,20 @@ class LandlordSubscriptionReminderService
             ->with('role')
             ->where('requires_subscription', true)
             ->whereHas('role', fn ($query) => $query->where('name', 'LANDLORD'))
+            ->whereNull('managed_landlord_id')
             ->get();
 
         foreach ($landlords as $landlord) {
-            if (!$this->subscriptionService->evaluate($landlord)['allowed']) {
+            if (! $this->subscriptionService->evaluate($landlord)['allowed']) {
                 $skipped++;
+
                 continue;
             }
 
             $dueDate = $landlord->service_paid_until ?? $landlord->trial_ends_at;
-            if (!$dueDate instanceof Carbon) {
+            if (! $dueDate instanceof Carbon) {
                 $skipped++;
+
                 continue;
             }
 
@@ -49,6 +51,7 @@ class LandlordSubscriptionReminderService
             $daysUntilDue = $today->diffInDays($dueDate, false);
             if ($daysUntilDue < 0 || $daysUntilDue > max(self::REMINDER_MILESTONES)) {
                 $skipped++;
+
                 continue;
             }
 
@@ -60,6 +63,7 @@ class LandlordSubscriptionReminderService
             $reminderKey = 'subscription-due-'.$dueDate->toDateString().'-'.$milestone;
             if ($this->alreadySent($landlord->id, $reminderKey)) {
                 $skipped++;
+
                 continue;
             }
 
@@ -101,6 +105,7 @@ class LandlordSubscriptionReminderService
             ->with('role')
             ->where('requires_subscription', true)
             ->whereHas('role', fn ($query) => $query->where('name', 'LANDLORD'))
+            ->whereNull('managed_landlord_id')
             ->where(function ($query) {
                 $query->whereNotNull('service_paid_until')
                     ->orWhereNotNull('trial_ends_at');
@@ -144,8 +149,7 @@ class LandlordSubscriptionReminderService
         string $landlordId,
         string $reminderKey,
         string $type = 'SUBSCRIPTION_REMINDER'
-    ): bool
-    {
+    ): bool {
         return Notification::query()
             ->where('user_id', $landlordId)
             ->where('type', $type)
