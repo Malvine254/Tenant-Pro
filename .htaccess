@@ -13,12 +13,15 @@ RewriteRule ^\.well-known/ - [L]
 # Requires mod_proxy and mod_proxy_http to be enabled on the server
 RewriteRule ^rebuild/?(.*)$ http://127.0.0.1:9090/$1 [P,L,QSA,NC]
 
-# Serve existing files/folders directly
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
-
-# Route all app requests to Laravel public directory
-RewriteCond %{REQUEST_URI} !^/laravel-app/public/
-RewriteCond %{REQUEST_URI} !^/rebuild(/.*)?$
+# Serve real static assets straight from the Laravel public folder (css, js,
+# build output, images, favicon, robots.txt, etc.) without going through PHP.
+# Anchored on DOCUMENT_ROOT so the check is correct no matter which nested
+# .htaccess is active when Apache re-evaluates the rewritten path.
+RewriteCond %{DOCUMENT_ROOT}/laravel-app/public/$1 -f
 RewriteRule ^(.*)$ laravel-app/public/$1 [L]
+
+# Everything else — including the bare site root — goes through the Laravel
+# front controller directly. Routing straight to index.php, instead of the
+# public/ directory, avoids depending on the host's DirectoryIndex setting;
+# some shared-hosting vhosts returned 403 for "/" because of that.
+RewriteRule ^ laravel-app/public/index.php [L]

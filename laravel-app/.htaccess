@@ -1,6 +1,7 @@
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-
-    RewriteCond %{REQUEST_URI} !^/public/
-    RewriteRule ^(.*)$ public/$1 [L]
-</IfModule>
+# Intentionally a no-op. Apache merges .htaccess files down the directory
+# tree, so any rewrite rule placed here also runs for requests already
+# resolved by the root .htaccess (which routes everything into
+# laravel-app/public/ itself). A previous version of this file rewrote to
+# "public/$1", double-prefixing that path and causing routing failures
+# (including a 403 on the bare site root). Do not add rewrite rules here —
+# all routing lives in the root .htaccess and laravel-app/public/.htaccess.
