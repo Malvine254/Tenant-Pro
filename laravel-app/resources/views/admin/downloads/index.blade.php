@@ -38,7 +38,14 @@
 @if($canManage)
 <div class="card" style="margin-bottom:16px;">
     <h3 style="font-size:15px;font-weight:800;margin:0 0 4px;">Upload a new release</h3>
-    <p style="color:var(--muted);font-size:13px;margin:0 0 16px;">Build with <code>./gradlew assembleRelease</code>, then upload the APK here. Version code must be higher than the previous release.</p>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 16px;">
+        Build with <code>./gradlew assembleRelease</code>, then upload the APK here.
+        @if($latest)
+            Fields are prefilled from <strong>v{{ $latest->version_name }} ({{ $latest->version_code }})</strong> — adjust what changed.
+        @else
+            Version code must increase with every release.
+        @endif
+    </p>
 
     @if($errors->any())
         <div class="alert-error" style="margin-bottom:14px;">
@@ -58,26 +65,27 @@
             </div>
             <div class="field">
                 <label for="version_name">Version name</label>
-                <input id="version_name" name="version_name" value="{{ old('version_name') }}" placeholder="e.g. 1.4.0" required>
-                <small>Must match <code>versionName</code> in build.gradle.kts.</small>
+                <input id="version_name" name="version_name" value="{{ old('version_name', $latest?->nextVersionName()) }}" placeholder="e.g. 1.4.0" required>
+                <small>Must match <code>versionName</code> in build.gradle.kts.@if($latest) Previous: v{{ $latest->version_name }}.@endif</small>
             </div>
             <div class="field">
                 <label for="version_code">Version code</label>
-                <input id="version_code" type="number" min="1" name="version_code" value="{{ old('version_code', ($current->version_code ?? 0) + 1) }}" required>
-                <small>Must match <code>versionCode</code> and be unique.</small>
+                <input id="version_code" type="number" min="1" name="version_code" value="{{ old('version_code', ($latest->version_code ?? 0) + 1) }}" required>
+                <small>Must match <code>versionCode</code> and be unique.@if($latest) Previous: {{ $latest->version_code }}.@endif</small>
             </div>
             <div class="field">
                 <label for="channel">Channel</label>
+                @php($selectedChannel = old('channel', $latest->channel ?? 'PRODUCTION'))
                 <select id="channel" name="channel">
-                    <option value="PRODUCTION" @selected(old('channel') === 'PRODUCTION')>Production</option>
-                    <option value="BETA" @selected(old('channel') === 'BETA')>Beta</option>
+                    <option value="PRODUCTION" @selected($selectedChannel === 'PRODUCTION')>Production</option>
+                    <option value="BETA" @selected($selectedChannel === 'BETA')>Beta</option>
                 </select>
                 <small>Beta builds stay downloadable but are labelled for testers.</small>
             </div>
             <div class="field field-wide">
                 <label for="release_notes">Release notes</label>
-                <textarea id="release_notes" name="release_notes" rows="3" placeholder="What changed in this version?">{{ old('release_notes') }}</textarea>
-                <small>Shown to tenants in the update notification.</small>
+                <textarea id="release_notes" name="release_notes" rows="3" placeholder="What changed in this version?">{{ old('release_notes', $latest?->release_notes) }}</textarea>
+                <small>Shown to tenants in the update notification.@if($latest?->release_notes) Carried over from the previous release — replace with this version's changes.@endif</small>
             </div>
         </div>
 
@@ -91,7 +99,7 @@
                 <span>Notify tenants that an update is available</span>
             </label>
             <label class="check-row" for="is_mandatory">
-                <input id="is_mandatory" type="checkbox" name="is_mandatory" value="1" {{ old('is_mandatory') ? 'checked' : '' }}>
+                <input id="is_mandatory" type="checkbox" name="is_mandatory" value="1" {{ old('is_mandatory', $latest->is_mandatory ?? false) ? 'checked' : '' }}>
                 <span>Mark as a required update</span>
             </label>
         </div>

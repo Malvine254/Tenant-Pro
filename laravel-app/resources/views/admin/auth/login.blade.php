@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="auth-shell">
-    <div class="auth-brand"><span class="brand-mark" aria-hidden="true">TP</span><strong>TenantPro</strong></div>
+    <div class="auth-brand"><img class="auth-brand-image" src="{{ asset('images/starmax-tenant-logo.png') }}" alt="Starmax Tenant Services"></div>
     <div class="card">
         <h2 style="margin-bottom:6px;font-size:22px;">Welcome back</h2>
         <p class="muted" style="font-size:13px;margin-bottom:20px;">Sign in to your secure property operations workspace.</p>

@@ -32,7 +32,8 @@
         .sr-only { position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important; }
         .admin-shell { min-height:100vh; height:100vh; width:100%; }
         .sidebar { position:fixed; inset:0 auto 0 0; width:224px; height:100vh; background: linear-gradient(180deg,#0b1220,#0f172a); color: #cbd5e1; display:flex; flex-direction:column; z-index:40; border-right:1px solid var(--line); box-shadow:14px 0 30px rgba(2,6,23,.24); }
-        .sidebar-logo { padding:18px 16px; font-size:15px; font-weight:800; color:#f8fafc; border-bottom:1px solid rgba(148,163,184,.16); letter-spacing:-.02em; display:flex;align-items:center;gap:10px; }
+        .sidebar-logo { position:relative;min-height:96px;padding:10px 16px;font-size:15px;font-weight:800;color:#f8fafc;border-bottom:1px solid rgba(148,163,184,.16);letter-spacing:-.02em;display:flex;align-items:center;justify-content:center;gap:10px; }
+        .sidebar-brand-image { display:block;width:min(164px,100%);height:74px;object-fit:contain; }
         .brand-mark { width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(145deg,#2563eb,#60a5fa);color:#fff;font-size:14px;box-shadow:0 8px 22px rgba(37,99,235,.3);flex:0 0 auto; }
         .brand-copy { min-width:0; }
         .brand-copy strong { display:block;font-size:14px; }
@@ -83,6 +84,7 @@
         .guest-main .content { min-height:100vh;display:grid;align-items:center;padding:28px 16px; }
         .auth-shell { width:min(440px,100%);margin:auto; }
         .auth-brand { display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:18px;color:#fff; }
+        .auth-brand-image { display:block;width:190px;max-width:72vw;height:118px;object-fit:contain; }
         .page-title { font-size:20px; font-weight:700; margin-bottom:20px; }
         .card { background:linear-gradient(180deg,#111827,#0b1220); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:var(--shadow); }
         .stat-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:18px; }
@@ -228,8 +230,7 @@
 @auth
 <aside class="sidebar" id="adminSidebar" aria-hidden="true">
     <div class="sidebar-logo">
-        <span class="brand-mark" aria-hidden="true">TP</span>
-        <span class="brand-copy"><strong>{{ $isLandlord ? 'Landlord Portal' : 'TenantPro' }}</strong><small>{{ $landlordLocked ? 'Subscription locked' : ($isLandlordStaff ? 'Team manager workspace' : ($isLandlord ? 'Property workspace' : 'Operations console')) }}</small></span>
+        <img class="sidebar-brand-image" src="{{ asset('images/starmax-tenant-logo.png') }}" alt="Starmax Tenant Services">
         <button class="sidebar-close" type="button" data-close-menu aria-label="Close menu">×</button>
     </div>
     <nav aria-label="Primary navigation">

@@ -15,9 +15,13 @@ class DownloadsController extends Controller
 
     public function index()
     {
+        $releases = AppRelease::query()->android()->with('uploader:id,name')->orderByDesc('version_code')->get();
+        $latest = $releases->first();
+
         return view('admin.downloads.index', [
-            'releases' => AppRelease::query()->android()->with('uploader:id,name')->orderByDesc('version_code')->get(),
+            'releases' => $releases,
             'current' => AppRelease::current(),
+            'latest' => $latest,
             'canManage' => $this->canManage(),
         ]);
     }

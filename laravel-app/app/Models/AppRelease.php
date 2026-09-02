@@ -74,4 +74,19 @@ class AppRelease extends Model
     {
         return 'v'.$this->version_name.' ('.$this->version_code.')';
     }
+
+    /** Bumps the trailing numeric segment, e.g. 1.4.0 -> 1.4.1. */
+    public function nextVersionName(): string
+    {
+        $parts = explode('.', $this->version_name);
+        $last = array_key_last($parts);
+
+        if ($last === null || ! ctype_digit($parts[$last])) {
+            return $this->version_name;
+        }
+
+        $parts[$last] = (string) ((int) $parts[$last] + 1);
+
+        return implode('.', $parts);
+    }
 }
