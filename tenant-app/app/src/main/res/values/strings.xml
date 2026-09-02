@@ -220,6 +220,9 @@
     <string name="invoice_detail_due_date">Due Date</string>
     <string name="invoice_detail_status">Status</string>
     <string name="invoice_close">Close</string>
+    <string name="app_update_download">Download update</string>
+    <string name="app_update_later">Later</string>
+    <string name="app_update_open_failed">Could not open the download link.</string>
     <string name="invoice_share">Share</string>
     <string name="invoice_share_subject">Invoice - %1$s</string>
     <string name="invoice_share_chooser">Share Invoice</string>

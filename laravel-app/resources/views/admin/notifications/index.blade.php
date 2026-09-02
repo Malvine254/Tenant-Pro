@@ -48,6 +48,10 @@
                     <div class="notification-copy">
                         <strong>{{ $notification->title }}</strong>
                         <p>{{ $notification->body }}</p>
+                        @php($downloadUrl = data_get($notification->metadata, 'download_url'))
+                        @if($downloadUrl)
+                            <a class="btn btn-secondary" style="min-height:32px;padding:6px 10px;font-size:12px;margin:6px 0;" href="{{ $downloadUrl }}">Download update</a>
+                        @endif
                         <time datetime="{{ $notification->created_at?->toIso8601String() }}">{{ $notification->created_at?->format('d M Y, H:i') }}</time>
                     </div>
                     @unless($notification->is_read)

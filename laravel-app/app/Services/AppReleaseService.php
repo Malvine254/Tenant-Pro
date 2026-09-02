@@ -71,22 +71,28 @@ class AppReleaseService
      */
     public function announce(AppRelease $release): int
     {
+        $downloadUrl = route('downloads.apk.public');
+
         $title = 'TenantPro '.$release->label.' is available';
         $notes = trim((string) $release->release_notes);
         $body = $notes !== ''
-            ? Str::limit($notes, 160)
+            ? Str::limit($notes, 140)
             : 'A new version of the TenantPro app is ready to download.';
 
         if ($release->is_mandatory) {
             $body .= ' This update is required to keep using the app.';
         }
 
+        // Inlined so the link is reachable even where notification metadata is not rendered.
+        $body .= ' Download: '.$downloadUrl;
+
         $metadata = [
             'release_id' => $release->id,
             'version_name' => $release->version_name,
             'version_code' => $release->version_code,
             'is_mandatory' => $release->is_mandatory,
-            'download_url' => route('downloads.apk.public'),
+            'download_url' => $downloadUrl,
+            'release_notes' => $notes !== '' ? $notes : null,
         ];
 
         $sent = 0;

@@ -1,5 +1,7 @@
 package com.tenantpro.app.ui.notifications
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -92,6 +94,11 @@ class NotificationsFragment : Fragment() {
     }
 
     private fun openNotification(item: NotificationItem) {
+        if (item.type.equals("APP_UPDATE", ignoreCase = true)) {
+            showAppUpdateDialog(item)
+            return
+        }
+
         val destinationAndArgs = when (item.type.uppercase(Locale.getDefault())) {
             "SUPPORT_REPLY" -> R.id.queriesFragment to bundleOf(
                 "conversationId" to item.metadata["conversation_id"]?.toString()
@@ -113,6 +120,36 @@ class NotificationsFragment : Fragment() {
             .setMessage(item.message)
             .setPositiveButton(R.string.invoice_close, null)
             .show()
+    }
+
+    private fun showAppUpdateDialog(item: NotificationItem) {
+        val downloadUrl = item.metadata["download_url"]?.toString()?.takeIf { it.isNotBlank() }
+        val version = item.metadata["version_name"]?.toString()?.takeIf { it.isNotBlank() }
+        val details = buildString {
+            append(item.message)
+            if (version != null) append("\n\nVersion $version")
+        }
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle(item.title)
+            .setMessage(details)
+
+        if (downloadUrl != null) {
+            dialog.setPositiveButton(R.string.app_update_download) { _, _ -> openDownloadLink(downloadUrl) }
+            dialog.setNegativeButton(R.string.app_update_later, null)
+        } else {
+            dialog.setPositiveButton(R.string.invoice_close, null)
+        }
+
+        dialog.show()
+    }
+
+    private fun openDownloadLink(url: String) {
+        val opened = runCatching {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }.isSuccess
+
+        if (!opened) toast(getString(R.string.app_update_open_failed))
     }
 
     private fun buildMeta(item: NotificationItem): String {
