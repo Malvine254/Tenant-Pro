@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <link rel="icon" type="image/png" href="{{ asset('images/starmax-app-icon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/starmax-app-icon.png') }}">
     <title>@yield('page-title', 'Dashboard') · Starmax Tenant Services</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
