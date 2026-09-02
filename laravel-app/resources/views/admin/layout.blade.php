@@ -58,6 +58,7 @@
         .notification-tooltip-item { display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:8px; }
         .notification-tooltip-item.is-unread { background:rgba(59,130,246,.1); }
         .notification-tooltip-title { color:#e2e8f0;font-weight:600;line-height:1.3; }
+        .notification-tooltip-body { color:#94a3b8;font-size:11px;line-height:1.4; }
         .notification-tooltip-time { color:#94a3b8;font-size:11px; }
         .topbar-action:hover .notification-tooltip,.topbar-action:focus-visible .notification-tooltip { display:block; }
         @media (max-width: 900px) {
@@ -294,23 +295,23 @@
         </div>
         <div class="topbar-meta">
             <span class="topbar-date">{{ now()->format('D, d M Y') }}</span>
-            <a class="topbar-action {{ request()->routeIs('admin.notifications*') ? 'active' : '' }}{{ $adminUnreadNotifications > 0 ? ' has-notifications' : '' }}" href="{{ route('admin.notifications.index') }}" aria-label="Notifications{{ $adminUnreadNotifications ? ', '.$adminUnreadNotifications.' unread' : '' }}" title="Notifications" data-notification-count="{{ $adminUnreadNotifications }}">
+            <a id="adminNotificationButton" class="topbar-action {{ request()->routeIs('admin.notifications*') ? 'active' : '' }}{{ $adminUnreadNotifications > 0 ? ' has-notifications' : '' }}" href="{{ route('admin.notifications.index') }}" aria-label="Notifications{{ $adminUnreadNotifications ? ', '.$adminUnreadNotifications.' unread' : '' }}" title="Notifications" data-notification-count="{{ $adminUnreadNotifications }}" data-summary-url="{{ route('admin.notifications.summary') }}">
                 <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
                 @if($adminUnreadNotifications > 0)<span class="topbar-count" aria-label="Unread notifications count">{{ min($adminUnreadNotifications, 99) }}</span>@endif
                 <span class="notification-tooltip" role="tooltip">
-                    <span class="notification-tooltip-head">{{ $adminUnreadNotifications > 0 ? $adminUnreadNotifications.' unread notification'.($adminUnreadNotifications === 1 ? '' : 's') : 'No unread notifications' }}</span>
-                    @forelse($adminNotificationPreview as $preview)
-                        <span class="notification-tooltip-item {{ $preview->is_read ? '' : 'is-unread' }}">
-                            <span class="notification-tooltip-title">{{ \Illuminate\Support\Str::limit($preview->title ?: 'Notification', 42) }}</span>
-                            <span class="notification-tooltip-time">{{ $preview->created_at?->diffForHumans() }}</span>
-                        </span>
-                    @empty
-                        <span class="notification-tooltip-item"><span class="notification-tooltip-title">Nothing here yet.</span></span>
-                    @endforelse
+                    <span id="adminNotificationHeading" class="notification-tooltip-head">{{ $adminUnreadNotifications > 0 ? $adminUnreadNotifications.' unread notification'.($adminUnreadNotifications === 1 ? '' : 's') : 'No unread notifications' }}</span>
+                    <span id="adminNotificationPreview">
+                        @forelse($adminNotificationPreview as $preview)
+                            <span class="notification-tooltip-item {{ $preview->is_read ? '' : 'is-unread' }}">
+                                <span class="notification-tooltip-title">{{ \Illuminate\Support\Str::limit($preview->title ?: 'Notification', 42) }}</span>
+                                <span class="notification-tooltip-body">{{ \Illuminate\Support\Str::limit($preview->body, 82) }}</span>
+                                <span class="notification-tooltip-time">{{ $preview->created_at?->diffForHumans() }}</span>
+                            </span>
+                        @empty
+                            <span class="notification-tooltip-item"><span class="notification-tooltip-title">Nothing here yet.</span></span>
+                        @endforelse
+                    </span>
                 </span>
-            </a>
-            <a class="topbar-action {{ request()->routeIs('admin.settings*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}" aria-label="Settings" title="Settings">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1A8 8 0 0 0 15 6l-.3-2.5h-4L10.5 6A8 8 0 0 0 9 7.1l-2.4-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1A8 8 0 0 0 10.5 18l.2 2.5h4L15 18a8 8 0 0 0 1.5-1.1l2.4 1 2-3.4-2-1.5a7 7 0 0 0 .1-1z"/></svg>
             </a>
             @php
                 $chipUser = auth()->user();
@@ -453,6 +454,71 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('keydown', event => {
             if (event.key === 'Escape') closeMenu();
         });
+    }
+
+    const notificationButton = document.getElementById('adminNotificationButton');
+    const notificationHeading = document.getElementById('adminNotificationHeading');
+    const notificationPreview = document.getElementById('adminNotificationPreview');
+    const refreshNotifications = async () => {
+        if (!notificationButton || document.hidden) return;
+        try {
+            const response = await fetch(notificationButton.dataset.summaryUrl, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+            });
+            if (!response.ok) return;
+            const payload = await response.json();
+            const unread = Number(payload.unread_count || 0);
+            notificationButton.dataset.notificationCount = String(unread);
+            notificationButton.classList.toggle('has-notifications', unread > 0);
+            notificationButton.setAttribute('aria-label', unread > 0 ? `Notifications, ${unread} unread` : 'Notifications');
+
+            let badge = notificationButton.querySelector('.topbar-count');
+            if (unread > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'topbar-count';
+                    notificationButton.insertBefore(badge, notificationButton.querySelector('.notification-tooltip'));
+                }
+                badge.textContent = String(Math.min(unread, 99));
+            } else {
+                badge?.remove();
+            }
+            if (notificationHeading) {
+                notificationHeading.textContent = unread > 0
+                    ? `${unread} unread notification${unread === 1 ? '' : 's'}`
+                    : 'No unread notifications';
+            }
+            if (notificationPreview) {
+                notificationPreview.replaceChildren();
+                const items = Array.isArray(payload.notifications) ? payload.notifications : [];
+                if (!items.length) {
+                    const empty = document.createElement('span');
+                    empty.className = 'notification-tooltip-item';
+                    empty.textContent = 'Nothing here yet.';
+                    notificationPreview.appendChild(empty);
+                }
+                items.forEach(item => {
+                    const row = document.createElement('span');
+                    row.className = `notification-tooltip-item${item.is_read ? '' : ' is-unread'}`;
+                    [['notification-tooltip-title', item.title || 'Notification'], ['notification-tooltip-body', item.body || ''], ['notification-tooltip-time', item.created_at || '']].forEach(([className, value]) => {
+                        const text = document.createElement('span');
+                        text.className = className;
+                        text.textContent = value;
+                        row.appendChild(text);
+                    });
+                    notificationPreview.appendChild(row);
+                });
+            }
+        } catch (_) {
+            // Keep the last server-rendered state without displaying disruptive connectivity warnings.
+        }
+    };
+    if (notificationButton) {
+        window.setInterval(refreshNotifications, 10000);
+        window.addEventListener('focus', refreshNotifications);
+        document.addEventListener('visibilitychange', refreshNotifications);
     }
 
     document.querySelectorAll('form:not(#composer)').forEach(form => {

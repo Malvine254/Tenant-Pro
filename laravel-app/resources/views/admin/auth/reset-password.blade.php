@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="auth-shell">
-    <div class="auth-brand"><span class="brand-mark" aria-hidden="true">TP</span><strong>TenantPro</strong></div>
+    <div class="auth-brand"><img class="auth-brand-image" src="{{ asset('images/starmax-tenant-logo.png') }}" alt="Starmax Tenant Services"></div>
     <div class="card">
         <h2 style="margin-bottom:10px;font-size:18px;">Choose a new password</h2>
         <p style="font-size:13px;color:#94a3b8;margin-bottom:20px;">Use at least 10 characters with uppercase, lowercase, and a number.</p>
