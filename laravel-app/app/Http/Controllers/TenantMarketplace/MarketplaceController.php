@@ -5,6 +5,7 @@ namespace App\Http\Controllers\TenantMarketplace;
 use App\Http\Controllers\Controller;
 use App\Models\Property;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 
 class MarketplaceController extends Controller
@@ -23,7 +24,7 @@ class MarketplaceController extends Controller
             ->publiclyAvailable()
             ->with([
                 'landlord:id,name',
-                'units' => fn (Builder $query) => $query
+                'units' => fn (HasMany $query) => $query
                     ->where('status', 'AVAILABLE')
                     ->orderBy('rent_amount')
                     ->orderBy('unit_number'),
@@ -80,7 +81,7 @@ class MarketplaceController extends Controller
 
         $property->load([
             'landlord:id,name',
-            'units' => fn (Builder $query) => $query
+            'units' => fn (HasMany $query) => $query
                 ->where('status', 'AVAILABLE')
                 ->orderBy('rent_amount')
                 ->orderBy('unit_number'),
