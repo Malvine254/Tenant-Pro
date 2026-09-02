@@ -66,13 +66,14 @@ class MarketplaceController extends Controller
             ->orderBy('city')
             ->pluck('city');
 
-        $heroImageUrl = Property::query()
+        $heroPhotos = Property::query()
             ->publiclyAvailable()
             ->whereNotNull('cover_image_url')
             ->latest('published_at')
-            ->value('cover_image_url');
+            ->limit(5)
+            ->pluck('cover_image_url');
 
-        return view('tenant-marketplace.index', compact('properties', 'locations', 'filters', 'heroImageUrl'));
+        return view('tenant-marketplace.index', compact('properties', 'locations', 'filters', 'heroPhotos'));
     }
 
     public function show(Property $property)

@@ -4,62 +4,47 @@
 
 @section('content')
 <section class="search-hero">
-    <div class="hero-skyline" aria-hidden="true">
-        <svg viewBox="0 0 1600 420" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
-            <rect x="40" y="200" width="150" height="220" rx="4"/>
-            <rect x="70" y="160" width="30" height="40" rx="2"/>
-            <rect x="210" y="260" width="120" height="160" rx="4"/>
-            <polygon points="210,260 270,220 330,260"/>
-            <rect x="360" y="150" width="90" height="270"/>
-            <rect x="470" y="230" width="140" height="190" rx="4"/>
-            <polygon points="470,230 540,185 610,230"/>
-            <rect x="640" y="180" width="70" height="240"/>
-            <rect x="730" y="240" width="160" height="180" rx="4"/>
-            <rect x="770" y="200" width="35" height="45" rx="2"/>
-            <rect x="920" y="140" width="100" height="280"/>
-            <rect x="1040" y="255" width="130" height="165" rx="4"/>
-            <polygon points="1040,255 1105,210 1170,255"/>
-            <rect x="1190" y="190" width="80" height="230"/>
-            <rect x="1290" y="245" width="150" height="175" rx="4"/>
-            <rect x="1330" y="205" width="34" height="44" rx="2"/>
-            <rect x="1460" y="170" width="100" height="250"/>
-        </svg>
-    </div>
-    @if($heroImageUrl)
-        <div class="hero-media" aria-hidden="true">
-            <img src="{{ $heroImageUrl }}" alt="">
-        </div>
-    @endif
-    <div class="hero-scrim" aria-hidden="true"></div>
-    <div class="market-shell hero-inner">
+    <div class="market-shell hero-grid">
         <div class="hero-copy">
             <span class="hero-kicker">Homes managed with Starmax</span>
             <h1>Find a place that feels right.</h1>
             <p>Explore current vacancies, compare monthly rent, and request a viewing directly from a verified property manager.</p>
+
+            <form class="search-panel" action="{{ route('marketplace.index') }}" method="GET">
+                <div class="search-field">
+                    <svg class="field-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <div>
+                        <label for="market-q">What are you looking for?</label>
+                        <input id="market-q" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Property name, estate or neighbourhood">
+                    </div>
+                </div>
+                <div class="search-field">
+                    <svg class="field-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                    <div>
+                        <label for="market-location">Location</label>
+                        <select id="market-location" name="location">
+                            <option value="">All locations</option>
+                            @foreach($locations as $location)
+                                <option value="{{ $location }}" @selected(($filters['location'] ?? '') === $location)>{{ $location }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <button type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Search homes</button>
+            </form>
         </div>
 
-        <form class="search-panel" action="{{ route('marketplace.index') }}" method="GET">
-            <div class="search-field search-field-main">
-                <svg class="field-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                <div>
-                    <label for="market-q">What are you looking for?</label>
-                    <input id="market-q" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Property name, estate or neighbourhood">
+        <div class="hero-gallery" aria-hidden="true">
+            @for($i = 0; $i < 5; $i++)
+                <div class="gallery-tile gallery-tile-{{ $i + 1 }}">
+                    @if($heroPhotos->get($i))
+                        <img src="{{ $heroPhotos->get($i) }}" alt="" loading="eager">
+                    @else
+                        <svg viewBox="0 0 24 24"><path d="M4 21V10l8-6 8 6v11h-5v-6H9v6z"/></svg>
+                    @endif
                 </div>
-            </div>
-            <div class="search-field">
-                <svg class="field-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
-                <div>
-                    <label for="market-location">Location</label>
-                    <select id="market-location" name="location">
-                        <option value="">All locations</option>
-                        @foreach($locations as $location)
-                            <option value="{{ $location }}" @selected(($filters['location'] ?? '') === $location)>{{ $location }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-            <button type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Search homes</button>
-        </form>
+            @endfor
+        </div>
     </div>
 </section>
 
