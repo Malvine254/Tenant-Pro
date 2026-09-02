@@ -1,4 +1,4 @@
-# TenantPro end-to-end product and security audit
+# Starmax Tenant Services end-to-end product and security audit
 
 Date: 29 August 2026
 

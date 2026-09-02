@@ -1,4 +1,4 @@
-# Tenant Pro — Project Summary for Claude
+# Starmax Tenant Services — Project Summary for Claude
 
 > This file is maintained by Claude. Update it whenever new features, modules, endpoints, or significant architectural changes are made.
 
@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-**Tenant Pro** is a full-stack, multi-platform **Tenant Payment & Property Management System** targeting landlords, tenants, admins, and caretakers in Kenya (M-Pesa payments). It consists of three main applications sharing a single MySQL database via Prisma ORM.
+**Starmax Tenant Services** is a full-stack, multi-platform **Tenant Payment & Property Management System** targeting landlords, tenants, admins, and caretakers in Kenya (M-Pesa payments). It consists of three main applications sharing a single MySQL database via Prisma ORM.
 
 ---
 

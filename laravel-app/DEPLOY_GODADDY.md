@@ -1,4 +1,4 @@
-# Deploy Laravel TenantPro on GoDaddy Shared Hosting
+# Deploy Starmax Tenant Services on GoDaddy Shared Hosting
 
 ## 0. If You Have No Terminal Access
 Use the built-in admin page:

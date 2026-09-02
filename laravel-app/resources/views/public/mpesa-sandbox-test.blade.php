@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TenantPro Sandbox Payment Test</title>
+    <title>Starmax Tenant Services Sandbox Payment Test</title>
     <style>
         :root {
             --bg: #07111f;
@@ -145,7 +145,7 @@
     <div class="shell">
         <div class="card">
             <div class="header">
-                <h1>TenantPro sandbox payment test</h1>
+                <h1>Starmax Tenant Services sandbox payment test</h1>
                 <p>Use this form to simulate a customer payment in Daraja sandbox mode without going through the admin panel.</p>
             </div>
 
@@ -187,7 +187,7 @@
 
                         <div class="field" style="grid-column: 1 / -1;">
                             <label for="account_reference">Account reference</label>
-                            <input id="account_reference" name="account_reference" value="{{ old('account_reference', 'Tenant Pro Sandbox') }}">
+                            <input id="account_reference" name="account_reference" value="{{ old('account_reference', 'Starmax Tenant Services Sandbox') }}">
                         </div>
                     </div>
 

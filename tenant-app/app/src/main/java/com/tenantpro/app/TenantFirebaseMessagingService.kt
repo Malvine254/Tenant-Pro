@@ -41,7 +41,7 @@ class TenantFirebaseMessagingService : FirebaseMessagingService() {
         // allowed Android to destroy the service and cancel delivery while the app was closed.
         if (runBlocking { dataStore.notificationsEnabled.firstOrNull() } == false) return
 
-        val title = message.data["title"] ?: message.notification?.title ?: "Tenant Pro"
+        val title = message.data["title"] ?: message.notification?.title ?: "Starmax Tenant Services"
         val body = message.data["body"] ?: message.notification?.body ?: return
         DeviceNotificationHelper.showPushNotification(
             context = this,

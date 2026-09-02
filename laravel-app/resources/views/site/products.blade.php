@@ -10,18 +10,18 @@
     </div>
 </div>
 
-<!-- TenantPro Platform -->
+<!-- Starmax Tenant Services Platform -->
 <div class="section">
     <div class="section-header">
         <p class="eyebrow">Flagship Product</p>
-        <h2>TenantPro — Property Management Platform</h2>
+        <h2>Starmax Tenant Services — Property Management Platform</h2>
         <p>A complete ecosystem for property operations: a powerful web dashboard for landlords and an intuitive Android app for tenants.</p>
     </div>
 
     <div class="grid grid-2">
         <article class="card card-accent reveal">
             <span class="tag">Web Dashboard</span>
-            <h3 style="margin-top:14px;">TenantPro Admin Console</h3>
+            <h3 style="margin-top:14px;">Starmax Tenant Services Admin Console</h3>
             <p>The command center for landlords, property managers, and operations teams. Built with NestJS, Next.js, and PostgreSQL.</p>
             <ul class="list">
                 <li>Property & unit lifecycle management</li>
@@ -39,7 +39,7 @@
 
         <article class="card card-accent reveal">
             <span class="tag teal">Android App</span>
-            <h3 style="margin-top:14px;">TenantPro Mobile</h3>
+            <h3 style="margin-top:14px;">Starmax Tenant Services Mobile</h3>
             <p>A self-service app for tenants built with native Kotlin. View invoices, pay rent, report issues, and communicate with management.</p>
             <ul class="list">
                 <li>Invoice viewing & payment tracking</li>

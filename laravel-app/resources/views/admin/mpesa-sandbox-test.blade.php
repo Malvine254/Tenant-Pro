@@ -153,7 +153,7 @@
 
                         <div class="field">
                             <label for="account_reference">Account reference</label>
-                            <input id="account_reference" name="account_reference" value="{{ old('account_reference', 'Tenant Pro Sandbox') }}" placeholder="Tenant Pro Sandbox">
+                            <input id="account_reference" name="account_reference" value="{{ old('account_reference', 'Starmax Tenant Services Sandbox') }}" placeholder="Starmax Tenant Services Sandbox">
                         </div>
                     </div>
                 </div>

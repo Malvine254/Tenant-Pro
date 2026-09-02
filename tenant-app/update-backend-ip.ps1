@@ -7,13 +7,13 @@ param(
     [switch]$Install
 )
 
-# Update Backend IP Script for Tenant Pro Android App
+# Update Backend IP Script for Starmax Tenant Services Android App
 # auto mode uses emulator localhost when an emulator is connected; otherwise it
 # detects the active LAN IP for a physical Android device.
 
 Write-Host ""
 Write-Host "=======================================" -ForegroundColor Cyan
-Write-Host "  Tenant Pro - Update Backend IP" -ForegroundColor Cyan
+Write-Host "  Starmax Tenant Services - Update Backend IP" -ForegroundColor Cyan
 Write-Host "=======================================" -ForegroundColor Cyan
 Write-Host ""
 

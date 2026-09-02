@@ -37,7 +37,7 @@ class MpesaSandboxTestController extends Controller
         $phoneNumber = trim((string) $data['phone_number']);
         $amount = round((float) $data['amount'], 2);
         $reference = 'sandbox-test-'.Str::uuid()->toString();
-        $accountReference = trim((string) ($data['account_reference'] ?? 'Tenant Pro Sandbox'));
+        $accountReference = trim((string) ($data['account_reference'] ?? 'Starmax Tenant Services Sandbox'));
 
         if ($mpesa->environment() !== 'sandbox') {
             return back()->withErrors([

@@ -1,6 +1,6 @@
-# Tenant Pro Android App — Installation & Setup Guide
+# Starmax Tenant Services Android App — Installation & Setup Guide
 
-This guide covers installing and setting up the **Tenant Pro** Android app on your phone.
+This guide covers installing and setting up the **Starmax Tenant Services** Android app on your phone.
 
 ---
 
@@ -47,7 +47,7 @@ Before installing, Android requires permission to install apps from sources othe
 ### Step 3: Install the App
 
 1. Open your **Downloads** folder or file manager
-2. Find **` tenant-app.apk`** or **`TenantPro.apk`**
+2. Find **`tenant-app.apk`** or **`StarmaxTenantServices.apk`**
 3. **Tap the file** to start installation
 4. Read the permissions list and tap **Install**
 5. Wait for installation to complete (~30 seconds)
@@ -55,7 +55,7 @@ Before installing, Android requires permission to install apps from sources othe
 
 ### Step 4: Launch & Configure
 
-1. **Open Tenant Pro** from your app drawer
+1. **Open Starmax Tenant Services** from your app drawer
 2. You'll see the **Login** screen
 3. Enter your **email and password** provided by your property manager
 4. Tap **Sign In**
@@ -259,7 +259,7 @@ verification)
 **Solution**:
 1. **Uninstall** the app completely
 2. Clear app cache:
-   - **Settings** → **Apps** → **Tenant Pro** → **Storage** → **Clear Cache**
+   - **Settings** → **Apps** → **Starmax Tenant Services** → **Storage** → **Clear Cache**
 3. **Reinstall** the app
 4. If still crashing, update to the latest APK version
 
@@ -303,7 +303,7 @@ verification)
 1. **Restart your phone**
 2. **Close other apps** running in the background
 3. **Clear app cache**:
-   - **Settings** → **Apps** → **Tenant Pro** → **Storage** → **Clear Cache**
+   - **Settings** → **Apps** → **Starmax Tenant Services** → **Storage** → **Clear Cache**
 4. Ensure you have **at least 200 MB free storage** on your phone
 5. **Uninstall and reinstall** the latest version of the app
 
@@ -326,13 +326,13 @@ If you find a bug in the app:
 2. Note **what you were trying to do** when the error occurred
 3. Note your **Android phone model and OS version** (**Settings** → **About**)
 4. Email your **property manager or IT support** with these details
-5. Include the **app version** (**Settings** → **Apps** → **Tenant Pro** → **.** → **App info**)
+5. Include the **app version** (**Settings** → **Apps** → **Starmax Tenant Services** → **.** → **App info**)
 
 ---
 
 ## App Permissions
 
-Tenant Pro requires these permissions:
+Starmax Tenant Services requires these permissions:
 
 | Permission | Purpose |
 |-----------|---------|

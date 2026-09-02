@@ -345,7 +345,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             val unlockIntent = keyguardManager.createConfirmDeviceCredentialIntent(
-                "Unlock Tenant Pro",
+                "Unlock Starmax Tenant Services",
                 "Confirm your device lock to continue"
             ) ?: return@launch
 

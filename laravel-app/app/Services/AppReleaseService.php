@@ -25,7 +25,7 @@ class AppReleaseService
         $versionCode = (int) $data['version_code'];
         $platform = strtoupper((string) ($data['platform'] ?? 'ANDROID'));
 
-        $fileName = sprintf('tenantpro-%s-%d.apk', Str::slug($versionName, '.'), $versionCode);
+        $fileName = sprintf('starmax-tenant-services-%s-%d.apk', Str::slug($versionName, '.'), $versionCode);
         $path = $file->storeAs(self::DIRECTORY, $fileName, 'local');
 
         return DB::transaction(function () use ($path, $fileName, $file, $versionName, $versionCode, $platform, $data, $actor) {
@@ -73,11 +73,11 @@ class AppReleaseService
     {
         $downloadUrl = route('downloads.apk.public');
 
-        $title = 'TenantPro '.$release->label.' is available';
+        $title = 'Starmax Tenant Services '.$release->label.' is available';
         $notes = trim((string) $release->release_notes);
         $body = $notes !== ''
             ? Str::limit($notes, 140)
-            : 'A new version of the TenantPro app is ready to download.';
+            : 'A new version of the Starmax Tenant Services app is ready to download.';
 
         if ($release->is_mandatory) {
             $body .= ' This update is required to keep using the app.';

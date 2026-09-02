@@ -33,11 +33,10 @@ class MpesaServiceTest extends TestCase
             ]),
         ]);
 
-        $result = app(MpesaService::class)->stkPush('0708374149', 1, 'invoice-reference', 'Tenant Pro payment');
+        $result = app(MpesaService::class)->stkPush('0708374149', 1, 'invoice-reference', 'Starmax Tenant Services payment');
 
         $this->assertSame('checkout-1', $result['CheckoutRequestID']);
-        Http::assertSent(fn ($request) =>
-            $request->url() === 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
+        Http::assertSent(fn ($request) => $request->url() === 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
             && $request['BusinessShortCode'] === '174379'
             && $request['PartyA'] === '254708374149'
             && $request['PartyB'] === '174379'

@@ -191,7 +191,7 @@ export class EmailService {
     const fromName = this.configService.get<string>('MAIL_FROM_NAME');
     const fromEmail = this.configService.get<string>('MAIL_FROM_EMAIL');
 
-    const subject = `You've been invited to ${propertyName} — Tenant Pro`;
+    const subject = `You've been invited to ${propertyName} — Starmax Tenant Services`;
     const html = this.getInvitationEmailTemplate(code, expiresAt, propertyName, unitName, tenantName);
 
     try {
@@ -225,7 +225,7 @@ export class EmailService {
         from: `"${fromName}" <${fromEmail}>`,
         to: email,
         subject: `Your unit at ${propertyName} is connected`,
-        html: `<p>${greeting}</p><p>Your existing Tenant Pro account has been connected to your unit.</p><p><strong>Property:</strong> ${propertyName}<br /><strong>Unit:</strong> ${unitName}</p><p>Open the app to view your tenancy, invoices, and payment information. No invitation code is needed.</p>`,
+        html: `<p>${greeting}</p><p>Your existing Starmax Tenant Services account has been connected to your unit.</p><p><strong>Property:</strong> ${propertyName}<br /><strong>Unit:</strong> ${unitName}</p><p>Open the app to view your tenancy, invoices, and payment information. No invitation code is needed.</p>`,
       });
       this.logger.log(`Unit assignment email sent to ${email}`);
       return { success: true };
@@ -586,7 +586,7 @@ export class EmailService {
     <div class="card">
       <div class="hero">
         <h1>You've been invited!</h1>
-        <p>Your landlord has set up a unit for you on Tenant Pro</p>
+        <p>Your landlord has set up a unit for you on Starmax Tenant Services</p>
       </div>
       <div class="content">
         <p>${greeting}</p>
@@ -609,7 +609,7 @@ export class EmailService {
         <div class="steps">
           <strong>How to accept your invitation:</strong>
           <ol>
-            <li>Download the <strong>Tenant Pro</strong> app and create an account</li>
+            <li>Download the <strong>Starmax Tenant Services</strong> app and create an account</li>
             <li>Go to <strong>Account → Accept Invitation</strong></li>
             <li>Enter the code above to activate your tenancy</li>
           </ol>

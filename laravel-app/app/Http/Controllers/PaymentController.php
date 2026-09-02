@@ -144,7 +144,7 @@ class PaymentController extends Controller
         $reference = trim((string) ($settings['account_reference'] ?? ''));
         $isProduction = $mpesa->environment() === 'production';
         $hasRequiredDetails = $number !== '' && (
-            $type === 'TILL' || ($reference !== '' && strcasecmp($reference, 'Tenant Pro') !== 0)
+            $type === 'TILL' || ($reference !== '' && ! in_array(strtolower($reference), ['tenant pro', 'starmax tenant services'], true))
         );
         $stkConfigured = $mpesa->isConfigured();
 
@@ -308,7 +308,7 @@ class PaymentController extends Controller
                 $data['phone_number'],
                 $amount,
                 $invoice->id,
-                'Tenant Pro invoice payment',
+                'Starmax Tenant Services invoice payment',
                 $landlordSettings
             );
             $payment->update([
@@ -490,7 +490,7 @@ class PaymentController extends Controller
         } else {
             abort_if(trim((string) ($settings['paybill_number'] ?? '')) === '', 422, 'Your landlord must configure a Paybill number before STK payments can be used.');
             $reference = trim((string) ($settings['account_reference'] ?? ''));
-            abort_if($reference === '' || strcasecmp($reference, 'Tenant Pro') === 0, 422, 'Your landlord must configure the Paybill account number before STK payments can be used.');
+            abort_if($reference === '' || in_array(strtolower($reference), ['tenant pro', 'starmax tenant services'], true), 422, 'Your landlord must configure the Paybill account number before STK payments can be used.');
         }
 
         return $settings;

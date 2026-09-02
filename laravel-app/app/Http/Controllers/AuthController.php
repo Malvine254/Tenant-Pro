@@ -356,12 +356,12 @@ class AuthController extends Controller
         ], now()->addMinutes(10));
 
         Mail::to($user->email, $user->name)->send(new TenantProUpdateMail(
-            subjectLine: 'Your Tenant Pro verification code',
+            subjectLine: 'Your Starmax Tenant Services verification code',
             preheader: 'Use this secure code to verify your email address.',
             title: 'Verify your email',
             introLines: [
                 'Hello '.($user->first_name ?: $user->name ?: 'there').',',
-                'Use the verification code below to finish setting up your Tenant Pro account.',
+                'Use the verification code below to finish setting up your Starmax Tenant Services account.',
             ],
             footerText: 'This code expires in 10 minutes. If you did not request it, you can safely ignore this email.',
             eyebrow: 'Account security',
@@ -385,12 +385,12 @@ class AuthController extends Controller
         ], now()->addMinutes(10));
 
         Mail::to($user->email, $user->name)->send(new TenantProUpdateMail(
-            subjectLine: 'Your Tenant Pro password reset code',
+            subjectLine: 'Your Starmax Tenant Services password reset code',
             preheader: 'Use this secure code to reset your password.',
             title: 'Reset your password',
             introLines: [
                 'Hello '.($user->first_name ?: $user->name ?: 'there').',',
-                'Use the code below to reset your Tenant Pro password.',
+                'Use the code below to reset your Starmax Tenant Services password.',
             ],
             footerText: 'This code expires in 10 minutes. If you did not request it, you can safely ignore this email.',
             eyebrow: 'Account security',

@@ -16,7 +16,7 @@
         <div style="margin-bottom:14px;padding:10px 12px;border:1px solid rgba(255,255,255,.35);background:rgba(96,165,250,.12);border-radius:10px;font-size:12px;color:#dbeafe;line-height:1.5;">
 
             Welcome {{ $invitation->invitee_name }}.
-            Create your password to activate your TenantPro account.
+            Create your password to activate your Starmax Tenant Services account.
 
         </div>
 

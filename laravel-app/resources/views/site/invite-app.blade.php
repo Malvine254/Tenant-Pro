@@ -6,7 +6,7 @@
         <p class="eyebrow" style="margin-block-end:8px;">Tenant onboarding</p>
         <h2 style="margin:0 0 12px;font-size:30px;line-height:1.2;">Your invitation is ready</h2>
         <p style="margin:0 0 20px;color:#475569;font-size:15px;line-height:1.7;">
-            Use the steps below to complete onboarding in the TenantPro Android app.
+            Use the steps below to complete onboarding in the Starmax Tenant Services Android app.
             Your invitation code is shown here in case you need to enter it manually.
         </p>
 
@@ -16,14 +16,14 @@
         </div>
 
         <ol style="margin:0 0 20px 18px;color:#334155;line-height:1.9;font-size:15px;">
-            <li>Install TenantPro on your Android phone.</li>
+            <li>Install Starmax Tenant Services on your Android phone.</li>
             <li>Sign in using the login details from your invitation email.</li>
             <li>In the app, open Account and select Accept Invitation.</li>
             <li>Enter the code above to link your unit.</li>
         </ol>
 
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            <a href="{{ $deepLink }}" class="btn btn-primary" style="min-inline-size:210px;text-align:center;">Open in TenantPro App</a>
+            <a href="{{ $deepLink }}" class="btn btn-primary" style="min-inline-size:210px;text-align:center;">Open in Starmax Tenant Services App</a>
             <a href="{{ $downloadUrl }}" class="btn btn-secondary" style="min-inline-size:210px;text-align:center;">Download Android APK</a>
         </div>
 

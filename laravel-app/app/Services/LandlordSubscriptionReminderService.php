@@ -68,8 +68,8 @@ class LandlordSubscriptionReminderService
             }
 
             $body = $daysUntilDue === 0
-                ? 'Your TenantPro subscription is due today. Renew to avoid interruption to tenant operations.'
-                : 'Your TenantPro subscription is due in '.$daysUntilDue.' day'.($daysUntilDue === 1 ? '' : 's').'.';
+                ? 'Your Starmax Tenant Services subscription is due today. Renew to avoid interruption to tenant operations.'
+                : 'Your Starmax Tenant Services subscription is due in '.$daysUntilDue.' day'.($daysUntilDue === 1 ? '' : 's').'.';
 
             $this->notificationService->notify(
                 $landlord,

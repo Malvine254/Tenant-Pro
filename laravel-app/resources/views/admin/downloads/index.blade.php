@@ -13,7 +13,7 @@
 
 <div class="admin-page-header">
     <div>
-        <h2>TenantPro app releases</h2>
+        <h2>Starmax Tenant Services app releases</h2>
         <p>Publish Android builds, keep older versions downloadable, and alert tenants when a new version lands.</p>
     </div>
     @if($current)
@@ -196,7 +196,7 @@
     <ol style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:20px;margin:0;">
         <li>Download the APK on the Android device, or transfer it there.</li>
         <li>Open the file and allow installs from this source when prompted.</li>
-        <li>Tap install, then sign in with your TenantPro credentials.</li>
+        <li>Tap install, then sign in with your Starmax Tenant Services credentials.</li>
         <li>Existing users can install straight over the old version — data is preserved.</li>
     </ol>
 </div>

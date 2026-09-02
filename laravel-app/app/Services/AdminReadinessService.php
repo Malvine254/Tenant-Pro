@@ -35,7 +35,7 @@ class AdminReadinessService
                 : ($settings['paybill_number'] ?? '')));
             $reference = trim((string) ($settings['account_reference'] ?? ''));
             $paymentReady = $number !== '' && ($paymentType === 'TILL'
-                || ($reference !== '' && strcasecmp($reference, 'Tenant Pro') !== 0));
+                || ($reference !== '' && ! in_array(strtolower($reference), ['tenant pro', 'starmax tenant services'], true)));
 
             $checkpoints['payment'] = [
                 'label' => 'Tenant payment channel',

@@ -41,7 +41,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Secure your Tenant Pro account"
+                android:text="Secure your Starmax Tenant Services account"
                 android:textColor="#C9D4F3"
                 android:textSize="13sp" />
         </LinearLayout>

@@ -142,7 +142,7 @@ class LandlordSubscriptionService
         return [
             'allowed' => false,
             'status' => self::STATUS_PAST_DUE,
-            'message' => ($wasPaidSubscription ? 'Your TenantPro subscription expired on ' : 'Your free trial ended on ')
+            'message' => ($wasPaidSubscription ? 'Your Starmax Tenant Services subscription expired on ' : 'Your free trial ended on ')
                 .$endedOn.'. Tenant billing, payments, maintenance, invitations and support operations are locked until the subscription is renewed.',
             'due_at' => $dueDate?->copy(),
             'days_remaining' => 0,

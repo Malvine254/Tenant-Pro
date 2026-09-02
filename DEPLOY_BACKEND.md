@@ -1,4 +1,4 @@
-# Tenant Pro Backend Deployment
+# Starmax Tenant Services Backend Deployment
 
 Target domain: `app.starmaxltd.com`
 

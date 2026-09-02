@@ -21,5 +21,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "TenantPro"
+rootProject.name = "StarmaxTenantServices"
 include(":app")

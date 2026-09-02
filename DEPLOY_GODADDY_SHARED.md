@@ -1,4 +1,4 @@
-# Tenant Pro Backend On GoDaddy Shared Hosting
+# Starmax Tenant Services Backend On GoDaddy Shared Hosting
 
 Target domain:
 

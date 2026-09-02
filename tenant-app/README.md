@@ -1,4 +1,4 @@
-# Tenant Pro — Android App
+# Starmax Tenant Services — Android App
 
 Kotlin + MVVM tenant-facing mobile app for managing invoices and M-Pesa payments.
 

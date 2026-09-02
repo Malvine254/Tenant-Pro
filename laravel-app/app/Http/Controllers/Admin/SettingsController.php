@@ -209,7 +209,7 @@ class SettingsController extends Controller
             'payment_type' => ['required', 'string', 'in:PAYBILL,TILL'],
             'paybill_number' => ['nullable', 'required_if:payment_type,PAYBILL', 'string', 'max:20'],
             'till_number' => ['nullable', 'required_if:payment_type,TILL', 'string', 'max:20'],
-            'account_reference' => ['nullable', 'required_if:payment_type,PAYBILL', 'string', 'max:50', 'not_in:Tenant Pro'],
+            'account_reference' => ['nullable', 'required_if:payment_type,PAYBILL', 'string', 'max:50', 'not_in:Tenant Pro,Starmax Tenant Services'],
             'business_name' => ['nullable', 'string', 'max:100'],
             'short_code_note' => ['nullable', 'string', 'max:255'],
             'use_default_config' => ['nullable', 'boolean'],

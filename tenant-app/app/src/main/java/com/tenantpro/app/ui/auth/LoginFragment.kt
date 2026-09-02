@@ -223,7 +223,7 @@ class LoginFragment : Fragment() {
         )
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Unlock Tenant Pro")
+            .setTitle("Unlock Starmax Tenant Services")
             .setSubtitle("Use fingerprint, face unlock, or your phone screen lock")
             .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
             .build()

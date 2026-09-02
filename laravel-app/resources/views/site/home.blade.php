@@ -247,13 +247,13 @@
 <div class="section">
     <div class="section-header">
         <p class="eyebrow">Flagship Product</p>
-        <h2>TenantPro — property ops made simple.</h2>
+        <h2>Starmax Tenant Services — property ops made simple.</h2>
         <p>A complete tenant management ecosystem with a web dashboard for landlords and a native Android app for tenants.</p>
     </div>
     <div class="grid grid-2">
         <article class="card reveal">
             <span class="tag">Web Dashboard</span>
-            <h3 style="margin-top:14px;">TenantPro Admin</h3>
+            <h3 style="margin-top:14px;">Starmax Tenant Services Admin</h3>
             <p>Manage properties, units, tenants, invoices, maintenance, and analytics from a single modern interface.</p>
             <ul class="list">
                 <li>Real-time occupancy & revenue dashboards</li>
@@ -264,7 +264,7 @@
         </article>
         <article class="card reveal">
             <span class="tag teal">Android App</span>
-            <h3 style="margin-top:14px;">TenantPro Mobile</h3>
+            <h3 style="margin-top:14px;">Starmax Tenant Services Mobile</h3>
             <p>Tenants view invoices, make payments, submit maintenance requests, and message management — all from their phone.</p>
             <ul class="list">
                 <li>Native Kotlin with Material 3 design</li>

@@ -19,7 +19,7 @@
     <div class="grid grid-3">
         <article class="card card-accent reveal">
             <span class="tag">Web App</span>
-            <h3 style="margin-top:12px;">TenantPro Admin Dashboard</h3>
+            <h3 style="margin-top:12px;">Starmax Tenant Services Admin Dashboard</h3>
             <p class="text-muted" style="margin-bottom:8px;">Property Management • Next.js + NestJS</p>
             <p>Full-featured admin console for landlords — property management, invoicing, maintenance tracking, tenant onboarding, and analytics. Built with Next.js 16 and server components.</p>
         </article>
@@ -47,7 +47,7 @@
     <div class="grid grid-3">
         <article class="card card-accent reveal">
             <span class="tag teal">Android</span>
-            <h3 style="margin-top:12px;">TenantPro Mobile</h3>
+            <h3 style="margin-top:12px;">Starmax Tenant Services Mobile</h3>
             <p class="text-muted" style="margin-bottom:8px;">Property • Kotlin + Jetpack</p>
             <p>Tenant self-service app with invoice viewing, payment tracking, maintenance requests, and direct messaging. MVVM architecture with Hilt DI and Retrofit.</p>
         </article>

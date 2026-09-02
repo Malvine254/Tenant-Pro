@@ -3,28 +3,29 @@
 namespace App\Services;
 
 use App\Mail\TenantProUpdateMail;
-use App\Models\Invoice;
 use App\Models\Invitation;
+use App\Models\Invoice;
 use App\Models\MaintenanceRequest;
 use App\Models\Payment;
 use App\Models\SupportMessage;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 class TenantEmailService
 {
-    public function sendSubscriptionLocked(User $landlord, ?\Illuminate\Support\Carbon $dueDate): bool
+    public function sendSubscriptionLocked(User $landlord, ?Carbon $dueDate): bool
     {
         return $this->send($landlord, [
-            'subjectLine' => 'TenantPro tenant operations are locked',
+            'subjectLine' => 'Starmax Tenant Services tenant operations are locked',
             'preheader' => 'Your subscription has expired and tenant operations are temporarily locked.',
             'title' => 'Subscription expired',
             'introLines' => [
                 'Hi '.$this->firstName($landlord).',',
-                'Your TenantPro subscription has expired. Tenant billing, payments, maintenance, invitations and support operations are now locked.',
+                'Your Starmax Tenant Services subscription has expired. Tenant billing, payments, maintenance, invitations and support operations are now locked.',
                 'Your account remains available so you can review the subscription status. Operations unlock immediately after an administrator records your renewal.',
             ],
             'details' => [
@@ -34,7 +35,7 @@ class TenantEmailService
             ],
             'actionLabel' => 'View subscription status',
             'actionUrl' => rtrim(config('app.url'), '/').'/admin/dashboard',
-            'footerText' => 'If you have already paid, contact the TenantPro administrator with your payment reference.',
+            'footerText' => 'If you have already paid, contact the Starmax Tenant Services administrator with your payment reference.',
             'eyebrow' => 'Subscription notice',
             'highlightLabel' => 'Access status',
             'highlightValue' => 'Tenant operations locked',
@@ -44,12 +45,12 @@ class TenantEmailService
     public function sendSubscriptionRenewed(User $landlord): bool
     {
         return $this->send($landlord, [
-            'subjectLine' => 'TenantPro subscription renewed',
+            'subjectLine' => 'Starmax Tenant Services subscription renewed',
             'preheader' => 'Your subscription is active and tenant operations are available again.',
             'title' => 'Subscription active',
             'introLines' => [
                 'Hi '.$this->firstName($landlord).',',
-                'Your TenantPro subscription renewal has been recorded successfully.',
+                'Your Starmax Tenant Services subscription renewal has been recorded successfully.',
                 'Tenant billing, payments, maintenance, invitations and support operations are available immediately.',
             ],
             'details' => [
@@ -59,39 +60,39 @@ class TenantEmailService
                 'Subscription status' => 'Active',
                 'Monthly service fee' => 'KES '.number_format((float) ($landlord->monthly_service_fee ?? 0), 2),
             ],
-            'actionLabel' => 'Open TenantPro portal',
+            'actionLabel' => 'Open Starmax Tenant Services portal',
             'actionUrl' => rtrim(config('app.url'), '/').'/admin/dashboard',
-            'footerText' => 'Thank you for keeping your TenantPro subscription active.',
+            'footerText' => 'Thank you for keeping your Starmax Tenant Services subscription active.',
             'eyebrow' => 'Payment confirmation',
             'highlightLabel' => 'Access status',
             'highlightValue' => 'All operations unlocked',
         ]);
     }
 
-    public function sendSubscriptionDueReminder(User $landlord, \Illuminate\Support\Carbon $dueDate, int $daysUntilDue): bool
+    public function sendSubscriptionDueReminder(User $landlord, Carbon $dueDate, int $daysUntilDue): bool
     {
         $dueText = $dueDate->format('d M Y');
 
         return $this->send($landlord, [
             'subjectLine' => $daysUntilDue === 0
-                ? 'TenantPro subscription due today'
-                : 'TenantPro subscription renewal reminder',
+                ? 'Starmax Tenant Services subscription due today'
+                : 'Starmax Tenant Services subscription renewal reminder',
             'preheader' => $daysUntilDue === 0
-                ? 'Your TenantPro subscription is due today.'
-                : 'Your TenantPro subscription renewal date is approaching.',
+                ? 'Your Starmax Tenant Services subscription is due today.'
+                : 'Your Starmax Tenant Services subscription renewal date is approaching.',
             'title' => $daysUntilDue === 0 ? 'Subscription due today' : 'Subscription renewal reminder',
             'introLines' => [
                 'Hi '.$this->firstName($landlord).',',
                 $daysUntilDue === 0
-                    ? 'Your TenantPro service subscription is due today. Please renew to avoid an interruption to tenant operations.'
-                    : 'Your TenantPro service subscription is due in '.$daysUntilDue.' day'.($daysUntilDue === 1 ? '' : 's').'.',
+                    ? 'Your Starmax Tenant Services subscription is due today. Please renew to avoid an interruption to tenant operations.'
+                    : 'Your Starmax Tenant Services subscription is due in '.$daysUntilDue.' day'.($daysUntilDue === 1 ? '' : 's').'.',
             ],
             'details' => [
                 'Renewal date' => $dueText,
                 'Monthly service fee' => 'KES '.number_format((float) ($landlord->monthly_service_fee ?? 0), 2),
                 'Subscription status' => ucfirst(str_replace('_', ' ', (string) $landlord->billing_status)),
             ],
-            'actionLabel' => 'Open TenantPro portal',
+            'actionLabel' => 'Open Starmax Tenant Services portal',
             'actionUrl' => rtrim(config('app.url'), '/').'/admin/dashboard',
             'footerText' => 'You will receive one reminder for each scheduled interval before your renewal date.',
         ]);
@@ -120,7 +121,7 @@ class TenantEmailService
                 'Amount due' => $invoice->balance_amount_formatted,
                 'Billing period' => $this->invoicePeriod($invoice),
             ],
-            'actionLabel' => 'Open TenantPro app',
+            'actionLabel' => 'Open Starmax Tenant Services app',
             'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'This is a periodic reminder. You will not receive duplicate reminders for the same reminder interval.',
             'eyebrow' => 'Invoice reminder',
@@ -149,7 +150,7 @@ class TenantEmailService
                 'Outstanding balance' => $invoice->balance_amount_formatted,
                 'Billing period' => $this->invoicePeriod($invoice),
             ],
-            'actionLabel' => 'Open TenantPro app',
+            'actionLabel' => 'Open Starmax Tenant Services app',
             'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'This is a periodic reminder to help avoid too-frequent notifications while keeping you updated.',
             'eyebrow' => 'Overdue invoice',
@@ -162,13 +163,13 @@ class TenantEmailService
         $tenant->loadMissing(['user', 'unit.property']);
 
         return $this->send($tenant->user, [
-            'subjectLine' => 'Your TenantPro account is ready',
-            'preheader' => 'Your TenantPro account and apartment assignment are ready.',
-            'title' => 'Welcome to TenantPro',
+            'subjectLine' => 'Your Starmax Tenant Services account is ready',
+            'preheader' => 'Your Starmax Tenant Services account and apartment assignment are ready.',
+            'title' => 'Welcome to Starmax Tenant Services',
             'introLines' => [
                 'Hi '.$this->firstName($tenant->user).',',
-                'Your TenantPro account has been created and linked to your apartment. You can now sign in to view invoices, payments, maintenance, and property updates.',
-                'For security, your M-Pesa payment details are managed only by you from the TenantPro Android app. Your landlord cannot edit them from the admin portal.',
+                'Your Starmax Tenant Services account has been created and linked to your apartment. You can now sign in to view invoices, payments, maintenance, and property updates.',
+                'For security, your M-Pesa payment details are managed only by you from the Starmax Tenant Services Android app. Your landlord cannot edit them from the admin portal.',
             ],
             'details' => [
                 'Login email' => $tenant->user?->email ?? 'Not specified',
@@ -179,7 +180,7 @@ class TenantEmailService
                     ? date('d M Y', strtotime((string) $tenant->move_in_date))
                     : 'Not specified',
             ],
-            'actionLabel' => 'Open TenantPro',
+            'actionLabel' => 'Open Starmax Tenant Services',
             'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'If you do not know your password, use Reset Password on the login screen to create a new one.',
         ]);
@@ -190,13 +191,13 @@ class TenantEmailService
         $inviteUrl = $this->inviteUrl($invitation);
 
         return $this->sendToAddress($invitation->email, $invitation->invitee_name, [
-            'subjectLine' => 'You have been invited to TenantPro',
-            'preheader' => 'Accept your Starmax TenantPro landlord invitation.',
-            'title' => 'Welcome to Starmax TenantPro',
+            'subjectLine' => 'You have been invited to Starmax Tenant Services',
+            'preheader' => 'Accept your Starmax Tenant Services landlord invitation.',
+            'title' => 'Welcome to Starmax Tenant Services',
             'introLines' => [
                 'Hello '.$this->displayName($invitation->invitee_name).',',
-                'You have been invited to join TenantPro as a landlord. Accept the invitation to set up your access and start managing properties, units, rent, and maintenance.',
-                $invitation->message ?: 'TenantPro helps you manage property operations from one clean dashboard.',
+                'You have been invited to join Starmax Tenant Services as a landlord. Accept the invitation to set up your access and start managing properties, units, rent, and maintenance.',
+                $invitation->message ?: 'Starmax Tenant Services helps you manage property operations from one clean dashboard.',
             ],
             'details' => array_filter([
                 'Business name' => $invitation->business_name,
@@ -237,10 +238,10 @@ class TenantEmailService
 
         $introLines = [
             'Hello '.$this->displayName($invitation->invitee_name).',',
-            'You have been invited to join TenantPro for '.$invitation->property?->name.', Unit '.$invitation->unit?->unit_number.'.',
+            'You have been invited to join Starmax Tenant Services for '.$invitation->property?->name.', Unit '.$invitation->unit?->unit_number.'.',
             $firstTimeSetup
                 ? 'Your tenant login has been prepared. Use the login email and temporary password below, then change your password after your first successful sign-in.'
-                : 'Use your existing TenantPro account. If you do not remember your password, use Reset Password on the app login screen.',
+                : 'Use your existing Starmax Tenant Services account. If you do not remember your password, use Reset Password on the app login screen.',
             'Open the invitation instructions link, install the Android app if needed, then sign in and accept your invitation code from Account -> Accept Invitation.',
         ];
 
@@ -249,8 +250,8 @@ class TenantEmailService
             : 'If you cannot sign in, use Reset Password in the app. Your landlord cannot edit your M-Pesa details.';
 
         return $this->sendToAddress($invitation->email, $invitation->invitee_name, [
-            'subjectLine' => 'You have been invited to join TenantPro',
-            'preheader' => 'Open app onboarding instructions and accept your TenantPro invitation.',
+            'subjectLine' => 'You have been invited to join Starmax Tenant Services',
+            'preheader' => 'Open app onboarding instructions and accept your Starmax Tenant Services invitation.',
             'title' => 'You have a tenant invitation',
             'introLines' => $introLines,
             'details' => $details,
@@ -266,11 +267,11 @@ class TenantEmailService
 
         return $this->send($tenant->user, [
             'subjectLine' => 'Your apartment has been assigned',
-            'preheader' => 'Your TenantPro unit assignment is now active.',
-            'title' => 'Your apartment is ready in TenantPro',
+            'preheader' => 'Your Starmax Tenant Services unit assignment is now active.',
+            'title' => 'Your apartment is ready in Starmax Tenant Services',
             'introLines' => [
                 'Hi '.$this->firstName($tenant->user).',',
-                'Your landlord has assigned you to a unit. You can now view rent bills, payments, maintenance, and property updates from your TenantPro app.',
+                'Your landlord has assigned you to a unit. You can now view rent bills, payments, maintenance, and property updates from your Starmax Tenant Services app.',
             ],
             'details' => [
                 'Property' => $tenant->unit?->property?->name ?? 'Not specified',
@@ -281,7 +282,7 @@ class TenantEmailService
                     ? date('d M Y', strtotime((string) $tenant->move_in_date))
                     : 'Not specified',
             ],
-            'actionLabel' => 'Open TenantPro',
+            'actionLabel' => 'Open Starmax Tenant Services',
             'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'If anything looks wrong, please contact your landlord or property manager.',
         ]);
@@ -293,7 +294,7 @@ class TenantEmailService
 
         return $this->send($tenant->user, [
             'subjectLine' => 'Your tenancy has been closed',
-            'preheader' => 'Your unit has been marked vacant in TenantPro.',
+            'preheader' => 'Your unit has been marked vacant in Starmax Tenant Services.',
             'title' => 'Tenancy closed',
             'introLines' => [
                 'Hi '.$this->firstName($tenant->user).',',
@@ -306,7 +307,7 @@ class TenantEmailService
                     ? date('d M Y', strtotime((string) $tenant->move_out_date))
                     : now()->format('d M Y'),
             ],
-            'footerText' => 'Thank you for using TenantPro.',
+            'footerText' => 'Thank you for using Starmax Tenant Services.',
         ]);
     }
 
@@ -316,7 +317,7 @@ class TenantEmailService
 
         return $this->send($invoice->tenant, [
             'subjectLine' => 'New '.strtolower((string) $invoice->billing_type).' invoice issued',
-            'preheader' => 'A new invoice is available in your TenantPro account.',
+            'preheader' => 'A new invoice is available in your Starmax Tenant Services account.',
             'title' => 'New invoice available',
             'introLines' => [
                 'Hi '.$this->firstName($invoice->tenant).',',
@@ -391,7 +392,7 @@ class TenantEmailService
                 'details' => ['Tenant' => $invoice?->tenant?->name ?? 'Not specified'] + $details,
                 'actionLabel' => 'View invoices',
                 'actionUrl' => rtrim(config('app.url'), '/').'/admin/invoices',
-                'footerText' => 'This confirmation was generated automatically by TenantPro.',
+                'footerText' => 'This confirmation was generated automatically by Starmax Tenant Services.',
             ]);
         }
 
@@ -418,7 +419,7 @@ class TenantEmailService
                 'Current status' => $maintenanceRequest->status,
                 'Assigned to' => $maintenanceRequest->assignedTo?->name,
                 'Resolved on' => $maintenanceRequest->resolved_at?->format('d M Y H:i'),
-            ], fn($value) => $value !== null && $value !== ''),
+            ], fn ($value) => $value !== null && $value !== ''),
             'actionLabel' => 'Open request',
             'actionUrl' => $this->tenantAppUrl(),
             'footerText' => 'We will keep you updated as the request progresses.',
@@ -443,20 +444,20 @@ class TenantEmailService
             $recipients->push($property->landlord);
         }
 
-        User::whereHas('role', fn($role) => $role->whereIn('name', ['SUPER_ADMIN', 'ADMIN']))
+        User::whereHas('role', fn ($role) => $role->whereIn('name', ['SUPER_ADMIN', 'ADMIN']))
             ->whereNotNull('email')
             ->get()
-            ->each(fn(User $user) => $recipients->push($user));
+            ->each(fn (User $user) => $recipients->push($user));
 
         $sent = 0;
         foreach ($recipients->unique('email') as $recipient) {
             $emailSent = $this->send($recipient, [
                 'subjectLine' => 'New tenant chat message',
-                'preheader' => 'A tenant has sent a new message from the TenantPro app.',
+                'preheader' => 'A tenant has sent a new message from the Starmax Tenant Services app.',
                 'title' => 'New tenant message',
                 'introLines' => [
                     'Hello '.$this->firstName($recipient).',',
-                    'A tenant has sent a new chat message from the TenantPro Android app. The full tenant and apartment details are below.',
+                    'A tenant has sent a new chat message from the Starmax Tenant Services Android app. The full tenant and apartment details are below.',
                 ],
                 'details' => [
                     'Tenant name' => $tenant?->name ?? 'Unknown tenant',
@@ -471,7 +472,7 @@ class TenantEmailService
                 ],
                 'actionLabel' => 'Open admin chat',
                 'actionUrl' => rtrim(config('app.url'), '/').'/admin/chats?conversation_id='.$message->conversation_id,
-                'footerText' => 'Reply from the TenantPro admin portal so the tenant can see your response in the app.',
+                'footerText' => 'Reply from the Starmax Tenant Services admin portal so the tenant can see your response in the app.',
             ]);
 
             if ($emailSent) {
@@ -484,7 +485,7 @@ class TenantEmailService
 
     private function send(?User $user, array $payload): bool
     {
-        if (!$user?->email) {
+        if (! $user?->email) {
             return false;
         }
 
@@ -493,20 +494,21 @@ class TenantEmailService
 
     private function sendToAddress(?string $email, ?string $name, array $payload, ?string $userId = null): bool
     {
-        if (!$email) {
+        if (! $email) {
             return false;
         }
 
         try {
             Mail::to($email, $name)->send(new TenantProUpdateMail(...$payload));
-            Log::info('TenantPro email update sent', [
+            Log::info('Starmax Tenant Services email update sent', [
                 'user_id' => $userId,
                 'email' => $email,
                 'subject' => $payload['subjectLine'] ?? null,
             ]);
+
             return true;
         } catch (Throwable $exception) {
-            Log::error('TenantPro email update failed', [
+            Log::error('Starmax Tenant Services email update failed', [
                 'user_id' => $userId,
                 'email' => $email,
                 'subject' => $payload['subjectLine'] ?? null,
@@ -528,9 +530,9 @@ class TenantEmailService
     }
 
     private function inviteUrl(Invitation $invitation): string
-        {
-            return rtrim(config('app.url'), '/').'/invite/'.$invitation->code;
-        }
+    {
+        return rtrim(config('app.url'), '/').'/invite/'.$invitation->code;
+    }
 
     private function tenantInviteUrl(Invitation $invitation): string
     {
@@ -554,7 +556,7 @@ class TenantEmailService
 
     private function invoicePeriod(Invoice $invoice): string
     {
-        if (!$invoice->period_month || !$invoice->period_year) {
+        if (! $invoice->period_month || ! $invoice->period_year) {
             return 'Not specified';
         }
 

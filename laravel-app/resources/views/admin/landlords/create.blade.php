@@ -31,7 +31,7 @@
                 @error('phone_number')<div class="form-error">{{ $message }}</div>@enderror
             </div>
             <div class="form-group">
-                <label>Monthly TenantPro Subscription Fee (KSh)</label>
+                <label>Monthly Starmax Tenant Services Subscription Fee (KSh)</label>
                 <input type="number" name="monthly_service_fee" min="0" step="0.01" value="{{ old('monthly_service_fee', 2500) }}" required>
                 <div style="font-size:12px;color:#94a3b8;margin-top:5px;">The first month remains a free trial. This amount applies when the subscription is renewed.</div>
                 @error('monthly_service_fee')<div class="form-error">{{ $message }}</div>@enderror

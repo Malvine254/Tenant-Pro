@@ -1,6 +1,6 @@
 # App Downloads
 
-This folder contains the Android APK file for TenantPro.
+This folder contains the Android APK file for Starmax Tenant Services.
 
 ## Updating the APK
 

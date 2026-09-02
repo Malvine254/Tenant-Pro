@@ -82,7 +82,7 @@ class MpesaService
 
         $shortcode = trim((string) ($settings['paybill_number'] ?? ''));
         $accountReference = trim((string) ($settings['account_reference'] ?? ''));
-        if ($shortcode === '' || $accountReference === '' || strcasecmp($accountReference, 'Tenant Pro') === 0) {
+        if ($shortcode === '' || $accountReference === '' || in_array(strtolower($accountReference), ['tenant pro', 'starmax tenant services'], true)) {
             throw new RuntimeException('A Paybill number and account reference must be configured before requesting an STK Push.');
         }
 

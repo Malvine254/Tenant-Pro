@@ -244,7 +244,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:gravity="center"
-            android:text="You will receive an M-Pesa prompt on your phone. Tenant Pro never asks for or stores your PIN."
+            android:text="You will receive an M-Pesa prompt on your phone. Starmax Tenant Services never asks for or stores your PIN."
             android:textColor="@color/on_surface_variant"
             android:textSize="10sp" />
 

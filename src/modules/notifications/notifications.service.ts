@@ -162,7 +162,7 @@ export class NotificationsService {
       toCreate.push({
         userId,
         type: NotificationType.GENERAL,
-        title: 'Welcome to Tenant Pro',
+        title: 'Welcome to Starmax Tenant Services',
         message: 'Your account is ready. New invoices, payments, and maintenance updates will appear here.',
       });
     }

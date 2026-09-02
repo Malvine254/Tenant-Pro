@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Tenant Pro — Production Rebuild Tool
+ * Starmax Tenant Services — Production Rebuild Tool
  *
  * Usage:
  *   node rebuild-tool.js [port]
@@ -240,7 +240,7 @@ function renderLogin(error = '') {
 <div class="box">
   <div class="logo">
     <div class="mark">TP</div>
-    <div><div class="t1">Rebuild Tool</div><div class="t2">Tenant Pro Production</div></div>
+    <div><div class="t1">Rebuild Tool</div><div class="t2">Starmax Tenant Services Production</div></div>
   </div>
   ${error ? `<div class="err">${esc(error)}</div>` : ''}
   <form method="POST" action="/login">
@@ -279,7 +279,7 @@ function renderMain(result = null, activeAction = null) {
 
   return `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tenant Pro — Rebuild Tool</title>
+<title>Starmax Tenant Services — Rebuild Tool</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
@@ -296,7 +296,7 @@ function renderMain(result = null, activeAction = null) {
   <div style="display:flex;align-items:center;gap:10px">
     <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff;flex-shrink:0">TP</div>
     <div>
-      <div style="font-size:15px;font-weight:700;color:#f1f5f9">Tenant Pro — Rebuild Tool</div>
+      <div style="font-size:15px;font-weight:700;color:#f1f5f9">Starmax Tenant Services — Rebuild Tool</div>
       <div style="font-size:11px;color:#64748b"><a href="/">↺ Refresh</a> &nbsp;·&nbsp; ${esc(ROOT)}</div>
     </div>
   </div>
@@ -404,7 +404,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, BIND, () => {
   const displayHost = BIND === '0.0.0.0' ? 'localhost' : BIND;
-  console.log(`\n  Tenant Pro Rebuild Tool`);
+  console.log(`\n  Starmax Tenant Services Rebuild Tool`);
   console.log(`  ─────────────────────────────────────────────────`);
   console.log(`  URL      : http://${displayHost}:${PORT}`);
   console.log(`  Binding  : ${BIND}:${PORT}`);

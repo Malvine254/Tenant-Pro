@@ -42,7 +42,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="3dp"
-                android:text="Set up your Tenant Pro account"
+                android:text="Set up your Starmax Tenant Services account"
                 android:textColor="#C9D4F3"
                 android:textSize="13sp" />
         </LinearLayout>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Tenant Pro</string>
+    <string name="app_name">Starmax Tenant Services</string>
 
     <!-- Login -->
     <string name="login_subtitle">Manage your invoices and payments</string>
@@ -142,7 +142,7 @@
 
     <!-- Registration -->
     <string name="create_account">Create Account</string>
-    <string name="register_subtitle">Join Tenant Pro to manage your properties</string>
+    <string name="register_subtitle">Join Starmax Tenant Services to manage your properties</string>
     <string name="hint_full_name">Full name</string>
     <string name="hint_phone">Phone number</string>
     <string name="hint_confirm_password">Confirm password</string>
@@ -226,7 +226,7 @@
     <string name="invoice_share">Share</string>
     <string name="invoice_share_subject">Invoice - %1$s</string>
     <string name="invoice_share_chooser">Share Invoice</string>
-    <string name="invoice_share_header">===== TenantPro Invoice =====</string>
+    <string name="invoice_share_header">===== Starmax Tenant Services Invoice =====</string>
     <string name="session_expired">Session expired. Please log in again.</string>
 
 </resources>

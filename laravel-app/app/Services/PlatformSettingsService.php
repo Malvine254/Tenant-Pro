@@ -57,7 +57,7 @@ class PlatformSettingsService
             'enabled' => filter_var($this->get('maintenance.enabled', false), FILTER_VALIDATE_BOOL),
             'message' => (string) $this->get(
                 'maintenance.message',
-                'TenantPro is temporarily unavailable while essential maintenance is completed. Please try again shortly.',
+                'Starmax Tenant Services is temporarily unavailable while essential maintenance is completed. Please try again shortly.',
             ),
         ]);
     }

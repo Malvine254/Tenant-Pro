@@ -317,7 +317,7 @@
                 <span class="badge badge-red" style="margin-bottom:9px;">Past due</span>
                 <h2>Tenant operations are locked</h2>
                 <p>{{ $landlordAccess['message'] }}</p>
-                <p style="margin-top:7px;">You can still access this dashboard, account settings and notifications. Ask the TenantPro administrator to record your renewal; access is restored immediately.</p>
+                <p style="margin-top:7px;">You can still access this dashboard, account settings and notifications. Ask the Starmax Tenant Services administrator to record your renewal; access is restored immediately.</p>
             </div>
             <div class="subscription-notice-meta">
                 <span>Expired</span>
