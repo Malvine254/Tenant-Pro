@@ -91,6 +91,16 @@
                 @endif
                 @error('cover_image')<div class="form-error">{{ $message }}</div>@enderror
             </div>
+            <div class="form-group" style="padding:14px;border:1px solid rgba(96,165,250,.25);border-radius:12px;background:rgba(59,130,246,.08);">
+                <label style="display:flex;align-items:flex-start;gap:10px;margin:0;cursor:pointer;">
+                    <input type="checkbox" name="is_publicly_listed" value="1" style="width:auto;margin-top:3px;" {{ old('is_publicly_listed', $property->is_publicly_listed) ? 'checked' : '' }}>
+                    <span><strong style="display:block;">Publish on Starmax Homes</strong><small class="property-edit-help" style="display:block;margin-top:4px;font-weight:400;line-height:1.5;">Only available units are shown publicly. Occupied or maintenance units and private landlord contact details remain hidden.</small></span>
+                </label>
+                @error('is_publicly_listed')<div class="form-error">{{ $message }}</div>@enderror
+                @if($property->is_publicly_listed)
+                    <a href="{{ route('marketplace.show', $property) }}" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:700;">View public listing &rarr;</a>
+                @endif
+            </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div class="form-group">
                     <label>Address Line</label>

@@ -43,6 +43,7 @@ class PropertyAdminController extends Controller
         if ($this->isLandlord($request->user())) {
             $request->merge(['landlord_id' => $request->user()->landlordAccountId()]);
         }
+        $request->merge(['is_publicly_listed' => $request->boolean('is_publicly_listed')]);
 
         $data = $request->validate([
             'landlord_id' => 'required|uuid|exists:users,id',
@@ -60,6 +61,7 @@ class PropertyAdminController extends Controller
             'water_monthly_fee' => 'required|numeric|min:0',
             'garbage_monthly_fee' => 'required|numeric|min:0',
             'electricity_billing_mode' => 'required|in:PREPAID,POSTPAID',
+            'is_publicly_listed' => 'required|boolean',
         ]);
         $this->assertLandlordId($data['landlord_id']);
 
@@ -82,9 +84,16 @@ class PropertyAdminController extends Controller
             $unitNumbers = $this->buildInitialUnitNumbers($data['first_unit_number'], $unitCount);
         }
 
+        if ($data['is_publicly_listed'] && (! $request->hasFile('cover_image') || $unitCount < 1)) {
+            throw ValidationException::withMessages([
+                'is_publicly_listed' => 'Add a cover photo and at least one available unit before publishing this property.',
+            ]);
+        }
+
         $propertyFields = collect($data)->only([
-            'landlord_id', 'name', 'description', 'address_line', 'city', 'state', 'country',
+            'landlord_id', 'name', 'description', 'address_line', 'city', 'state', 'country', 'is_publicly_listed',
         ])->all();
+        $propertyFields['published_at'] = $data['is_publicly_listed'] ? now() : null;
         $newImageUrl = null;
         if ($request->hasFile('cover_image')) {
             $newImageUrl = $this->storePropertyImage($request->file('cover_image'));
@@ -169,6 +178,7 @@ class PropertyAdminController extends Controller
         if ($this->isLandlord($request->user())) {
             $request->merge(['landlord_id' => $request->user()->landlordAccountId()]);
         }
+        $request->merge(['is_publicly_listed' => $request->boolean('is_publicly_listed')]);
 
         $data = $request->validate([
             'landlord_id' => 'required|uuid|exists:users,id',
@@ -191,12 +201,16 @@ class PropertyAdminController extends Controller
             'units.*.status' => 'required|in:AVAILABLE,OCCUPIED,UNDER_MAINTENANCE',
             'units.*.water_monthly_fee' => 'nullable|numeric|min:0',
             'units.*.garbage_monthly_fee' => 'nullable|numeric|min:0',
+            'is_publicly_listed' => 'required|boolean',
         ]);
         $this->assertLandlordId($data['landlord_id']);
         $propertyFields = collect($data)->except([
             'cover_image', 'remove_cover_image', 'water_monthly_fee', 'garbage_monthly_fee',
             'electricity_billing_mode', 'units',
         ])->all();
+        $propertyFields['published_at'] = $data['is_publicly_listed']
+            ? ($property->published_at ?? now())
+            : null;
         $propertyFields['billing_settings'] = array_merge($property->billing_settings ?? [], [
             'water_monthly_fee' => (float) $data['water_monthly_fee'],
             'garbage_monthly_fee' => (float) $data['garbage_monthly_fee'],
@@ -213,6 +227,17 @@ class PropertyAdminController extends Controller
                     "units.{$index}.id" => 'This unit does not belong to the selected property.',
                 ]);
             }
+        }
+
+        $willHaveCoverImage = $request->hasFile('cover_image')
+            || ($property->cover_image_url && ! $request->boolean('remove_cover_image'));
+        $hasAvailableUnit = $submittedUnits->isNotEmpty()
+            ? $submittedUnits->contains(fn (array $unit) => $unit['status'] === 'AVAILABLE')
+            : $property->units->contains(fn (Unit $unit) => $unit->status === 'AVAILABLE');
+        if ($data['is_publicly_listed'] && (! $willHaveCoverImage || ! $hasAvailableUnit)) {
+            throw ValidationException::withMessages([
+                'is_publicly_listed' => 'A public listing needs a cover photo and at least one available unit.',
+            ]);
         }
 
         // Validate the final set of unit numbers so two units cannot be given the same identity.

@@ -41,6 +41,14 @@
                 @error('cover_image')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
+            <div class="form-group" style="padding:14px;border:1px solid var(--line);border-radius:12px;background:rgba(79,70,229,.07);">
+                <label style="display:flex;align-items:flex-start;gap:10px;margin:0;cursor:pointer;">
+                    <input type="checkbox" name="is_publicly_listed" value="1" style="width:auto;margin-top:3px;" {{ old('is_publicly_listed') ? 'checked' : '' }}>
+                    <span><strong style="display:block;">Publish on Starmax Homes</strong><small style="display:block;margin-top:4px;color:var(--muted);font-weight:400;line-height:1.5;">Show this property and its available units on the public tenant marketplace. A cover photo and at least one unit are required.</small></span>
+                </label>
+                @error('is_publicly_listed')<div class="form-error">{{ $message }}</div>@enderror
+            </div>
+
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div class="form-group">
                     <label>Address Line</label>

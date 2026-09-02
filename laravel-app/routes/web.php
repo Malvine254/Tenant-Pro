@@ -18,6 +18,8 @@ use App\Http\Controllers\Admin\SupportChatAdminController;
 use App\Http\Controllers\Admin\TenantAdminController;
 use App\Http\Controllers\DownloadsController;
 use App\Http\Controllers\InvitationAcceptanceController;
+use App\Http\Controllers\TenantMarketplace\MarketplaceController;
+use App\Http\Controllers\TenantMarketplace\MarketplaceEnquiryController;
 use App\Http\Controllers\SiteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -50,8 +52,13 @@ Route::get('/download/apk', [DownloadsController::class, 'publicDownloadApk'])
 Route::get('/download/latest-version', [DownloadsController::class, 'latestVersion'])
     ->name('downloads.apk.latest-version');
 
-// Send the app subdomain straight to the Laravel admin area.
-Route::redirect('/', '/admin');
+// Public tenant marketplace. This remains separate from the corporate site and
+// the authenticated operations console under /admin.
+Route::get('/', [MarketplaceController::class, 'index'])->name('marketplace.index');
+Route::get('/homes/{property}', [MarketplaceController::class, 'show'])->name('marketplace.show');
+Route::post('/homes/{property}/enquiries', [MarketplaceEnquiryController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('marketplace.enquiries.store');
 Route::redirect('/login', '/admin/login')->name('login');
 Route::get('/home', [SiteController::class, 'home'])->name('site.home');
 Route::get('/about', [SiteController::class, 'about']);
