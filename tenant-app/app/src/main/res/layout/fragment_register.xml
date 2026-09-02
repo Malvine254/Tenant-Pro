@@ -9,43 +9,28 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="138dp"
+        android:layout_height="180dp"
         android:background="@drawable/bg_auth_top"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
+        android:gravity="center"
+        android:orientation="vertical"
         android:paddingHorizontal="24dp">
 
         <ImageView
-            android:layout_width="104dp"
-            android:layout_height="88dp"
+            android:layout_width="156dp"
+            android:layout_height="112dp"
             android:adjustViewBounds="true"
             android:contentDescription="@string/app_name"
             android:scaleType="centerInside"
             android:src="@drawable/tenant_logo" />
 
-        <LinearLayout
-            android:layout_width="0dp"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="14dp"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/create_account"
-                android:textColor="@android:color/white"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:text="Set up your Starmax Tenant Services account"
-                android:textColor="#C9D4F3"
-                android:textSize="13sp" />
-        </LinearLayout>
+            android:layout_marginTop="2dp"
+            android:gravity="center"
+            android:text="Set up your Starmax Tenant Services account"
+            android:textColor="#C9D4F3"
+            android:textSize="13sp" />
     </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
