@@ -52,7 +52,7 @@
                             <p>{{ $unit->floor === null ? 'Floor information available on request' : ($unit->floor == 0 ? 'Ground floor' : 'Floor '.$unit->floor) }}</p>
                         </div>
                         <div class="unit-price"><strong>KSh {{ number_format((float) $unit->rent_amount) }}</strong><span>per month</span></div>
-                        <a href="#request-viewing" data-unit-select="{{ $unit->id }}">Request viewing</a>
+                        <a href="#request-viewing" data-unit-select="{{ $unit->id }}">Get info &amp; contact</a>
                     </article>
                 @endforeach
             </div>
@@ -60,8 +60,8 @@
 
         <aside id="request-viewing" class="enquiry-card">
             <span class="section-kicker">Interested?</span>
-            <h2>Request a viewing</h2>
-            <p>Share your contact details and the property manager will follow up with you.</p>
+            <h2>Contact the property manager</h2>
+            <p>Share your contact details and the property manager will follow up with more information and a viewing time.</p>
 
             @if(session('marketplace_success'))
                 <div class="success-message" role="status">{{ session('marketplace_success') }}</div>

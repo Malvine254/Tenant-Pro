@@ -27,22 +27,14 @@ class Property extends Model
     public function invitations() { return $this->hasMany(Invitation::class); }
     public function marketplaceEnquiries() { return $this->hasMany(PropertyEnquiry::class); }
 
+    /** Only properties the owning landlord has opted to list, with vacancies, and active subscription/trial access. */
     public function scopePubliclyAvailable(Builder $query): Builder
     {
         return $query
             ->where('is_publicly_listed', true)
             ->whereHas('units', fn (Builder $units) => $units->where('status', 'AVAILABLE'))
-            ->whereHas('landlord', function (Builder $landlords) {
-                $landlords->where('is_active', true)->where(function (Builder $access) {
-                    $access->where('requires_subscription', false)
-                        ->orWhereNull('requires_subscription')
-                        ->orWhere('service_paid_until', '>', now())
-                        ->orWhere(function (Builder $trial) {
-                            $trial->whereNull('service_paid_until')
-                                ->whereNull('subscription_started_at')
-                                ->where('trial_ends_at', '>', now());
-                        });
-                });
-            });
+            ->whereHas('landlord', fn (Builder $landlords) => $landlords
+                ->where('is_active', true)
+                ->withActiveSubscriptionAccess());
     }
 }

@@ -4,6 +4,12 @@
 
 @section('content')
 <section class="search-hero">
+    @if($heroImageUrl)
+        <div class="hero-media" aria-hidden="true">
+            <img src="{{ $heroImageUrl }}" alt="">
+        </div>
+        <div class="hero-scrim" aria-hidden="true"></div>
+    @endif
     <div class="market-shell hero-inner">
         <div class="hero-copy">
             <span class="hero-kicker">Homes managed with Starmax</span>
@@ -59,7 +65,8 @@
 
     <div class="listing-grid">
         @forelse($properties as $property)
-            @php($firstUnit = $property->units->first())
+            @php($unitPreview = $property->units->take(3))
+            @php($remainingUnits = $property->available_units_count - $unitPreview->count())
             <article class="listing-card">
                 <a href="{{ route('marketplace.show', $property) }}" class="listing-image" aria-label="View {{ $property->name }}">
                     @if($property->cover_image_url)
@@ -82,7 +89,22 @@
                             <small>Up to KSh {{ number_format((float) $property->maximum_rent) }}</small>
                         @endif
                     </div>
-                    <a href="{{ route('marketplace.show', $property) }}" class="card-action">View available homes <span aria-hidden="true">&rarr;</span></a>
+
+                    @if($unitPreview->isNotEmpty())
+                        <div class="unit-chip-row">
+                            @foreach($unitPreview as $unit)
+                                <span class="unit-chip">Unit {{ $unit->unit_number }} · KSh {{ number_format((float) $unit->rent_amount) }}</span>
+                            @endforeach
+                            @if($remainingUnits > 0)
+                                <span class="unit-chip unit-chip-more">+{{ $remainingUnits }} more</span>
+                            @endif
+                        </div>
+                    @endif
+
+                    <div class="card-actions">
+                        <a href="{{ route('marketplace.show', $property) }}" class="card-action">View details <span aria-hidden="true">&rarr;</span></a>
+                        <a href="{{ route('marketplace.show', $property) }}#request-viewing" class="card-action card-action-ghost">Contact</a>
+                    </div>
                 </div>
             </article>
         @empty

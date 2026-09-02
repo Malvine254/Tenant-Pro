@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -187,5 +188,23 @@ class User extends Authenticatable
             });
 
         return ! $hasActiveTenancy;
+    }
+
+    /**
+     * Database-level equivalent of the landlord-owner branch of hasActiveServiceAccess().
+     * Used to filter listings (e.g. the public marketplace) without loading every model.
+     */
+    public function scopeWithActiveSubscriptionAccess(Builder $query): Builder
+    {
+        return $query->where(function (Builder $access) {
+            $access->where('requires_subscription', false)
+                ->orWhereNull('requires_subscription')
+                ->orWhere('service_paid_until', '>', now())
+                ->orWhere(function (Builder $trial) {
+                    $trial->whereNull('service_paid_until')
+                        ->whereNull('subscription_started_at')
+                        ->where('trial_ends_at', '>', now());
+                });
+        });
     }
 }
