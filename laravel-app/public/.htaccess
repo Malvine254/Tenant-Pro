@@ -1,3 +1,9 @@
+# Some shared-hosting vhosts (e.g. GoDaddy add-on domains) default DirectoryIndex
+# to index.html and have autoindex disabled, so a bare "/" request never reaches
+# mod_rewrite (it only fires for paths that aren't an existing directory) and
+# Apache returns 403 instead of serving this front controller. Force index.php.
+DirectoryIndex index.php index.html
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
