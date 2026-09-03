@@ -7,8 +7,8 @@
     <div class="market-shell hero-grid">
         <div class="hero-copy">
             <span class="hero-kicker">A clearer way to rent</span>
-            <h1>Your next home, without the guesswork.</h1>
-            <p>Search current vacancies across Kenya, see the recorded monthly rent, and reach the responsible property manager in one secure step.</p>
+            <h1>Find a home that fits.</h1>
+            <p>Explore current vacancies across Kenya, compare monthly rent, and contact the property manager directly.</p>
 
             <div class="hero-proof" aria-label="Marketplace benefits">
                 <span><strong>Live</strong> availability</span>
@@ -17,6 +17,11 @@
             </div>
 
             <form class="search-panel" action="{{ route('marketplace.index') }}" method="GET">
+                <div class="search-panel-heading">
+                    <strong>Search available homes</strong>
+                    <span>Use one or both fields</span>
+                </div>
+                <div class="search-fields">
                 <div class="search-field">
                     <svg class="field-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                     <div>
@@ -35,6 +40,7 @@
                             @endforeach
                         </select>
                     </div>
+                </div>
                 </div>
                 <div class="search-actions">
                     <button type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Search homes</button>

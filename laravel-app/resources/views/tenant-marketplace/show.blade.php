@@ -45,7 +45,17 @@
             <div class="section-title"><span class="section-kicker">Choose your home</span><h2>Available units</h2></div>
             <div class="unit-grid">
                 @foreach($property->units as $unit)
+                    @php
+                        $unitImages = collect($unit->image_urls ?? [])->filter(fn ($image) => is_string($image) && trim($image) !== '');
+                        $unitPreviewImage = $unitImages->first();
+                        $unitPreviewImage = $unitPreviewImage
+                            ? (\Illuminate\Support\Str::startsWith($unitPreviewImage, ['http://', 'https://', 'data:']) ? $unitPreviewImage : asset(ltrim($unitPreviewImage, '/')))
+                            : null;
+                    @endphp
                     <button type="button" class="unit-box" data-unit-modal="unit-modal-{{ $unit->id }}">
+                        @if($unitPreviewImage)
+                            <span class="unit-box-image"><img src="{{ $unitPreviewImage }}" alt="" loading="lazy"><small>{{ $unitImages->count() }} {{ str('photo')->plural($unitImages->count()) }}</small></span>
+                        @endif
                         <span class="unit-box-dot" aria-hidden="true"></span>
                         <strong>Unit {{ $unit->unit_number }}</strong>
                         @if($unit->bedrooms_label)
@@ -55,21 +65,58 @@
                             </span>
                         @endif
                         <span class="unit-box-price">KSh {{ number_format((float) $unit->rent_amount) }}</span>
+                        <span class="unit-box-more">View unit details <span aria-hidden="true">&rarr;</span></span>
                     </button>
                 @endforeach
             </div>
 
             @foreach($property->units as $unit)
+                @php
+                    $unitImages = collect($unit->image_urls ?? [])->filter(fn ($image) => is_string($image) && trim($image) !== '')->values();
+                    $displayImages = $unitImages->isNotEmpty() ? $unitImages : collect([$property->cover_image_url])->filter();
+                @endphp
                 <dialog id="unit-modal-{{ $unit->id }}" class="unit-dialog">
-                    <form method="dialog" class="unit-dialog-close"><button type="submit" aria-label="Close">&times;</button></form>
-                    <span class="unit-label">Available now</span>
-                    <h3>Unit {{ $unit->unit_number }}</h3>
-                    <dl class="unit-dialog-facts">
-                        @if($unit->bedrooms_label)<div><dt>Bedrooms</dt><dd>{{ $unit->bedrooms_label }}</dd></div>@endif
-                        <div><dt>Floor</dt><dd>{{ $unit->floor === null ? 'On request' : ($unit->floor == 0 ? 'Ground floor' : $unit->floor) }}</dd></div>
-                        <div><dt>Monthly rent</dt><dd>KSh {{ number_format((float) $unit->rent_amount) }}</dd></div>
-                    </dl>
-                    <a href="#request-viewing" data-unit-select="{{ $unit->id }}" data-unit-dialog-confirm>Contact about this unit</a>
+                    <form method="dialog" class="unit-dialog-close"><button type="submit" aria-label="Close unit details">&times;</button></form>
+                    <div class="unit-dialog-layout">
+                        <div class="unit-dialog-media">
+                            @if($displayImages->isNotEmpty())
+                                <div class="unit-photo-stage">
+                                    @foreach($displayImages as $image)
+                                        @php($imageUrl = \Illuminate\Support\Str::startsWith($image, ['http://', 'https://', 'data:']) ? $image : asset(ltrim($image, '/')))
+                                        <img src="{{ $imageUrl }}" alt="{{ $unitImages->isNotEmpty() ? 'Unit '.$unit->unit_number.' photo '.($loop->iteration) : $property->name.' property photo' }}" class="unit-photo @if(!$loop->first) is-hidden @endif" data-unit-photo loading="lazy">
+                                    @endforeach
+                                </div>
+                                @if($displayImages->count() > 1)
+                                    <div class="unit-photo-thumbs" aria-label="Unit photos">
+                                        @foreach($displayImages as $image)
+                                            @php($thumbUrl = \Illuminate\Support\Str::startsWith($image, ['http://', 'https://', 'data:']) ? $image : asset(ltrim($image, '/')))
+                                            <button type="button" class="unit-photo-thumb @if($loop->first) is-active @endif" data-unit-photo-index="{{ $loop->index }}" aria-label="Show photo {{ $loop->iteration }}"><img src="{{ $thumbUrl }}" alt=""></button>
+                                        @endforeach
+                                    </div>
+                                @endif
+                                @if($unitImages->isEmpty())<small class="unit-photo-note">Property photo shown — ask the manager for unit-specific photos.</small>@endif
+                            @else
+                                <div class="unit-photo-empty"><span>SM</span><strong>Photos coming soon</strong><small>Request current photos from the property manager.</small></div>
+                            @endif
+                        </div>
+                        <div class="unit-dialog-content">
+                            <span class="unit-label">Available now</span>
+                            <p class="unit-property-name">{{ $property->name }}</p>
+                            <h3>Unit {{ $unit->unit_number }}</h3>
+                            <p class="unit-dialog-location">{{ collect([$property->address_line, $property->city, $property->state])->filter()->join(', ') }}</p>
+                            <dl class="unit-dialog-facts">
+                                <div><dt>Monthly rent</dt><dd>KSh {{ number_format((float) $unit->rent_amount) }}</dd></div>
+                                <div><dt>Bedrooms</dt><dd>{{ $unit->bedrooms_label ?: 'Ask manager' }}</dd></div>
+                                <div><dt>Floor</dt><dd>{{ $unit->floor === null ? 'Ask manager' : ($unit->floor == 0 ? 'Ground floor' : 'Floor '.$unit->floor) }}</dd></div>
+                                <div><dt>Status</dt><dd class="unit-status-available">Available</dd></div>
+                            </dl>
+                            @if($property->description)
+                                <div class="unit-dialog-about"><strong>About this property</strong><p>{{ $property->description }}</p></div>
+                            @endif
+                            <p class="unit-dialog-help">Need details about the deposit, utilities, amenities or viewing times? The property manager can confirm them for you.</p>
+                            <a href="#request-viewing" data-unit-select="{{ $unit->id }}" data-unit-dialog-confirm>Ask about Unit {{ $unit->unit_number }}</a>
+                        </div>
+                    </div>
                 </dialog>
             @endforeach
         </section>
@@ -132,6 +179,25 @@ document.querySelectorAll('[data-unit-select]').forEach(function (link) {
             var dialog = link.closest('dialog');
             if (dialog) dialog.close();
         }
+    });
+});
+
+document.querySelectorAll('.unit-photo-thumb').forEach(function (thumb) {
+    thumb.addEventListener('click', function () {
+        var dialog = thumb.closest('.unit-dialog');
+        if (!dialog) return;
+        dialog.querySelectorAll('[data-unit-photo]').forEach(function (photo, index) {
+            photo.classList.toggle('is-hidden', index !== Number(thumb.dataset.unitPhotoIndex));
+        });
+        dialog.querySelectorAll('.unit-photo-thumb').forEach(function (item) {
+            item.classList.toggle('is-active', item === thumb);
+        });
+    });
+});
+
+document.querySelectorAll('.unit-dialog').forEach(function (dialog) {
+    dialog.addEventListener('click', function (event) {
+        if (event.target === dialog) dialog.close();
     });
 });
 </script>
