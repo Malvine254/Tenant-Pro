@@ -74,7 +74,7 @@
     <div class="results-heading">
         <div>
             <span class="section-kicker">Live availability</span>
-            <h2>{{ $properties->total() }} {{ str('home')->plural($properties->total()) }} available</h2>
+            <h2>{{ $properties->total() }} {{ str('property')->plural($properties->total()) }} available</h2>
             <p>Availability comes directly from properties managed on Starmax.</p>
         </div>
         <form method="GET" class="sort-form">
@@ -99,7 +99,7 @@
 
     <div class="listing-grid">
         @forelse($properties as $property)
-            @php($unitPreview = $property->units->take(3))
+            @php($unitPreview = $property->units->take(2))
             @php($remainingUnits = $property->available_units_count - $unitPreview->count())
             <article class="listing-card">
                 <a href="{{ route('marketplace.show', $property) }}" class="listing-image" aria-label="View {{ $property->name }}">
@@ -108,7 +108,7 @@
                     @else
                         <div class="image-placeholder"><span>SM</span><small>Photo coming soon</small></div>
                     @endif
-                    <span class="availability-pill">{{ $property->available_units_count }} available</span>
+                    <span class="availability-pill">{{ $property->available_units_count }} {{ str('home')->plural($property->available_units_count) }}</span>
                 </a>
                 <div class="listing-body">
                     <div class="location-line">
