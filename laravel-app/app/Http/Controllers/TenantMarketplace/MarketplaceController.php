@@ -31,6 +31,8 @@ class MarketplaceController extends Controller
             ])
             ->withMin(['units as minimum_rent' => fn (Builder $query) => $query->where('status', 'AVAILABLE')], 'rent_amount')
             ->withMax(['units as maximum_rent' => fn (Builder $query) => $query->where('status', 'AVAILABLE')], 'rent_amount')
+            ->withMin(['units as minimum_bedrooms' => fn (Builder $query) => $query->where('status', 'AVAILABLE')->whereNotNull('bedrooms')], 'bedrooms')
+            ->withMax(['units as maximum_bedrooms' => fn (Builder $query) => $query->where('status', 'AVAILABLE')->whereNotNull('bedrooms')], 'bedrooms')
             ->withCount(['units as available_units_count' => fn (Builder $query) => $query->where('status', 'AVAILABLE')])
             ->when(filled($filters['q'] ?? null), function (Builder $query) use ($filters) {
                 $term = '%'.trim($filters['q']).'%';

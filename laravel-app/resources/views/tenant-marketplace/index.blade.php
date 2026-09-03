@@ -122,12 +122,18 @@
                         @if($property->minimum_rent != $property->maximum_rent)
                             <small>Up to KSh {{ number_format((float) $property->maximum_rent) }}</small>
                         @endif
+                        @if($property->minimum_bedrooms !== null)
+                            <span class="bedroom-badge">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7"/><path d="M3 18h18"/><path d="M5 11V7a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v4"/></svg>
+                                {{ $property->minimum_bedrooms == $property->maximum_bedrooms ? ($property->minimum_bedrooms == 0 ? 'Studio' : $property->minimum_bedrooms.' bed') : $property->minimum_bedrooms.'-'.$property->maximum_bedrooms.' beds' }}
+                            </span>
+                        @endif
                     </div>
 
                     @if($unitPreview->isNotEmpty())
                         <div class="unit-chip-row">
                             @foreach($unitPreview as $unit)
-                                <span class="unit-chip">Unit {{ $unit->unit_number }} · KSh {{ number_format((float) $unit->rent_amount) }}</span>
+                                <span class="unit-chip">Unit {{ $unit->unit_number }}{{ $unit->bedrooms_label ? ' · '.$unit->bedrooms_label : '' }} · KSh {{ number_format((float) $unit->rent_amount) }}</span>
                             @endforeach
                             @if($remainingUnits > 0)
                                 <span class="unit-chip unit-chip-more">+{{ $remainingUnits }} more</span>

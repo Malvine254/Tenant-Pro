@@ -43,19 +43,35 @@
     <div class="detail-columns">
         <section>
             <div class="section-title"><span class="section-kicker">Choose your home</span><h2>Available units</h2></div>
-            <div class="unit-list">
+            <div class="unit-grid">
                 @foreach($property->units as $unit)
-                    <article class="unit-row">
-                        <div>
-                            <span class="unit-label">Available now</span>
-                            <h3>Unit {{ $unit->unit_number }}</h3>
-                            <p>{{ $unit->floor === null ? 'Floor information available on request' : ($unit->floor == 0 ? 'Ground floor' : 'Floor '.$unit->floor) }}</p>
-                        </div>
-                        <div class="unit-price"><strong>KSh {{ number_format((float) $unit->rent_amount) }}</strong><span>per month</span></div>
-                        <a href="#request-viewing" data-unit-select="{{ $unit->id }}">Get info &amp; contact</a>
-                    </article>
+                    <button type="button" class="unit-box" data-unit-modal="unit-modal-{{ $unit->id }}">
+                        <span class="unit-box-dot" aria-hidden="true"></span>
+                        <strong>Unit {{ $unit->unit_number }}</strong>
+                        @if($unit->bedrooms_label)
+                            <span class="unit-box-beds">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7"/><path d="M3 18h18"/><path d="M5 11V7a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v4"/></svg>
+                                {{ $unit->bedrooms_label }}
+                            </span>
+                        @endif
+                        <span class="unit-box-price">KSh {{ number_format((float) $unit->rent_amount) }}</span>
+                    </button>
                 @endforeach
             </div>
+
+            @foreach($property->units as $unit)
+                <dialog id="unit-modal-{{ $unit->id }}" class="unit-dialog">
+                    <form method="dialog" class="unit-dialog-close"><button type="submit" aria-label="Close">&times;</button></form>
+                    <span class="unit-label">Available now</span>
+                    <h3>Unit {{ $unit->unit_number }}</h3>
+                    <dl class="unit-dialog-facts">
+                        @if($unit->bedrooms_label)<div><dt>Bedrooms</dt><dd>{{ $unit->bedrooms_label }}</dd></div>@endif
+                        <div><dt>Floor</dt><dd>{{ $unit->floor === null ? 'On request' : ($unit->floor == 0 ? 'Ground floor' : $unit->floor) }}</dd></div>
+                        <div><dt>Monthly rent</dt><dd>KSh {{ number_format((float) $unit->rent_amount) }}</dd></div>
+                    </dl>
+                    <a href="#request-viewing" data-unit-select="{{ $unit->id }}" data-unit-dialog-confirm>Contact about this unit</a>
+                </dialog>
+            @endforeach
         </section>
 
         <aside id="request-viewing" class="enquiry-card">
@@ -101,10 +117,21 @@
 </div>
 
 <script>
+document.querySelectorAll('[data-unit-modal]').forEach(function (box) {
+    box.addEventListener('click', function () {
+        var dialog = document.getElementById(box.dataset.unitModal);
+        if (dialog && typeof dialog.showModal === 'function') dialog.showModal();
+    });
+});
+
 document.querySelectorAll('[data-unit-select]').forEach(function (link) {
     link.addEventListener('click', function () {
         var select = document.getElementById('enquiry-unit');
         if (select) select.value = link.dataset.unitSelect;
+        if (link.hasAttribute('data-unit-dialog-confirm')) {
+            var dialog = link.closest('dialog');
+            if (dialog) dialog.close();
+        }
     });
 });
 </script>

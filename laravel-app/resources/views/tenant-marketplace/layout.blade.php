@@ -23,7 +23,7 @@
             <a href="{{ route('marketplace.home') }}#how-it-works">How it works</a>
             <a href="{{ route('marketplace.home') }}#tenant-safety">Tenant safety</a>
             <a href="/contact?topic=list-property">List a property</a>
-            <a href="/home">About Starmax</a>
+            <a href="https://starmaxltd.com" target="_blank" rel="noopener">About Starmax</a>
             <a class="nav-sign-in" href="{{ route('admin.login') }}">Property manager sign in</a>
         </nav>
         <details class="mobile-market-nav">
@@ -33,7 +33,7 @@
                 <a href="{{ route('marketplace.home') }}#how-it-works">How it works</a>
                 <a href="{{ route('marketplace.home') }}#tenant-safety">Tenant safety</a>
                 <a href="/contact?topic=list-property">List a property</a>
-                <a href="/home">About Starmax</a>
+                <a href="https://starmaxltd.com" target="_blank" rel="noopener">About Starmax</a>
                 <a href="{{ route('admin.login') }}">Property manager sign in</a>
             </div>
         </details>
@@ -53,7 +53,7 @@
         <div>
             <strong>Explore</strong>
             <a href="{{ route('marketplace.index') }}">Available homes</a>
-            <a href="/home">Starmax Ltd</a>
+            <a href="https://starmaxltd.com" target="_blank" rel="noopener">Starmax Ltd</a>
             <a href="/contact">Contact support</a>
         </div>
         <div>

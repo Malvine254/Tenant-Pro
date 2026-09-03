@@ -27,11 +27,17 @@
                     @error('units_count')<div class="form-error">{{ $message }}</div>@enderror
                 </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
                 <div class="form-group">
                     <label>Floor</label>
                     <input type="number" name="floor" value="{{ old('floor') }}">
                     @error('floor')<div class="form-error">{{ $message }}</div>@enderror
+                </div>
+                <div class="form-group">
+                    <label>Bedrooms</label>
+                    <input type="number" name="bedrooms" value="{{ old('bedrooms') }}" min="0" max="20" placeholder="e.g. 2">
+                    <small style="color:#64748b;">0 = studio. Shown to tenants on the public listing.</small>
+                    @error('bedrooms')<div class="form-error">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
                     <label>Monthly Rent (KES)</label>

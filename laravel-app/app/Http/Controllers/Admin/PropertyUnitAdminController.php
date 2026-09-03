@@ -52,6 +52,7 @@ class PropertyUnitAdminController extends Controller
             ],
             'units_count' => 'required|integer|min:1|max:100',
             'floor' => 'nullable|integer',
+            'bedrooms' => 'nullable|integer|min:0|max:20',
             'rent_amount' => 'required|numeric|min:0',
             'water_monthly_fee' => 'nullable|numeric|min:0',
             'garbage_monthly_fee' => 'nullable|numeric|min:0',
@@ -76,6 +77,7 @@ class PropertyUnitAdminController extends Controller
                 $property->units()->create([
                     'unit_number' => $unitNumber,
                     'floor' => $data['floor'] ?? null,
+                    'bedrooms' => $data['bedrooms'] ?? null,
                     'rent_amount' => $data['rent_amount'],
                     'status' => $data['status'],
                     'billing_overrides' => $this->billingOverrides($data),
@@ -111,6 +113,7 @@ class PropertyUnitAdminController extends Controller
                     ->ignore($unit->id),
             ],
             'floor' => 'nullable|integer',
+            'bedrooms' => 'nullable|integer|min:0|max:20',
             'rent_amount' => 'required|numeric|min:0',
             'water_monthly_fee' => 'nullable|numeric|min:0',
             'garbage_monthly_fee' => 'nullable|numeric|min:0',

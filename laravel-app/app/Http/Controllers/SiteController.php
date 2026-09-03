@@ -6,31 +6,6 @@ use Illuminate\Http\Request;
 
 class SiteController extends Controller
 {
-    public function home()
-    {
-        return view('site.home');
-    }
-
-    public function about()
-    {
-        return view('site.about');
-    }
-
-    public function services()
-    {
-        return view('site.services');
-    }
-
-    public function products()
-    {
-        return view('site.products');
-    }
-
-    public function portfolio()
-    {
-        return view('site.portfolio');
-    }
-
     public function contact()
     {
         return view('site.contact');
@@ -46,10 +21,5 @@ class SiteController extends Controller
 
         // Contact handling (mail/logging) can be wired here.
         return back()->with('success', 'Thank you! Your message has been received.');
-    }
-
-    public function dashboard()
-    {
-        return redirect()->route('admin.login');
     }
 }

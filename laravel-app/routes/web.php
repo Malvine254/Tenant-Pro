@@ -61,11 +61,9 @@ Route::post('/homes/{property}/enquiries', [MarketplaceEnquiryController::class,
     ->middleware('throttle:5,1')
     ->name('marketplace.enquiries.store');
 Route::redirect('/login', '/admin/login')->name('login');
-Route::get('/home', [SiteController::class, 'home'])->name('site.home');
-Route::get('/about', [SiteController::class, 'about']);
-Route::get('/services', [SiteController::class, 'services']);
-Route::get('/products', [SiteController::class, 'products']);
-Route::get('/portfolio', [SiteController::class, 'portfolio']);
+// The old corporate marketing pages (home/about/services/products/portfolio)
+// were replaced by starmaxltd.com; only /contact is still used, by the
+// marketplace's "list a property" and support links.
 Route::get('/contact', [SiteController::class, 'contact']);
 Route::post('/contact', [SiteController::class, 'submitContact']);
 Route::get('/deployment-tools-once', [DeploymentToolsController::class, 'once'])
