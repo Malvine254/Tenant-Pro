@@ -6,9 +6,15 @@
 <section class="search-hero">
     <div class="market-shell hero-grid">
         <div class="hero-copy">
-            <span class="hero-kicker">Homes managed with Starmax</span>
-            <h1>Find a place that feels right.</h1>
-            <p>Explore current vacancies, compare monthly rent, and request a viewing directly from a verified property manager.</p>
+            <span class="hero-kicker">A clearer way to rent</span>
+            <h1>Your next home, without the guesswork.</h1>
+            <p>Search current vacancies across Kenya, see the recorded monthly rent, and reach the responsible property manager in one secure step.</p>
+
+            <div class="hero-proof" aria-label="Marketplace benefits">
+                <span><strong>Live</strong> availability</span>
+                <span><strong>Clear</strong> monthly rent</span>
+                <span><strong>Private</strong> enquiries</span>
+            </div>
 
             <form class="search-panel" action="{{ route('marketplace.index') }}" method="GET">
                 <div class="search-field">
@@ -30,7 +36,23 @@
                         </select>
                     </div>
                 </div>
-                <button type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Search homes</button>
+                <div class="search-actions">
+                    <button type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Search homes</button>
+                    <details class="advanced-filters" @if(isset($filters['min_price']) || isset($filters['max_price'])) open @endif>
+                        <summary>More filters</summary>
+                        <div class="advanced-filter-card">
+                            <div>
+                                <label for="market-min-price">Minimum monthly rent</label>
+                                <input id="market-min-price" type="number" name="min_price" value="{{ $filters['min_price'] ?? '' }}" min="0" step="500" placeholder="Any minimum">
+                            </div>
+                            <div>
+                                <label for="market-max-price">Maximum monthly rent</label>
+                                <input id="market-max-price" type="number" name="max_price" value="{{ $filters['max_price'] ?? '' }}" min="0" step="500" placeholder="Any maximum">
+                            </div>
+                            <a href="{{ route('marketplace.index') }}">Clear all filters</a>
+                        </div>
+                    </details>
+                </div>
             </form>
         </div>
 
@@ -138,11 +160,24 @@
     @endif
 </section>
 
-<section class="trust-band">
+<section class="trust-band" id="how-it-works">
     <div class="market-shell trust-grid">
         <div><strong>Current availability</strong><p>Occupied and maintenance units are removed from public results.</p></div>
-        <div><strong>Private by design</strong><p>Your enquiry details go only to the relevant property manager.</p></div>
+        <div><strong>Private by design</strong><p>Your enquiry details are not displayed publicly and are sent securely to the relevant manager.</p></div>
         <div><strong>Clear monthly pricing</strong><p>Compare the recorded rent before requesting a viewing.</p></div>
+    </div>
+</section>
+
+<section class="market-guide" id="tenant-safety">
+    <div class="market-shell guide-inner">
+        <div>
+            <span class="section-kicker">Rent with confidence</span>
+            <h2>See it first. Confirm it. Then pay.</h2>
+        </div>
+        <div>
+            <p>Request a physical viewing and confirm who manages the property before making a commitment.</p>
+            <p>Never send a deposit to an unfamiliar personal number. Use payment instructions confirmed by the property manager and retain your receipt.</p>
+        </div>
     </div>
 </section>
 @endsection

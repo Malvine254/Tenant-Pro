@@ -54,7 +54,8 @@ Route::get('/download/latest-version', [DownloadsController::class, 'latestVersi
 
 // Public tenant marketplace. This remains separate from the corporate site and
 // the authenticated operations console under /admin.
-Route::get('/', [MarketplaceController::class, 'index'])->name('marketplace.index');
+Route::get('/', [MarketplaceController::class, 'index'])->name('marketplace.home');
+Route::get('/homes', [MarketplaceController::class, 'index'])->name('marketplace.index');
 Route::get('/homes/{property}', [MarketplaceController::class, 'show'])->name('marketplace.show');
 Route::post('/homes/{property}/enquiries', [MarketplaceEnquiryController::class, 'store'])
     ->middleware('throttle:5,1')

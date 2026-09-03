@@ -47,12 +47,12 @@ class MarketplaceController extends Controller
                     ->where('city', $location)
                     ->orWhere('state', $location));
             })
-            ->when(isset($filters['min_price']), fn (Builder $query) => $query->whereHas(
-                'units', fn (Builder $units) => $units->where('status', 'AVAILABLE')->where('rent_amount', '>=', $filters['min_price'])
-            ))
-            ->when(isset($filters['max_price']), fn (Builder $query) => $query->whereHas(
-                'units', fn (Builder $units) => $units->where('status', 'AVAILABLE')->where('rent_amount', '<=', $filters['max_price'])
-            ))
+            ->when(isset($filters['min_price']) || isset($filters['max_price']), function (Builder $query) use ($filters) {
+                $query->whereHas('units', fn (Builder $units) => $units
+                    ->where('status', 'AVAILABLE')
+                    ->when(isset($filters['min_price']), fn (Builder $range) => $range->where('rent_amount', '>=', $filters['min_price']))
+                    ->when(isset($filters['max_price']), fn (Builder $range) => $range->where('rent_amount', '<=', $filters['max_price'])));
+            })
             ->when(($filters['sort'] ?? 'newest') === 'price_low', fn (Builder $query) => $query->orderBy('minimum_rent'))
             ->when(($filters['sort'] ?? 'newest') === 'price_high', fn (Builder $query) => $query->orderByDesc('maximum_rent'))
             ->when(($filters['sort'] ?? 'newest') === 'newest', fn (Builder $query) => $query->orderByDesc('published_at')->latest())

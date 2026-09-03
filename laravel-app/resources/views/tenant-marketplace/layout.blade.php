@@ -14,15 +14,29 @@
 <body>
 <header class="market-header">
     <div class="market-shell market-nav">
-        <a class="market-brand" href="{{ route('marketplace.index') }}" aria-label="Starmax homes">
+        <a class="market-brand" href="{{ route('marketplace.home') }}" aria-label="Starmax homes">
             <img src="{{ asset('images/starmax-tenant-logo.png') }}" alt="Starmax Tenant Services">
             <span>Homes</span>
         </a>
-        <nav aria-label="Main navigation">
+        <nav class="desktop-market-nav" aria-label="Main navigation">
             <a href="{{ route('marketplace.index') }}">Find a home</a>
+            <a href="{{ route('marketplace.home') }}#how-it-works">How it works</a>
+            <a href="{{ route('marketplace.home') }}#tenant-safety">Tenant safety</a>
+            <a href="/contact?topic=list-property">List a property</a>
             <a href="/home">About Starmax</a>
             <a class="nav-sign-in" href="{{ route('admin.login') }}">Property manager sign in</a>
         </nav>
+        <details class="mobile-market-nav">
+            <summary aria-label="Open navigation">Menu</summary>
+            <div>
+                <a href="{{ route('marketplace.index') }}">Find a home</a>
+                <a href="{{ route('marketplace.home') }}#how-it-works">How it works</a>
+                <a href="{{ route('marketplace.home') }}#tenant-safety">Tenant safety</a>
+                <a href="/contact?topic=list-property">List a property</a>
+                <a href="/home">About Starmax</a>
+                <a href="{{ route('admin.login') }}">Property manager sign in</a>
+            </div>
+        </details>
     </div>
 </header>
 
