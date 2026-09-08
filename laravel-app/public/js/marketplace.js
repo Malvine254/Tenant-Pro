@@ -29,6 +29,9 @@
         checklistProgress.hidden = false;
     }
     const banner = document.querySelector('[data-cookie-banner]');
+    const modal = document.querySelector('[data-cookie-modal]');
+    const modalDialog = modal?.querySelector('.cookie-modal-dialog');
+    const preferenceToggle = modal?.querySelector('[data-cookie-preference-toggle]');
     const filters = document.querySelector('.advanced-filters');
     const key = 'starmax_filters_open';
     const readChoice = () => {
@@ -41,22 +44,37 @@
             else if (filters && localStorage.getItem(key) === 'true') filters.open = true;
         } catch (_) { /* Browsing remains available when storage is blocked. */ }
     };
+    const saveChoice = (choice) => {
+        document.cookie = `starmax_cookie_choice=${choice}; Max-Age=15552000; Path=/; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
+        applyChoice();
+        return readChoice() === choice;
+    };
+    const closeModal = () => {
+        if (!modal) return;
+        modal.hidden = true;
+        document.body.classList.remove('cookie-modal-open');
+    };
+    const openModal = () => {
+        if (!modal) return;
+        preferenceToggle.checked = readChoice() === 'v1-preferences';
+        modal.hidden = false;
+        document.body.classList.add('cookie-modal-open');
+        modalDialog?.focus({preventScroll: true});
+    };
     if (banner) {
         banner.hidden = readChoice() !== null;
         applyChoice();
         document.querySelectorAll('[data-cookie-settings]').forEach(button => {
             button.hidden = false;
             button.addEventListener('click', () => {
-                banner.hidden = false;
-                banner.querySelector('button').focus({preventScroll: true});
+                openModal();
             });
         });
+        banner.querySelector('[data-cookie-preferences]')?.addEventListener('click', openModal);
         banner.querySelectorAll('[data-cookie-choice]').forEach(button => {
             button.addEventListener('click', () => {
                 const choice = 'v1-' + button.dataset.cookieChoice;
-                document.cookie = `starmax_cookie_choice=${choice}; Max-Age=15552000; Path=/; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
-                applyChoice();
-                if (readChoice() === choice) {
+                if (saveChoice(choice)) {
                     banner.hidden = true;
                     document.querySelector('[data-cookie-settings]')?.focus({preventScroll: true});
                 } else {
@@ -70,6 +88,21 @@
             }
         });
     }
+    modal?.querySelectorAll('[data-cookie-close]').forEach(button => button.addEventListener('click', closeModal));
+    modal?.querySelector('[data-cookie-save]')?.addEventListener('click', () => {
+        const choice = preferenceToggle?.checked ? 'v1-preferences' : 'v1-essential';
+        const status = modal.querySelector('[data-cookie-modal-status]');
+        if (saveChoice(choice)) {
+            closeModal();
+            if (banner) banner.hidden = true;
+            document.querySelector('[data-cookie-settings]')?.focus({preventScroll: true});
+        } else if (status) {
+            status.textContent = 'Your browser blocked saving this choice. Essential cookies remain on.';
+        }
+    });
+    modal?.addEventListener('keydown', event => {
+        if (event.key === 'Escape') closeModal();
+    });
     document.querySelectorAll('.share-actions').forEach(group => {
         const status = group.querySelector('[data-share-status]');
         const copy = group.querySelector('[data-share-copy]');
