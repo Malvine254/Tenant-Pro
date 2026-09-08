@@ -87,7 +87,8 @@ a { color: inherit; }
 .market-nav nav a.active { background: #eef2ff; color: #3730a3; font-weight: 800; box-shadow: inset 0 -2px 0 #6366f1; }
 .market-nav .nav-sign-in { margin-left: 6px; background: var(--ink); color: #fff; }
 .market-nav .nav-sign-in:hover { background: #27272a; }
-.market-nav .nav-advertise { color: var(--blue); background: #eef2ff; }
+.market-nav .nav-advertise { color: var(--blue); }
+.market-nav .nav-advertise.active { background: #eef2ff; }
 .mobile-market-nav { position: relative; display: none; }
 .mobile-market-nav summary { padding: 9px 13px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; list-style: none; }
 .mobile-market-nav summary::-webkit-details-marker { display: none; }
