@@ -22,10 +22,12 @@ class MarketplaceContactController extends Controller
             'message' => ['required', 'string', 'max:3000'],
         ]);
 
-        // Advertise submissions use the listing topic implicitly.
+        $isListingRequest = $request->input('service') === 'tenant' || $request->input('topic') === 'listing';
+
         return redirect()
-            ->route('marketplace.contact')
-            ->withInput()
-            ->with('success', 'Thanks, '.$data['name'].'. Starmax support has received your message.');
+            ->route($isListingRequest ? 'marketplace.advertise' : 'marketplace.contact')
+            ->with('success', $isListingRequest
+                ? 'Thanks, '.$data['name'].'. Your listing setup request has been submitted.'
+                : 'Thanks, '.$data['name'].'. Your support request has been submitted.');
     }
 }
