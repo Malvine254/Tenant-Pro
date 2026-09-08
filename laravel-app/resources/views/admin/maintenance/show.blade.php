@@ -36,7 +36,7 @@
     <div class="card">
         <div class="section-heading">Assignment</div>
         <p class="muted" style="margin-bottom:12px;">Choose the caretaker responsible for this request.</p>
-        <form method="POST" action="{{ route('admin.maintenance.assign', $maintenanceRequest) }}">
+        <form method="POST" action="{{ route('admin.maintenance.assign', $maintenanceRequest) }}" data-ajax-form>
             @csrf @method('PATCH')
             <div class="field">
                 <label for="assigned-to">Caretaker</label>
@@ -52,7 +52,7 @@
 
         <div class="section-heading" style="margin-top:24px;">Update status</div>
         @if($nextStatuses)
-            <form method="POST" action="{{ route('admin.maintenance.status', $maintenanceRequest) }}">
+            <form method="POST" action="{{ route('admin.maintenance.status', $maintenanceRequest) }}" data-ajax-form>
                 @csrf @method('PATCH')
                 <div class="field">
                     <label for="request-status">Next status</label>

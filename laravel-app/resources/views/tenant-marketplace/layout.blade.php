@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#18181b">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Homes to rent in Kenya | Starmax')</title>
     <meta name="description" content="@yield('meta_description', 'Find available rental homes managed through Starmax. Search by location, compare monthly rent, and request a viewing safely.')">
     @php
@@ -91,5 +92,6 @@
 <script src="{{ asset('js/marketplace-shortlist.js') }}?v={{ @filemtime(public_path('js/marketplace-shortlist.js')) }}" defer></script>
 @include('tenant-marketplace.partials.cookie-consent')
 <script src="{{ asset('js/marketplace.js') }}?v={{ @filemtime(public_path('js/marketplace.js')) }}" defer></script>
+<script src="{{ asset('js/form-ajax.js') }}?v={{ @filemtime(public_path('js/form-ajax.js')) }}" defer></script>
 </body>
 </html>

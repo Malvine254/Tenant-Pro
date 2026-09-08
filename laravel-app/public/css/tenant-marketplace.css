@@ -39,6 +39,9 @@
 .cookie-modal-status { margin-top:12px!important; color:#b91c1c!important; font-size:12px!important; }
 .cookie-modal-open { overflow:hidden; }
 .cookie-settings { padding: 0; border: 0; background: transparent; color: #e4e4e7; font: inherit; font-size: 14px; text-decoration: underline; cursor: pointer; }
+.ajax-status-success, .ajax-status-error { margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; font-size: 13px; line-height: 1.5; }
+.ajax-status-success { background: #ecfdf5; border: 1px solid #a7f3d0; color: #166534; }
+.ajax-status-error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
 .privacy-copy { max-width: 780px; line-height: 1.8; }
 
 :root {

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
     <link rel="icon" type="image/png" href="{{ asset('images/starmax-app-icon.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/starmax-app-icon.png') }}">
@@ -145,6 +146,9 @@
         .check-row { display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(15,23,42,.7);border:1px solid rgba(148,163,184,.18);border-radius:12px;color:#e2e8f0;font-size:13px; }
         .check-row input { width:16px;height:16px;flex:0 0 16px;min-height:0;accent-color:#60a5fa; }
         .form-error { color:#fca5a5; font-size:12px; margin-top:3px; }
+        .ajax-status-success, .ajax-status-error { margin-top:10px; padding:9px 11px; border-radius:9px; font-size:12px; }
+        .ajax-status-success { background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.24); color:#bbf7d0; }
+        .ajax-status-error { background:rgba(248,113,113,.12); border:1px solid rgba(248,113,113,.24); color:#fecaca; }
         .pagination { display:flex; gap:6px; margin-top:16px; flex-wrap:wrap; }
         .pagination a, .pagination span { padding:7px 11px; border:1px solid rgba(148,163,184,.18); border-radius:9px; font-size:13px; text-decoration:none; color:#e2e8f0; background:rgba(15,23,42,.7); }
         .pagination .active span { background:linear-gradient(180deg,#2563eb,#1d4ed8); color:#eff6ff; border-color:#2563eb; }
@@ -548,5 +552,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+<script src="{{ asset('js/form-ajax.js') }}?v={{ @filemtime(public_path('js/form-ajax.js')) }}" defer></script>
 </body>
 </html>

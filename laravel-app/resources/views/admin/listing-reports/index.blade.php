@@ -9,7 +9,7 @@
         <p style="white-space:pre-wrap;overflow-wrap:anywhere;">{{ $report->details }}</p>
         @if($report->email)<p>Reply contact: {{ $report->email }}</p>@endif
         <a href="{{ route('admin.properties.edit', $report->property) }}">Review property</a>
-        <form method="POST" action="{{ route('admin.listing-reports.resolve', $report) }}" style="margin-top:12px;">@csrf @method('PATCH')
+        <form method="POST" action="{{ route('admin.listing-reports.resolve', $report) }}" data-ajax-form style="margin-top:12px;">@csrf @method('PATCH')
             <input type="hidden" name="status" value="{{ $report->status === 'OPEN' ? 'RESOLVED' : 'OPEN' }}">
             <button class="btn btn-primary">{{ $report->status === 'OPEN' ? 'Mark reviewed and resolved' : 'Reopen report' }}</button>
         </form>

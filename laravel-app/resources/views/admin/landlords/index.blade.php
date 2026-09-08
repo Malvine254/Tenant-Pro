@@ -432,11 +432,11 @@
                                         </optgroup>
                                         <option value="status" data-form="status-{{ $landlord->id }}">{{ $landlord->is_active ? 'Suspend landlord' : 'Reactivate landlord' }}</option>
                                     </select>
-                                    <form id="renewal-{{ $landlord->id }}" class="landlord-action-form" method="POST" action="{{ route('admin.landlords.payments.record', $landlord) }}">
+                                    <form id="renewal-{{ $landlord->id }}" class="landlord-action-form" method="POST" action="{{ route('admin.landlords.payments.record', $landlord) }}" data-ajax-form>
                                         @csrf
                                         <input type="hidden" name="months" value="">
                                     </form>
-                                    <form id="status-{{ $landlord->id }}" class="landlord-action-form" method="POST" action="{{ route('admin.landlords.status', $landlord) }}">
+                                    <form id="status-{{ $landlord->id }}" class="landlord-action-form" method="POST" action="{{ route('admin.landlords.status', $landlord) }}" data-ajax-form>
                                         @csrf @method('PATCH')
                                         <input type="hidden" name="is_active" value="{{ $landlord->is_active ? 0 : 1 }}">
                                     </form>
@@ -477,7 +477,7 @@
             } else if (!window.confirm(selected.textContent + '?')) {
                 return;
             }
-            form.submit();
+            form.requestSubmit();
         });
     });
 </script>

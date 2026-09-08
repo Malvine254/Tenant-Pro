@@ -27,7 +27,7 @@
 <div class="notification-header">
     <div><h2>Notifications</h2><p>Review account, payment, tenant, and operational updates.</p></div>
     @if($notificationGroups['unread']->isNotEmpty())
-        <form method="POST" action="{{ route('admin.notifications.read-all') }}">
+        <form method="POST" action="{{ route('admin.notifications.read-all') }}" data-ajax-form>
             @csrf @method('PATCH')
             <button class="btn btn-secondary" type="submit">Mark all as read</button>
         </form>
@@ -55,7 +55,7 @@
                         <time datetime="{{ $notification->created_at?->toIso8601String() }}">{{ $notification->created_at?->format('d M Y, H:i') }}</time>
                     </div>
                     @unless($notification->is_read)
-                        <form method="POST" action="{{ route('admin.notifications.read', $notification) }}">
+                        <form method="POST" action="{{ route('admin.notifications.read', $notification) }}" data-ajax-form>
                             @csrf @method('PATCH')
                             <button class="btn btn-secondary" type="submit">Mark read</button>
                         </form>

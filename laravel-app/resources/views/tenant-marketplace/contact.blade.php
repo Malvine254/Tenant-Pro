@@ -14,7 +14,7 @@
             </ul>
             <div class="area-callout support-note"><div><strong>Need to report a suspicious listing?</strong><p>Use <em>Report this listing</em> on the property page so the review team receives the listing details with your report.</p></div></div>
         </div>
-        <form action="{{ route('marketplace.contact.submit') }}" method="POST" class="support-form">
+        <form action="{{ route('marketplace.contact.submit') }}" method="POST" class="support-form" data-ajax-form>
             @csrf
             @if(session('success'))<div class="success-message" role="status">{{ session('success') }}</div>@endif
             @if($errors->any())<div class="field-error" role="alert">{{ $errors->first() }}</div>@endif

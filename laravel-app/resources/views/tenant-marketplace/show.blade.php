@@ -148,7 +148,7 @@
                 <div class="success-message" role="status">{{ session('marketplace_success') }}</div>
             @endif
 
-            <form method="POST" action="{{ route('marketplace.enquiries.store', $property) }}">
+            <form method="POST" action="{{ route('marketplace.enquiries.store', $property) }}" data-ajax-form>
                 @csrf
                 <div class="honeypot" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
                 <label for="enquiry-name">Your name</label>
