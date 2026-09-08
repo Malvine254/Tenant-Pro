@@ -3,11 +3,11 @@
 @section('title', 'Find available homes to rent | Starmax Homes')
 
 @section('content')
-<section class="search-hero">
+<section class="search-hero results-hero">
     <div class="market-shell hero-grid">
         <div class="hero-copy">
             <span class="hero-kicker">A clearer way to rent</span>
-            <h1>Find a home that fits.</h1>
+            <h1>Find a home that fits your life.</h1>
             <p>Explore current vacancies across Kenya, compare monthly rent, and contact the property manager directly.</p>
 
             <div class="hero-proof" aria-label="Marketplace benefits">
@@ -44,8 +44,8 @@
                 </div>
                 <div class="search-actions">
                     <button type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Search homes</button>
-                    <details class="advanced-filters" @if(isset($filters['min_price']) || isset($filters['max_price'])) open @endif>
-                        <summary>More filters</summary>
+                    <details class="advanced-filters" @if(isset($filters['min_price']) || isset($filters['max_price']) || isset($filters['bedrooms'])) open @endif>
+                        <summary>Rent and bedrooms</summary>
                         <div class="advanced-filter-card">
                             <div>
                                 <label for="market-min-price">Minimum monthly rent</label>
@@ -55,6 +55,15 @@
                                 <label for="market-max-price">Maximum monthly rent</label>
                                 <input id="market-max-price" type="number" name="max_price" value="{{ $filters['max_price'] ?? '' }}" min="0" step="500" placeholder="Any maximum">
                             </div>
+                            <div>
+                                <label for="market-bedrooms">Bedrooms</label>
+                                <select id="market-bedrooms" name="bedrooms">
+                                    <option value="">Any bedrooms</option>
+                                    <option value="0" @selected(($filters['bedrooms'] ?? '') === 0 || ($filters['bedrooms'] ?? '') === '0')>Studio</option>
+                                    @foreach(range(1, 10) as $bedroom)<option value="{{ $bedroom }}" @selected(($filters['bedrooms'] ?? '') == $bedroom)>{{ $bedroom }} {{ str('bedroom')->plural($bedroom) }}</option>@endforeach
+                                </select>
+                            </div>
+                            <button type="submit">Apply filters</button>
                             <a href="{{ route('marketplace.index') }}">Clear all filters</a>
                         </div>
                     </details>
@@ -96,10 +105,15 @@
         </form>
     </div>
 
-    @if(request()->hasAny(['q', 'location', 'min_price', 'max_price']))
-        <div class="active-search">
-            <span>Showing filtered results</span>
-            <a href="{{ route('marketplace.index') }}">Clear filters</a>
+    @if(request()->hasAny(['q', 'location', 'min_price', 'max_price', 'bedrooms']))
+        <div class="active-search active-filter-row">
+            <strong>Your filters</strong>
+            @foreach(['q' => 'Search', 'location' => 'Location', 'min_price' => 'From KSh', 'max_price' => 'Up to KSh', 'bedrooms' => 'Bedrooms'] as $key => $label)
+                @if(filled($filters[$key] ?? null) || (($filters[$key] ?? null) === 0 || ($filters[$key] ?? null) === '0'))
+                    <a class="filter-chip" href="{{ route('marketplace.index', request()->except($key, 'page')) }}">{{ $label }}: {{ $key === 'bedrooms' && ($filters[$key] == 0) ? 'Studio' : $filters[$key] }} <span aria-hidden="true">×</span></a>
+                @endif
+            @endforeach
+            <a class="clear-filter-link" href="{{ route('marketplace.index') }}">Clear all</a>
         </div>
     @endif
 

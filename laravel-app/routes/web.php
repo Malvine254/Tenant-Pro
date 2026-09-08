@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DeploymentToolsController;
 use App\Http\Controllers\Admin\InvitationAdminController;
 use App\Http\Controllers\Admin\InvoiceAdminController;
 use App\Http\Controllers\Admin\LandlordAdminController;
+use App\Http\Controllers\Admin\MaintenanceAdminController;
 use App\Http\Controllers\Admin\LandlordTeamController;
 use App\Http\Controllers\Admin\MpesaSandboxTestController;
 use App\Http\Controllers\Admin\NotificationAdminController;
@@ -19,8 +20,10 @@ use App\Http\Controllers\Admin\TenantAdminController;
 use App\Http\Controllers\DownloadsController;
 use App\Http\Controllers\InvitationAcceptanceController;
 use App\Http\Controllers\TenantMarketplace\MarketplaceController;
+use App\Http\Controllers\TenantMarketplace\DiscoveryController;
+use App\Http\Controllers\TenantMarketplace\ListingReportController;
 use App\Http\Controllers\TenantMarketplace\MarketplaceEnquiryController;
-use App\Http\Controllers\SiteController;
+use App\Http\Controllers\TenantMarketplace\MarketplaceContactController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -54,18 +57,27 @@ Route::get('/download/latest-version', [DownloadsController::class, 'latestVersi
 
 // Public tenant marketplace. This remains separate from the corporate site and
 // the authenticated operations console under /admin.
-Route::get('/', [MarketplaceController::class, 'index'])->name('marketplace.home');
+Route::get('/', [MarketplaceController::class, 'home'])->name('marketplace.home');
 Route::get('/homes', [MarketplaceController::class, 'index'])->name('marketplace.index');
+Route::get('/saved-homes', [DiscoveryController::class, 'saved'])->name('marketplace.saved');
+Route::get('/neighbourhoods', [DiscoveryController::class, 'neighbourhoods'])->name('marketplace.neighbourhoods');
+Route::get('/neighbourhoods/{slug}', [DiscoveryController::class, 'neighbourhood'])->name('marketplace.neighbourhood');
+Route::post('/homes/{property}/reports', [ListingReportController::class, 'store'])->middleware('throttle:3,10')->name('marketplace.reports.store');
+Route::get('/sitemap.xml', [MarketplaceController::class, 'sitemap'])->name('marketplace.sitemap');
+Route::get('/robots.txt', function () {
+    return response("User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /invite\nDisallow: /deployment-tools-once\nSitemap: ".route('marketplace.sitemap')."\n", 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+});
+Route::view('/cookies', 'tenant-marketplace.cookies')->name('marketplace.cookies');
+Route::view('/how-it-works', 'tenant-marketplace.how-it-works')->name('marketplace.how-it-works');
+Route::view('/rent-safely', 'tenant-marketplace.safety')->name('marketplace.safety');
+Route::view('/advertise', 'tenant-marketplace.advertise')->name('marketplace.advertise');
+Route::get('/contact', [MarketplaceContactController::class, 'index'])->name('marketplace.contact');
+Route::post('/contact', [MarketplaceContactController::class, 'submit'])->middleware('throttle:5,10')->name('marketplace.contact.submit');
 Route::get('/homes/{property}', [MarketplaceController::class, 'show'])->name('marketplace.show');
 Route::post('/homes/{property}/enquiries', [MarketplaceEnquiryController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('marketplace.enquiries.store');
 Route::redirect('/login', '/admin/login')->name('login');
-// The old corporate marketing pages (home/about/services/products/portfolio)
-// were replaced by starmaxltd.com; only /contact is still used, by the
-// marketplace's "list a property" and support links.
-Route::get('/contact', [SiteController::class, 'contact']);
-Route::post('/contact', [SiteController::class, 'submitContact']);
 Route::get('/deployment-tools-once', [DeploymentToolsController::class, 'once'])
     ->middleware(['admin.security', 'throttle:10,1'])->name('deployment-tools.once');
 Route::post('/deployment-tools-once/run', [DeploymentToolsController::class, 'runOnce'])
@@ -87,6 +99,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.security')->group(func
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::middleware('admin.role:SUPER_ADMIN,ADMIN')->group(function () {
+            Route::get('/listing-reports', [ListingReportController::class, 'index'])->name('listing-reports.index');
+            Route::patch('/listing-reports/{report}', [ListingReportController::class, 'resolve'])->name('listing-reports.resolve');
             Route::patch('/landlords/{landlord}/status', [LandlordAdminController::class, 'updateStatus'])->name('landlords.status');
             Route::post('/landlords/{landlord}/payments', [LandlordAdminController::class, 'recordPayment'])->name('landlords.payments.record');
             Route::resource('/landlords', LandlordAdminController::class)->only(['index', 'create', 'store', 'edit', 'update']);
@@ -116,6 +130,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.security')->group(func
         Route::get('/tenants', [TenantAdminController::class, 'index'])->name('tenants.index');
         Route::get('/tenants/{tenant}', [TenantAdminController::class, 'show'])->name('tenants.show');
         Route::patch('/tenants/{tenant}/unassign', [TenantAdminController::class, 'unassign'])->name('tenants.unassign');
+        Route::get('/maintenance', [MaintenanceAdminController::class, 'index'])->name('maintenance.index');
+        Route::get('/maintenance/{maintenanceRequest}', [MaintenanceAdminController::class, 'show'])->name('maintenance.show');
+        Route::patch('/maintenance/{maintenanceRequest}/assign', [MaintenanceAdminController::class, 'assignCaretaker'])->name('maintenance.assign');
+        Route::patch('/maintenance/{maintenanceRequest}/status', [MaintenanceAdminController::class, 'updateStatus'])->name('maintenance.status');
         Route::get('/invitations', [InvitationAdminController::class, 'index'])->name('invitations.index');
         Route::post('/invitations/tenants', [InvitationAdminController::class, 'storeTenant'])->name('invitations.tenants.store');
         Route::post('/invitations/landlords', [InvitationAdminController::class, 'storeLandlord'])->name('invitations.landlords.store');

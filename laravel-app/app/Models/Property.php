@@ -14,6 +14,7 @@ class Property extends Model
         'landlord_id', 'name', 'description', 'cover_image_url',
         'address_line', 'city', 'state', 'country',
         'billing_settings', 'is_publicly_listed', 'published_at',
+        'neighbourhood', 'area_notes',
     ];
 
     protected $casts = [
@@ -23,6 +24,11 @@ class Property extends Model
     ];
 
     public function landlord() { return $this->belongsTo(User::class, 'landlord_id'); }
+
+    public function getNeighbourhoodSlugAttribute(): ?string
+    {
+        return filled($this->neighbourhood) ? \Illuminate\Support\Str::slug($this->city).'--'.\Illuminate\Support\Str::slug($this->neighbourhood) : null;
+    }
     public function units() { return $this->hasMany(Unit::class); }
     public function invitations() { return $this->hasMany(Invitation::class); }
     public function marketplaceEnquiries() { return $this->hasMany(PropertyEnquiry::class); }

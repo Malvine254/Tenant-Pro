@@ -19,12 +19,14 @@ return new class extends Migration
         });
 
         // Backfill existing conversations so landlord inboxes are isolated immediately.
-        DB::statement('UPDATE support_conversations sc
-            JOIN tenants t ON t.user_id = sc.tenant_user_id AND t.is_active = 1
-            JOIN units u ON u.id = t.unit_id
-            JOIN properties p ON p.id = u.property_id
-            SET sc.landlord_user_id = p.landlord_id
-            WHERE sc.landlord_user_id IS NULL');
+        DB::statement('UPDATE support_conversations
+            SET landlord_user_id = (
+                SELECT p.landlord_id FROM tenants t
+                JOIN units u ON u.id = t.unit_id
+                JOIN properties p ON p.id = u.property_id
+                WHERE t.user_id = support_conversations.tenant_user_id AND t.is_active = 1
+                ORDER BY t.updated_at DESC, t.created_at DESC LIMIT 1
+            ) WHERE landlord_user_id IS NULL');
     }
 
     /**

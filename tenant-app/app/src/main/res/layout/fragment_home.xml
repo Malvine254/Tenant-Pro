@@ -93,7 +93,7 @@
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton">
 
                         <TextView
-                            android:id="@+id/tvNoBillsTitle"
+                            android:id="@+id/tvBillingLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="BILLING"
@@ -463,7 +463,7 @@
                             android:layout_marginBottom="8dp" />
 
                         <TextView
-                            android:id="@+id/tvNoBillsMessage"
+                            android:id="@+id/tvNoBillsTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="All clear this month!"
@@ -472,6 +472,7 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tvNoBillsMessage"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="No outstanding bills for this month."
@@ -490,7 +491,6 @@
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp"
-                android:visibility="gone"
                 app:cardBackgroundColor="@color/surface"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"

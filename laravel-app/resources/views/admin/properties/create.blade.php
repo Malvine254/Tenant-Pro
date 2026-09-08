@@ -7,6 +7,7 @@
     <div class="card">
         <form method="POST" action="{{ route('admin.properties.store') }}" enctype="multipart/form-data">
             @csrf
+            @include('admin.properties.neighbourhood-fields')
             <div class="form-group">
                 <label>Landlord</label>
                 <select name="landlord_id" required {{ $landlords->isEmpty() ? 'disabled' : '' }}>

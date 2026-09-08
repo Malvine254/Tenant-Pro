@@ -1,167 +1,78 @@
-🚀 PROJECT INSTRUCTIONS FOR COPILOT
+# Starmax Tenant Services
 
-## LOCAL DEVELOPMENT (AUTO-SYNC)
+Starmax Tenant Services is a Laravel-based tenant payment and property-management platform for landlords, tenants, administrators, and caretakers in Kenya.
 
-Use these commands from the project root:
+## Applications
 
-- `npm install`
-- `npm run dev`
+- `laravel-app/` - Laravel backend, admin portal, public rental marketplace, database migrations, seeders, and mobile API.
+- `tenant-app/` - Kotlin Android tenant application.
+- `data/` - Public content data used by the Laravel application.
 
-What `npm run dev` does:
+Laravel is the sole backend and source of truth. The Android app uses the Laravel API under `/api/*`.
 
-- Starts backend in watch mode (Nest + ts-node-dev) on `http://localhost:3000`
-- Starts admin dashboard in Next.js dev mode on `http://localhost:3001`
-- Auto-reloads when you save code changes (no manual restart needed)
+## Laravel Setup
 
-Production-mode commands (`npm start`, `npm --prefix admin-dashboard run start`) do **not** auto-sync changes.
+```bash
+cd laravel-app
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan db:seed --force
+npm install
+npm run build
+```
 
-You are building a full-stack Tenant Payment & Property Management System with:
+For local development:
 
-📱 Mobile App (Android)
-Tech: Kotlin (Android Jetpack)
-Architecture: MVVM
-API: REST
-🌐 Web Admin Panel
-Tech: React (Next.js preferred)
-UI: Tailwind CSS
-Auth: JWT
-⚙️ Backend API
-Tech: Node.js with Express OR NestJS (preferred)
-Database: PostgreSQL
-ORM: Prisma
-💳 Payment Integration
-Integrate M-Pesa Daraja API:
-STK Push
-Payment callback handling
-Transaction validation
-🧩 CORE FEATURES TO IMPLEMENT
-1. Authentication
-Phone number login (OTP)
-JWT-based sessions
-Roles:
-Landlord
-Tenant
-Admin
-2. Property Management
-Landlord can:
-Create properties
-Add units
-Set rent amount
-Add billing types:
-Rent
-Water
-Garbage
-3. Tenant Invitation System
-Generate invite link or SMS
-Assign tenant to unit
-Tenant registers and joins unit
-4. Billing System
-Monthly auto-generated invoices
-Water billing (manual input)
-Late penalties
-Invoice statuses:
-Paid
-Pending
-Overdue
-5. Payment System
-Trigger M-Pesa STK Push
-Handle callback endpoint
-Update invoice status
-Store transactions
-6. Notifications
-SMS + push notifications:
-Payment reminders
-Payment confirmations
-7. Dashboards
-Admin Web Panel:
-Total revenue
-Occupancy rate
-Outstanding balances
-Charts (monthly trends)
-Tenant App:
-View invoices
-Pay bills
-View payment history
-8. Maintenance Module
-Tenant submits issues
-Landlord tracks status
-🗄️ DATABASE SCHEMA (REQUIRED TABLES)
+```bash
+cd laravel-app
+composer run dev
+```
 
-Generate Prisma models for:
+This starts the Laravel server, queue listener, logs, and Vite. The web application is available at `http://127.0.0.1:8000`.
 
-Users
-Roles
-Properties
-Units
-Tenants
-Invitations
-Invoices
-Payments
-Transactions
-MaintenanceRequests
-🔐 SECURITY REQUIREMENTS
-Hash passwords (bcrypt)
-Use HTTPS
-Validate M-Pesa callbacks
-Role-based access control
-📦 PROJECT STRUCTURE
-Backend
-/backend
-  /src
-    /modules
-      /auth
-      /users
-      /properties
-      /billing
-      /payments
-Web Admin
-/admin-web
-  /pages
-  /components
-  /services
-Android App
-/android-app
-  /ui
-  /viewmodel
-  /repository
-  /api
-🧪 EXTRA FEATURES (OPTIONAL BUT RECOMMENDED)
-PDF receipts
-Export reports (CSV)
-Multi-language (English/Swahili)
-Role: caretaker
-Offline sync for Android
-Dark mode
-🧱 TASK BREAKDOWN (IMPORTANT)
+For a focused server only:
 
-Build in this order:
+```bash
+cd laravel-app
+php artisan serve
+```
 
-Backend API (auth + users)
-Database schema (Prisma)
-Property & tenant modules
-Billing system
-M-Pesa integration
-Web admin dashboard
-Android app
-Notifications
-⚡ CODING RULES
-Use clean architecture
-Write reusable services
-Add comments
-Use environment variables
-Handle errors properly
-🛠️ 3. Suggested Tech Stack (Final Decision)
-Backend
-Node.js + NestJS ✅ (best structure)
-PostgreSQL
-Prisma ORM
-Admin Web
-Next.js (React)
-Tailwind CSS
-Chart.js (analytics)
-Mobile App
-Kotlin + Jetpack Compose
-DevOps
-Docker
-Nginx
-CI/CD (GitHub Actions)
+## Testing
+
+```bash
+cd laravel-app
+composer test
+```
+
+## Android Setup
+
+The Android application is under `tenant-app/`. Production builds use:
+
+```text
+https://app.starmaxltd.com/api/
+```
+
+For local Laravel development, configure `tenant-app/local.properties` with port `8000`, or run the helper script:
+
+```powershell
+cd tenant-app
+.\update-backend-ip.ps1
+```
+
+See [tenant-app/INSTALLATION_GUIDE.md](tenant-app/INSTALLATION_GUIDE.md) for Android Studio and device setup.
+
+## Deployment
+
+Use [laravel-app/DEPLOY_GODADDY.md](laravel-app/DEPLOY_GODADDY.md) for shared-hosting deployment, migrations, scheduled tasks, and production configuration.
+
+## Main Features
+
+- Role-based landlord, tenant, admin, and caretaker access.
+- Property, unit, tenancy, invitation, invoice, and payment management.
+- Safaricom M-Pesa STK Push and callback settlement.
+- Maintenance requests and support conversations.
+- Notifications, email OTP authentication, and password reset.
+- Public rental marketplace with neighbourhood discovery.
+- Android offline support-message queue and cached tenant data.

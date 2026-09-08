@@ -62,6 +62,7 @@
                     <div class="form-group"><label>Garbage fee (KES/month)</label><input type="number" name="garbage_monthly_fee" value="{{ old('garbage_monthly_fee') }}" min="0" step="0.01">@error('garbage_monthly_fee')<div class="form-error">{{ $message }}</div>@enderror</div>
                 </div>
             </div>
+            @include('admin.properties.units.marketplace-fields')
             <div style="display:flex;gap:10px;">
                 <button type="submit" class="btn btn-primary">Create Unit(s)</button>
                 <a href="{{ route('admin.properties.show', $property) }}" class="btn btn-secondary">Cancel</a>

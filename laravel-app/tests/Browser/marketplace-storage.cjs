@@ -1,0 +1,40 @@
+// Run from laravel-app: Get-Content tests/Browser/marketplace-storage.cjs -Raw | node
+const fs = require('fs');
+const vm = require('vm');
+const assert = require('assert/strict');
+const source = fs.readFileSync('public/js/marketplace-shortlist.js', 'utf8');
+const id = '11111111-1111-4111-8111-111111111111';
+const secondId = '22222222-2222-4222-8222-222222222222';
+const key = 'starmax_saved_units_v1';
+function setup(stored = null, blocked = false) {
+    const storage = new Map(stored ? [[key, JSON.stringify(stored)]] : []);
+    const status = {textContent: ''};
+    const button = {dataset: {saveUnit: id}, parentElement: {querySelector: () => status}, listeners: {}, attributes: {}, addEventListener(type, fn) {this.listeners[type] = fn;}, setAttribute(k,v) {this.attributes[k] = v;}};
+    const link = {getAttribute: () => '/saved-homes'};
+    const window = {listeners: {}, addEventListener(type, fn) {this.listeners[type] = fn;}};
+    const document = {querySelector: selector => selector === '[data-saved-link]' ? link : null, querySelectorAll: selector => selector === '[data-save-unit]' ? [button] : selector === '[data-saved-link]' ? [link] : []};
+    vm.runInNewContext(source, {document, window, URL, location: {origin:'http://localhost'}, localStorage: {getItem: k => storage.get(k) ?? null, setItem: (k,v) => {if (blocked) throw Error('blocked'); storage.set(k,v);}, removeItem: k => storage.delete(k)}});
+    return {storage,button,status,link,window};
+}
+let page = setup();
+assert.equal(page.storage.size,0);
+page.button.listeners.click();
+assert.equal(page.button.attributes['aria-pressed'],'true');
+assert.equal(JSON.parse(page.storage.get(key)).ids[0],id);
+assert.ok(page.link.href.includes(id));
+page.button.listeners.click();
+assert.equal(JSON.parse(page.storage.get(key)).ids.length,0);
+page = setup({savedAt:Date.now(),ids:[id,id,'bad-id']});
+assert.equal(page.button.attributes['aria-pressed'],'true');
+page.storage.set(key,JSON.stringify({savedAt:Date.now(),ids:[secondId]}));
+page.window.listeners.storage({key});
+assert.equal(page.button.attributes['aria-pressed'],'false');
+page.button.listeners.click();
+assert.equal(JSON.parse(page.storage.get(key)).ids.length,2);
+page = setup({savedAt:Date.now()-181*86400000,ids:[id]});
+assert.equal(page.storage.size,0);
+assert.equal(page.button.attributes['aria-pressed'],'false');
+page = setup(null,true);page.button.listeners.click();
+assert.match(page.status.textContent,/blocked/);
+assert.equal(page.storage.size,0);
+console.log('Shortlist checks passed: explicit saving, removal, persistence, cross-tab updates, malformed and expired entries, blocked storage.');

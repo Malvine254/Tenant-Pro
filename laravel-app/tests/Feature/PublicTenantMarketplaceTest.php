@@ -14,6 +14,54 @@ class PublicTenantMarketplaceTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_root_redirects_to_homes_with_search_preserved(): void
+    {
+        $this->get('/?location=Nairobi')->assertStatus(301)
+            ->assertRedirect(route('marketplace.index', ['location' => 'Nairobi']));
+    }
+
+    public function test_rent_and_bedroom_filters_must_match_the_same_unit(): void
+    {
+        $property = $this->property($this->landlord(), 'Mixed Units Court', true, 'AVAILABLE');
+        $property->units()->first()->update(['bedrooms' => 1]);
+        Unit::create(['property_id' => $property->id, 'unit_number' => 'B2', 'rent_amount' => 50000, 'bedrooms' => 2, 'status' => 'AVAILABLE']);
+        $this->get('/homes?bedrooms=2&max_price=30000')->assertOk()->assertDontSee('Mixed Units Court');
+        $this->get('/homes?bedrooms=2&max_price=60000')->assertOk()->assertSee('Mixed Units Court');
+    }
+
+    public function test_sharing_metadata_contains_public_facts_and_escapes_markup(): void
+    {
+        $property = $this->property($this->landlord(), 'Court </script><script>alert(1)</script>', true, 'AVAILABLE');
+        $response = $this->get(route('marketplace.show', $property))->assertOk();
+        $response->assertSee('property="og:image" content="https://example.test/home.jpg"', false)
+            ->assertSee('From KSh 25,000/month.')
+            ->assertSee('1 available.')
+            ->assertSee('name="twitter:card" content="summary_large_image"', false)
+            ->assertSee('WhatsApp')
+            ->assertDontSee('</script><script>alert(1)</script>', false);
+    }
+
+    public function test_sitemap_only_contains_public_available_properties(): void
+    {
+        $landlord = $this->landlord();
+        $visible = $this->property($landlord, 'Public home', true, 'AVAILABLE');
+        $private = $this->property($landlord, 'Private home', false, 'AVAILABLE');
+        $occupied = $this->property($landlord, 'Occupied home', true, 'OCCUPIED');
+        $xml = $this->get('/sitemap.xml')->assertOk()->streamedContent();
+        $this->assertStringContainsString(route('marketplace.show', $visible), $xml);
+        $this->assertStringNotContainsString($private->id, $xml);
+        $this->assertStringNotContainsString($occupied->id, $xml);
+    }
+
+    public function test_filtered_pages_are_noindex_and_pagination_has_its_own_canonical(): void
+    {
+        $this->get('/homes?bedrooms=0')->assertOk()
+            ->assertSee('content="noindex,follow"', false);
+        $this->get('/homes?page=2')->assertOk()
+            ->assertSee('rel="canonical" href="'.route('marketplace.index', ['page' => 2]).'"', false);
+        $this->get('/cookies')->assertOk()->assertSee('Essential only')->assertSee('Cookie settings');
+    }
+
     public function test_only_publishable_available_properties_appear_publicly(): void
     {
         $activeLandlord = $this->landlord();

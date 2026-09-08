@@ -9,10 +9,6 @@ RewriteRule ^laravel-app/public/(.*)$ /$1 [R=301,L,NE]
 # Keep Let's Encrypt validation working
 RewriteRule ^\.well-known/ - [L]
 
-# Proxy /rebuild and /rebuild/* to the Node.js rebuild tool on port 9090
-# Requires mod_proxy and mod_proxy_http to be enabled on the server
-RewriteRule ^rebuild/?(.*)$ http://127.0.0.1:9090/$1 [P,L,QSA,NC]
-
 # Serve real static assets straight from the Laravel public folder (css, js,
 # build output, images, favicon, robots.txt, etc.) without going through PHP.
 # Anchored on DOCUMENT_ROOT so the check is correct no matter which nested

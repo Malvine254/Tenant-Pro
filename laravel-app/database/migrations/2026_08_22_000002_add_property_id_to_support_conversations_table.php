@@ -18,19 +18,19 @@ return new class extends Migration
             $table->index(['property_id', 'updated_at'], 'support_conversations_property_updated_idx');
         });
 
-        DB::statement("UPDATE support_conversations sc
-            SET sc.property_id = (
+        DB::statement("UPDATE support_conversations
+            SET property_id = (
                 SELECT u.property_id
                 FROM tenants t
                 INNER JOIN units u ON u.id = t.unit_id
                 INNER JOIN properties p ON p.id = u.property_id
-                WHERE t.user_id = sc.tenant_user_id
+                WHERE t.user_id = support_conversations.tenant_user_id
                   AND t.is_active = 1
-                  AND (sc.landlord_user_id IS NULL OR p.landlord_id = sc.landlord_user_id)
+                  AND (support_conversations.landlord_user_id IS NULL OR p.landlord_id = support_conversations.landlord_user_id)
                 ORDER BY t.updated_at DESC, t.created_at DESC
                 LIMIT 1
             )
-            WHERE sc.property_id IS NULL");
+            WHERE property_id IS NULL");
     }
 
     /**

@@ -170,23 +170,19 @@
         color:#94a3b8;
         font-size:12px;
     }
-    .landlord-counts {
-        display:flex;
-        gap:8px;
-        flex-wrap:wrap;
-    }
-    .landlord-pill {
+    .landlord-portfolio-summary {
         display:inline-flex;
         align-items:center;
-        gap:5px;
-        padding:5px 8px;
-        border-radius:999px;
-        background:rgba(148,163,184,.12);
+        gap:6px;
         color:#dbeafe;
         font-size:12px;
         font-weight:700;
         white-space:nowrap;
-        border:1px solid rgba(148,163,184,.16);
+    }
+    .landlord-portfolio-summary span + span::before {
+        content:'·';
+        margin-right:6px;
+        color:#64748b;
     }
     .landlord-money {
         font-size:13px;
@@ -197,11 +193,23 @@
     .landlord-money.red { color:#fca5a5; }
     .landlord-row-actions {
         display:flex;
-        gap:7px;
         align-items:center;
         justify-content:flex-end;
         white-space:nowrap;
     }
+    .landlord-action-select {
+        min-width:150px;
+        min-height:40px;
+        padding:8px 30px 8px 11px;
+        border:1px solid rgba(148,163,184,.3);
+        border-radius:10px;
+        background:#0f172a;
+        color:#e2e8f0;
+        font-size:13px;
+        font-weight:700;
+        cursor:pointer;
+    }
+    .landlord-action-form { display:none; }
     .landlord-empty {
         padding:40px 18px;
         text-align:center;
@@ -367,10 +375,10 @@
                                 <div class="landlord-muted">{{ $landlord->phone_number ?? 'No phone added' }}</div>
                             </td>
                             <td>
-                                <div class="landlord-counts">
-                                    <span class="landlord-pill">{{ $landlord->properties_count }} properties</span>
-                                    <span class="landlord-pill">{{ $landlord->units_count }} units</span>
-                                    <span class="landlord-pill">{{ $landlord->tenants_count }} tenants</span>
+                                <div class="landlord-portfolio-summary" title="{{ $landlord->properties_count }} properties, {{ $landlord->units_count }} units, {{ $landlord->tenants_count }} tenants" aria-label="{{ $landlord->properties_count }} properties, {{ $landlord->units_count }} units, {{ $landlord->tenants_count }} tenants">
+                                    <span>{{ $landlord->properties_count }} prop{{ $landlord->properties_count == 1 ? '' : 's' }}</span>
+                                    <span>{{ $landlord->units_count }} unit{{ $landlord->units_count == 1 ? '' : 's' }}</span>
+                                    <span>{{ $landlord->tenants_count }} tenant{{ $landlord->tenants_count == 1 ? '' : 's' }}</span>
                                 </div>
                             </td>
                             <td>
@@ -413,25 +421,24 @@
                             </td>
                             <td>
                                 <div class="landlord-row-actions">
-                                    <a href="{{ route('admin.landlords.edit', $landlord) }}" class="btn btn-secondary">Edit</a>
-                                    <form method="POST" action="{{ route('admin.landlords.payments.record', $landlord) }}">
+                                    <label class="sr-only" for="landlord-action-{{ $landlord->id }}">Actions for {{ $landlord->name }}</label>
+                                    <select id="landlord-action-{{ $landlord->id }}" class="landlord-action-select" data-landlord-action>
+                                        <option value="">Choose action</option>
+                                        <option value="{{ route('admin.landlords.edit', $landlord) }}">Edit landlord</option>
+                                        <optgroup label="Record renewal">
+                                            @foreach([1, 3, 6, 12] as $months)
+                                                <option value="renewal" data-form="renewal-{{ $landlord->id }}" data-months="{{ $months }}">{{ $months }} month{{ $months === 1 ? '' : 's' }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                        <option value="status" data-form="status-{{ $landlord->id }}">{{ $landlord->is_active ? 'Suspend landlord' : 'Reactivate landlord' }}</option>
+                                    </select>
+                                    <form id="renewal-{{ $landlord->id }}" class="landlord-action-form" method="POST" action="{{ route('admin.landlords.payments.record', $landlord) }}">
                                         @csrf
-                                        <select name="months" aria-label="Subscription months" style="padding:8px;border-radius:9px;background:#0f172a;color:#f8fafc;border:1px solid rgba(148,163,184,.25);">
-                                            <option value="1">1 month</option>
-                                            <option value="3">3 months</option>
-                                            <option value="6">6 months</option>
-                                            <option value="12">12 months</option>
-                                        </select>
-                                        <button type="submit" class="btn btn-primary" onclick="return confirm('Record this service subscription payment? Access will update immediately.')">
-                                            Record renewal
-                                        </button>
+                                        <input type="hidden" name="months" value="">
                                     </form>
-                                    <form method="POST" action="{{ route('admin.landlords.status', $landlord) }}">
+                                    <form id="status-{{ $landlord->id }}" class="landlord-action-form" method="POST" action="{{ route('admin.landlords.status', $landlord) }}">
                                         @csrf @method('PATCH')
                                         <input type="hidden" name="is_active" value="{{ $landlord->is_active ? 0 : 1 }}">
-                                        <button type="submit" class="btn {{ $landlord->is_active ? 'btn-danger' : 'btn-primary' }}" onclick="return confirm('{{ $landlord->is_active ? 'Suspend this landlord account?' : 'Reactivate this landlord account?' }}')">
-                                            {{ $landlord->is_active ? 'Suspend' : 'Reactivate' }}
-                                        </button>
                                     </form>
                                 </div>
                             </td>
@@ -452,4 +459,26 @@
         <div class="landlord-pagination pagination">{{ $landlords->links() }}</div>
     </div>
 </div>
+<script>
+    document.querySelectorAll('[data-landlord-action]').forEach(function (menu) {
+        menu.addEventListener('change', function () {
+            var selected = menu.options[menu.selectedIndex];
+            var form = selected.dataset.form ? document.getElementById(selected.dataset.form) : null;
+
+            if (!menu.value) return;
+            if (menu.value !== 'renewal' && menu.value !== 'status') {
+                window.location.href = menu.value;
+                return;
+            }
+            if (!form) return;
+            if (menu.value === 'renewal') {
+                form.querySelector('[name="months"]').value = selected.dataset.months;
+                if (!window.confirm('Record this service subscription payment? Access will update immediately.')) return;
+            } else if (!window.confirm(selected.textContent + '?')) {
+                return;
+            }
+            form.submit();
+        });
+    });
+</script>
 @endsection

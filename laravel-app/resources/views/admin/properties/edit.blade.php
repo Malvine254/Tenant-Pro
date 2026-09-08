@@ -52,7 +52,8 @@
     <h2 style="font-size:16px;font-weight:600;margin-bottom:16px;">Edit: {{ $property->name }}</h2>
     <div class="card">
         <form method="POST" action="{{ route('admin.properties.update', $property) }}" enctype="multipart/form-data">
-            @csrf @method('PUT')
+            @csrf
+            @include('admin.properties.neighbourhood-fields') @method('PUT')
             <div class="form-group">
                 <label>Landlord</label>
                 <select name="landlord_id" required>

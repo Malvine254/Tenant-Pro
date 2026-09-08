@@ -49,6 +49,8 @@ class PropertyAdminController extends Controller
             'landlord_id' => 'required|uuid|exists:users,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'neighbourhood' => 'nullable|string|max:100',
+            'area_notes' => 'nullable|string|max:2000',
             'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'address_line' => 'required|string',
             'city' => 'required|string',
@@ -91,7 +93,7 @@ class PropertyAdminController extends Controller
         }
 
         $propertyFields = collect($data)->only([
-            'landlord_id', 'name', 'description', 'address_line', 'city', 'state', 'country', 'is_publicly_listed',
+            'landlord_id', 'name', 'description', 'address_line', 'city', 'state', 'country', 'is_publicly_listed', 'neighbourhood', 'area_notes',
         ])->all();
         $propertyFields['published_at'] = $data['is_publicly_listed'] ? now() : null;
         $newImageUrl = null;
@@ -184,6 +186,8 @@ class PropertyAdminController extends Controller
             'landlord_id' => 'required|uuid|exists:users,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'neighbourhood' => 'nullable|string|max:100',
+            'area_notes' => 'nullable|string|max:2000',
             'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'remove_cover_image' => 'nullable|boolean',
             'address_line' => 'required|string|max:255',

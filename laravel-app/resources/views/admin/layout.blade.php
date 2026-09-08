@@ -241,6 +241,7 @@
         <div class="nav-section">Overview</div>
         <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10M9 20v-6h6v6"/></svg></i><span>Dashboard</span></a>
         @if($isPlatformAdmin)
+            <a href="{{ route('admin.listing-reports.index') }}"><span>Listing reports</span></a>
             <a href="{{ route('admin.landlords.index') }}" class="{{ request()->routeIs('admin.landlords*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></i><span>Landlords</span></a>
         @endif
         @if(!$landlordLocked)
@@ -249,6 +250,7 @@
             <a href="{{ route('admin.properties.index') }}" class="{{ request()->routeIs('admin.properties*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h2m4 0h2M8 11h2m4 0h2M9 21v-5h6v5"/></svg></i><span>Properties</span></a>
             <a href="{{ route('admin.units.index') }}" class="{{ request()->routeIs('admin.units*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 21V5l8-3 8 3v16M4 9h16M9 21v-5h6v5"/></svg></i><span>Units</span></a>
             <a href="{{ route('admin.tenants.index') }}" class="{{ request()->routeIs('admin.tenants*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2m1-12a4 4 0 0 1 0 8m2 4v-2a7 7 0 0 0-3-5.8"/></svg></i><span>Tenants</span></a>
+            <a href="{{ route('admin.maintenance.index') }}" class="{{ request()->routeIs('admin.maintenance*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="m14.7 6.3 3 3M5 19l7.5-7.5m-1.5-6a4 4 0 0 1 5.2 5.2L8 19H5v-3l7.5-7.5A4 4 0 0 1 11 5.5Z"/></svg></i><span>Maintenance</span></a>
             <a href="{{ route('admin.invitations.index') }}" class="{{ request()->routeIs('admin.invitations*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></i><span>{{ $isLandlord ? 'Tenant Invitations' : 'Invitations' }}</span></a>
             <a href="{{ route('admin.invoices.index') }}" class="{{ request()->routeIs('admin.invoices*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6m-6 4h6m-6 4h4"/></svg></i><span>Invoices</span></a>
             <a href="{{ route('admin.payments.index') }}" class="{{ request()->routeIs('admin.payments*') ? 'active' : '' }}"><i class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></svg></i><span>Payments</span></a>

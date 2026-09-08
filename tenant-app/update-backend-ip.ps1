@@ -18,13 +18,13 @@ Write-Host "=======================================" -ForegroundColor Cyan
 Write-Host ""
 
 $backendHost = "10.0.2.2"
-$backendPort = 3000
+$backendPort = 8000
 $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 
 if ($Port -gt 0) {
     $backendPort = $Port
 } else {
-    $candidatePorts = @(3000, 8000)
+    $candidatePorts = @(8000)
     foreach ($candidate in $candidatePorts) {
         $listener = Get-NetTCPConnection -LocalPort $candidate -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($listener) {

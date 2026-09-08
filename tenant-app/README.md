@@ -18,7 +18,7 @@ Kotlin + MVVM tenant-facing mobile app for managing invoices and M-Pesa payments
 ```
 data/
   api/          — Retrofit ApiService + AuthInterceptor
-  model/        — Kotlin data classes matching NestJS response shapes
+  model/        — Kotlin data classes matching the Laravel API response shapes
   repository/   — AuthRepository, InvoiceRepository, PaymentRepository
 di/             — Hilt NetworkModule
 ui/
@@ -51,7 +51,7 @@ chmod +x update-backend-ip.sh
 This will:
 - ✅ Automatically detect your computer's network IP
 - ✅ Update `local.properties` with the correct IP
-- ✅ Configure the app to connect to `http://YOUR_IP:3000/api/`
+  - ✅ Configure the app to connect to `http://YOUR_IP:8000/api/`
 
 Because the API URL is compiled into `BuildConfig.BASE_URL`, rebuild and reinstall the app after this helper changes `local.properties`.
 
@@ -72,13 +72,13 @@ For a physical device explicitly:
 Edit `local.properties` and set:
 ```properties
 backend.host=192.168.0.104  # Your computer's IP
-backend.port=3000
+backend.port=8000
 ```
 
 **For Android Emulator:**
 ```properties
 backend.host=10.0.2.2
-backend.port=3000
+backend.port=8000
 ```
 
 ### 2. Open in Android Studio
@@ -109,7 +109,7 @@ Click **Run ▶** or use:
 The backend uses Daraja STK Push. For local testing make sure:
 - Your `.env` has valid `MPESA_CONSUMER_KEY`, `MPESA_CONSUMER_SECRET`, `MPESA_PASSKEY`, and `MPESA_SHORTCODE`  
 - `MPESA_ENV=sandbox` for sandbox
-- The backend is reachable from the device / emulator on port 3000
+- The Laravel API is reachable from the device / emulator on port 8000
 
 ## Sample login credentials
 
@@ -123,5 +123,5 @@ Use these seeded credentials for testing:
 
 | Variant | BASE_URL |
 |---------|----------|
-| `debug` | `http://192.168.0.104:3000/api/` |
+  | `debug` | `http://192.168.0.104:8000/api/` |
 | `release` | Update in `build.gradle.kts` to your production URL |

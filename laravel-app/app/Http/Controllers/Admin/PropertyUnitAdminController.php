@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Property;
 use App\Models\Unit;
+use App\Services\MarketplaceUnitDetails;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -43,7 +44,7 @@ class PropertyUnitAdminController extends Controller
     {
         $this->authorizeLandlordProperty($property);
 
-        $data = $request->validate([
+        $data = $request->validate(array_merge(MarketplaceUnitDetails::rules(), [
             'unit_number' => [
                 'required',
                 'string',
@@ -57,7 +58,9 @@ class PropertyUnitAdminController extends Controller
             'water_monthly_fee' => 'nullable|numeric|min:0',
             'garbage_monthly_fee' => 'nullable|numeric|min:0',
             'status' => 'required|in:AVAILABLE,OCCUPIED,UNDER_MAINTENANCE',
-        ]);
+        ]));
+
+        $listingFields = MarketplaceUnitDetails::fields($data);
 
         $unitNumbers = $this->buildUnitNumbers($data['unit_number'], (int) $data['units_count']);
         $duplicates = $property->units()
@@ -72,16 +75,16 @@ class PropertyUnitAdminController extends Controller
                 ]);
         }
 
-        DB::transaction(function () use ($property, $data, $unitNumbers) {
+        DB::transaction(function () use ($property, $data, $unitNumbers, $listingFields) {
             foreach ($unitNumbers as $unitNumber) {
-                $property->units()->create([
+                $property->units()->create(array_merge($listingFields, [
                     'unit_number' => $unitNumber,
                     'floor' => $data['floor'] ?? null,
                     'bedrooms' => $data['bedrooms'] ?? null,
                     'rent_amount' => $data['rent_amount'],
                     'status' => $data['status'],
                     'billing_overrides' => $this->billingOverrides($data),
-                ]);
+                ]));
             }
         });
 
@@ -103,7 +106,7 @@ class PropertyUnitAdminController extends Controller
         $this->authorizeLandlordProperty($property);
         abort_if($unit->property_id !== $property->id, 404);
 
-        $data = $request->validate([
+        $data = $request->validate(array_merge(MarketplaceUnitDetails::rules(), [
             'unit_number' => [
                 'required',
                 'string',
@@ -118,11 +121,11 @@ class PropertyUnitAdminController extends Controller
             'water_monthly_fee' => 'nullable|numeric|min:0',
             'garbage_monthly_fee' => 'nullable|numeric|min:0',
             'status' => 'required|in:AVAILABLE,OCCUPIED,UNDER_MAINTENANCE',
-        ]);
+        ]));
 
-        $unitFields = collect($data)->except(['water_monthly_fee', 'garbage_monthly_fee'])->all();
+        $unitFields = collect($data)->only(['unit_number', 'floor', 'bedrooms', 'rent_amount', 'status'])->all();
         $unitFields['billing_overrides'] = $this->billingOverrides($data);
-        $unit->update($unitFields);
+        MarketplaceUnitDetails::updateWithPhotos($unit, $request, array_merge($unitFields, MarketplaceUnitDetails::fields($data, $unit)));
 
         return redirect()
             ->route('admin.properties.show', $property)

@@ -4,7 +4,7 @@ Date: 29 August 2026
 
 ## Scope and production architecture
 
-The Android release uses `https://app.starmaxltd.com/api/`, which is served by `laravel-app/`. The NestJS application under `src/` is a second backend and is not the production API consumed by the released Android configuration. Feature work must either be implemented in Laravel or the two APIs must be deliberately consolidated.
+The Android release uses `https://app.starmaxltd.com/api/`, which is served by `laravel-app/`. Laravel is the sole backend and source of truth for the released Android application, admin portal, and marketplace.
 
 Reviewed areas: Android authentication, dashboard, invoices, payments/history, rental information, updates, chat/maintenance, account settings and deep links; Laravel mobile API, M-Pesa callback handling and role scoping; Laravel landlord/admin portal; source-control and release security.
 

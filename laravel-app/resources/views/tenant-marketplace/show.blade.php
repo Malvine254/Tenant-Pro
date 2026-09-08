@@ -1,7 +1,16 @@
 @extends('tenant-marketplace.layout')
 
 @section('title', $property->name.' in '.$property->city.' | Starmax Homes')
-@section('meta_description', str($property->description ?: 'Available rental homes at '.$property->name.' in '.$property->city)->limit(155))
+@php
+    $shareUrl = route('marketplace.show', $property);
+    $bedrooms = $property->units->pluck('bedrooms_label')->filter()->unique()->join(', ');
+    $shareDescription = $property->name.' in '.$property->city.'. From KSh '.number_format((float) $property->units->min('rent_amount')).'/month. '.($bedrooms ? $bedrooms.'. ' : '').$property->units->count().' available. Request a viewing on Starmax Homes.';
+    $shareImage = $property->cover_image_url ?: 'images/starmax-tenant-logo.png';
+    $shareImage = \Illuminate\Support\Str::startsWith($shareImage, ['http://', 'https://']) ? $shareImage : asset(ltrim($shareImage, '/'));
+@endphp
+@section('meta_description', $shareDescription)
+@section('share_image', $shareImage)
+@section('share_image_alt', $property->cover_image_url ? $property->name.' in '.$property->city : 'Starmax Homes')
 
 @push('head')
 <script type="application/ld+json">{!! json_encode([
@@ -12,7 +21,7 @@
         ['@type' => 'ListItem', 'position' => 2, 'name' => $property->city, 'item' => route('marketplace.index', ['location' => $property->city])],
         ['@type' => 'ListItem', 'position' => 3, 'name' => $property->name],
     ],
-], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
+], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) !!}</script>
 @endpush
 
 @section('content')
@@ -34,6 +43,14 @@
         <div class="detail-summary">
             <span class="availability-pill">{{ $property->units->count() }} {{ str('home')->plural($property->units->count()) }} available</span>
             <h1>{{ $property->name }}</h1>
+            <p class="detail-rent"><strong>From KSh {{ number_format((float) $property->units->min('rent_amount')) }}</strong> / month</p>
+            <div class="share-actions" data-share-title="{{ $property->name }}" data-share-text="{{ $shareDescription }}" data-share-url="{{ $shareUrl }}">
+                <button type="button" data-share-native hidden>Share home</button>
+                <button type="button" data-share-copy hidden>Copy link</button>
+                <a href="https://wa.me/?text={{ rawurlencode($shareDescription.' '.$shareUrl) }}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+                <a href="mailto:?subject={{ rawurlencode($property->name.' | Starmax Homes') }}&amp;body={{ rawurlencode($shareDescription."\n\n".$shareUrl) }}">Email</a>
+                <span data-share-status role="status"></span>
+            </div>
             <p class="detail-location">{{ $property->address_line }}, {{ collect([$property->city, $property->state, $property->country])->filter()->join(', ') }}</p>
             <p class="detail-description">{{ $property->description ?: 'Well-managed rental homes with current availability shown directly from Starmax.' }}</p>
             <div class="verified-manager"><span>✓</span><div><strong>Managed on Starmax</strong><small>Enquiries are sent securely to the property manager.</small></div></div>
@@ -52,12 +69,12 @@
                             ? (\Illuminate\Support\Str::startsWith($unitPreviewImage, ['http://', 'https://', 'data:']) ? $unitPreviewImage : asset(ltrim($unitPreviewImage, '/')))
                             : null;
                     @endphp
-                    <button type="button" class="unit-box" data-unit-modal="unit-modal-{{ $unit->id }}">
+                    <button type="button" class="unit-box" id="unit-{{ $unit->id }}" data-unit-modal="unit-modal-{{ $unit->id }}">
                         @if($unitPreviewImage)
                             <span class="unit-box-image"><img src="{{ $unitPreviewImage }}" alt="" loading="lazy"><small>{{ $unitImages->count() }} {{ str('photo')->plural($unitImages->count()) }}</small></span>
                         @endif
                         <span class="unit-box-dot" aria-hidden="true"></span>
-                        <strong>Unit {{ $unit->unit_number }}</strong>
+                        <strong>Unit {{ $unit->unit_number }}</strong><span class="unit-confirmation">{{ $unit->availability_confirmed_at ? 'Checked '.$unit->availability_confirmed_at->format('j M Y') : 'Availability not yet confirmed' }}</span>
                         @if($unit->bedrooms_label)
                             <span class="unit-box-beds">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7"/><path d="M3 18h18"/><path d="M5 11V7a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v4"/></svg>
@@ -75,7 +92,7 @@
                     $unitImages = collect($unit->image_urls ?? [])->filter(fn ($image) => is_string($image) && trim($image) !== '')->values();
                     $displayImages = $unitImages->isNotEmpty() ? $unitImages : collect([$property->cover_image_url])->filter();
                 @endphp
-                <dialog id="unit-modal-{{ $unit->id }}" class="unit-dialog">
+                <dialog id="unit-modal-{{ $unit->id }}" class="unit-dialog" aria-label="Unit {{ $unit->unit_number }} details">
                     <form method="dialog" class="unit-dialog-close"><button type="submit" aria-label="Close unit details">&times;</button></form>
                     <div class="unit-dialog-layout">
                         <div class="unit-dialog-media">
@@ -110,10 +127,11 @@
                                 <div><dt>Floor</dt><dd>{{ $unit->floor === null ? 'Ask manager' : ($unit->floor == 0 ? 'Ground floor' : 'Floor '.$unit->floor) }}</dd></div>
                                 <div><dt>Status</dt><dd class="unit-status-available">Available</dd></div>
                             </dl>
+                            @include('tenant-marketplace.partials.unit-facts')
                             @if($property->description)
                                 <div class="unit-dialog-about"><strong>About this property</strong><p>{{ $property->description }}</p></div>
                             @endif
-                            <p class="unit-dialog-help">Need details about the deposit, utilities, amenities or viewing times? The property manager can confirm them for you.</p>
+                            <p class="unit-dialog-help">Confirm the listed details and arrange a viewing with the property manager.</p>
                             <a href="#request-viewing" data-unit-select="{{ $unit->id }}" data-unit-dialog-confirm>Ask about Unit {{ $unit->unit_number }}</a>
                         </div>
                     </div>
@@ -161,6 +179,10 @@
             </form>
         </aside>
     </div>
+    @if($property->neighbourhood_slug)
+        <section class="area-callout"><div><span class="section-kicker">Get to know the area</span><h2>{{ $property->neighbourhood }}, {{ $property->city }}</h2><p>Browse nearby listings and manager-supplied local notes.</p></div><a class="secondary-action" href="{{ route('marketplace.neighbourhood', $property->neighbourhood_slug) }}">Explore neighbourhood</a></section>
+    @endif
+    @include('tenant-marketplace.partials.report-listing')
 </div>
 
 <script>

@@ -73,7 +73,7 @@ Before installing, Android requires permission to install apps from sources othe
 - **Java 17+** (included with Android Studio)
 - **Gradle** (included with Android Studio)
 - **Git** (to clone the repository)
-- **Backend server** running on `localhost:3000` or a known IP
+- **Laravel backend** running on `localhost:8000` or a known IP
 
 ### Step 1: Clone or Extract the Project
 
@@ -108,7 +108,7 @@ chmod +x update-backend-ip.sh
 2. Add or update these lines:
    ```properties
    backend.host=192.168.0.104
-   backend.port=3000
+   backend.port=8000
    ```
    Replace `192.168.0.104` with your computer's actual IP address
 
@@ -119,7 +119,7 @@ chmod +x update-backend-ip.sh
 **For Android Emulator:**
 ```properties
 backend.host=10.0.2.2
-backend.port=3000
+backend.port=8000
 ```
 
 ### Step 3: Open in Android Studio
@@ -226,7 +226,7 @@ verification)
 **Solution**:
 1. Check your **Wi-Fi or mobile data** is active
 2. Ask your IT/support contact for the correct backend URL:
-   - Local network: `http://192.168.x.x:3000/api/`
+   - Local network: `http://192.168.x.x:8000/api/`
    - Public domain: `https://api.yourdomain.com/api/`
 3. If building from source, verify `local.properties` has the correct IP/hostname
 4. Restart the app (close and reopen)

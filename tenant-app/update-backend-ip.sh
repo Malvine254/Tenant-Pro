@@ -5,14 +5,12 @@
 
 TARGET="${1:-auto}"
 PORT="${2:-auto}"
-BACKEND_PORT="3000"
+BACKEND_PORT="8000"
 
 if [ "$PORT" != "auto" ] && [ -n "$PORT" ]; then
     BACKEND_PORT="$PORT"
 elif command -v lsof >/dev/null 2>&1; then
-    if lsof -iTCP:3000 -sTCP:LISTEN -Pn >/dev/null 2>&1; then
-        BACKEND_PORT="3000"
-    elif lsof -iTCP:8000 -sTCP:LISTEN -Pn >/dev/null 2>&1; then
+    if lsof -iTCP:8000 -sTCP:LISTEN -Pn >/dev/null 2>&1; then
         BACKEND_PORT="8000"
     fi
 fi
