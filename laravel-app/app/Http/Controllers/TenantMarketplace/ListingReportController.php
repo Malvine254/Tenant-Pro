@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\ListingReport;
 use App\Models\Property;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class ListingReportController extends Controller
 {
@@ -19,7 +22,39 @@ class ListingReportController extends Controller
             'report_email' => 'nullable|email|max:255',
             'report_website' => 'nullable|string|max:0',
         ]);
-        ListingReport::create(['property_id' => $property->id, 'reason' => $data['reason'], 'details' => $data['details'], 'email' => $data['report_email'] ?? null]);
+        $report = ListingReport::create(['property_id' => $property->id, 'reason' => $data['reason'], 'details' => $data['details'], 'email' => $data['report_email'] ?? null]);
+        try {
+            $subject = 'New marketplace listing report: '.$property->name;
+            Mail::send('emails.tenant-pro-update', [
+                'subjectLine' => $subject,
+                'preheader' => 'A public marketplace listing was reported for review.',
+                'eyebrow' => 'Listing report',
+                'title' => 'A marketplace listing needs review',
+                'introLines' => ['A visitor reported a public Starmax Homes listing.'],
+                'highlightLabel' => null,
+                'highlightValue' => null,
+                'document' => null,
+                'details' => array_filter([
+                    'Property' => $property->name,
+                    'Reason' => $data['reason'],
+                    'Details' => $data['details'],
+                    'Reporter email' => $data['report_email'] ?? null,
+                    'Report ID' => $report->id,
+                ]),
+                'actionLabel' => 'Review reports',
+                'actionUrl' => route('admin.listing-reports.index'),
+                'footerText' => 'This report is stored in the Starmax admin listing-reports queue.',
+            ], function ($message) use ($subject) {
+                $recipients = config('mail.marketplace_recipients');
+                $message->to($recipients[0])->cc(array_slice($recipients, 1))->subject($subject);
+            });
+        } catch (Throwable $exception) {
+            Log::warning('Marketplace listing report email could not be sent.', [
+                'report_id' => $report->id,
+                'property_id' => $property->id,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
         return redirect()->to(route('marketplace.show', $property).'#report-listing')->with('report_success', 'Your report has been received for review. Thank you for helping keep listing details accurate.');
     }
 

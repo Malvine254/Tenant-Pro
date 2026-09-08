@@ -109,6 +109,25 @@ class PublicTenantMarketplaceTest extends TestCase
             ->assertDontSee('manager@example.test');
     }
 
+    public function test_listing_setup_request_is_sent_to_starmax_recipients(): void
+    {
+        Mail::fake();
+
+        $this->post(route('marketplace.contact.submit'), [
+            'service' => 'tenant',
+            'topic' => 'listing',
+            'name' => 'Amina Owner',
+            'email' => 'amina@example.test',
+            'message' => 'I have three available units in Nairobi.',
+        ])->assertRedirect(route('marketplace.advertise'));
+
+        Mail::assertSent(function ($mail) {
+            return $mail->to[0]['address'] === 'malvine.owuor@starmaxltd.com'
+                && collect($mail->cc)->pluck('address')->contains('info@starmaxltd.com')
+                && $mail->subject === 'New marketplace listing setup request';
+        });
+    }
+
     private function landlord(array $attributes = []): User
     {
         $role = Role::firstOrCreate(['name' => 'LANDLORD']);

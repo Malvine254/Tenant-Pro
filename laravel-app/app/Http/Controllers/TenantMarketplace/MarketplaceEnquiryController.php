@@ -64,6 +64,7 @@ class MarketplaceEnquiryController extends Controller
                     'footerText' => 'This enquiry is stored securely in Starmax. Confirm the property is still available before arranging a viewing.',
                 ], fn ($message) => $message
                     ->to($property->landlord->email, $property->landlord->name)
+                    ->cc(config('mail.marketplace_recipients'))
                     ->subject('New viewing request: '.$property->name));
             } catch (Throwable $exception) {
                 Log::warning('Marketplace enquiry email could not be sent.', [
