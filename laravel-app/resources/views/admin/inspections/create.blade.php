@@ -26,7 +26,7 @@
 </div>
 
 <div class="card" style="max-width: 880px;">
-    <div class="ui-tabs" id="inspectionTabs" role="tablist" aria-label="Inspection steps">
+    <div class="ui-tabs" id="inspectionTabs" role="tablist" aria-label="Inspection steps" data-ui-tabs>
         <button type="button" class="ui-tab" role="tab" data-ui-tab="basic" data-tab-panel="insp-panel-basic">1. Basic Info</button>
         <button type="button" class="ui-tab" role="tab" data-ui-tab="meters" data-tab-panel="insp-panel-meters">2. Meter Readings</button>
         <button type="button" class="ui-tab" role="tab" data-ui-tab="checklist" data-tab-panel="insp-panel-checklist">3. Room Checklist</button>
