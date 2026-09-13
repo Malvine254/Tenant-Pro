@@ -131,6 +131,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.security')->group(func
         Route::post('/tenants/assign', [TenantAdminController::class, 'assignStore'])->name('tenants.assign.store');
         Route::get('/tenants', [TenantAdminController::class, 'index'])->name('tenants.index');
         Route::get('/tenants/{tenant}', [TenantAdminController::class, 'show'])->name('tenants.show');
+        Route::get('/tenants/{tenant}/trust-certificate', [TenantAdminController::class, 'trustCertificate'])->name('tenants.trust-certificate');
+        Route::get('/tenants/{tenant}/lease-pdf', [TenantAdminController::class, 'leasePdf'])->name('tenants.lease-pdf');
         Route::patch('/tenants/{tenant}/unassign', [TenantAdminController::class, 'unassign'])->name('tenants.unassign');
         Route::get('/maintenance', [MaintenanceAdminController::class, 'index'])->name('maintenance.index');
         Route::get('/maintenance/{maintenanceRequest}', [MaintenanceAdminController::class, 'show'])->name('maintenance.show');

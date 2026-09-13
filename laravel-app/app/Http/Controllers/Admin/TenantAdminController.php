@@ -226,7 +226,26 @@ class TenantAdminController extends Controller
             ->orderByDesc('move_in_date')
             ->get();
 
-        return view('admin.tenants.show', compact('tenant', 'allTenancies'));
+        $trustData = app(\App\Services\TenantTrustScoreService::class)->calculateScore($tenant->user);
+
+        return view('admin.tenants.show', compact('tenant', 'allTenancies', 'trustData'));
+    }
+
+    public function trustCertificate(Tenant $tenant)
+    {
+        $user = request()->user();
+        abort_if($this->isLandlord($user) && $tenant->unit?->property?->landlord_id !== $user->landlordAccountId(), 403);
+
+        $trustData = app(\App\Services\TenantTrustScoreService::class)->calculateScore($tenant->user);
+        return app(\App\Services\PdfService::class)->generateTrustScoreCertificate($tenant->user, $trustData);
+    }
+
+    public function leasePdf(Tenant $tenant)
+    {
+        $user = request()->user();
+        abort_if($this->isLandlord($user) && $tenant->unit?->property?->landlord_id !== $user->landlordAccountId(), 403);
+
+        return app(\App\Services\PdfService::class)->generateLeaseAgreement($tenant);
     }
 
     public function unassign(Request $request, Tenant $tenant)

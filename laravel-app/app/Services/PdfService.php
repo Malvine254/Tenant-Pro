@@ -60,4 +60,38 @@ class PdfService
             'Content-Disposition' => 'inline; filename="' . $filename . '"',
         ]);
     }
+
+    public function generateTrustScoreCertificate(\App\Models\User $tenantUser, array $trustData): Response
+    {
+        $tenantUser->loadMissing(['role']);
+
+        $pdf = Pdf::loadView('pdf.trust-certificate', compact('tenantUser', 'trustData'))
+            ->setPaper('a4', 'portrait')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isRemoteEnabled', true);
+
+        $filename = 'Starmax-Trust-Certificate-' . substr($tenantUser->id, 0, 8) . '.pdf';
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function generateLeaseAgreement(\App\Models\Tenant $tenant): Response
+    {
+        $tenant->loadMissing(['user', 'unit.property.landlord']);
+
+        $pdf = Pdf::loadView('pdf.lease-agreement', compact('tenant'))
+            ->setPaper('a4', 'portrait')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isRemoteEnabled', true);
+
+        $filename = 'Starmax-Lease-Agreement-' . ($tenant->unit?->unit_number ?? 'Unit') . '.pdf';
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ]);
+    }
 }

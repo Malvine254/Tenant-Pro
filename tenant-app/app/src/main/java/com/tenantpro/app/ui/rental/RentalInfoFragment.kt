@@ -16,10 +16,12 @@ import com.bumptech.glide.Glide
 import com.google.android.material.textview.MaterialTextView
 import com.tenantpro.app.R
 import com.tenantpro.app.databinding.FragmentRentalInfoBinding
+import com.tenantpro.app.utils.PdfDownloadHelper
 import com.tenantpro.app.utils.showErrorSnackbar
 import com.tenantpro.app.utils.showSuccessSnackbar
 import com.tenantpro.app.utils.toAbsoluteAssetUrl
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -33,6 +35,9 @@ class RentalInfoFragment : Fragment() {
     private var _binding: FragmentRentalInfoBinding? = null
     private val binding get() = _binding!!
     private val viewModel: RentalInfoViewModel by viewModels()
+
+    @Inject
+    lateinit var pdfDownloadHelper: PdfDownloadHelper
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -143,6 +148,16 @@ class RentalInfoFragment : Fragment() {
         card.findViewById<MaterialTextView>(R.id.tvUnitRent).text = item.rentAmountText ?: "-"
         card.findViewById<MaterialTextView>(R.id.tvUnitMoveIn).text = item.moveInDate
         card.findViewById<MaterialTextView>(R.id.tvUnitAddress).text = item.address
+
+        card.findViewById<View>(R.id.btnDownloadLease)?.setOnClickListener {
+            viewLifecycleOwner.lifecycleScope.launch {
+                pdfDownloadHelper.downloadAndOpenPdf(
+                    activity = requireActivity(),
+                    endpointPath = "users/me/lease-pdf",
+                    fileName = "Lease-Agreement-${item.unitNumber}.pdf"
+                )
+            }
+        }
     }
 
     override fun onResume() {

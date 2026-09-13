@@ -2,15 +2,48 @@
 @section('page-title', $tenant->user->name)
 
 @section('content')
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-    <a href="{{ route('admin.tenants.index') }}" style="color:#94a3b8;text-decoration:none;font-size:13px;">Tenants</a>
-    <span style="color:#cbd5e1;">/</span>
-    <span style="font-weight:600;">{{ $tenant->user->name }}</span>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <a href="{{ route('admin.tenants.index') }}" style="color:#94a3b8;text-decoration:none;font-size:13px;">Tenants</a>
+        <span style="color:#cbd5e1;">/</span>
+        <span style="font-weight:600;">{{ $tenant->user->name }}</span>
+    </div>
+    <div>
+        <a href="{{ route('admin.tenants.lease-pdf', $tenant) }}" target="_blank" class="btn btn-secondary" style="min-height:34px; padding:6px 12px; font-size:12px; margin-right:6px;">
+            📄 Lease Agreement
+        </a>
+        <a href="{{ route('admin.tenants.trust-certificate', $tenant) }}" target="_blank" class="btn btn-primary" style="min-height:34px; padding:6px 12px; font-size:12px;">
+            ★ Trust Certificate
+        </a>
+    </div>
 </div>
 
 @php
     $outstandingBalance = $tenant->unit->invoices->sum(fn($invoice) => max(0, (float) $invoice->total_amount - (float) $invoice->paid_amount));
 @endphp
+
+<!-- Tenant Trust & Payment Performance Hero -->
+<div class="card" style="margin-bottom: 16px; background: linear-gradient(135deg, rgba(37,99,235,0.12), rgba(15,23,42,0.92)); border: 1px solid rgba(59,130,246,0.3);">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+        <div>
+            <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#93c5fd; font-weight:800;">Starmax Trust &amp; Payment Reliability</span>
+            <div style="display:flex; align-items:baseline; gap:10px; margin-top:4px;">
+                <span style="font-size:32px; font-weight:900; color:#60a5fa;">{{ $trustData['score'] }}</span>
+                <span class="badge badge-green" style="font-size:13px;">Grade {{ $trustData['grade'] }} • {{ $trustData['rating'] }}</span>
+            </div>
+        </div>
+        <div style="display:flex; gap:16px; align-items:center;">
+            <div style="text-align:right;">
+                <span class="muted" style="font-size:11px; display:block;">On-Time Payment</span>
+                <strong style="color:#86efac; font-size:16px;">{{ $trustData['on_time_percentage'] }}%</strong>
+            </div>
+            <div style="text-align:right;">
+                <span class="muted" style="font-size:11px; display:block;">Invoices Cleared</span>
+                <strong style="color:#f8fafc; font-size:16px;">{{ $trustData['settled_invoices_count'] }} / {{ $trustData['total_invoices_count'] }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
     <div class="card">

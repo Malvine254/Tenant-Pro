@@ -59,6 +59,21 @@ Route::middleware('mobile.api.key')->group(function () {
 		Route::get('/payments/invoice/{invoice}', [PaymentController::class, 'forInvoice']);
 		Route::get('/payments/{payment}/receipt-pdf', [PaymentController::class, 'receiptPdf']);
 		Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf']);
+		Route::get('/users/me/trust-score', function (Request $request) {
+			$user = $request->user();
+			$score = app(\App\Services\TenantTrustScoreService::class)->calculateScore($user);
+			return response()->json($score);
+		});
+		Route::get('/users/me/trust-certificate', function (Request $request) {
+			$user = $request->user();
+			$trustData = app(\App\Services\TenantTrustScoreService::class)->calculateScore($user);
+			return app(\App\Services\PdfService::class)->generateTrustScoreCertificate($user, $trustData);
+		});
+		Route::get('/users/me/lease-pdf', function (Request $request) {
+			$user = $request->user();
+			$activeTenancy = $user->tenancies()->where('is_active', true)->with(['unit.property.landlord'])->firstOrFail();
+			return app(\App\Services\PdfService::class)->generateLeaseAgreement($activeTenancy);
+		});
 		Route::post('/support/upload', [SupportMessageController::class, 'upload']);
 		Route::post('/support/heartbeat', [SupportMessageController::class, 'heartbeat']);
 		Route::post('/support/typing', [SupportMessageController::class, 'typing']);
