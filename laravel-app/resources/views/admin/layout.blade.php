@@ -139,6 +139,9 @@
         .form-group input, .form-group select, .form-group textarea, .field input, .field select, .field textarea { width:100%; min-height:44px;padding:10px 12px; border:1px solid rgba(148,163,184,.48); border-radius:11px; font-size:14px; background:rgba(2,6,23,.18); color:var(--text); outline:none; transition:border-color .14s, box-shadow .14s, background .14s; }
         .form-group input::placeholder, .form-group textarea::placeholder, .field input::placeholder, .field textarea::placeholder { color:rgba(248,250,252,.68); }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus, .field input:focus, .field select:focus, .field textarea:focus { border-color:#fff; background: rgba(255,255,255,.03); box-shadow: 0 0 0 3px rgba(255,255,255,.12); }
+        .form-group select, .field select { appearance:none; -webkit-appearance:none; -moz-appearance:none; cursor:pointer; padding-right:38px; background-repeat:no-repeat; background-position:right 14px center; background-size:11px 7px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7' fill='none'%3E%3Cpath d='M1 1L5.5 5.5L10 1' stroke='%2394a3b8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+        .form-group select:focus, .field select:focus { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7' fill='none'%3E%3Cpath d='M1 1L5.5 5.5L10 1' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+        .form-group select::-ms-expand, .field select::-ms-expand { display:none; }
         .field input[type="file"] { padding:9px 12px;font-size:13px; }
         .field small { display:block;margin-top:5px;font-size:12px;color:var(--muted); }
         .form-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0 14px; }
