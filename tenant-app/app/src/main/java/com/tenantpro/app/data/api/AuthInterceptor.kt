@@ -37,9 +37,15 @@ class AuthInterceptor @Inject constructor(
         val responseBody = if (response.code == 403) response.peekBody(64 * 1024).string() else ""
         val landlordAccessSuspended = response.code == 403 && responseBody.contains("LANDLORD_ACCESS_SUSPENDED")
         val accountSuspended = response.code == 403 && responseBody.contains("ACCOUNT_SUSPENDED")
+        val isAuthEndpoint = request.url.encodedPath.contains("auth/login") ||
+            request.url.encodedPath.contains("auth/register") ||
+            request.url.encodedPath.contains("auth/forgot-password") ||
+            request.url.encodedPath.contains("app/latest-version")
 
         if ((response.code == 401 || accountSuspended) &&
             !token.isNullOrBlank() &&
+            !isAuthEndpoint &&
+            request.header("Authorization") != null &&
             sessionExpiredNotified.compareAndSet(false, true)
         ) {
             notificationWorkScheduler.cancel()

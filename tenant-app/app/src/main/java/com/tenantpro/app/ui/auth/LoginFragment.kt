@@ -84,6 +84,15 @@ class LoginFragment : Fragment() {
         }
         updateBiometricLoginVisibility()
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            val remembered = dataStoreManager.rememberedEmail.firstOrNull()
+                ?: dataStoreManager.userEmail.firstOrNull()
+            if (!remembered.isNullOrBlank() && binding.etEmail.text.isNullOrBlank()) {
+                binding.etEmail.setText(remembered)
+                updateButtonState()
+            }
+        }
+
         binding.tvRegisterLink.setOnClickListener {
             dismissKeyboard()
             findNavController().navigate(R.id.action_loginFragment_to_registerFragment)
@@ -158,6 +167,8 @@ class LoginFragment : Fragment() {
         }
     }
 
+    private var autoPromptAttempted = false
+
     private fun updateBiometricLoginVisibility() {
         viewLifecycleOwner.lifecycleScope.launch {
             val enabled = dataStoreManager.biometricLockEnabled.firstOrNull() ?: false
@@ -175,6 +186,11 @@ class LoginFragment : Fragment() {
                 enabled && hasBiometricSession && canAuthenticate -> "Unlock with biometric"
                 !canAuthenticate -> "Set phone lock for biometric"
                 else -> "Sign in once to use biometric"
+            }
+
+            if (enabled && hasBiometricSession && canAuthenticate && !autoPromptAttempted && !loginInFlight) {
+                autoPromptAttempted = true
+                launchBiometricPrompt()
             }
         }
     }

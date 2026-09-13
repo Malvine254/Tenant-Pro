@@ -241,13 +241,16 @@ class MainActivity : AppCompatActivity() {
                     val biometricLockEnabled = dataStoreManager.biometricLockEnabled.firstOrNull() ?: false
                     val graph = navController.navInflater.inflate(R.navigation.nav_graph)
                     graph.setStartDestination(
-                        if (loggedIn && !biometricLockEnabled) R.id.homeFragment else R.id.loginFragment
+                        if (loggedIn) R.id.homeFragment else R.id.loginFragment
                     )
                     navController.graph = graph
                     handlePendingInvitationDeepLink()
                     handlePendingNotificationNavigation()
                     syncFcmTokenIfLoggedIn()
                     appUpdateManager.checkAndPromptUpdate(this@MainActivity, isAutomatic = true)
+                    if (loggedIn && biometricLockEnabled) {
+                        maybePromptAppUnlock()
+                    }
                 } finally {
                     // Reveal content first, then allow the system splash to
                     // animate away on the next frame.
@@ -353,7 +356,7 @@ class MainActivity : AppCompatActivity() {
 
             val unlockIntent = keyguardManager.createConfirmDeviceCredentialIntent(
                 "Unlock Starmax Tenant Services",
-                "Confirm your device lock to continue"
+                "Confirm your fingerprint, face unlock, or screen lock to continue"
             ) ?: return@launch
 
             unlockPromptInProgress = true

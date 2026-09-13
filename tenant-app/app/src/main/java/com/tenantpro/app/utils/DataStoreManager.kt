@@ -39,6 +39,7 @@ class DataStoreManager @Inject constructor(
         private val KEY_BIOMETRIC_SESSION_TOKEN = stringPreferencesKey("biometric_session_token")
         private val KEY_PENDING_FCM_TOKEN = stringPreferencesKey("pending_fcm_token")
         private val KEY_RENTAL_ACCESS_RESTRICTED = booleanPreferencesKey("rental_access_restricted")
+        private val KEY_REMEMBERED_EMAIL = stringPreferencesKey("remembered_email")
         private val SENSITIVE_STRING_KEYS = listOf(
             KEY_ACCESS_TOKEN,
             KEY_PHONE_NUMBER,
@@ -57,6 +58,9 @@ class DataStoreManager @Inject constructor(
 
     val accessToken: Flow<String?> = context.dataStore.data
         .map { decodeSensitive(it[KEY_ACCESS_TOKEN], KEY_ACCESS_TOKEN) }
+
+    val rememberedEmail: Flow<String?> = context.dataStore.data
+        .map { it[KEY_REMEMBERED_EMAIL] }
 
     val phoneNumber: Flow<String?> = context.dataStore.data
         .map { decodeSensitive(it[KEY_PHONE_NUMBER], KEY_PHONE_NUMBER) }
@@ -114,7 +118,10 @@ class DataStoreManager @Inject constructor(
             prefs[KEY_ACCESS_TOKEN] = encryptSensitive(token, KEY_ACCESS_TOKEN)
             prefs[KEY_PHONE_NUMBER] = encryptSensitive(phone, KEY_PHONE_NUMBER)
             if (name != null) prefs[KEY_USER_NAME] = encryptSensitive(name, KEY_USER_NAME)
-            if (email != null) prefs[KEY_USER_EMAIL] = encryptSensitive(email, KEY_USER_EMAIL)
+            if (email != null) {
+                prefs[KEY_USER_EMAIL] = encryptSensitive(email, KEY_USER_EMAIL)
+                prefs[KEY_REMEMBERED_EMAIL] = email
+            }
             if (userId != null) prefs[KEY_USER_ID] = encryptSensitive(userId, KEY_USER_ID)
         }
     }
@@ -245,16 +252,14 @@ class DataStoreManager @Inject constructor(
         return true
     }
 
-    /** Encrypts values created by releases that predate Keystore-backed storage. */
+    /** Encrypts legacy values created by releases that predate Keystore-backed storage. */
     suspend fun migrateSensitiveStorage() {
         context.dataStore.edit { prefs ->
             SENSITIVE_STRING_KEYS.forEach { key ->
                 val value = prefs[key] ?: return@forEach
-                if (cipher.isEncrypted(value)) {
-                    if (cipher.decrypt(value, key.name) == null) prefs.remove(key)
-                } else {
+                if (!cipher.isEncrypted(value)) {
                     val encrypted = cipher.encrypt(value, key.name)
-                    if (encrypted == null) prefs.remove(key) else prefs[key] = encrypted
+                    if (encrypted != null) prefs[key] = encrypted
                 }
             }
         }
