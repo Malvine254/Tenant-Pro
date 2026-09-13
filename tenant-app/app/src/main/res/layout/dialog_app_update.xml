@@ -27,7 +27,7 @@
             <FrameLayout
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:background="@drawable/item_circle_background"
+                android:background="@drawable/bg_circle_soft"
                 android:backgroundTint="@color/info_surface">
 
                 <ImageView
@@ -79,7 +79,7 @@
                 android:id="@+id/tvVersionChip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/badge_rounded_green"
+                android:background="@drawable/bg_badge_green"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
                 android:textColor="@color/badge_green_text"
@@ -92,7 +92,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:background="@drawable/badge_rounded_yellow"
+                android:background="@drawable/bg_badge_yellow"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
                 android:textColor="@color/badge_yellow_text"
@@ -105,7 +105,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:background="@drawable/badge_rounded_red"
+                android:background="@drawable/bg_badge_red"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
                 android:text="@string/app_update_chip_mandatory"
