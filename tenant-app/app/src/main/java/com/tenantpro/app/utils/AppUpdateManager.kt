@@ -117,12 +117,26 @@ class AppUpdateManager @Inject constructor(
 
     /**
      * Shows update modal from a push notification item.
+     * Skips the dialog when the notified version is not newer than the installed build,
+     * since the user may have already updated by the time they open the notification.
      */
     fun showUpdateFromNotification(activity: FragmentActivity, item: NotificationItem) {
+        val metadataVersionCode = (item.metadata["version_code"] as? Number)?.toInt()
+
+        if (metadataVersionCode != null && metadataVersionCode <= BuildConfig.VERSION_CODE) {
+            activity.toast(
+                activity.getString(
+                    R.string.app_update_latest_version,
+                    "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+                )
+            )
+            return
+        }
+
         val downloadUrl = item.metadata["download_url"]?.toString()?.takeIf { it.isNotBlank() }
             ?: (BuildConfig.BASE_URL.trimEnd('/').removeSuffix("/api") + "/download/apk")
         val versionName = item.metadata["version_name"]?.toString()?.takeIf { it.isNotBlank() } ?: "Latest"
-        val versionCode = (item.metadata["version_code"] as? Number)?.toInt() ?: (BuildConfig.VERSION_CODE + 1)
+        val versionCode = metadataVersionCode ?: (BuildConfig.VERSION_CODE + 1)
         val isMandatory = (item.metadata["is_mandatory"] as? Boolean) ?: false
         val releaseNotes = item.metadata["release_notes"]?.toString() ?: item.message
 
@@ -137,6 +151,7 @@ class AppUpdateManager @Inject constructor(
 
         showUpdateDialog(activity, updateInfo)
     }
+
 
     /**
      * Downloads APK bytes from the update URL into the app's cache directory.
