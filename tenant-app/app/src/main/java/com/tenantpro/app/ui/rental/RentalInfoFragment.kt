@@ -131,6 +131,18 @@ class RentalInfoFragment : Fragment() {
                 bindUnitCard(card, item)
                 unitContainer.addView(card)
             }
+
+            group.findViewById<View>(R.id.btnPropertyLeaseAgreement)?.setOnClickListener {
+                val safePropertyName = propertyName.replace(Regex("[^A-Za-z0-9]"), "_")
+                viewLifecycleOwner.lifecycleScope.launch {
+                    pdfDownloadHelper.downloadAndOpenPdf(
+                        activity = requireActivity(),
+                        endpointPath = "users/me/lease-pdf",
+                        fileName = "Lease-Agreement-${safePropertyName}.pdf"
+                    )
+                }
+            }
+
             binding.llRentalUnits.addView(group)
         }
     }
@@ -148,16 +160,6 @@ class RentalInfoFragment : Fragment() {
         card.findViewById<MaterialTextView>(R.id.tvUnitRent).text = item.rentAmountText ?: "-"
         card.findViewById<MaterialTextView>(R.id.tvUnitMoveIn).text = item.moveInDate
         card.findViewById<MaterialTextView>(R.id.tvUnitAddress).text = item.address
-
-        card.findViewById<View>(R.id.btnDownloadLease)?.setOnClickListener {
-            viewLifecycleOwner.lifecycleScope.launch {
-                pdfDownloadHelper.downloadAndOpenPdf(
-                    activity = requireActivity(),
-                    endpointPath = "users/me/lease-pdf",
-                    fileName = "Lease-Agreement-${item.unitNumber}.pdf"
-                )
-            }
-        }
     }
 
     override fun onResume() {

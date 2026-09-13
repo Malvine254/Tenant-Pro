@@ -83,8 +83,13 @@ class PaymentController extends Controller
     public function receiptPdf(Payment $payment, PdfService $pdfService)
     {
         $user = request()->user();
+        $payment->loadMissing(['invoice.tenant', 'invoice.unit.property.landlord']);
+
         if ($this->isTenant($user)) {
-            abort_if($payment->invoice?->tenant_id !== $user->id, 403);
+            $isOwner = ($payment->invoice?->tenant_id === $user->id)
+                || ($payment->invoice?->user_id === $user->id)
+                || (isset($payment->metadata['user_id']) && $payment->metadata['user_id'] === $user->id);
+            abort_unless($isOwner, 403, 'Unauthorized access to this payment receipt.');
         } elseif ($user?->role?->name === 'LANDLORD') {
             abort_if($payment->invoice?->unit?->property?->landlord_id !== $user->landlordAccountId(), 403);
         }

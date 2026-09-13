@@ -28,5 +28,24 @@
                 android:paddingEnd="4dp"
                 android:paddingBottom="4dp" />
         </HorizontalScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="14dp"
+            android:paddingBottom="14dp"
+            android:paddingTop="6dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPropertyLeaseAgreement"
+                style="@style/Theme.TenantPro.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:text="View Lease Agreement (PDF)"
+                android:textSize="12sp"
+                app:icon="@drawable/ic_download"
+                app:iconGravity="textStart"
+                app:iconSize="16dp" />
+        </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

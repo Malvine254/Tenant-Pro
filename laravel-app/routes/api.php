@@ -71,7 +71,14 @@ Route::middleware('mobile.api.key')->group(function () {
 		});
 		Route::get('/users/me/lease-pdf', function (Request $request) {
 			$user = $request->user();
-			$activeTenancy = $user->tenancies()->where('is_active', true)->with(['unit.property.landlord'])->firstOrFail();
+			$propertyId = $request->query('property_id');
+			$tenancyQuery = $user->tenancies()->with(['unit.property.landlord']);
+			if ($propertyId) {
+				$tenancyQuery->whereHas('unit', fn ($u) => $u->where('property_id', $propertyId));
+			}
+			$activeTenancy = (clone $tenancyQuery)->where('is_active', true)->first() 
+				?? $tenancyQuery->latest('move_in_date')->first();
+			abort_unless($activeTenancy, 404, 'No active lease agreement found for this property.');
 			return app(\App\Services\PdfService::class)->generateLeaseAgreement($activeTenancy);
 		});
 		Route::post('/support/upload', [SupportMessageController::class, 'upload']);
