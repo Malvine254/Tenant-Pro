@@ -29,6 +29,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tenantpro.app.R
 import com.tenantpro.app.data.model.Invoice
 import com.tenantpro.app.databinding.FragmentInvoicesBinding
+import com.tenantpro.app.utils.PdfDownloadHelper
 import com.tenantpro.app.utils.Resource
 import com.tenantpro.app.utils.gone
 import com.tenantpro.app.utils.toBillingLabel
@@ -37,6 +38,7 @@ import com.tenantpro.app.utils.toKes
 import com.tenantpro.app.utils.toStatusLabel
 import com.tenantpro.app.utils.visible
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -57,6 +59,9 @@ class InvoicesFragment : Fragment() {
     private var _binding: FragmentInvoicesBinding? = null
     private val binding get() = _binding!!
     private val viewModel: InvoicesViewModel by viewModels()
+
+    @Inject
+    lateinit var pdfDownloadHelper: PdfDownloadHelper
 
     private val pageSize = 8
 
@@ -380,6 +385,14 @@ class InvoicesFragment : Fragment() {
             appendLine("${getString(R.string.invoice_detail_period)}:     $displayPeriod")
             appendLine("${getString(R.string.invoice_detail_property)}:   ${invoice.unit?.property?.name ?: "—"}")
             appendLine("${getString(R.string.invoice_detail_unit)}:       ${invoice.unit?.unitName ?: "—"}")
+            if (invoice.waterCurrentReading != null && invoice.waterPreviousReading != null) {
+                val consumed = (invoice.waterCurrentReading - invoice.waterPreviousReading).coerceAtLeast(0.0)
+                appendLine("Water Sub-Meter:   $consumed Units (${invoice.waterPreviousReading} → ${invoice.waterCurrentReading})")
+            }
+            if (invoice.electricityCurrentReading != null && invoice.electricityPreviousReading != null) {
+                val consumed = (invoice.electricityCurrentReading - invoice.electricityPreviousReading).coerceAtLeast(0.0)
+                appendLine("Power Sub-Meter:   $consumed Units (${invoice.electricityPreviousReading} → ${invoice.electricityCurrentReading})")
+            }
             appendLine()
             appendLine("${getString(R.string.invoice_detail_total)}:      ${invoice.effectiveTotalAmount().toKes()}")
             appendLine("${getString(R.string.invoice_detail_paid)}:       ${invoice.paidAmount.toKes()}")
@@ -394,8 +407,15 @@ class InvoicesFragment : Fragment() {
             .setPositiveButton(if (remaining > 0) getString(R.string.invoice_action_pay) else getString(R.string.invoice_close)) { _, _ ->
                 if (remaining > 0) openPayment(invoice)
             }
-            .setNegativeButton(getString(R.string.btn_history)) { _, _ ->
-                openPaymentHistory(invoice)
+            .setNegativeButton("PDF Statement") { _, _ ->
+                val fileName = "Invoice-${invoice.id.take(8)}.pdf"
+                viewLifecycleOwner.lifecycleScope.launch {
+                    pdfDownloadHelper.downloadAndOpenPdf(
+                        activity = requireActivity(),
+                        endpointPath = "invoices/${invoice.id}/pdf",
+                        fileName = fileName
+                    )
+                }
             }
             .setNeutralButton(getString(R.string.invoice_share)) { _, _ -> shareInvoice(invoice) }
             .show()
@@ -453,6 +473,19 @@ class InvoicesFragment : Fragment() {
     // ── PDF export ────────────────────────────────────────────────────────────
 
     private fun exportInvoiceGroupPdf(group: InvoiceGroup) {
+        val singleInvoice = group.invoices.firstOrNull()
+        if (group.invoices.size == 1 && singleInvoice != null) {
+            val fileName = "Invoice-${singleInvoice.id.take(8)}.pdf"
+            viewLifecycleOwner.lifecycleScope.launch {
+                pdfDownloadHelper.downloadAndOpenPdf(
+                    activity = requireActivity(),
+                    endpointPath = "invoices/${singleInvoice.id}/pdf",
+                    fileName = fileName
+                )
+            }
+            return
+        }
+
         try {
             val doc = PdfDocument()
             val pages = group.invoices.chunked(12).ifEmpty { listOf(emptyList()) }

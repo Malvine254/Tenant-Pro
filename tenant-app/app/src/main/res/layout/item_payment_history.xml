@@ -147,6 +147,18 @@
 
         </LinearLayout>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDownloadReceiptPdf"
+            style="@style/Theme.TenantPro.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:layout_marginTop="12dp"
+            android:text="Download Official Receipt (PDF)"
+            android:textSize="11sp"
+            app:icon="@drawable/ic_download"
+            app:iconGravity="textStart"
+            app:iconSize="16dp" />
+
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

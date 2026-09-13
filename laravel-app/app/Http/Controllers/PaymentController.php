@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Tenant;
 use App\Services\MpesaService;
+use App\Services\PdfService;
 use App\Services\TenantAppNotificationService;
 use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
@@ -77,6 +78,18 @@ class PaymentController extends Controller
         }
 
         return response()->json($payment->load('invoice'), 201);
+    }
+
+    public function receiptPdf(Payment $payment, PdfService $pdfService)
+    {
+        $user = request()->user();
+        if ($this->isTenant($user)) {
+            abort_if($payment->invoice?->tenant_id !== $user->id, 403);
+        } elseif ($user?->role?->name === 'LANDLORD') {
+            abort_if($payment->invoice?->unit?->property?->landlord_id !== $user->landlordAccountId(), 403);
+        }
+
+        return $pdfService->generatePaymentReceipt($payment);
     }
 
     public function show(Payment $payment)

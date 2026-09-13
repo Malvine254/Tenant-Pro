@@ -111,17 +111,19 @@
 <div class="admin-page-header invoice-shell">
     <div>
         <h2>Invoice Management</h2>
-        <p>Review rent billing, payment status, due dates, and outstanding balances.</p>
+        <p>Review rent billing, sub-meter utility calculations, payment status, and formal PDF statements.</p>
     </div>
-    <form method="GET" class="admin-filter">
-        <select name="status">
-            <option value="">All Statuses</option>
-            @foreach(['PENDING','PARTIAL','PAID','OVERDUE','CANCELLED'] as $status)
-                <option value="{{ $status }}" {{ request('status') === $status ? 'selected' : '' }}>{{ $status }}</option>
-            @endforeach
-        </select>
-        <button type="submit" class="btn btn-secondary">Filter</button>
-    </form>
+    <div class="admin-actions">
+        <a href="{{ route('admin.invoices.create') }}" class="btn btn-primary">+ Generate Invoice</a>
+        <form method="GET" class="admin-filter" style="display:inline-flex;">
+            <select name="status" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                @foreach(['PENDING','PARTIAL','PAID','OVERDUE','CANCELLED'] as $status)
+                    <option value="{{ $status }}" {{ request('status') === $status ? 'selected' : '' }}>{{ $status }}</option>
+                @endforeach
+            </select>
+        </form>
+    </div>
 </div>
 
 <div class="invoice-summary-grid invoice-shell">
@@ -183,7 +185,10 @@
                     <span class="badge {{ $sc[$invoice->status] ?? 'badge-gray' }}">{{ $invoice->status }}</span>
                 </td>
                 <td class="invoice-mono" style="color:#cbd5e1;">{{ $invoice->due_date?->format('d M Y') }}</td>
-                <td><a href="{{ route('admin.invoices.show', $invoice) }}" class="btn btn-secondary">View</a></td>
+                <td style="white-space:nowrap; text-align:right;">
+                    <a href="{{ route('admin.invoices.show', $invoice) }}" class="btn btn-secondary" style="min-height:30px; padding:3px 8px; font-size:11px;">View</a>
+                    <a href="{{ route('admin.invoices.pdf', $invoice) }}" target="_blank" class="btn btn-primary" style="min-height:30px; padding:3px 8px; font-size:11px;">PDF</a>
+                </td>
             </tr>
             @empty
             <tr><td colspan="9" class="invoice-empty">No invoices found.</td></tr>

@@ -123,7 +123,7 @@
         </div>
         <div class="table-scroll">
             <table>
-                <thead><tr><th>Date &amp; time</th><th>Tenant</th><th>Property / unit</th><th>Amount</th><th>Phone</th><th>Transaction IDs</th><th>Status</th><th>Invoice</th></tr></thead>
+                <thead><tr><th>Date &amp; time</th><th>Tenant</th><th>Property / unit</th><th>Amount</th><th>Phone</th><th>Transaction IDs</th><th>Status</th><th>Invoice</th><th style="text-align:right;">Receipt</th></tr></thead>
                 <tbody>
                     @forelse($payments as $payment)
                         @php $paymentStatus = strtoupper($payment->status ?? 'PENDING'); @endphp
@@ -148,9 +148,18 @@
                                     <span class="muted">Unavailable</span>
                                 @endif
                             </td>
+                            <td style="text-align:right; white-space:nowrap;">
+                                @if($paymentStatus === 'SUCCESSFUL')
+                                    <a href="{{ route('admin.payments.receipt-pdf', $payment) }}" target="_blank" class="btn btn-primary" style="min-height:28px; padding:3px 8px; font-size:11px;">
+                                        Receipt PDF
+                                    </a>
+                                @else
+                                    <span class="muted" style="font-size:11px;">—</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="payment-empty">No payments match the selected filters.</td></tr>
+                        <tr><td colspan="9" class="payment-empty">No payments match the selected filters.</td></tr>
                     @endforelse
                 </tbody>
             </table>

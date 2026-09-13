@@ -89,6 +89,33 @@ class TenantAppNotificationService
         );
     }
 
+    public function rentReminder(Invoice $invoice, string $urgency = 'DUE_SOON'): ?Notification
+    {
+        $invoice->loadMissing(['tenant', 'unit.property']);
+        $dueText = $invoice->due_date ? date('d M Y', strtotime((string) $invoice->due_date)) : 'soon';
+        $balanceText = $invoice->balance_amount_formatted;
+
+        $title = match ($urgency) {
+            'OVERDUE' => '⚠️ Rent Payment Overdue',
+            'DUE_TODAY' => '🔔 Rent Due Today',
+            default => '📅 Upcoming Rent Due Reminder',
+        };
+
+        $message = match ($urgency) {
+            'OVERDUE' => sprintf('Your invoice for %s (Unit %s) of %s was due on %s. Please settle via M-Pesa to avoid further penalties.', $invoice->unit?->property?->name ?? 'your rental', $invoice->unit?->unit_number ?? '-', $balanceText, $dueText),
+            'DUE_TODAY' => sprintf('Your rent invoice for %s (Unit %s) of %s is due today (%s). Pay easily via M-Pesa.', $invoice->unit?->property?->name ?? 'your rental', $invoice->unit?->unit_number ?? '-', $balanceText, $dueText),
+            default => sprintf('Reminder: Your rent invoice of %s for Unit %s is due on %s.', $balanceText, $invoice->unit?->unit_number ?? '-', $dueText),
+        };
+
+        return $this->notify($invoice->tenant, 'INVOICE_CREATED', $title, $message, [
+            'invoice_id' => $invoice->id,
+            'unit_id' => $invoice->unit_id,
+            'property_id' => $invoice->unit?->property_id,
+            'balance' => (float) $invoice->balance_amount,
+            'urgency' => $urgency,
+        ]);
+    }
+
     public function notify(?User $user, string $type, string $title, string $body, array $metadata = []): ?Notification
     {
         if (!$user) {

@@ -4,10 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
+use App\Services\PdfService;
 use Illuminate\Http\Request;
 
 class PaymentAdminController extends Controller
 {
+    public function __construct(
+        private readonly PdfService $pdfService
+    ) {}
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -65,5 +70,15 @@ class PaymentAdminController extends Controller
             ->withQueryString();
 
         return view('admin.payments.index', compact('payments', 'paymentMethods', 'paymentSummary'));
+    }
+
+    public function receiptPdf(Payment $payment)
+    {
+        $user = request()->user();
+        if ($user?->role?->name === 'LANDLORD') {
+            abort_if($payment->invoice?->unit?->property?->landlord_id !== $user->landlordAccountId(), 403);
+        }
+
+        return $this->pdfService->generatePaymentReceipt($payment);
     }
 }

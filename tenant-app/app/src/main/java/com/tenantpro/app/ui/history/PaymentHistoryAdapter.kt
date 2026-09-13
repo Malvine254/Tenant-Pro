@@ -20,8 +20,9 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-class PaymentHistoryAdapter :
-    ListAdapter<Payment, PaymentHistoryAdapter.ViewHolder>(DIFF_CALLBACK) {
+class PaymentHistoryAdapter(
+    private val onDownloadReceiptPdf: ((Payment) -> Unit)? = null
+) : ListAdapter<Payment, PaymentHistoryAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     inner class ViewHolder(private val binding: ItemPaymentHistoryBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -73,6 +74,12 @@ class PaymentHistoryAdapter :
             }
             binding.tvStatus.setTextColor(textColor)
             binding.tvStatus.setBackgroundResource(bgRes)
+
+            val isSuccessful = payment.status.equals("SUCCESS", ignoreCase = true) || payment.status.equals("SUCCESSFUL", ignoreCase = true)
+            binding.btnDownloadReceiptPdf.visibility = if (isSuccessful) android.view.View.VISIBLE else android.view.View.GONE
+            binding.btnDownloadReceiptPdf.setOnClickListener {
+                onDownloadReceiptPdf?.invoke(payment)
+            }
         }
 
         private fun callbackMetadataValue(rawPayload: JsonElement?, name: String): String? =

@@ -22,15 +22,25 @@ class Invoice extends Model
 
     protected $fillable = [
         'tenant_id', 'user_id', 'unit_id', 'billing_type', 'period_month', 'period_year',
-        'issue_date', 'due_date', 'amount', 'penalty_amount', 'total_amount',
-        'paid_amount', 'status', 'paid_at',
+        'issue_date', 'due_date', 'amount', 'water_previous_reading', 'water_current_reading',
+        'water_rate_per_unit', 'electricity_previous_reading', 'electricity_current_reading',
+        'electricity_rate_per_unit', 'utility_breakdown', 'penalty_amount', 'total_amount',
+        'paid_amount', 'status', 'paid_at', 'last_reminder_sent_at',
     ];
 
     protected $casts = [
         'issue_date' => 'date',
         'due_date' => 'date',
         'paid_at' => 'datetime',
+        'last_reminder_sent_at' => 'datetime',
         'amount' => 'decimal:2',
+        'water_previous_reading' => 'decimal:2',
+        'water_current_reading' => 'decimal:2',
+        'water_rate_per_unit' => 'decimal:2',
+        'electricity_previous_reading' => 'decimal:2',
+        'electricity_current_reading' => 'decimal:2',
+        'electricity_rate_per_unit' => 'decimal:2',
+        'utility_breakdown' => 'array',
         'penalty_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
@@ -40,6 +50,32 @@ class Invoice extends Model
     public function user() { return $this->belongsTo(User::class); }
     public function unit() { return $this->belongsTo(Unit::class); }
     public function payments() { return $this->hasMany(Payment::class); }
+
+    public function getWaterUnitsConsumedAttribute(): float
+    {
+        if ($this->water_current_reading !== null && $this->water_previous_reading !== null) {
+            return max(0, (float) $this->water_current_reading - (float) $this->water_previous_reading);
+        }
+        return 0.0;
+    }
+
+    public function getWaterCostAttribute(): float
+    {
+        return $this->water_units_consumed * ((float) ($this->water_rate_per_unit ?? 0));
+    }
+
+    public function getElectricityUnitsConsumedAttribute(): float
+    {
+        if ($this->electricity_current_reading !== null && $this->electricity_previous_reading !== null) {
+            return max(0, (float) $this->electricity_current_reading - (float) $this->electricity_previous_reading);
+        }
+        return 0.0;
+    }
+
+    public function getElectricityCostAttribute(): float
+    {
+        return $this->electricity_units_consumed * ((float) ($this->electricity_rate_per_unit ?? 0));
+    }
 
     public function getCurrencyAttribute(): string { return 'KES'; }
     public function getCurrencySymbolAttribute(): string { return 'KSh'; }

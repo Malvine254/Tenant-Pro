@@ -18,6 +18,12 @@ data class Invoice(
     @SerializedName(value = "billingPeriod", alternate = ["billing_period"]) val billingPeriod: String? = null,
     @SerializedName(value = "periodMonth", alternate = ["period_month"]) val periodMonth: Int? = null,
     @SerializedName(value = "periodYear", alternate = ["period_year"]) val periodYear: Int? = null,
+    @SerializedName(value = "waterPreviousReading", alternate = ["water_previous_reading"]) val waterPreviousReading: Double? = null,
+    @SerializedName(value = "waterCurrentReading", alternate = ["water_current_reading"]) val waterCurrentReading: Double? = null,
+    @SerializedName(value = "waterRatePerUnit", alternate = ["water_rate_per_unit"]) val waterRatePerUnit: Double? = null,
+    @SerializedName(value = "electricityPreviousReading", alternate = ["electricity_previous_reading"]) val electricityPreviousReading: Double? = null,
+    @SerializedName(value = "electricityCurrentReading", alternate = ["electricity_current_reading"]) val electricityCurrentReading: Double? = null,
+    @SerializedName(value = "electricityRatePerUnit", alternate = ["electricity_rate_per_unit"]) val electricityRatePerUnit: Double? = null,
     @SerializedName("description") val description: String? = null,
     @SerializedName("unit") val unit: UnitSummary? = null,
     @SerializedName(value = "createdAt", alternate = ["created_at"]) val createdAt: String = ""

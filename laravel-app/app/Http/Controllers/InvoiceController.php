@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Invoice;
 use App\Models\Tenant;
+use App\Services\PdfService;
 use App\Services\TenantAppNotificationService;
 use App\Services\TenantEmailService;
 use Illuminate\Http\Request;
@@ -75,6 +76,15 @@ class InvoiceController extends Controller
         if ($user?->role?->name === 'LANDLORD') $this->requireUnitManager($user, $invoice->unit);
 
         return response()->json($invoice->load(['tenant', 'unit.property', 'payments']));
+    }
+
+    public function pdf(Invoice $invoice, PdfService $pdfService)
+    {
+        $user = request()->user();
+        abort_if($this->isTenant($user) && $invoice->tenant_id !== $user->id, 403);
+        if ($user?->role?->name === 'LANDLORD') $this->requireUnitManager($user, $invoice->unit);
+
+        return $pdfService->generateInvoiceStatement($invoice);
     }
 
     public function update(Request $request, Invoice $invoice)

@@ -11,10 +11,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tenantpro.app.databinding.FragmentPaymentHistoryBinding
+import com.tenantpro.app.utils.PdfDownloadHelper
 import com.tenantpro.app.utils.Resource
 import com.tenantpro.app.utils.gone
+import com.tenantpro.app.utils.toast
 import com.tenantpro.app.utils.visible
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -24,7 +27,22 @@ class PaymentHistoryFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: PaymentHistoryViewModel by viewModels()
 
-    private val adapter = PaymentHistoryAdapter()
+    @Inject
+    lateinit var pdfDownloadHelper: PdfDownloadHelper
+
+    private val adapter by lazy {
+        PaymentHistoryAdapter { payment ->
+            val receiptNum = payment.mpesaReceiptNumber?.takeIf { it.isNotBlank() } ?: payment.id.take(8)
+            val fileName = "Receipt-$receiptNum.pdf"
+            viewLifecycleOwner.lifecycleScope.launch {
+                pdfDownloadHelper.downloadAndOpenPdf(
+                    activity = requireActivity(),
+                    endpointPath = "payments/${payment.id}/receipt-pdf",
+                    fileName = fileName
+                )
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?

@@ -43,4 +43,14 @@ class Property extends Model
                 ->where('is_active', true)
                 ->withActiveSubscriptionAccess());
     }
+
+    public function expenses()
+    {
+        return $this->hasMany(PropertyExpense::class);
+    }
+
+    public function inspections()
+    {
+        return $this->hasMany(PropertyInspection::class);
+    }
 }
