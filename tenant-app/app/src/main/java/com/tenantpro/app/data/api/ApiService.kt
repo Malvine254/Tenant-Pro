@@ -1,5 +1,6 @@
 package com.tenantpro.app.data.api
 
+import com.tenantpro.app.data.model.AppUpdateInfo
 import com.tenantpro.app.data.model.AuthResponse
 import com.tenantpro.app.data.model.RegisterResponse
 import com.tenantpro.app.data.model.EmailLoginRequest
@@ -171,6 +172,13 @@ interface ApiService {
 
     @POST("support/typing")
     suspend fun setSupportTyping(@Body body: Map<String, Boolean>): Response<Map<String, Boolean>>
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // App Updates / System
+    // ──────────────────────────────────────────────────────────────────────────
+
+    @GET("app/latest-version")
+    suspend fun getLatestVersion(): Response<AppUpdateInfo>
 
     // ──────────────────────────────────────────────────────────────────────────
     // Maintenance

@@ -24,14 +24,17 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.tenantpro.app.BuildConfig
 import com.tenantpro.app.R
 import com.tenantpro.app.MainActivity
 import com.tenantpro.app.databinding.FragmentAccountSettingsBinding
+import com.tenantpro.app.utils.AppUpdateManager
 import com.tenantpro.app.utils.toast
 import com.tenantpro.app.utils.toAbsoluteAssetUrl
 import com.tenantpro.app.utils.normalizeKenyanPhone
 import com.tenantpro.app.utils.dismissKeyboard
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -42,6 +45,9 @@ class AccountSettingsFragment : Fragment() {
     private val viewModel: AccountSettingsViewModel by viewModels()
     private var latestState = AccountUiState()
     private var suppressSwitchEvents = false
+
+    @Inject
+    lateinit var appUpdateManager: AppUpdateManager
 
     private val imagePicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
@@ -99,6 +105,13 @@ class AccountSettingsFragment : Fragment() {
     }
 
     private fun setupSettingsActions() {
+        val currentVersionLabel = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+        binding.root.findViewById<TextView>(R.id.tvSettingsUpdateSubtitle)?.text =
+            getString(R.string.app_update_check_subtitle, currentVersionLabel)
+
+        binding.root.findViewById<View>(R.id.rowAppUpdate)?.setOnClickListener {
+            appUpdateManager.checkAndPromptUpdate(requireActivity(), isAutomatic = false)
+        }
         binding.root.findViewById<View>(R.id.rowAccountDetails).setOnClickListener {
             showAccountDetailsDialog()
         }

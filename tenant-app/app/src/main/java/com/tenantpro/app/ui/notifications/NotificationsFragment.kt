@@ -20,8 +20,10 @@ import com.google.android.material.card.MaterialCardView
 import com.tenantpro.app.R
 import com.tenantpro.app.data.model.NotificationItem
 import com.tenantpro.app.databinding.FragmentNotificationsBinding
+import com.tenantpro.app.utils.AppUpdateManager
 import com.tenantpro.app.utils.toast
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -31,6 +33,9 @@ class NotificationsFragment : Fragment() {
     private var _binding: FragmentNotificationsBinding? = null
     private val binding get() = _binding!!
     private val viewModel: NotificationsViewModel by activityViewModels()
+
+    @Inject
+    lateinit var appUpdateManager: AppUpdateManager
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -95,7 +100,7 @@ class NotificationsFragment : Fragment() {
 
     private fun openNotification(item: NotificationItem) {
         if (item.type.equals("APP_UPDATE", ignoreCase = true)) {
-            showAppUpdateDialog(item)
+            appUpdateManager.showUpdateFromNotification(requireActivity(), item)
             return
         }
 

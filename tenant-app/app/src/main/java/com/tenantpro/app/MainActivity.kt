@@ -35,6 +35,7 @@ import com.google.android.material.navigation.NavigationView
 import com.tenantpro.app.databinding.ActivityMainBinding
 import com.tenantpro.app.ui.auth.LoginViewModel
 import com.tenantpro.app.ui.queries.QueriesFragment
+import com.tenantpro.app.utils.AppUpdateManager
 import com.tenantpro.app.utils.DataStoreManager
 import com.tenantpro.app.utils.SessionManager
 import com.tenantpro.app.utils.toAbsoluteAssetUrl
@@ -65,6 +66,9 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var sessionManager: SessionManager
+
+    @Inject
+    lateinit var appUpdateManager: AppUpdateManager
 
     private val requestNotificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -243,6 +247,7 @@ class MainActivity : AppCompatActivity() {
                     handlePendingInvitationDeepLink()
                     handlePendingNotificationNavigation()
                     syncFcmTokenIfLoggedIn()
+                    appUpdateManager.checkAndPromptUpdate(this@MainActivity, isAutomatic = true)
                 } finally {
                     // Reveal content first, then allow the system splash to
                     // animate away on the next frame.
@@ -255,6 +260,7 @@ class MainActivity : AppCompatActivity() {
             // rebuilding the graph or briefly displaying Login.
             binding.navHostFragment.visibility = View.VISIBLE
             binding.navHostFragment.post { startupNavigationResolved = true }
+            appUpdateManager.checkAndPromptUpdate(this, isAutomatic = true)
         }
 
         // Navigate to login when the session expires (401 received on any request)
@@ -292,6 +298,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         maybePromptAppUnlock()
+        appUpdateManager.resumePendingInstallIfAllowed(this)
     }
 
     override fun onNewIntent(intent: Intent) {
