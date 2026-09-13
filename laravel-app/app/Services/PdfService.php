@@ -17,7 +17,7 @@ class PdfService
         $pdf = Pdf::loadView('pdf.payment-receipt', compact('payment'))
             ->setPaper('a4', 'portrait')
             ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('isRemoteEnabled', true);
+            ->setOption('isRemoteEnabled', false);
 
         $filename = 'Starmax-Receipt-' . ($payment->mpesa_receipt ?? substr($payment->id, 0, 8)) . '.pdf';
 
@@ -34,7 +34,7 @@ class PdfService
         $pdf = Pdf::loadView('pdf.invoice-statement', compact('invoice'))
             ->setPaper('a4', 'portrait')
             ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('isRemoteEnabled', true);
+            ->setOption('isRemoteEnabled', false);
 
         $filename = 'Starmax-Invoice-' . substr($invoice->id, 0, 8) . '.pdf';
 
@@ -51,7 +51,7 @@ class PdfService
         $pdf = Pdf::loadView('pdf.inspection-certificate', compact('inspection'))
             ->setPaper('a4', 'portrait')
             ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('isRemoteEnabled', true);
+            ->setOption('isRemoteEnabled', false);
 
         $filename = 'Starmax-Inspection-' . substr($inspection->id, 0, 8) . '.pdf';
 
@@ -68,7 +68,7 @@ class PdfService
         $pdf = Pdf::loadView('pdf.trust-certificate', compact('tenantUser', 'trustData'))
             ->setPaper('a4', 'portrait')
             ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('isRemoteEnabled', true);
+            ->setOption('isRemoteEnabled', false);
 
         $filename = 'Starmax-Trust-Certificate-' . substr($tenantUser->id, 0, 8) . '.pdf';
 
@@ -85,7 +85,7 @@ class PdfService
         $pdf = Pdf::loadView('pdf.lease-agreement', compact('tenant'))
             ->setPaper('a4', 'portrait')
             ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('isRemoteEnabled', true);
+            ->setOption('isRemoteEnabled', false);
 
         $filename = 'Starmax-Lease-Agreement-' . ($tenant->unit?->unit_number ?? 'Unit') . '.pdf';
 
