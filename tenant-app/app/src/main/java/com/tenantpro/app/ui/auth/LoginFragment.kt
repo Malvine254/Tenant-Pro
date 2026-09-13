@@ -17,7 +17,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.tenantpro.app.MainActivity
 import com.tenantpro.app.R
 import com.tenantpro.app.databinding.FragmentLoginBinding
 import com.tenantpro.app.utils.DataStoreManager
@@ -254,7 +253,6 @@ class LoginFragment : Fragment() {
     }
 
     private fun navigateHome() {
-        (activity as? MainActivity)?.markAppUnlockedForSession()
         findNavController().navigate(
             R.id.homeFragment,
             null,

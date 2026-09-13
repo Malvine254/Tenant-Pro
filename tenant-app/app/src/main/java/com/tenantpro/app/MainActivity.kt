@@ -1,8 +1,6 @@
 package com.tenantpro.app
 
 import android.Manifest
-import android.app.KeyguardManager
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
@@ -56,8 +54,6 @@ class MainActivity : AppCompatActivity() {
     private var pendingInvitationCode: String? = null
     private var pendingNotificationDestination: String? = null
     private var pendingNotificationEntityId: String? = null
-    private var appUnlockedForSession = false
-    private var unlockPromptInProgress = false
     @Volatile
     private var startupNavigationResolved = false
 
@@ -75,24 +71,6 @@ class MainActivity : AppCompatActivity() {
             if (granted) {
                 lifecycleScope.launch {
                     syncFcmTokenIfLoggedIn()
-                }
-            }
-        }
-
-    private val deviceCredentialLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            unlockPromptInProgress = false
-            appUnlockedForSession = result.resultCode == RESULT_OK
-            if (!appUnlockedForSession) {
-                toast("Unlock required to continue")
-                if (::navController.isInitialized) {
-                    navController.navigate(
-                        R.id.loginFragment,
-                        null,
-                        androidx.navigation.NavOptions.Builder()
-                            .setPopUpTo(R.id.nav_graph, true)
-                            .build()
-                    )
                 }
             }
         }
@@ -240,17 +218,16 @@ class MainActivity : AppCompatActivity() {
                     val loggedIn = loginViewModel.hasSavedSession()
                     val biometricLockEnabled = dataStoreManager.biometricLockEnabled.firstOrNull() ?: false
                     val graph = navController.navInflater.inflate(R.navigation.nav_graph)
+                    // When biometric lock is on, always start at Login so the fingerprint
+                    // prompt only ever appears there instead of overlaying Home on relaunch.
                     graph.setStartDestination(
-                        if (loggedIn) R.id.homeFragment else R.id.loginFragment
+                        if (loggedIn && !biometricLockEnabled) R.id.homeFragment else R.id.loginFragment
                     )
                     navController.graph = graph
                     handlePendingInvitationDeepLink()
                     handlePendingNotificationNavigation()
                     syncFcmTokenIfLoggedIn()
                     appUpdateManager.checkAndPromptUpdate(this@MainActivity, isAutomatic = true)
-                    if (loggedIn && biometricLockEnabled) {
-                        maybePromptAppUnlock()
-                    }
                 } finally {
                     // Reveal content first, then allow the system splash to
                     // animate away on the next frame.
@@ -300,7 +277,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        maybePromptAppUnlock()
         appUpdateManager.resumePendingInstallIfAllowed(this)
     }
 
@@ -321,46 +297,11 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
-    fun markAppUnlockedForSession() {
-        appUnlockedForSession = true
-    }
-
     fun ensureNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
             requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
-    }
-
-    private fun maybePromptAppUnlock() {
-        if (unlockPromptInProgress || appUnlockedForSession || !::navController.isInitialized) return
-
-        val destinationId = navController.currentDestination?.id
-        if (destinationId == R.id.loginFragment ||
-            destinationId == R.id.registerFragment ||
-            destinationId == R.id.emailVerificationFragment
-        ) return
-
-        lifecycleScope.launch {
-            val biometricLockEnabled = dataStoreManager.biometricLockEnabled.firstOrNull() ?: false
-            if (!biometricLockEnabled || appUnlockedForSession || unlockPromptInProgress) return@launch
-            if (!loginViewModel.hasSavedSession()) return@launch
-
-            val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-            if (!keyguardManager.isDeviceSecure) {
-                dataStoreManager.saveBiometricLockEnabled(false)
-                toast("Set a phone screen lock first to use biometric lock")
-                return@launch
-            }
-
-            val unlockIntent = keyguardManager.createConfirmDeviceCredentialIntent(
-                "Unlock Starmax Tenant Services",
-                "Confirm your fingerprint, face unlock, or screen lock to continue"
-            ) ?: return@launch
-
-            unlockPromptInProgress = true
-            deviceCredentialLauncher.launch(unlockIntent)
         }
     }
 

@@ -129,23 +129,9 @@ class DownloadsController extends Controller
     {
         $release = AppRelease::current();
 
+        // No tracked release exists yet — do not advertise a fake fixed version forever;
+        // that previously kept the in-app update prompt showing even after installing.
         if (! $release) {
-            $fallbackPath = public_path('downloads/app-debug.apk');
-            if (file_exists($fallbackPath)) {
-                return response()->json([
-                    'available' => true,
-                    'version_name' => '1.0.1',
-                    'version_code' => 2,
-                    'channel' => 'PRODUCTION',
-                    'release_notes' => 'Starmax Tenant Services build update with stability and in-app update support.',
-                    'is_mandatory' => false,
-                    'file_size' => filesize($fallbackPath),
-                    'checksum' => md5_file($fallbackPath),
-                    'download_url' => route('downloads.apk.public'),
-                    'released_at' => date('c', filemtime($fallbackPath)),
-                ]);
-            }
-
             return response()->json(['available' => false]);
         }
 
