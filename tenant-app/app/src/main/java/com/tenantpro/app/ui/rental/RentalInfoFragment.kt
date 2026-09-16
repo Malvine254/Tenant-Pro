@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -13,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textview.MaterialTextView
 import com.tenantpro.app.R
 import com.tenantpro.app.databinding.FragmentRentalInfoBinding
@@ -160,6 +162,48 @@ class RentalInfoFragment : Fragment() {
         card.findViewById<MaterialTextView>(R.id.tvUnitRent).text = item.rentAmountText ?: "-"
         card.findViewById<MaterialTextView>(R.id.tvUnitMoveIn).text = item.moveInDate
         card.findViewById<MaterialTextView>(R.id.tvUnitAddress).text = item.address
+
+        val galleryTitle = card.findViewById<TextView>(R.id.tvUnitGalleryTitle)
+        val galleryScroll = card.findViewById<View>(R.id.scrollUnitGallery)
+        val galleryContainer = card.findViewById<LinearLayout>(R.id.llUnitGallery)
+        galleryContainer.removeAllViews()
+        val hasInteriorPhotos = item.interiorGallery.isNotEmpty()
+        galleryTitle.visibility = if (hasInteriorPhotos) View.VISIBLE else View.GONE
+        galleryScroll.visibility = if (hasInteriorPhotos) View.VISIBLE else View.GONE
+
+        item.interiorGallery.forEach { photo ->
+            val photoView = layoutInflater.inflate(
+                R.layout.item_rental_interior_photo,
+                galleryContainer,
+                false
+            )
+            val imageView = photoView.findViewById<ImageView>(R.id.ivInteriorPhoto)
+            imageView.contentDescription = "${photo.label} in Unit ${item.unitNumber}"
+            photoView.findViewById<TextView>(R.id.tvInteriorLabel).text = photo.label
+            Glide.with(this)
+                .load(photo.url.toAbsoluteAssetUrl())
+                .centerCrop()
+                .into(imageView)
+            photoView.setOnClickListener { showInteriorPhoto(item, photo.label, photo.url) }
+            galleryContainer.addView(photoView)
+        }
+    }
+
+    private fun showInteriorPhoto(item: RentalUnitItem, label: String, url: String) {
+        val content = layoutInflater.inflate(R.layout.dialog_rental_interior_photo, null)
+        val imageView = content.findViewById<ImageView>(R.id.ivInteriorPreview)
+        imageView.contentDescription = "$label in Unit ${item.unitNumber}"
+        content.findViewById<TextView>(R.id.tvInteriorPreviewLabel).text =
+            "$label · Unit ${item.unitNumber}"
+        Glide.with(this)
+            .load(url.toAbsoluteAssetUrl())
+            .fitCenter()
+            .into(imageView)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setView(content)
+            .setPositiveButton("Close", null)
+            .show()
     }
 
     override fun onResume() {

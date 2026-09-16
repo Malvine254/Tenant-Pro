@@ -580,9 +580,18 @@ class AuthController extends Controller
                     'currency' => $unit->currency,
                     'currencySymbol' => $unit->currency_symbol,
                     'status' => $unit->status,
+                    'imageUrls' => $unit->image_urls ?? [],
+                    'displayImageUrl' => collect($unit->image_urls ?? [])->first(),
+                    'interiorGallery' => collect($unit->interior_gallery ?? [])->map(fn ($photo) => [
+                        'area' => $photo['area'] ?? 'other',
+                        'label' => $photo['label'] ?? 'Other',
+                        'url' => $photo['url'] ?? null,
+                    ])->filter(fn ($photo) => filled($photo['url']))->values(),
                     'property' => $property ? [
                         'id' => $property->id,
                         'name' => $property->name,
+                        'description' => $property->description,
+                        'coverImageUrl' => $property->cover_image_url,
                         'addressLine' => $property->address_line,
                         'city' => $property->city,
                         'state' => $property->state,

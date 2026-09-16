@@ -3,6 +3,7 @@ package com.tenantpro.app.ui.rental
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tenantpro.app.data.model.TenantTenancyProfile
+import com.tenantpro.app.data.model.UnitInteriorPhoto
 import com.tenantpro.app.data.repository.AuthRepository
 import com.tenantpro.app.utils.Resource
 import com.tenantpro.app.utils.toDisplayDate
@@ -86,6 +87,7 @@ class RentalInfoViewModel @Inject constructor(
                 apartmentImageUrl = unit?.displayImageUrl
                     ?: unit?.imageUrls?.firstOrNull()
                     ?: property?.coverImageUrl,
+                interiorGallery = unit?.interiorGallery.orEmpty().filter { it.url.isNotBlank() },
             )
         }
     }
@@ -117,6 +119,7 @@ data class RentalUnitItem(
     val moveInDate: String,
     val address: String,
     val apartmentImageUrl: String? = null,
+    val interiorGallery: List<UnitInteriorPhoto> = emptyList(),
 )
 
 data class RentalInfoUiState(

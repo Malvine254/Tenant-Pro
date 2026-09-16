@@ -22,6 +22,34 @@
         @endforeach
         </div>
         <div class="form-group"><label for="unit-photos">Add current photos</label><input id="unit-photos" type="file" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple>@error('photos')<div class="form-error">{{ $message }}</div>@enderror @error('photos.*')<div class="form-error">{{ $message }}</div>@enderror</div>
+
+        <h3>Interior gallery for tenants</h3>
+        <p>Label photos by area so tenants can understand their home at a glance. Keep up to 24 photos total.</p>
+        @if(!empty($unit->interior_gallery))
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;">
+                @foreach($unit->interior_gallery as $index => $photo)
+                    @php($photoUrl = data_get($photo, 'url'))
+                    @if($photoUrl)
+                        <label style="display:block;">
+                            <img src="{{ str_starts_with($photoUrl, 'http') ? $photoUrl : asset(ltrim($photoUrl, '/')) }}" alt="{{ data_get($photo, 'label', 'Interior') }}" width="160" height="110" style="width:100%;object-fit:cover;border-radius:8px;">
+                            <strong style="display:block;font-size:12px;margin-top:5px;">{{ data_get($photo, 'label', 'Other') }}</strong>
+                            <span style="display:block;font-size:12px;"><input style="width:auto;" type="checkbox" name="remove_interior_photos[]" value="{{ $index }}" @checked(in_array($index, old('remove_interior_photos', [])))> Remove</span>
+                        </label>
+                    @endif
+                @endforeach
+            </div>
+        @endif
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;">
+            @foreach(\App\Services\MarketplaceUnitDetails::INTERIOR_AREAS as $area => $label)
+                <div class="form-group">
+                    <label for="interior-{{ $area }}">{{ $label }}</label>
+                    <input id="interior-{{ $area }}" type="file" name="interior_photos[{{ $area }}][]" accept="image/jpeg,image/png,image/webp" multiple>
+                    <small>Up to 6 photos for this area, 5 MB each.</small>
+                    @error("interior_photos.$area.*")<div class="form-error">{{ $message }}</div>@enderror
+                </div>
+            @endforeach
+        </div>
+        @error('interior_photos')<div class="form-error">{{ $message }}</div>@enderror
     @else
         <p>For several units, these details apply to every unit created. Add individual unit photos by editing each unit after creation.</p>
     @endif

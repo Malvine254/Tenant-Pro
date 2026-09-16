@@ -11,10 +11,11 @@ class Unit extends Model
 
     protected $appends = ['currency', 'currency_symbol', 'rent_amount_formatted'];
 
-    protected $fillable = ['property_id', 'unit_number', 'floor', 'bedrooms', 'rent_amount', 'status', 'image_urls', 'billing_overrides', 'bathrooms', 'deposit_amount', 'service_charge', 'other_move_in_cost', 'other_move_in_label', 'amenities', 'available_from', 'availability_confirmed_at'];
+    protected $fillable = ['property_id', 'unit_number', 'floor', 'bedrooms', 'rent_amount', 'status', 'image_urls', 'interior_gallery', 'billing_overrides', 'bathrooms', 'deposit_amount', 'service_charge', 'other_move_in_cost', 'other_move_in_label', 'amenities', 'available_from', 'availability_confirmed_at'];
 
     protected $casts = [
         'image_urls' => 'array',
+        'interior_gallery' => 'array',
         'rent_amount' => 'decimal:2',
         'billing_overrides' => 'array',
         'bedrooms' => 'integer',

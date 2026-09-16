@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="148dp"
+    android:layout_height="124dp"
+    android:layout_marginEnd="10dp"
+    android:background="@drawable/bg_card_premium"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/ivInteriorPhoto"
+        android:layout_width="match_parent"
+        android:layout_height="92dp"
+        android:scaleType="centerCrop" />
+
+    <TextView
+        android:id="@+id/tvInteriorLabel"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:paddingHorizontal="10dp"
+        android:textColor="@color/on_surface"
+        android:textSize="12sp" />
+</LinearLayout>

@@ -2,11 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\{ListingReport, Property, Role, Unit, User};
+use App\Models\{ListingReport, Property, Role, Tenant, Unit, User};
 use App\Services\MarketplaceUnitDetails;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class MarketplaceEnhancementsTest extends TestCase
@@ -42,7 +43,8 @@ class MarketplaceEnhancementsTest extends TestCase
         $manager = $this->manager();
         $unit = $this->home($manager);
         $payload = ['unit_number' => 'A1', 'rent_amount' => 25000, 'status' => 'AVAILABLE', 'bathrooms' => 2, 'deposit_amount' => 20000, 'service_charge' => 1000, 'other_move_in_cost' => 0, 'amenities' => ['Parking'], 'available_from' => '2026-10-01', 'confirm_availability' => 1,
-            'photos' => [UploadedFile::fake()->createWithContent('room.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1cAAAAASUVORK5CYII='))]];
+            'photos' => [UploadedFile::fake()->createWithContent('room.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1cAAAAASUVORK5CYII='))],
+            'interior_photos' => ['kitchen' => [UploadedFile::fake()->createWithContent('kitchen.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1cAAAAASUVORK5CYII='))]]];
         $url = route('admin.properties.units.update', [$unit->property, $unit]);
         $this->actingAs($manager)->put($url, $payload)->assertSessionHasNoErrors()->assertRedirect();
         $unit->refresh();
@@ -50,14 +52,57 @@ class MarketplaceEnhancementsTest extends TestCase
         $this->assertSame(['Parking'], $unit->amenities);
         $this->assertNotNull($unit->availability_confirmed_at);
         $this->assertCount(1, $unit->image_urls);
-        Storage::disk('public')->assertExists(substr($unit->image_urls[0], strlen('/storage/')));
+        $this->assertSame('Kitchen', $unit->interior_gallery[0]['label']);
+        $unitPhotoPath = substr($unit->image_urls[0], strlen('/storage/'));
+        $interiorPhotoPath = substr($unit->interior_gallery[0]['url'], strlen('/storage/'));
+        Storage::disk('public')->assertExists($unitPhotoPath);
+        Storage::disk('public')->assertExists($interiorPhotoPath);
         $this->actingAs($this->manager())->put($url, $payload)->assertForbidden();
-        unset($payload['photos'], $payload['confirm_availability']);
+        unset($payload['photos'], $payload['interior_photos'], $payload['confirm_availability']);
         $payload['remove_photos'] = [0];
+        $payload['remove_interior_photos'] = [0];
         $payload['status'] = 'OCCUPIED';
         $this->actingAs($manager)->put($url, $payload)->assertSessionHasNoErrors();
         $this->assertNull($unit->fresh()->availability_confirmed_at);
         $this->assertSame([], $unit->fresh()->image_urls);
+        $this->assertSame([], $unit->fresh()->interior_gallery);
+        Storage::disk('public')->assertMissing($unitPhotoPath);
+        Storage::disk('public')->assertMissing($interiorPhotoPath);
+    }
+
+    public function test_tenant_profile_includes_unit_cover_and_labeled_interior_gallery(): void
+    {
+        config(['deployment.mobile_api_key' => 'test-mobile-key']);
+        $unit = $this->home();
+        $unit->property->update(['cover_image_url' => '/storage/properties/garden-court.jpg']);
+        $unit->update([
+            'image_urls' => ['/storage/unit-photos/a1.jpg'],
+            'interior_gallery' => [[
+                'area' => 'kitchen',
+                'label' => 'Kitchen',
+                'url' => '/storage/unit-interiors/kitchen.jpg',
+            ]],
+        ]);
+        $tenant = User::factory()->create([
+            'role_id' => Role::firstOrCreate(['name' => 'TENANT'])->id,
+            'is_active' => true,
+        ]);
+        Tenant::create([
+            'user_id' => $tenant->id,
+            'unit_id' => $unit->id,
+            'move_in_date' => now()->toDateString(),
+            'is_active' => true,
+        ]);
+        Sanctum::actingAs($tenant);
+
+        $this->withHeader('X-Mobile-App-Key', 'test-mobile-key')
+            ->getJson('/api/users/me/profile')
+            ->assertOk()
+            ->assertJsonPath('tenantProfiles.0.unit.displayImageUrl', '/storage/unit-photos/a1.jpg')
+            ->assertJsonPath('tenantProfiles.0.unit.property.coverImageUrl', '/storage/properties/garden-court.jpg')
+            ->assertJsonPath('tenantProfiles.0.unit.interiorGallery.0.area', 'kitchen')
+            ->assertJsonPath('tenantProfiles.0.unit.interiorGallery.0.label', 'Kitchen')
+            ->assertJsonPath('tenantProfiles.0.unit.interiorGallery.0.url', '/storage/unit-interiors/kitchen.jpg');
     }
 
     public function test_reports_are_private_reviewable_and_restricted_to_public_properties(): void

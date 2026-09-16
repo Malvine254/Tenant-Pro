@@ -51,7 +51,14 @@ data class UnitSummary(
     @SerializedName(value = "rentAmount", alternate = ["rent_amount"]) val rentAmount: Double? = null,
     @SerializedName(value = "imageUrls", alternate = ["image_urls"]) val imageUrls: List<String>? = null,
     @SerializedName(value = "displayImageUrl", alternate = ["display_image_url"]) val displayImageUrl: String? = null,
+    @SerializedName(value = "interiorGallery", alternate = ["interior_gallery"]) val interiorGallery: List<UnitInteriorPhoto> = emptyList(),
     @SerializedName("property") val property: PropertySummary? = null
+)
+
+data class UnitInteriorPhoto(
+    @SerializedName("area") val area: String = "other",
+    @SerializedName("label") val label: String = "Other",
+    @SerializedName("url") val url: String = ""
 )
 
 data class PropertySummary(
