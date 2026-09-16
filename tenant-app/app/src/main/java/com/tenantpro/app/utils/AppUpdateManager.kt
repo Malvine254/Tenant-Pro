@@ -121,9 +121,18 @@ class AppUpdateManager @Inject constructor(
      * since the user may have already updated by the time they open the notification.
      */
     fun showUpdateFromNotification(activity: FragmentActivity, item: NotificationItem) {
-        val metadataVersionCode = (item.metadata["version_code"] as? Number)?.toInt()
+        val metadataVersionCode = when (val rawVersionCode = item.metadata["version_code"]) {
+            is Number -> rawVersionCode.toInt()
+            is String -> rawVersionCode.toIntOrNull()
+            else -> null
+        }
 
-        if (metadataVersionCode != null && metadataVersionCode <= BuildConfig.VERSION_CODE) {
+        if (metadataVersionCode == null) {
+            checkAndPromptUpdate(activity, isAutomatic = false)
+            return
+        }
+
+        if (metadataVersionCode <= BuildConfig.VERSION_CODE) {
             activity.toast(
                 activity.getString(
                     R.string.app_update_latest_version,
@@ -136,14 +145,13 @@ class AppUpdateManager @Inject constructor(
         val downloadUrl = item.metadata["download_url"]?.toString()?.takeIf { it.isNotBlank() }
             ?: (BuildConfig.BASE_URL.trimEnd('/').removeSuffix("/api") + "/download/apk")
         val versionName = item.metadata["version_name"]?.toString()?.takeIf { it.isNotBlank() } ?: "Latest"
-        val versionCode = metadataVersionCode ?: (BuildConfig.VERSION_CODE + 1)
         val isMandatory = (item.metadata["is_mandatory"] as? Boolean) ?: false
         val releaseNotes = item.metadata["release_notes"]?.toString() ?: item.message
 
         val updateInfo = AppUpdateInfo(
             available = true,
             versionName = versionName,
-            versionCode = versionCode,
+            versionCode = metadataVersionCode,
             releaseNotes = releaseNotes,
             isMandatory = isMandatory,
             downloadUrl = downloadUrl

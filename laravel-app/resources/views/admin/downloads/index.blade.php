@@ -41,10 +41,11 @@
     <p style="color:var(--muted);font-size:13px;margin:0 0 16px;">
         Build with <code>./gradlew assembleRelease</code>, then upload the APK here.
         @if($latest)
-            Fields are prefilled from <strong>v{{ $latest->version_name }} ({{ $latest->version_code }})</strong> — adjust what changed.
+            Current release: <strong>v{{ $latest->version_name }} ({{ $latest->version_code }})</strong>.
         @else
             Version code must increase with every release.
         @endif
+        Read the exact version name and code from the generated APK; incorrect values will make updated devices receive the same update repeatedly.
     </p>
 
     @if($errors->any())
@@ -65,12 +66,12 @@
             </div>
             <div class="field">
                 <label for="version_name">Version name</label>
-                <input id="version_name" name="version_name" value="{{ old('version_name', $latest?->nextVersionName()) }}" placeholder="e.g. 1.4.0" required>
+                <input id="version_name" name="version_name" value="{{ old('version_name') }}" placeholder="e.g. 1.4.8" autocomplete="off" required>
                 <small>Must match <code>versionName</code> in build.gradle.kts.@if($latest) Previous: v{{ $latest->version_name }}.@endif</small>
             </div>
             <div class="field">
                 <label for="version_code">Version code</label>
-                <input id="version_code" type="number" min="1" name="version_code" value="{{ old('version_code', ($latest->version_code ?? 0) + 1) }}" required>
+                <input id="version_code" type="number" min="{{ ($latest->version_code ?? 0) + 1 }}" name="version_code" value="{{ old('version_code') }}" autocomplete="off" required>
                 <small>Must match <code>versionCode</code> and be unique.@if($latest) Previous: {{ $latest->version_code }}.@endif</small>
             </div>
             <div class="field">
