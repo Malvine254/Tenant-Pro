@@ -11,17 +11,20 @@ import com.tenantpro.app.data.model.ManualPaymentInstructions
 import com.tenantpro.app.data.model.ManualPaymentInstructionsRequest
 import com.tenantpro.app.data.model.Payment
 import com.tenantpro.app.utils.Resource
+import com.tenantpro.app.utils.NetworkConnectivityObserver
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.first
 
 @Singleton
 class PaymentRepository @Inject constructor(
     private val api: ApiService,
-    private val cache: SafeResponseCache
+    private val cache: SafeResponseCache,
+    private val connectivity: NetworkConnectivityObserver
 ) {
     private val gson = Gson()
     private val paymentListType = object : TypeToken<List<Payment>>() {}.type
@@ -43,7 +46,11 @@ class PaymentRepository @Inject constructor(
         invoiceIds: List<String>,
         phoneNumber: String,
         amount: Double? = null
-    ): Resource<InitiatePaymentResponse> = try {
+    ): Resource<InitiatePaymentResponse> {
+        if (!connectivity.isConnected.first()) {
+            return Resource.Error("Internet is required to start an M-Pesa payment. Your invoices remain available offline.")
+        }
+        return try {
         val response = api.initiatePayment(
             InitiatePaymentRequest(
                 // Always include the primary invoice for compatibility with
@@ -64,6 +71,7 @@ class PaymentRepository @Inject constructor(
         }
     } catch (e: Exception) {
         Resource.Error(ApiErrorMapper.fromThrowable(e))
+        }
     }
 
     /** Fetches payment records for a specific invoice. */
@@ -81,12 +89,12 @@ class PaymentRepository @Inject constructor(
                 payload?.let { cache.write(CacheKeys.PAYMENTS, it.toString()) }
                 Resource.Success(payments)
             } else {
-                cachedPayments(CacheKeys.PAYMENTS, CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+                cachedPayments(CacheKeys.PAYMENTS, CachePolicy.OFFLINE_MAX_AGE_MS)?.let {
                     Resource.Success(it, fromCache = true)
                 } ?: Resource.Error(ApiErrorMapper.fromResponse(response))
             }
         } catch (e: Exception) {
-            cachedPayments(CacheKeys.PAYMENTS, CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+            cachedPayments(CacheKeys.PAYMENTS, CachePolicy.OFFLINE_MAX_AGE_MS)?.let {
                 Resource.Success(it, fromCache = true)
             } ?: Resource.Error(ApiErrorMapper.fromThrowable(e))
         }
@@ -129,18 +137,18 @@ class PaymentRepository @Inject constructor(
                 cache.write(key, gson.toJson(payments))
                 Resource.Success(payments)
             } else {
-                cachedPayments(key, CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+                cachedPayments(key, CachePolicy.OFFLINE_MAX_AGE_MS)?.let {
                     Resource.Success(it, fromCache = true)
                 } ?: Resource.Error(ApiErrorMapper.fromResponse(response))
             }
         } catch (e: Exception) {
-            cachedPayments(key, CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+            cachedPayments(key, CachePolicy.OFFLINE_MAX_AGE_MS)?.let {
                 Resource.Success(it, fromCache = true)
             } ?: Resource.Error(ApiErrorMapper.fromThrowable(e))
         }
     }
 
-    private suspend fun cachedPayments(key: String, maxAgeMillis: Long): List<Payment>? =
+    private suspend fun cachedPayments(key: String, maxAgeMillis: Long?): List<Payment>? =
         cache.read(key, maxAgeMillis)?.let { payload ->
             runCatching { parsePayments(com.google.gson.JsonParser.parseString(payload)) }.getOrNull()
         }

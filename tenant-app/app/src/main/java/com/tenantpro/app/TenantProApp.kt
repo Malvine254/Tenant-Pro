@@ -4,6 +4,8 @@ import android.app.Application
 import com.tenantpro.app.utils.DeviceNotificationHelper
 import com.tenantpro.app.utils.DataStoreManager
 import com.tenantpro.app.utils.NotificationWorkScheduler
+import com.tenantpro.app.utils.OfflineSyncCoordinator
+import com.tenantpro.app.utils.OfflineSyncScheduler
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +17,8 @@ import javax.inject.Inject
 class TenantProApp : Application() {
     @Inject lateinit var notificationWorkScheduler: NotificationWorkScheduler
     @Inject lateinit var dataStoreManager: DataStoreManager
+    @Inject lateinit var offlineSyncCoordinator: OfflineSyncCoordinator
+    @Inject lateinit var offlineSyncScheduler: OfflineSyncScheduler
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -22,6 +26,8 @@ class TenantProApp : Application() {
         super.onCreate()
         DeviceNotificationHelper.ensureNotificationChannels(this)
         notificationWorkScheduler.cancel()
+        offlineSyncCoordinator.observeConnectivity(applicationScope)
+        offlineSyncScheduler.schedule()
         applicationScope.launch { dataStoreManager.migrateSensitiveStorage() }
         applicationScope.launch {
             cacheDir.resolve("invoices").listFiles()?.forEach { file ->

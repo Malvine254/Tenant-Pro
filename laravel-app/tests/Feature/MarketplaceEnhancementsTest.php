@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\{ListingReport, Property, Role, Tenant, Unit, User};
+use App\Models\{ListingReport, MaintenanceRequest, Property, Role, Tenant, Unit, User};
 use App\Services\MarketplaceUnitDetails;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -105,6 +105,34 @@ class MarketplaceEnhancementsTest extends TestCase
             ->assertJsonPath('tenantProfiles.0.unit.interiorGallery.0.area', 'kitchen')
             ->assertJsonPath('tenantProfiles.0.unit.interiorGallery.0.label', 'Kitchen')
             ->assertJsonPath('tenantProfiles.0.unit.interiorGallery.0.url', '/storage/unit-interiors/kitchen.jpg');
+    }
+
+    public function test_offline_maintenance_replay_is_idempotent(): void
+    {
+        config(['deployment.mobile_api_key' => 'test-mobile-key']);
+        $unit = $this->home();
+        $tenant = User::factory()->create([
+            'role_id' => Role::firstOrCreate(['name' => 'TENANT'])->id,
+            'is_active' => true,
+        ]);
+        Tenant::create([
+            'user_id' => $tenant->id,
+            'unit_id' => $unit->id,
+            'move_in_date' => now()->toDateString(),
+            'is_active' => true,
+        ]);
+        Sanctum::actingAs($tenant);
+        $payload = [
+            'title' => 'Leaking kitchen tap',
+            'description' => 'The kitchen tap has continued leaking overnight.',
+            'priority' => 'MEDIUM',
+            'clientRequestId' => fake()->uuid(),
+        ];
+
+        $this->withHeader('X-Mobile-App-Key', 'test-mobile-key')->postJson('/api/maintenance', $payload)->assertCreated();
+        $this->withHeader('X-Mobile-App-Key', 'test-mobile-key')->postJson('/api/maintenance', $payload)->assertCreated();
+
+        $this->assertSame(1, MaintenanceRequest::where('client_request_id', $payload['clientRequestId'])->count());
     }
 
     public function test_reports_are_private_reviewable_and_restricted_to_public_properties(): void

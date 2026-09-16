@@ -60,6 +60,9 @@ class NetworkConnectivityObserver @Inject constructor(
     private fun hasActiveNetwork(): Boolean =
         cm.activeNetwork?.let { n ->
             cm.getNetworkCapabilities(n)
-                ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                ?.let { capabilities ->
+                    capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                }
         } == true
 }

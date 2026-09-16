@@ -31,6 +31,9 @@ class PdfDownloadHelper @Inject constructor(
         fileName: String,
         onProgress: ((Boolean) -> Unit)? = null
     ) = withContext(Dispatchers.IO) {
+        val documentsDir = File(context.filesDir, "documents").apply { mkdirs() }
+        val targetFile = File(documentsDir, fileName)
+        val temporaryFile = File(documentsDir, "$fileName.download")
         try {
             withContext(Dispatchers.Main) { onProgress?.invoke(true) }
 
@@ -56,15 +59,15 @@ class PdfDownloadHelper @Inject constructor(
             }
 
             val body = response.body ?: throw IOException("Empty document response")
-            val pdfsDir = File(context.cacheDir, "invoices").apply {
-                if (!exists()) mkdirs()
-            }
-            val targetFile = File(pdfsDir, fileName)
 
             body.byteStream().use { input ->
-                FileOutputStream(targetFile).use { output ->
+                FileOutputStream(temporaryFile).use { output ->
                     input.copyTo(output)
                 }
+            }
+            if (!temporaryFile.renameTo(targetFile)) {
+                temporaryFile.copyTo(targetFile, overwrite = true)
+                temporaryFile.delete()
             }
 
             withContext(Dispatchers.Main) {
@@ -72,9 +75,15 @@ class PdfDownloadHelper @Inject constructor(
                 openPdfFile(activity, targetFile)
             }
         } catch (e: Exception) {
+            temporaryFile.delete()
             withContext(Dispatchers.Main) {
                 onProgress?.invoke(false)
-                activity.toast("Could not download PDF: ${e.localizedMessage ?: "Network error"}")
+                if (targetFile.exists() && targetFile.length() > 0L) {
+                    activity.toast("Opening the saved offline copy")
+                    openPdfFile(activity, targetFile)
+                } else {
+                    activity.toast("Could not download PDF: ${e.localizedMessage ?: "Network error"}")
+                }
             }
         }
     }

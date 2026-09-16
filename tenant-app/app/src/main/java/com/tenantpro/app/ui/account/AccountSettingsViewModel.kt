@@ -250,7 +250,7 @@ class AccountSettingsViewModel @Inject constructor(
                 profileImageUrl = uiState.value.imageUri
             )) {
                 is Resource.Success -> {
-                    _events.emit("Profile updated")
+                    _events.emit(if (result.fromCache) "Profile saved offline and will sync automatically" else "Profile updated")
                 }
                 is Resource.Error -> {
                     _events.emit(result.message)
@@ -311,7 +311,7 @@ class AccountSettingsViewModel @Inject constructor(
                 notificationsEnabled = enabled
             )) {
                 is Resource.Success -> {
-                    _events.emit(if (enabled) "Notifications enabled" else "Notifications muted")
+                    _events.emit(if (result.fromCache) "Preference saved offline and will sync automatically" else if (enabled) "Notifications enabled" else "Notifications muted")
                 }
                 is Resource.Error -> {
                     dataStoreManager.saveNotificationsEnabled(current.notificationsEnabled)
@@ -343,7 +343,7 @@ class AccountSettingsViewModel @Inject constructor(
                 emailNotificationsEnabled = enabled
             )) {
                 is Resource.Success -> {
-                    _events.emit(if (enabled) "Email notifications enabled" else "Email notifications disabled")
+                    _events.emit(if (result.fromCache) "Preference saved offline and will sync automatically" else if (enabled) "Email notifications enabled" else "Email notifications disabled")
                 }
                 is Resource.Error -> {
                     dataStoreManager.saveEmailNotificationsEnabled(current.emailNotificationsEnabled)
@@ -373,7 +373,7 @@ class AccountSettingsViewModel @Inject constructor(
                     if (enabled) {
                         dataStoreManager.saveCurrentSessionForBiometric()
                     }
-                    _events.emit(if (enabled) "Biometric login enabled" else "Biometric login disabled")
+                    _events.emit(if (result.fromCache) "Preference saved offline and will sync automatically" else if (enabled) "Biometric login enabled" else "Biometric login disabled")
                 }
                 is Resource.Error -> {
                     dataStoreManager.saveBiometricLockEnabled(current.biometricLockEnabled)

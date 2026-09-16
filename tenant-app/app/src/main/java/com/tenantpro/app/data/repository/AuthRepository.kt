@@ -21,6 +21,8 @@ import com.tenantpro.app.data.model.VerifyOtpRequest
 import com.tenantpro.app.data.api.ApiErrorMapper
 import com.tenantpro.app.data.local.CacheKeys
 import com.tenantpro.app.data.local.CachePolicy
+import com.tenantpro.app.data.local.OfflineActionQueue
+import com.tenantpro.app.data.local.OfflineActionTypes
 import com.tenantpro.app.data.local.SafeResponseCache
 import com.tenantpro.app.utils.DataStoreManager
 import com.tenantpro.app.utils.NotificationWorkScheduler
@@ -35,15 +37,18 @@ import kotlinx.coroutines.tasks.await
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AuthRepository @Inject constructor(
+    @ApplicationContext private val applicationContext: Context,
     private val api: ApiService,
     private val dataStore: DataStoreManager,
     private val notificationWorkScheduler: NotificationWorkScheduler,
     private val cache: SafeResponseCache,
+    private val offlineActions: OfflineActionQueue,
     private val gson: Gson
 ) {
     private fun parseErrorMessage(response: retrofit2.Response<*>): String =
@@ -200,6 +205,8 @@ class AuthRepository @Inject constructor(
         runCatching { api.logout() }
         runCatching { FirebaseMessaging.getInstance().deleteToken().await() }
         cache.clearCurrentUser()
+        offlineActions.clearCurrentUser()
+        applicationContext.filesDir.resolve("documents").deleteRecursively()
         dataStore.clearSession()
     }
 
@@ -271,12 +278,12 @@ class AuthRepository @Inject constructor(
                     Resource.Success(user)
                 }
             } else {
-                cachedProfile(CacheKeys.PROFILE_BASIC, CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+                cachedProfile(CacheKeys.PROFILE_BASIC, CachePolicy.OFFLINE_MAX_AGE_MS)?.let {
                     Resource.Success(it, fromCache = true)
                 } ?: Resource.Error(parseErrorMessage(response))
             }
         } catch (e: Exception) {
-            cachedProfile(CacheKeys.PROFILE_BASIC, CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+            cachedProfile(CacheKeys.PROFILE_BASIC, CachePolicy.OFFLINE_MAX_AGE_MS)?.let {
                 Resource.Success(it, fromCache = true)
             } ?: Resource.Error(ApiErrorMapper.fromThrowable(e))
         }
@@ -298,18 +305,18 @@ class AuthRepository @Inject constructor(
                     Resource.Success(user)
                 }
             } else {
-                cachedProfile(CacheKeys.PROFILE, CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+                cachedProfile(CacheKeys.PROFILE, CachePolicy.OFFLINE_MAX_AGE_MS)?.let {
                     Resource.Success(it, fromCache = true)
                 } ?: Resource.Error(parseErrorMessage(response))
             }
         } catch (e: Exception) {
-            cachedProfile(CacheKeys.PROFILE, CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+            cachedProfile(CacheKeys.PROFILE, CachePolicy.OFFLINE_MAX_AGE_MS)?.let {
                 Resource.Success(it, fromCache = true)
             } ?: Resource.Error(ApiErrorMapper.fromThrowable(e))
         }
     }
 
-    private suspend fun cachedProfile(key: String, maxAgeMillis: Long): UserProfile? =
+    private suspend fun cachedProfile(key: String, maxAgeMillis: Long?): UserProfile? =
         cache.read(key, maxAgeMillis)?.let { payload ->
             runCatching { gson.fromJson(payload, UserProfile::class.java) }.getOrNull()
         }
@@ -327,65 +334,108 @@ class AuthRepository @Inject constructor(
         emergencyContact: String,
         bio: String,
         profileImageUrl: String? = null
-    ): Resource<UserProfile> = try {
+    ): Resource<UserProfile> {
         val names = fullName.trim().split(" ", limit = 2)
-        val response = api.updateMyProfile(
-            UpdateProfileRequest(
-                phoneNumber = phone.trim().ifBlank { null },
-                email = email.trim().ifBlank { null },
-                firstName = names.getOrNull(0)?.ifBlank { null },
-                lastName = names.getOrNull(1)?.ifBlank { null },
-                emergencyContactPhone = emergencyContact.trim().ifBlank { null },
-                bio = bio.trim().ifBlank { null },
-                profileImageUrl = profileImageUrl
-            )
+        val request = UpdateProfileRequest(
+            phoneNumber = phone.trim().ifBlank { null },
+            email = email.trim().ifBlank { null },
+            firstName = names.getOrNull(0)?.ifBlank { null },
+            lastName = names.getOrNull(1)?.ifBlank { null },
+            emergencyContactPhone = emergencyContact.trim().ifBlank { null },
+            bio = bio.trim().ifBlank { null },
+            profileImageUrl = profileImageUrl
         )
-
-        if (response.isSuccessful) {
-            val user = response.body()
-            if (user == null) {
-                Resource.Error("Profile update response was empty. Please try again.")
+        return try {
+            val response = api.updateMyProfile(request)
+            if (response.isSuccessful) {
+                val user = response.body()
+                if (user == null) {
+                    Resource.Error("Profile update response was empty. Please try again.")
+                } else {
+                    syncUserProfileToStore(user)
+                    cacheUpdatedProfile(user)
+                    Resource.Success(user)
+                }
             } else {
-                syncUserProfileToStore(user)
-                cacheUpdatedProfile(user)
-                Resource.Success(user)
+                Resource.Error(parseErrorMessage(response))
             }
-        } else {
-            Resource.Error(parseErrorMessage(response))
+        } catch (e: Exception) {
+            val cached = cachedProfile(CacheKeys.PROFILE, CachePolicy.OFFLINE_MAX_AGE_MS)
+                ?: return Resource.Error(ApiErrorMapper.fromThrowable(e))
+            val updated = cached.copy(
+                phoneNumber = request.phoneNumber ?: cached.phoneNumber,
+                email = request.email ?: cached.email,
+                firstName = request.firstName ?: cached.firstName,
+                lastName = request.lastName ?: cached.lastName,
+                fullName = fullName,
+                emergencyContactPhone = request.emergencyContactPhone,
+                bio = request.bio,
+                profileImageUrl = request.profileImageUrl ?: cached.profileImageUrl
+            )
+            offlineActions.enqueue(
+                OfflineActionTypes.UPDATE_PROFILE,
+                gson.toJson(request),
+                dedupeKey = "profile"
+            ) ?: return Resource.Error(ApiErrorMapper.fromThrowable(e))
+            syncUserProfileToStore(updated)
+            cacheUpdatedProfile(updated)
+            Resource.Success(updated, fromCache = true)
         }
-    } catch (e: Exception) {
-        Resource.Error(ApiErrorMapper.fromThrowable(e))
     }
 
     suspend fun updateAppSettings(
         notificationsEnabled: Boolean? = null,
         emailNotificationsEnabled: Boolean? = null,
         biometricLockEnabled: Boolean? = null
-    ): Resource<UserProfile> = try {
-        val response = api.updateMyProfile(
-            UpdateProfileRequest(
-                appSettings = com.tenantpro.app.data.model.AppSettingsUpdate(
-                    notificationsEnabled = notificationsEnabled,
-                    emailNotificationsEnabled = emailNotificationsEnabled,
-                    biometricLockEnabled = biometricLockEnabled
+    ): Resource<UserProfile> {
+        val settingsUpdate = com.tenantpro.app.data.model.AppSettingsUpdate(
+            notificationsEnabled = notificationsEnabled,
+            emailNotificationsEnabled = emailNotificationsEnabled,
+            biometricLockEnabled = biometricLockEnabled
+        )
+        val request = UpdateProfileRequest(appSettings = settingsUpdate)
+        return try {
+            val response = api.updateMyProfile(request)
+            if (response.isSuccessful) {
+                val user = response.body()
+                if (user == null) {
+                    Resource.Error("Settings update response was empty. Please try again.")
+                } else {
+                    syncUserProfileToStore(user)
+                    cacheUpdatedProfile(user)
+                    Resource.Success(user)
+                }
+            } else {
+                Resource.Error(parseErrorMessage(response))
+            }
+        } catch (e: Exception) {
+            val cached = cachedProfile(CacheKeys.PROFILE, CachePolicy.OFFLINE_MAX_AGE_MS)
+                ?: return Resource.Error(ApiErrorMapper.fromThrowable(e))
+            val currentSettings = cached.appSettings ?: com.tenantpro.app.data.model.AppSettings()
+            val updated = cached.copy(
+                appSettings = currentSettings.copy(
+                    notificationsEnabled = notificationsEnabled ?: currentSettings.notificationsEnabled,
+                    emailNotificationsEnabled = emailNotificationsEnabled ?: currentSettings.emailNotificationsEnabled,
+                    biometricLockEnabled = biometricLockEnabled ?: currentSettings.biometricLockEnabled
                 )
             )
-        )
-
-        if (response.isSuccessful) {
-            val user = response.body()
-            if (user == null) {
-                Resource.Error("Settings update response was empty. Please try again.")
-            } else {
-                syncUserProfileToStore(user)
-                cacheUpdatedProfile(user)
-                Resource.Success(user)
-            }
-        } else {
-            Resource.Error(parseErrorMessage(response))
+            val consolidatedSettings = updated.appSettings ?: currentSettings
+            val consolidatedRequest = UpdateProfileRequest(
+                appSettings = com.tenantpro.app.data.model.AppSettingsUpdate(
+                    notificationsEnabled = consolidatedSettings.notificationsEnabled,
+                    emailNotificationsEnabled = consolidatedSettings.emailNotificationsEnabled,
+                    biometricLockEnabled = consolidatedSettings.biometricLockEnabled
+                )
+            )
+            offlineActions.enqueue(
+                OfflineActionTypes.UPDATE_SETTINGS,
+                gson.toJson(consolidatedRequest),
+                dedupeKey = "settings"
+            ) ?: return Resource.Error(ApiErrorMapper.fromThrowable(e))
+            syncUserProfileToStore(updated)
+            cacheUpdatedProfile(updated)
+            Resource.Success(updated, fromCache = true)
         }
-    } catch (e: Exception) {
-        Resource.Error(ApiErrorMapper.fromThrowable(e))
     }
 
     suspend fun changePassword(

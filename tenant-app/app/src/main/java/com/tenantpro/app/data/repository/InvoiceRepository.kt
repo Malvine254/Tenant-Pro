@@ -41,12 +41,12 @@ class InvoiceRepository @Inject constructor(
                 payload?.let { cache.write(CacheKeys.INVOICES, it.toString()) }
                 Resource.Success(invoices)
             } else {
-                cachedInvoices(CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+                cachedInvoices(CachePolicy.OFFLINE_MAX_AGE_MS)?.let {
                     Resource.Success(it, fromCache = true)
                 } ?: Resource.Error(ApiErrorMapper.fromResponse(response))
             }
         } catch (e: Exception) {
-            cachedInvoices(CachePolicy.MAX_OFFLINE_AGE_MS)?.let {
+            cachedInvoices(CachePolicy.OFFLINE_MAX_AGE_MS)?.let {
                 Resource.Success(it, fromCache = true)
             } ?: Resource.Error(ApiErrorMapper.fromThrowable(e))
         }
@@ -54,7 +54,7 @@ class InvoiceRepository @Inject constructor(
 
     suspend fun invalidateCache() = cache.remove(CacheKeys.INVOICES)
 
-    private suspend fun cachedInvoices(maxAgeMillis: Long): List<Invoice>? =
+    private suspend fun cachedInvoices(maxAgeMillis: Long?): List<Invoice>? =
         cache.read(CacheKeys.INVOICES, maxAgeMillis)?.let { payload ->
             runCatching { parseInvoices(com.google.gson.JsonParser.parseString(payload)) }.getOrNull()
         }

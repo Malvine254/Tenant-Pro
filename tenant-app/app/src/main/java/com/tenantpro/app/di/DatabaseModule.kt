@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.tenantpro.app.data.local.dao.CachedResponseDao
+import com.tenantpro.app.data.local.dao.OfflineActionDao
 import com.tenantpro.app.data.local.db.AppDatabase
 import dagger.Module
 import dagger.Provides
@@ -40,14 +41,39 @@ object DatabaseModule {
         }
     }
 
+    private val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS `offline_actions` (
+                    `actionId` TEXT NOT NULL,
+                    `userId` TEXT NOT NULL,
+                    `actionType` TEXT NOT NULL,
+                    `dedupeKey` TEXT NOT NULL,
+                    `payload` TEXT NOT NULL,
+                    `createdAt` INTEGER NOT NULL,
+                    `attemptCount` INTEGER NOT NULL,
+                    PRIMARY KEY(`actionId`)
+                )""".trimIndent()
+            )
+            db.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS `index_offline_actions_userId_actionType_dedupeKey` " +
+                    "ON `offline_actions` (`userId`, `actionType`, `dedupeKey`)"
+            )
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "tenantpro.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
             .build()
 
     @Provides
     @Singleton
     fun provideCachedResponseDao(db: AppDatabase): CachedResponseDao = db.cachedResponseDao()
+
+    @Provides
+    @Singleton
+    fun provideOfflineActionDao(db: AppDatabase): OfflineActionDao = db.offlineActionDao()
 }

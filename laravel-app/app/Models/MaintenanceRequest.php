@@ -11,7 +11,7 @@ class MaintenanceRequest extends Model
 
     protected $fillable = [
         'tenant_id', 'unit_id', 'reported_by_id', 'assigned_to_id',
-        'title', 'description', 'priority', 'status', 'resolved_at',
+        'title', 'description', 'priority', 'status', 'resolved_at', 'client_request_id',
     ];
 
     protected $casts = ['resolved_at' => 'datetime'];

@@ -1,6 +1,7 @@
 package com.tenantpro.app.ui.queries
 
 import android.database.Cursor
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
@@ -45,7 +46,7 @@ class QueriesFragment : Fragment() {
 
     // File-picker launcher — must be registered before onStart
     private val pickFileLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             if (uri != null) onFilePicked(uri)
         }
 
@@ -69,11 +70,11 @@ class QueriesFragment : Fragment() {
             ?.let(viewModel::focusConversation)
 
         binding.btnAttachment.setOnClickListener {
-            pickFileLauncher.launch("*/*")
+            pickFileLauncher.launch(arrayOf("*/*"))
         }
 
         binding.btnImageAttachment.setOnClickListener {
-            pickFileLauncher.launch("image/*")
+            pickFileLauncher.launch(arrayOf("image/*"))
         }
 
         binding.btnClearAttachment.setOnClickListener {
@@ -115,6 +116,12 @@ class QueriesFragment : Fragment() {
     }
 
     private fun onFilePicked(uri: Uri) {
+        runCatching {
+            requireContext().contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+        }
         pendingAttachmentUri = uri
         pendingAttachmentName = getFileName(uri)
         binding.tvAttachmentPreview.text = pendingAttachmentName

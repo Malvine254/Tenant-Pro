@@ -30,6 +30,7 @@ class MaintenanceRequestController extends Controller
             'tenant_id' => $request->input('tenant_id', $user?->id),
             'unit_id' => $request->input('unit_id', $tenant?->unit_id),
             'reported_by_id' => $request->input('reported_by_id', $user?->id),
+            'client_request_id' => $request->input('client_request_id', $request->input('clientRequestId')),
         ]);
 
         $data = $request->validate([
@@ -39,13 +40,21 @@ class MaintenanceRequestController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'priority' => 'in:LOW,MEDIUM,HIGH,URGENT',
+            'client_request_id' => 'nullable|uuid',
         ]);
         abort_if($this->isTenant($user) && ($data['tenant_id'] !== $user->id || $data['reported_by_id'] !== $user->id), 403);
         abort_if($this->isTenant($user) && !$this->hasActiveTenancy($user->id, $data['unit_id']), 403);
         if (!$this->isTenant($user)) $this->requireUnitManager($user, \App\Models\Unit::findOrFail($data['unit_id']));
 
         $data['status'] = 'OPEN';
-        return response()->json(MaintenanceRequest::create($data)->load(['unit', 'reportedBy']), 201);
+        $maintenanceRequest = filled($data['client_request_id'] ?? null)
+            ? MaintenanceRequest::firstOrCreate([
+                'tenant_id' => $data['tenant_id'],
+                'client_request_id' => $data['client_request_id'],
+            ], $data)
+            : MaintenanceRequest::create($data);
+
+        return response()->json($maintenanceRequest->load(['unit', 'reportedBy']), 201);
     }
 
     public function show(MaintenanceRequest $maintenanceRequest)

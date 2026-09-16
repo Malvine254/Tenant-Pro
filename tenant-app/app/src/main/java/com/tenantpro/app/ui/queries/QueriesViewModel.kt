@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tenantpro.app.data.repository.AuthRepository
+import com.tenantpro.app.data.local.CacheKeys
+import com.tenantpro.app.data.local.SafeResponseCache
 import com.tenantpro.app.data.model.SupportMessageDto
 import com.tenantpro.app.data.repository.TenantFeatureRepository
 import com.tenantpro.app.utils.DataStoreManager
@@ -36,6 +38,7 @@ class QueriesViewModel @Inject constructor(
     private val repository: TenantFeatureRepository,
     private val authRepository: AuthRepository,
     private val connectivity: NetworkConnectivityObserver,
+    private val cache: SafeResponseCache,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -147,13 +150,16 @@ class QueriesViewModel @Inject constructor(
     }
 
     private suspend fun loadMessages(showCached: Boolean, emitErrors: Boolean) {
-        val cached = parseMessages(dataStoreManager.queryChatHistoryJson.firstOrNull())
+        val cached = parseMessages(
+            cache.read(CacheKeys.CHAT_HISTORY, CachePolicy.OFFLINE_MAX_AGE_MS)
+                ?: dataStoreManager.queryChatHistoryJson.firstOrNull()
+        )
         if (showCached && cached.isNotEmpty() && _messages.value != cached) {
             _messages.value = cached
             resolvePendingConversation()
         }
 
-        when (val result = repository.getSupportMessages()) {
+        when (val result = repository.getSupportMessages(forceRefresh = !showCached)) {
             is Resource.Success -> {
                 val mapped = result.data.toChatMessages()
                 val reconciled = reconcileServerMessages(mapped)
@@ -276,7 +282,7 @@ class QueriesViewModel @Inject constructor(
     }
 
     private suspend fun persist(list: List<QueryChatMessage>) {
-        dataStoreManager.saveQueryChatHistory(toJson(list))
+        cache.write(CacheKeys.CHAT_HISTORY, toJson(list))
     }
 
     private fun resolvePendingConversation() {
@@ -291,7 +297,7 @@ class QueriesViewModel @Inject constructor(
     }
 
     private suspend fun flushPendingQueue() {
-        val queue = parseMessages(dataStoreManager.pendingSupportQueueJson.firstOrNull()).toMutableList()
+        val queue = readPendingQueue().toMutableList()
         if (queue.isEmpty()) return
 
         var changed = false
@@ -330,25 +336,30 @@ class QueriesViewModel @Inject constructor(
         }
 
         if (changed) {
-            dataStoreManager.savePendingSupportQueue(toJson(queue))
+            cache.write(CacheKeys.PENDING_SUPPORT_QUEUE, toJson(queue))
             loadMessages(showCached = false, emitErrors = false)
         }
     }
 
     private suspend fun queueOfflineMessage(message: QueryChatMessage) {
-        val existingQueue = parseMessages(dataStoreManager.pendingSupportQueueJson.firstOrNull()).toMutableList()
+        val existingQueue = readPendingQueue().toMutableList()
         existingQueue.removeAll { it.clientMessageId != null && it.clientMessageId == message.clientMessageId }
         existingQueue.add(message)
-        dataStoreManager.savePendingSupportQueue(toJson(existingQueue.takeLast(100)))
+        cache.write(CacheKeys.PENDING_SUPPORT_QUEUE, toJson(existingQueue.takeLast(100)))
     }
 
     private suspend fun removeQueuedMessage(clientMessageId: String?) {
         if (clientMessageId.isNullOrBlank()) return
-        val existingQueue = parseMessages(dataStoreManager.pendingSupportQueueJson.firstOrNull()).toMutableList()
+        val existingQueue = readPendingQueue().toMutableList()
         if (existingQueue.removeAll { it.clientMessageId == clientMessageId }) {
-            dataStoreManager.savePendingSupportQueue(toJson(existingQueue))
+            cache.write(CacheKeys.PENDING_SUPPORT_QUEUE, toJson(existingQueue))
         }
     }
+
+    private suspend fun readPendingQueue(): List<QueryChatMessage> = parseMessages(
+        cache.read(CacheKeys.PENDING_SUPPORT_QUEUE, CachePolicy.OFFLINE_MAX_AGE_MS)
+            ?: dataStoreManager.pendingSupportQueueJson.firstOrNull()
+    )
 
     private fun parseMessages(json: String?): List<QueryChatMessage> {
         if (json.isNullOrBlank()) return emptyList()

@@ -82,7 +82,13 @@ class MaintenanceViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(submitting = true)
             when (val result = repository.createMaintenanceRequest(normalizedTitle, normalizedDescription, priority)) {
                 is Resource.Success -> {
-                    _events.emit("Maintenance request submitted")
+                    _events.emit(
+                        if (result.data.status == "PENDING_SYNC") {
+                            "Saved offline. Maintenance request will sync automatically."
+                        } else {
+                            "Maintenance request submitted"
+                        }
+                    )
                     val newItem = result.data.toUiModel()
                     val updated = listOf(newItem) + _uiState.value.requests.filterNot { it.id == newItem.id }
                     _uiState.value = _uiState.value.copy(

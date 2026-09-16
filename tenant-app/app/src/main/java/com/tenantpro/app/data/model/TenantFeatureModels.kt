@@ -77,7 +77,8 @@ data class MaintenanceRequestItem(
 data class CreateMaintenanceRequest(
     @SerializedName("title") val title: String,
     @SerializedName("description") val description: String,
-    @SerializedName("priority") val priority: String? = null
+    @SerializedName("priority") val priority: String? = null,
+    @SerializedName("clientRequestId") val clientRequestId: String? = null
 )
 
 data class AcceptInvitationRequest(
