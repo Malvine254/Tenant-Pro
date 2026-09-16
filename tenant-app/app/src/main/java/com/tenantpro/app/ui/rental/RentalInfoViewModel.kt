@@ -76,18 +76,26 @@ class RentalInfoViewModel @Inject constructor(
             val unit = tenancy.unit
             val property = unit?.property
             val address = listOfNotNull(property?.addressLine, property?.city).joinToString(", ")
+            val interiorPhotos = unit?.interiorGallery.orEmpty().filter { it.url.isNotBlank() }
+            val categorizedUrls = interiorPhotos.mapTo(mutableSetOf()) { it.url }
+            val additionalUnitPhotos = unit?.imageUrls.orEmpty()
+                .filter { it.isNotBlank() && it !in categorizedUrls }
+                .mapIndexed { index, url ->
+                    UnitInteriorPhoto(area = "unit", label = "Unit photo ${index + 1}", url = url)
+                }
             RentalUnitItem(
                 tenancyId = tenancy.id,
                 propertyName = property?.name ?: "—",
                 unitNumber = unit?.unitName ?: "—",
                 floor = unit?.floor,
+                bedrooms = unit?.bedrooms,
                 rentAmountText = unit?.rentAmount?.toKes(),
                 moveInDate = tenancy.moveInDate?.toDisplayDate() ?: "—",
                 address = address.ifBlank { "—" },
                 apartmentImageUrl = unit?.displayImageUrl
                     ?: unit?.imageUrls?.firstOrNull()
                     ?: property?.coverImageUrl,
-                interiorGallery = unit?.interiorGallery.orEmpty().filter { it.url.isNotBlank() },
+                interiorGallery = interiorPhotos + additionalUnitPhotos,
             )
         }
     }
@@ -115,6 +123,7 @@ data class RentalUnitItem(
     val propertyName: String,
     val unitNumber: String,
     val floor: String?,
+    val bedrooms: Int?,
     val rentAmountText: String?,
     val moveInDate: String,
     val address: String,

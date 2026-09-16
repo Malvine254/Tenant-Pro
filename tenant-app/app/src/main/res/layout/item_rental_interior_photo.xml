@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="148dp"
-    android:layout_height="124dp"
-    android:layout_marginEnd="10dp"
+    android:layout_width="match_parent"
+    android:layout_height="220dp"
+    android:layout_marginBottom="12dp"
     android:background="@drawable/bg_card_premium"
     android:clickable="true"
     android:focusable="true"
@@ -12,13 +12,13 @@
     <ImageView
         android:id="@+id/ivInteriorPhoto"
         android:layout_width="match_parent"
-        android:layout_height="92dp"
+        android:layout_height="178dp"
         android:scaleType="centerCrop" />
 
     <TextView
         android:id="@+id/tvInteriorLabel"
         android:layout_width="match_parent"
-        android:layout_height="32dp"
+        android:layout_height="42dp"
         android:ellipsize="end"
         android:fontFamily="sans-serif-medium"
         android:gravity="center_vertical"

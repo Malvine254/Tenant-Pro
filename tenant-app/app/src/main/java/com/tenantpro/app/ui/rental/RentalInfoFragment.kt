@@ -158,33 +158,52 @@ class RentalInfoFragment : Fragment() {
 
         card.findViewById<MaterialTextView>(R.id.tvUnitPropertyName).text = item.propertyName
         card.findViewById<MaterialTextView>(R.id.tvUnitNumber).text = "Unit ${item.unitNumber}"
+        card.findViewById<MaterialTextView>(R.id.tvUnitBedrooms).text = when (item.bedrooms) {
+            null -> "Bedrooms not specified"
+            0 -> "Studio"
+            1 -> "1 bedroom"
+            else -> "${item.bedrooms} bedrooms"
+        }
         card.findViewById<MaterialTextView>(R.id.tvUnitFloor).text = item.floor ?: "-"
         card.findViewById<MaterialTextView>(R.id.tvUnitRent).text = item.rentAmountText ?: "-"
         card.findViewById<MaterialTextView>(R.id.tvUnitMoveIn).text = item.moveInDate
         card.findViewById<MaterialTextView>(R.id.tvUnitAddress).text = item.address
 
         val galleryTitle = card.findViewById<TextView>(R.id.tvUnitGalleryTitle)
-        val galleryScroll = card.findViewById<View>(R.id.scrollUnitGallery)
+        val galleryEmpty = card.findViewById<TextView>(R.id.tvUnitGalleryEmpty)
         val galleryContainer = card.findViewById<LinearLayout>(R.id.llUnitGallery)
         galleryContainer.removeAllViews()
         val hasInteriorPhotos = item.interiorGallery.isNotEmpty()
-        galleryTitle.visibility = if (hasInteriorPhotos) View.VISIBLE else View.GONE
-        galleryScroll.visibility = if (hasInteriorPhotos) View.VISIBLE else View.GONE
+        galleryTitle.text = if (hasInteriorPhotos) {
+            "Rooms & spaces · ${item.interiorGallery.size} photo${if (item.interiorGallery.size == 1) "" else "s"}"
+        } else {
+            "Rooms & spaces"
+        }
+        galleryEmpty.visibility = if (hasInteriorPhotos) View.GONE else View.VISIBLE
 
+        val areaTotals = item.interiorGallery.groupingBy { it.area }.eachCount()
+        val areaPositions = mutableMapOf<String, Int>()
         item.interiorGallery.forEach { photo ->
+            val position = (areaPositions[photo.area] ?: 0) + 1
+            areaPositions[photo.area] = position
+            val displayLabel = if ((areaTotals[photo.area] ?: 0) > 1 && photo.area != "unit") {
+                "${photo.label} $position"
+            } else {
+                photo.label
+            }
             val photoView = layoutInflater.inflate(
                 R.layout.item_rental_interior_photo,
                 galleryContainer,
                 false
             )
             val imageView = photoView.findViewById<ImageView>(R.id.ivInteriorPhoto)
-            imageView.contentDescription = "${photo.label} in Unit ${item.unitNumber}"
-            photoView.findViewById<TextView>(R.id.tvInteriorLabel).text = photo.label
+            imageView.contentDescription = "$displayLabel in Unit ${item.unitNumber}"
+            photoView.findViewById<TextView>(R.id.tvInteriorLabel).text = displayLabel
             Glide.with(this)
                 .load(photo.url.toAbsoluteAssetUrl())
                 .centerCrop()
                 .into(imageView)
-            photoView.setOnClickListener { showInteriorPhoto(item, photo.label, photo.url) }
+            photoView.setOnClickListener { showInteriorPhoto(item, displayLabel, photo.url) }
             galleryContainer.addView(photoView)
         }
     }

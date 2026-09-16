@@ -575,6 +575,7 @@ class AuthController extends Controller
                     'id' => $unit->id,
                     'unitNumber' => $unit->unit_number,
                     'floor' => $unit->floor,
+                    'bedrooms' => $unit->bedrooms,
                     'rentAmount' => $unit->rent_amount,
                     'rentAmountFormatted' => $unit->rent_amount_formatted,
                     'currency' => $unit->currency,

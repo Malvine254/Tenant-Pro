@@ -76,6 +76,7 @@ class MarketplaceEnhancementsTest extends TestCase
         $unit = $this->home();
         $unit->property->update(['cover_image_url' => '/storage/properties/garden-court.jpg']);
         $unit->update([
+            'bedrooms' => 2,
             'image_urls' => ['/storage/unit-photos/a1.jpg'],
             'interior_gallery' => [[
                 'area' => 'kitchen',
@@ -98,6 +99,7 @@ class MarketplaceEnhancementsTest extends TestCase
         $this->withHeader('X-Mobile-App-Key', 'test-mobile-key')
             ->getJson('/api/users/me/profile')
             ->assertOk()
+            ->assertJsonPath('tenantProfiles.0.unit.bedrooms', 2)
             ->assertJsonPath('tenantProfiles.0.unit.displayImageUrl', '/storage/unit-photos/a1.jpg')
             ->assertJsonPath('tenantProfiles.0.unit.property.coverImageUrl', '/storage/properties/garden-court.jpg')
             ->assertJsonPath('tenantProfiles.0.unit.interiorGallery.0.area', 'kitchen')
