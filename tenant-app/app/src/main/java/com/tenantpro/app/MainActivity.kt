@@ -216,12 +216,9 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 try {
                     val loggedIn = loginViewModel.hasSavedSession()
-                    val biometricLockEnabled = dataStoreManager.biometricLockEnabled.firstOrNull() ?: false
                     val graph = navController.navInflater.inflate(R.navigation.nav_graph)
-                    // When biometric lock is on, always start at Login so the fingerprint
-                    // prompt only ever appears there instead of overlaying Home on relaunch.
                     graph.setStartDestination(
-                        if (loggedIn && !biometricLockEnabled) R.id.homeFragment else R.id.loginFragment
+                        if (loggedIn) R.id.homeFragment else R.id.loginFragment
                     )
                     navController.graph = graph
                     handlePendingInvitationDeepLink()
