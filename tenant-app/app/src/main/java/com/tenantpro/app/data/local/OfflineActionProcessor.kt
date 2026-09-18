@@ -18,7 +18,9 @@ class OfflineActionProcessor @Inject constructor(
 ) {
     suspend fun flush() {
         for (action in queue.pending()) {
-            val response = runCatching { execute(action) }.getOrElse {
+            val response = try {
+                execute(action)
+            } catch (_: Exception) {
                 queue.markAttempt(action.actionId)
                 break
             }
