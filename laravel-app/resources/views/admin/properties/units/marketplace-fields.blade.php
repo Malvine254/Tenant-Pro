@@ -29,6 +29,12 @@
         </div>
         <div class="form-group"><label for="unit-photos">Add current photos</label><input id="unit-photos" type="file" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple>@error('photos')<div class="form-error">{{ $message }}</div>@enderror @error('photos.*')<div class="form-error">{{ $message }}</div>@enderror</div>
 
+        <label class="check-row" for="apply-media-to-property-units">
+            <input id="apply-media-to-property-units" type="checkbox" name="apply_media_to_property_units" value="1" @checked(old('apply_media_to_property_units'))>
+            <span>Replace media on every other unit in this property with this unit's final photos and interior gallery.</span>
+        </label>
+        <small>This copies files so later media changes on one unit do not affect the others.</small>
+
         <h3>Interior gallery for tenants</h3>
         <p>Label photos by area so tenants can understand their home at a glance. Keep up to 24 photos total.</p>
         @if(!empty($unit->interior_gallery))

@@ -70,6 +70,37 @@ class MarketplaceEnhancementsTest extends TestCase
         Storage::disk('public')->assertMissing($interiorPhotoPath);
     }
 
+    public function test_manager_can_copy_unit_media_to_other_property_units(): void
+    {
+        Storage::fake('public');
+        $manager = $this->manager();
+        $source = $this->home($manager);
+        $target = $source->property->units()->create([
+            'unit_number' => 'A2',
+            'rent_amount' => 25000,
+            'status' => 'AVAILABLE',
+        ]);
+        $payload = [
+            'unit_number' => 'A1',
+            'rent_amount' => 25000,
+            'status' => 'AVAILABLE',
+            'apply_media_to_property_units' => 1,
+            'photos' => [UploadedFile::fake()->createWithContent('room.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1cAAAAASUVORK5CYII='))],
+            'interior_photos' => ['bedroom' => [UploadedFile::fake()->createWithContent('bedroom.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1cAAAAASUVORK5CYII='))]],
+        ];
+
+        $this->actingAs($manager)
+            ->put(route('admin.properties.units.update', [$source->property, $source]), $payload)
+            ->assertSessionHasNoErrors();
+
+        $source->refresh();
+        $target->refresh();
+        $this->assertCount(1, $target->image_urls);
+        $this->assertCount(1, $target->interior_gallery);
+        $this->assertNotSame($source->image_urls[0], $target->image_urls[0]);
+        $this->assertNotSame($source->interior_gallery[0]['url'], $target->interior_gallery[0]['url']);
+    }
+
     public function test_tenant_profile_includes_unit_cover_and_labeled_interior_gallery(): void
     {
         config(['deployment.mobile_api_key' => 'test-mobile-key']);

@@ -58,6 +58,7 @@ class PropertyUnitAdminController extends Controller
             'water_monthly_fee' => 'nullable|numeric|min:0',
             'garbage_monthly_fee' => 'nullable|numeric|min:0',
             'status' => 'required|in:AVAILABLE,OCCUPIED,UNDER_MAINTENANCE',
+            'apply_media_to_property_units' => 'nullable|boolean',
         ]));
 
         $listingFields = MarketplaceUnitDetails::fields($data);
@@ -127,9 +128,13 @@ class PropertyUnitAdminController extends Controller
         $unitFields['billing_overrides'] = $this->billingOverrides($data);
         MarketplaceUnitDetails::updateWithPhotos($unit, $request, array_merge($unitFields, MarketplaceUnitDetails::fields($data, $unit)));
 
+        $appliedCount = $request->boolean('apply_media_to_property_units')
+            ? MarketplaceUnitDetails::copyMediaToUnits($unit->fresh(), $property->units()->get())
+            : 0;
+
         return redirect()
             ->route('admin.properties.show', $property)
-            ->with('success', 'Unit updated.');
+            ->with('success', $appliedCount > 0 ? 'Unit updated and media applied to '.$appliedCount.' other unit(s).' : 'Unit updated.');
     }
 
     public function destroy(Property $property, Unit $unit)

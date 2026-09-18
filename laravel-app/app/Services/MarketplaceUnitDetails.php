@@ -120,4 +120,77 @@ class MarketplaceUnitDetails
             throw $error;
         }
     }
+
+    /** Copies final media to sibling units without sharing files between units. */
+    public static function copyMediaToUnits(Unit $source, iterable $units): int
+    {
+        $sourcePhotos = array_values($source->image_urls ?? []);
+        $sourceGallery = array_values($source->interior_gallery ?? []);
+        if ($sourcePhotos === [] && $sourceGallery === []) {
+            return 0;
+        }
+
+        $copied = 0;
+        foreach ($units as $unit) {
+            if ($unit->id === $source->id) {
+                continue;
+            }
+
+            $newPaths = [];
+            try {
+                $photos = array_map(
+                    fn ($url) => self::duplicateMediaUrl($url, 'unit-photos', $newPaths),
+                    $sourcePhotos
+                );
+                $gallery = array_map(function ($photo) use (&$newPaths) {
+                    $photo['url'] = self::duplicateMediaUrl($photo['url'] ?? null, 'unit-interiors', $newPaths);
+
+                    return $photo;
+                }, $sourceGallery);
+
+                $oldPaths = self::storagePaths(array_merge(
+                    $unit->image_urls ?? [],
+                    collect($unit->interior_gallery ?? [])->pluck('url')->all()
+                ));
+                $unit->update(['image_urls' => $photos, 'interior_gallery' => $gallery]);
+                Storage::disk('public')->delete($oldPaths);
+                $copied++;
+            } catch (Throwable $error) {
+                Storage::disk('public')->delete($newPaths);
+                throw $error;
+            }
+        }
+
+        return $copied;
+    }
+
+    private static function duplicateMediaUrl(?string $url, string $directory, array &$newPaths): ?string
+    {
+        if (blank($url) || ! Str::contains($url, '/storage/')) {
+            return $url;
+        }
+
+        $sourcePath = Str::after($url, '/storage/');
+        if (! Storage::disk('public')->exists($sourcePath)) {
+            throw new \RuntimeException('The source media file is missing.');
+        }
+
+        $extension = pathinfo($sourcePath, PATHINFO_EXTENSION) ?: 'jpg';
+        $targetPath = $directory.'/'.Str::uuid().'.'.$extension;
+        if (! Storage::disk('public')->copy($sourcePath, $targetPath)) {
+            throw new \RuntimeException('The media file could not be copied.');
+        }
+
+        $newPaths[] = $targetPath;
+
+        return '/storage/'.$targetPath;
+    }
+
+    private static function storagePaths(array $urls): array
+    {
+        return collect($urls)
+            ->filter(fn ($url) => is_string($url) && Str::contains($url, '/storage/'))
+            ->map(fn ($url) => Str::after($url, '/storage/'))
+            ->all();
+    }
 }
