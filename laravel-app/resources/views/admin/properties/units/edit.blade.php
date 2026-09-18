@@ -2,7 +2,7 @@
 @section('page-title', 'Edit Unit')
 
 @section('content')
-<div style="max-width:940px;">
+<div style="width:min(100%,940px);margin-inline:auto;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
         <a href="{{ route('admin.properties.show', $property) }}" style="color:#94a3b8;text-decoration:none;font-size:13px;">{{ $property->name }}</a>
         <span style="color:#cbd5e1;">/</span>
