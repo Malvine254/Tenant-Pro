@@ -2,9 +2,9 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
+    android:layout_width="300dp"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
+    android:layout_marginEnd="12dp"
     app:cardBackgroundColor="@color/surface_variant"
     app:cardCornerRadius="18dp"
     app:cardElevation="0dp"
@@ -18,7 +18,7 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="190dp">
+            android:layout_height="154dp">
 
             <ImageView
                 android:id="@+id/ivUnitPhoto"
@@ -46,7 +46,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="14dp">
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tvUnitNumber"
@@ -54,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
                 android:textColor="@color/on_surface"
-                android:textSize="19sp" />
+                android:textSize="17sp" />
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tvUnitBedrooms"
@@ -72,7 +72,7 @@
                 android:id="@+id/tvUnitPropertyName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:fontFamily="sans-serif-medium"
                 android:textColor="@color/on_surface_variant"
                 android:textSize="13sp" />
@@ -85,17 +85,12 @@
                 android:textColor="@color/on_surface_variant"
                 android:textSize="12sp" />
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginVertical="14dp"
-                android:background="@color/outline_variant" />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:minHeight="40dp"
+                android:layout_marginTop="10dp"
+                android:minHeight="32dp"
                 android:orientation="horizontal">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Monthly rent" android:textColor="@color/on_surface_variant" android:textSize="12sp" />
                 <com.google.android.material.textview.MaterialTextView android:id="@+id/tvUnitRent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="sans-serif-medium" android:textColor="@color/on_surface" android:textSize="14sp" />
@@ -105,7 +100,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:minHeight="40dp"
+                android:minHeight="32dp"
                 android:orientation="horizontal">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Floor" android:textColor="@color/on_surface_variant" android:textSize="12sp" />
                 <com.google.android.material.textview.MaterialTextView android:id="@+id/tvUnitFloor" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="sans-serif-medium" android:textColor="@color/on_surface" android:textSize="14sp" />
@@ -115,21 +110,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:minHeight="40dp"
+                android:minHeight="32dp"
                 android:orientation="horizontal">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Move-in date" android:textColor="@color/on_surface_variant" android:textSize="12sp" />
                 <com.google.android.material.textview.MaterialTextView android:id="@+id/tvUnitMoveIn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="sans-serif-medium" android:textColor="@color/on_surface" android:textSize="14sp" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/tvUnitGalleryTitle"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnUnitRooms"
+                style="@style/Theme.TenantPro.Button.Outlined"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="14dp"
                 android:fontFamily="sans-serif-medium"
-                android:text="Rooms &amp; spaces"
-                android:textColor="@color/on_surface"
-                android:textSize="15sp" />
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/tvUnitGalleryEmpty"
@@ -142,13 +136,6 @@
                 android:text="Room photos have not been added for this unit yet."
                 android:textColor="@color/on_surface_variant"
                 android:textSize="12sp" />
-
-            <LinearLayout
-                android:id="@+id/llUnitGallery"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="vertical" />
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

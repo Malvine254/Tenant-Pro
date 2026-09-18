@@ -15,6 +15,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.textview.MaterialTextView
 import com.tenantpro.app.R
 import com.tenantpro.app.databinding.FragmentRentalInfoBinding
@@ -169,18 +170,24 @@ class RentalInfoFragment : Fragment() {
         card.findViewById<MaterialTextView>(R.id.tvUnitMoveIn).text = item.moveInDate
         card.findViewById<MaterialTextView>(R.id.tvUnitAddress).text = item.address
 
-        val galleryTitle = card.findViewById<TextView>(R.id.tvUnitGalleryTitle)
+        val roomsButton = card.findViewById<MaterialButton>(R.id.btnUnitRooms)
         val galleryEmpty = card.findViewById<TextView>(R.id.tvUnitGalleryEmpty)
-        val galleryContainer = card.findViewById<LinearLayout>(R.id.llUnitGallery)
-        galleryContainer.removeAllViews()
         val hasInteriorPhotos = item.interiorGallery.isNotEmpty()
-        galleryTitle.text = if (hasInteriorPhotos) {
-            "Rooms & spaces · ${item.interiorGallery.size} photo${if (item.interiorGallery.size == 1) "" else "s"}"
+        roomsButton.text = if (hasInteriorPhotos) {
+            "View rooms & spaces (${item.interiorGallery.size})"
         } else {
             "Rooms & spaces"
         }
+        roomsButton.visibility = if (hasInteriorPhotos) View.VISIBLE else View.GONE
         galleryEmpty.visibility = if (hasInteriorPhotos) View.GONE else View.VISIBLE
+        roomsButton.setOnClickListener { showUnitGallery(item) }
+    }
 
+    private fun showUnitGallery(item: RentalUnitItem) {
+        val content = layoutInflater.inflate(R.layout.dialog_rental_unit_gallery, null)
+        content.findViewById<TextView>(R.id.tvUnitGalleryDialogTitle).text =
+            "Unit ${item.unitNumber} rooms & spaces"
+        val galleryContainer = content.findViewById<LinearLayout>(R.id.llUnitGalleryDialogPhotos)
         val areaTotals = item.interiorGallery.groupingBy { it.area }.eachCount()
         val areaPositions = mutableMapOf<String, Int>()
         item.interiorGallery.forEach { photo ->
@@ -206,6 +213,11 @@ class RentalInfoFragment : Fragment() {
             photoView.setOnClickListener { showInteriorPhoto(item, displayLabel, photo.url) }
             galleryContainer.addView(photoView)
         }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setView(content)
+            .setNegativeButton("Close", null)
+            .show()
     }
 
     private fun showInteriorPhoto(item: RentalUnitItem, label: String, url: String) {
