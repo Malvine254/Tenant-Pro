@@ -2,9 +2,9 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="248dp"
+    android:layout_width="196dp"
     android:layout_height="wrap_content"
-    android:layout_marginEnd="12dp"
+    android:layout_marginEnd="10dp"
     app:cardBackgroundColor="@color/surface_variant"
     app:cardCornerRadius="14dp"
     app:cardElevation="0dp"
@@ -18,7 +18,7 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="112dp">
+            android:layout_height="88dp">
 
             <ImageView
                 android:id="@+id/ivUnitPhoto"
@@ -46,7 +46,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="10dp">
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tvUnitNumber"
@@ -54,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
                 android:textColor="@color/on_surface"
-                android:textSize="16sp" />
+                android:textSize="15sp" />
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tvUnitBedrooms"
@@ -63,7 +63,7 @@
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_badge_blue"
                 android:fontFamily="sans-serif-medium"
-                android:paddingHorizontal="10dp"
+                android:paddingHorizontal="8dp"
                 android:paddingVertical="4dp"
                 android:textColor="@color/secondary"
                 android:textSize="11sp" />
@@ -89,7 +89,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="6dp"
                 android:minHeight="28dp"
                 android:orientation="horizontal">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Monthly rent" android:textColor="@color/on_surface_variant" android:textSize="12sp" />
@@ -100,7 +100,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:minHeight="28dp"
+                android:minHeight="0dp"
                 android:orientation="horizontal">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Floor" android:textColor="@color/on_surface_variant" android:textSize="12sp" />
                 <com.google.android.material.textview.MaterialTextView android:id="@+id/tvUnitFloor" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="sans-serif-medium" android:textColor="@color/on_surface" android:textSize="14sp" />
@@ -108,20 +108,20 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:gravity="center_vertical"
-                android:minHeight="28dp"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:visibility="gone">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Move-in date" android:textColor="@color/on_surface_variant" android:textSize="12sp" />
                 <com.google.android.material.textview.MaterialTextView android:id="@+id/tvUnitMoveIn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="sans-serif-medium" android:textColor="@color/on_surface" android:textSize="14sp" />
             </LinearLayout>
 
-            <com.google.android.material.button.MaterialButton
+                android:layout_height="0dp"
                 android:id="@+id/btnUnitRooms"
-                style="@style/Theme.TenantPro.Button.Outlined"
-                android:layout_width="match_parent"
-                android:layout_height="36dp"
-                android:layout_marginTop="10dp"
+                android:orientation="horizontal"
+                android:visibility="gone">
+                android:layout_height="34dp"
+                android:layout_marginTop="8dp"
                 android:fontFamily="sans-serif-medium"
                 android:textSize="12sp" />
 
@@ -132,7 +132,7 @@
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_card_premium"
                 android:gravity="center"
-                android:padding="12dp"
+                android:padding="10dp"
                 android:text="Room photos have not been added for this unit yet."
                 android:textColor="@color/on_surface_variant"
                 android:textSize="12sp" />
