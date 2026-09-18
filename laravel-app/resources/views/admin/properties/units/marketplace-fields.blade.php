@@ -1,11 +1,17 @@
+<style>
+    .unit-listing-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px; }
+    @media (max-width:640px) { .unit-listing-grid { grid-template-columns:1fr; } }
+</style>
 <fieldset style="border:1px solid #cbd5e1;border-radius:12px;padding:18px;margin-bottom:20px;">
     <legend>Public listing details</legend>
     <p>Leave unknown amounts blank. Enter 0 only when there is no charge. These advertised costs do not change invoice settings.</p>
-    @foreach(['bathrooms' => 'Bathrooms', 'deposit_amount' => 'Security deposit (KSh)', 'service_charge' => 'Service charge (KSh / month)', 'other_move_in_cost' => 'Other one-time move-in charges (KSh)'] as $field => $label)
-        <div class="form-group"><label for="listing-{{ $field }}">{{ $label }}</label><input id="listing-{{ $field }}" type="number" name="{{ $field }}" min="0" step="{{ $field === 'bathrooms' ? '1' : '0.01' }}" value="{{ old($field, isset($unit) ? $unit->$field : '') }}">@error($field)<div class="form-error">{{ $message }}</div>@enderror</div>
-    @endforeach
-    <div class="form-group"><label for="other-move-in-label">What do the other one-time charges cover?</label><input id="other-move-in-label" name="other_move_in_label" maxlength="100" value="{{ old('other_move_in_label', $unit->other_move_in_label ?? '') }}" placeholder="For example, keys and utility connection">@error('other_move_in_label')<div class="form-error">{{ $message }}</div>@enderror</div>
-    <div class="form-group"><label for="available-from">Earliest move-in date</label><input id="available-from" type="date" name="available_from" value="{{ old('available_from', isset($unit) ? $unit->available_from?->format('Y-m-d') : '') }}">@error('available_from')<div class="form-error">{{ $message }}</div>@enderror</div>
+    <div class="unit-listing-grid">
+        @foreach(['bathrooms' => 'Bathrooms', 'deposit_amount' => 'Security deposit (KSh)', 'service_charge' => 'Service charge (KSh / month)', 'other_move_in_cost' => 'Other one-time move-in charges (KSh)'] as $field => $label)
+            <div class="form-group"><label for="listing-{{ $field }}">{{ $label }}</label><input id="listing-{{ $field }}" type="number" name="{{ $field }}" min="0" step="{{ $field === 'bathrooms' ? '1' : '0.01' }}" value="{{ old($field, isset($unit) ? $unit->$field : '') }}">@error($field)<div class="form-error">{{ $message }}</div>@enderror</div>
+        @endforeach
+        <div class="form-group"><label for="other-move-in-label">What do the other one-time charges cover?</label><input id="other-move-in-label" name="other_move_in_label" maxlength="100" value="{{ old('other_move_in_label', $unit->other_move_in_label ?? '') }}" placeholder="For example, keys and utility connection">@error('other_move_in_label')<div class="form-error">{{ $message }}</div>@enderror</div>
+        <div class="form-group"><label for="available-from">Earliest move-in date</label><input id="available-from" type="date" name="available_from" value="{{ old('available_from', isset($unit) ? $unit->available_from?->format('Y-m-d') : '') }}">@error('available_from')<div class="form-error">{{ $message }}</div>@enderror</div>
+    </div>
     <fieldset style="border:0;padding:0;margin-bottom:18px;"><legend>Amenities confirmed for this unit</legend>
         @foreach(\App\Services\MarketplaceUnitDetails::AMENITIES as $amenity)
             <label style="display:inline-flex;align-items:center;gap:8px;margin:8px 16px 0 0;"><input style="width:auto;" type="checkbox" name="amenities[]" value="{{ $amenity }}" @checked(in_array($amenity, old('amenities', $unit->amenities ?? [])))>{{ $amenity }}</label>
