@@ -62,13 +62,7 @@ class InvitationAdminController extends Controller
             ->whereNotNull('email')
             ->when(
                 $isLandlord,
-                fn ($query) => $query->where(function ($tenantQuery) use ($user) {
-                    $tenantQuery
-                        ->whereHas('receivedInvitations', fn ($invitations) => $invitations
-                            ->whereIn('sent_by_id', $user->landlordTeamUserIds())
-                            ->where('invite_type', 'TENANT'))
-                        ->orWhereHas('tenancies.unit.property', fn ($property) => $property->where('landlord_id', $user->landlordAccountId()));
-                })
+                fn ($query) => $query->where('tenant_owner_landlord_id', $user->landlordAccountId())
             )
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'phone_number']);
@@ -115,13 +109,10 @@ class InvitationAdminController extends Controller
         if (! empty($data['tenant_user_id'])) {
             $selectedTenant = User::query()
                 ->with('role')
-                ->when($user?->role?->name === 'LANDLORD', fn ($query) => $query->where(function ($tenantQuery) use ($user) {
-                    $tenantQuery
-                        ->whereHas('receivedInvitations', fn ($invitations) => $invitations
-                            ->whereIn('sent_by_id', $user->landlordTeamUserIds())
-                            ->where('invite_type', 'TENANT'))
-                        ->orWhereHas('tenancies.unit.property', fn ($property) => $property->where('landlord_id', $user->landlordAccountId()));
-                }))
+                ->when($user?->role?->name === 'LANDLORD', fn ($query) => $query->where(
+                    'tenant_owner_landlord_id',
+                    $user->landlordAccountId()
+                ))
                 ->findOrFail($data['tenant_user_id']);
 
             abort_if($selectedTenant->role?->name !== 'TENANT', 422, 'Selected user must be a tenant account.');
@@ -146,7 +137,8 @@ class InvitationAdminController extends Controller
 
         [$loginUser, $temporaryPassword, $firstTimeSetup] = $this->prepareTenantLogin(
             $normalizedEmail,
-            (string) ($data['invitee_name'] ?? '')
+            (string) ($data['invitee_name'] ?? ''),
+            $user?->role?->name === 'LANDLORD' ? $user->landlordAccountId() : null
         );
         if (! $selectedTenant && ! $firstTimeSetup && $loginUser->role?->name === 'TENANT') {
             $selectedTenant = $loginUser;
@@ -236,7 +228,7 @@ class InvitationAdminController extends Controller
         );
     }
 
-    private function prepareTenantLogin(string $email, string $inviteeName): array
+    private function prepareTenantLogin(string $email, string $inviteeName, ?string $tenantOwnerLandlordId): array
     {
         $tenantRole = Role::query()->firstOrCreate(
             ['name' => 'TENANT'],
@@ -268,6 +260,17 @@ class InvitationAdminController extends Controller
             if (blank($existingUser->name) && trim($inviteeName) !== '') {
                 $updates['name'] = trim($inviteeName);
             }
+            if ($existingUser->role?->name === 'TENANT' && $tenantOwnerLandlordId) {
+                abort_if(
+                    filled($existingUser->tenant_owner_landlord_id) &&
+                    $existingUser->tenant_owner_landlord_id !== $tenantOwnerLandlordId,
+                    403,
+                    'This tenant account belongs to another landlord.'
+                );
+                if (blank($existingUser->tenant_owner_landlord_id)) {
+                    $updates['tenant_owner_landlord_id'] = $tenantOwnerLandlordId;
+                }
+            }
 
             if (! empty($updates)) {
                 $existingUser->update($updates);
@@ -291,6 +294,7 @@ class InvitationAdminController extends Controller
             'is_active' => true,
             'email_verified_at' => now(),
             'requires_password_change' => true,
+            'tenant_owner_landlord_id' => $tenantOwnerLandlordId,
         ]);
 
         return [$newUser, $temporaryPassword, true];

@@ -28,7 +28,7 @@ class User extends Authenticatable
         'subscription_started_at', 'subscription_last_paid_at',
         'monthly_service_fee',
         'requires_password_change',
-        'managed_landlord_id', 'team_invited_at',
+        'managed_landlord_id', 'tenant_owner_landlord_id', 'team_invited_at',
     ];
 
     protected $hidden = [
@@ -98,6 +98,11 @@ class User extends Authenticatable
     public function landlordAccountOwner()
     {
         return $this->belongsTo(User::class, 'managed_landlord_id');
+    }
+
+    public function tenantOwnerLandlord()
+    {
+        return $this->belongsTo(User::class, 'tenant_owner_landlord_id');
     }
 
     public function landlordTeamMembers()

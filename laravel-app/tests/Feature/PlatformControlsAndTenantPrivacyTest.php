@@ -64,12 +64,18 @@ class PlatformControlsAndTenantPrivacyTest extends TestCase
         $this->postJson('/api/payments/mpesa/callback', [])->assertStatus(400);
     }
 
-    public function test_landlord_only_sees_unassigned_tenant_accounts_they_invited(): void
+    public function test_landlord_only_sees_unassigned_tenant_accounts_they_own(): void
     {
         $landlord = $this->userWithRole('LANDLORD');
         $otherLandlord = $this->userWithRole('LANDLORD');
-        $visibleTenant = $this->userWithRole('TENANT', ['email' => 'invited@example.test']);
-        $hiddenTenant = $this->userWithRole('TENANT', ['email' => 'unrelated@example.test']);
+        $visibleTenant = $this->userWithRole('TENANT', [
+            'email' => 'invited@example.test',
+            'tenant_owner_landlord_id' => $landlord->id,
+        ]);
+        $hiddenTenant = $this->userWithRole('TENANT', [
+            'email' => 'unrelated@example.test',
+            'tenant_owner_landlord_id' => $otherLandlord->id,
+        ]);
 
         $property = Property::create([
             'landlord_id' => $landlord->id,
@@ -109,6 +115,48 @@ class PlatformControlsAndTenantPrivacyTest extends TestCase
             ->assertOk()
             ->assertSee('invited@example.test')
             ->assertDontSee('unrelated@example.test');
+    }
+
+    public function test_landlord_can_only_assign_tenants_owned_by_their_landlord_account(): void
+    {
+        $firstLandlord = $this->userWithRole('LANDLORD');
+        $secondLandlord = $this->userWithRole('LANDLORD');
+        $superAdmin = $this->userWithRole('SUPER_ADMIN');
+        $ownedTenant = $this->userWithRole('TENANT', [
+            'email' => 'owned-tenant@example.test',
+            'tenant_owner_landlord_id' => $firstLandlord->id,
+        ]);
+        $property = Property::create([
+            'landlord_id' => $secondLandlord->id,
+            'name' => 'Second Landlord Home',
+            'address_line' => '2 Test Road',
+            'city' => 'Nairobi',
+        ]);
+        $unit = Unit::create([
+            'property_id' => $property->id,
+            'unit_number' => 'B1',
+            'rent_amount' => 10000,
+            'status' => 'AVAILABLE',
+        ]);
+
+        $this->actingAs($secondLandlord)
+            ->get(route('admin.tenants.assign'))
+            ->assertOk()
+            ->assertDontSee('owned-tenant@example.test');
+
+        $this->actingAs($secondLandlord)
+            ->post(route('admin.tenants.assign.store'), [
+                'user_id' => $ownedTenant->id,
+                'property_id' => $property->id,
+                'unit_id' => $unit->id,
+                'move_in_date' => now()->toDateString(),
+            ])
+            ->assertNotFound();
+
+        $this->actingAs($superAdmin)
+            ->get(route('admin.tenants.assign'))
+            ->assertOk()
+            ->assertSee('owned-tenant@example.test');
     }
 
     public function test_landlord_can_unassign_one_tenant_unit_without_deleting_tenancy_history(): void

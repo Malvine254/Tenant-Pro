@@ -99,6 +99,7 @@ class TenantAdminController extends Controller
             'password' => Hash::make($data['password']),
             'role_id' => $role->id,
             'is_active' => true,
+            'tenant_owner_landlord_id' => $this->isLandlord($admin) ? $admin->landlordAccountId() : null,
         ]);
 
         $tenant = DB::transaction(function () use ($tenantUser, $unit, $data) {
@@ -156,11 +157,9 @@ class TenantAdminController extends Controller
 
         $tenantUser = User::where('id', $data['user_id'])
             ->whereHas('role', fn ($role) => $role->where('name', 'TENANT'))
-            ->when($this->isLandlord($admin), fn ($query) => $query->whereHas(
-                'receivedInvitations',
-                fn ($invitations) => $invitations
-                    ->whereIn('sent_by_id', $admin->landlordTeamUserIds())
-                    ->where('invite_type', 'TENANT')
+            ->when($this->isLandlord($admin), fn ($query) => $query->where(
+                'tenant_owner_landlord_id',
+                $admin->landlordAccountId()
             ))
             ->firstOrFail();
 
@@ -322,11 +321,9 @@ class TenantAdminController extends Controller
         return User::with('role')
             ->whereHas('role', fn ($role) => $role->where('name', 'TENANT'))
             ->whereDoesntHave('tenancies', fn ($tenant) => $tenant->where('is_active', true))
-            ->when($this->isLandlord($user), fn ($query) => $query->whereHas(
-                'receivedInvitations',
-                fn ($invitations) => $invitations
-                    ->whereIn('sent_by_id', $user->landlordTeamUserIds())
-                    ->where('invite_type', 'TENANT')
+            ->when($this->isLandlord($user), fn ($query) => $query->where(
+                'tenant_owner_landlord_id',
+                $user->landlordAccountId()
             ))
             ->when($request->search, fn ($query) => $query->where(function ($userQuery) use ($request) {
                 $userQuery->where('name', 'like', "%{$request->search}%")
@@ -343,11 +340,9 @@ class TenantAdminController extends Controller
         return User::with('role')
             ->whereHas('role', fn ($role) => $role->where('name', 'TENANT'))
             ->whereDoesntHave('tenancies', fn ($tenant) => $tenant->where('is_active', true))
-            ->when($this->isLandlord($user), fn ($query) => $query->whereHas(
-                'receivedInvitations',
-                fn ($invitations) => $invitations
-                    ->whereIn('sent_by_id', $user->landlordTeamUserIds())
-                    ->where('invite_type', 'TENANT')
+            ->when($this->isLandlord($user), fn ($query) => $query->where(
+                'tenant_owner_landlord_id',
+                $user->landlordAccountId()
             ))
             ->when($request->search, fn ($query) => $query->where(function ($userQuery) use ($request) {
                 $userQuery->where('name', 'like', "%{$request->search}%")
