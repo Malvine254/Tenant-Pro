@@ -196,10 +196,10 @@
                         </tr>
                         <tr>
                             <td colspan="6" class="tenancy-nested-wrap">
-                                <details class="tenancy-details">
+                                <details class="tenancy-details" open>
                                 <summary>
-                                    <span>Tenancy and unit details</span>
-                                    <span class="tenancy-summary">{{ $activeTenancies->count() }} {{ $activeTenancies->count() === 1 ? 'record' : 'records' }} · Expand</span>
+                                    <span>Active unit assignments</span>
+                                    <span class="tenancy-summary">{{ $activeTenancies->count() }} {{ $activeTenancies->count() === 1 ? 'record' : 'records' }}</span>
                                 </summary>
                                 <div class="table-scroll">
                                 <table class="tenancy-nested">
