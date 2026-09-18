@@ -223,7 +223,16 @@
                                             <td><span class="badge badge-gray">Tenant-managed</span><div style="font-size:11px;color:#94a3b8;margin-top:3px;">Not edited in admin</div></td>
                                             <td>{{ $tenancy->move_out_date?->format('d M Y') ?? 'Active tenancy' }}</td>
                                             <td><span class="badge {{ $tenancy->is_active ? 'badge-green' : 'badge-gray' }}">{{ $tenancy->is_active ? 'Active' : 'Inactive' }}</span></td>
-                                            <td><a href="{{ route('admin.tenants.show', $tenancy) }}" class="btn btn-secondary">Open</a></td>
+                                            <td>
+                                                <div class="tenant-quick-actions">
+                                                    <a href="{{ route('admin.tenants.show', $tenancy) }}" class="btn btn-secondary">Open</a>
+                                                    <form method="POST" action="{{ route('admin.tenants.unassign', $tenancy) }}" style="display:flex;align-items:center;gap:6px;" onsubmit="return confirm('Unassign {{ $tenantUser->name }} from Unit {{ $tenancy->unit->unit_number }}? The unit will stop appearing in the tenant app and be marked available.');">
+                                                        @csrf @method('PATCH')
+                                                        <input type="date" name="move_out_date" value="{{ old('move_out_date', now()->toDateString()) }}" aria-label="Move-out date for Unit {{ $tenancy->unit->unit_number }}" required style="min-height:32px;padding:5px 7px;font-size:12px;">
+                                                        <button type="submit" class="btn btn-danger">Unassign</button>
+                                                    </form>
+                                                </div>
+                                            </td>
                                         </tr>
                                         @empty
                                         <tr><td colspan="7" class="empty-state">No active tenancy rows for this tenant.</td></tr>

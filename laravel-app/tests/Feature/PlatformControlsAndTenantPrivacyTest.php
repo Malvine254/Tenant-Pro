@@ -6,6 +6,7 @@ use App\Models\Invitation;
 use App\Models\PlatformSetting;
 use App\Models\Property;
 use App\Models\Role;
+use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\PlatformSettingsService;
@@ -108,6 +109,45 @@ class PlatformControlsAndTenantPrivacyTest extends TestCase
             ->assertOk()
             ->assertSee('invited@example.test')
             ->assertDontSee('unrelated@example.test');
+    }
+
+    public function test_landlord_can_unassign_one_tenant_unit_without_deleting_tenancy_history(): void
+    {
+        $landlord = $this->userWithRole('LANDLORD');
+        $tenantUser = $this->userWithRole('TENANT');
+        $property = Property::create([
+            'landlord_id' => $landlord->id,
+            'name' => 'Tenant Home',
+            'address_line' => '1 Test Road',
+            'city' => 'Nairobi',
+        ]);
+        $unit = Unit::create([
+            'property_id' => $property->id,
+            'unit_number' => 'A1',
+            'rent_amount' => 10000,
+            'status' => 'OCCUPIED',
+        ]);
+        $tenancy = Tenant::create([
+            'user_id' => $tenantUser->id,
+            'unit_id' => $unit->id,
+            'move_in_date' => now()->subMonth()->toDateString(),
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($landlord)
+            ->patch(route('admin.tenants.unassign', $tenancy), [
+                'move_out_date' => now()->toDateString(),
+            ])
+            ->assertRedirect(route('admin.tenants.index'));
+
+        $this->assertDatabaseHas('tenants', [
+            'id' => $tenancy->id,
+            'is_active' => false,
+        ]);
+        $this->assertDatabaseHas('units', [
+            'id' => $unit->id,
+            'status' => 'AVAILABLE',
+        ]);
     }
 
     public function test_landlord_owner_can_add_a_team_member_with_scoped_access(): void
