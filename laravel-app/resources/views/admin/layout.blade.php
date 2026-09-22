@@ -152,7 +152,7 @@
         .ajax-status-success, .ajax-status-error { margin-top:10px; padding:9px 11px; border-radius:9px; font-size:12px; }
         .ajax-status-success { background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.24); color:#bbf7d0; }
         .ajax-status-error { background:rgba(248,113,113,.12); border:1px solid rgba(248,113,113,.24); color:#fecaca; }
-        .pagination { display:flex; gap:6px; margin-top:16px; flex-wrap:wrap; }
+        .pagination { display:flex; gap:6px; margin:16px 0 20px; padding:0 4px 4px; flex-wrap:wrap; align-items:center; }
         .pagination a, .pagination span { padding:7px 11px; border:1px solid rgba(148,163,184,.18); border-radius:9px; font-size:13px; text-decoration:none; color:#e2e8f0; background:rgba(15,23,42,.7); }
         .pagination .active span { background:linear-gradient(180deg,#2563eb,#1d4ed8); color:#eff6ff; border-color:#2563eb; }
         .admin-page-header { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:14px; }

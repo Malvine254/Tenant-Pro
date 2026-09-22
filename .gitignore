@@ -3,6 +3,9 @@ node_modules/
 **/node_modules/
 vendor/
 **/vendor/
+# Blade view overrides live under resources/views/vendor/ - not a Composer vendor folder
+!laravel-app/resources/views/vendor/
+!laravel-app/resources/views/vendor/**
 
 # local runtime data
 .localdb/
