@@ -71,7 +71,7 @@
                 </tbody>
             </table>
         </div>
-        {{ $logs->links() }}
+        <div class="pagination">{{ $logs->links() }}</div>
     @endif
 </div>
 @endsection

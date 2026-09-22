@@ -15,5 +15,5 @@
         </form>
     </article>
 @empty<p>No reports have been submitted.</p>@endforelse
-{{ $reports->links() }}</div>
+<div class="pagination">{{ $reports->links() }}</div></div>
 @endsection

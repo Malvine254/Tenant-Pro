@@ -55,7 +55,7 @@
     .payment-identifiers span { display:inline-block;width:60px;color:#64748b;font-family:inherit; }
     .payment-invoice-link { white-space:nowrap;text-decoration:none;font-weight:700;font-size:12px; }
     .payment-empty { padding:42px 18px!important;text-align:center;color:var(--muted); }
-    .payment-pagination { padding:0 18px 18px; }
+    .payment-pagination.pagination { padding:0 18px 18px; }
     @media (max-width:1200px) { .payment-filter-form { grid-template-columns:repeat(2,minmax(0,1fr)); }.payment-search-field { grid-column:1/-1; } }
     @media (max-width:700px) { .payment-metrics { grid-template-columns:1fr; }.payment-filter-form { grid-template-columns:1fr; }.payment-search-field { grid-column:auto; }.payment-filter-heading { align-items:flex-start; }.payment-filter-actions { flex-direction:column-reverse; }.payment-filter-actions .btn { width:100%; }.payments-table-header { align-items:flex-start;flex-direction:column; } }
 </style>
@@ -164,7 +164,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="payment-pagination">{{ $payments->links() }}</div>
+        <div class="payment-pagination pagination">{{ $payments->links() }}</div>
     </div>
 </div>
 @endsection
