@@ -257,10 +257,61 @@ class AiAssistantTest extends TestCase
             ]);
 
         $response->assertCreated();
-        $bodies = collect($response->json())->pluck('message');
-        $this->assertTrue($bodies->contains(fn ($body) => str_contains((string) $body, '25,000')));
 
-        $aiMessages = collect($response->json())->firstWhere('isAi', true);
-        $this->assertNotNull($aiMessages, 'Expected an AI-generated message in the response payload.');
+        // The AI reply is generated after the response is sent (afterResponse) so the tenant app
+        // is not held up waiting on the model/tool round trip - verify it landed in the database,
+        // the same way the app would pick it up on its next poll.
+        $aiMessage = SupportMessage::where('conversation_id', $ctx['conversation']->id)
+            ->where('is_ai', true)
+            ->first();
+
+        $this->assertNotNull($aiMessage, 'Expected an AI-generated message to be persisted.');
+        $this->assertStringContainsString('25,000', $aiMessage->body);
+    }
+
+    public function test_landlord_is_not_emailed_when_the_ai_successfully_answers(): void
+    {
+        $this->enableAzureConfig();
+        config(['deployment.mobile_api_key' => 'test-mobile-key']);
+        \Illuminate\Support\Facades\Mail::fake();
+        $ctx = $this->makeTenancy();
+        $ctx['landlord']->update(['email' => 'landlord@example.com']);
+
+        Http::fake([
+            '*openai.azure.com*' => Http::response([
+                'choices' => [[
+                    'message' => ['role' => 'assistant', 'content' => 'Your balance is KSh 25,000.00.'],
+                ]],
+            ]),
+        ]);
+
+        Sanctum::actingAs($ctx['tenant']);
+        $this->withHeader('X-Mobile-App-Key', 'test-mobile-key')
+            ->postJson('/api/support/messages', [
+                'conversationId' => $ctx['conversation']->id,
+                'topic' => 'Billing',
+                'text' => 'What do I owe?',
+            ])->assertCreated();
+
+        \Illuminate\Support\Facades\Mail::assertNothingSent();
+    }
+
+    public function test_landlord_is_emailed_when_the_ai_cannot_answer(): void
+    {
+        config(['services.azure_openai.enabled' => false]);
+        config(['deployment.mobile_api_key' => 'test-mobile-key']);
+        \Illuminate\Support\Facades\Mail::fake();
+        $ctx = $this->makeTenancy();
+        $ctx['landlord']->update(['email' => 'landlord@example.com']);
+
+        Sanctum::actingAs($ctx['tenant']);
+        $this->withHeader('X-Mobile-App-Key', 'test-mobile-key')
+            ->postJson('/api/support/messages', [
+                'conversationId' => $ctx['conversation']->id,
+                'topic' => 'Billing',
+                'text' => 'What do I owe?',
+            ])->assertCreated();
+
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\TenantProUpdateMail::class);
     }
 }

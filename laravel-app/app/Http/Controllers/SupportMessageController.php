@@ -107,14 +107,38 @@ class SupportMessageController extends Controller
         ]);
 
         if ($this->isTenant($user)) {
-            app(TenantEmailService::class)->supportMessageReceived($message);
+            // Deferred until after the response is sent so the tenant app is not held up waiting
+            // on the AI/tool-calling round trip. The tenant's own message has already been saved
+            // above; the AI reply (if any) will appear on the app's next poll, exactly like a
+            // human landlord's reply already does today.
+            $conversationId = $conversation->id;
+            $userId = $user->id;
+            $messageId = $message->id;
 
-            // AI assistant failures must never block the tenant's own message from sending.
-            try {
-                app(\App\Services\AI\AiAssistantService::class)->respond($conversation, $user);
-            } catch (\Throwable $e) {
-                report($e);
-            }
+            dispatch(function () use ($conversationId, $userId, $messageId) {
+                $conversation = SupportConversation::find($conversationId);
+                $tenant = \App\Models\User::find($userId);
+                $message = SupportMessage::find($messageId);
+
+                if (! $conversation || ! $tenant || ! $message) {
+                    return;
+                }
+
+                $aiReply = null;
+
+                try {
+                    $aiReply = app(\App\Services\AI\AiAssistantService::class)->respond($conversation, $tenant);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+
+                // Only page the human property manager by email when the AI did not handle the
+                // message (not configured/disabled/failed) or the tenant explicitly escalated -
+                // not on every routine message the AI can already answer.
+                if (! $aiReply || $conversation->fresh()->escalated_at) {
+                    app(TenantEmailService::class)->supportMessageReceived($message);
+                }
+            })->afterResponse();
         }
 
         return response()->json(
