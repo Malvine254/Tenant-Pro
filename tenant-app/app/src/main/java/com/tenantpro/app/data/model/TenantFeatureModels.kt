@@ -60,7 +60,8 @@ data class SupportMessageDto(
     @SerializedName("propertyId") val propertyId: String? = null,
     @SerializedName("propertyName") val propertyName: String? = null,
     @SerializedName("attachmentUri") val attachmentUri: String? = null,
-    @SerializedName("attachmentName") val attachmentName: String? = null
+    @SerializedName("attachmentName") val attachmentName: String? = null,
+    @SerializedName("isAi") val isAi: Boolean = false
 )
 
 data class MaintenanceRequestItem(

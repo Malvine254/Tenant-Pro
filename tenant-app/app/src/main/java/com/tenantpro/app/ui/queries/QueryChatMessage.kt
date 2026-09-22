@@ -13,5 +13,6 @@ data class QueryChatMessage(
     val clientMessageId: String? = null,
     val attachmentUri: String? = null,
     val attachmentName: String? = null,
-    val localAttachmentUri: String? = null
+    val localAttachmentUri: String? = null,
+    val isAi: Boolean = false
 )

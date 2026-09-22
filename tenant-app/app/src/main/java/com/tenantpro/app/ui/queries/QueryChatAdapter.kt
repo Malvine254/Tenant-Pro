@@ -70,7 +70,7 @@ class QueryChatAdapter(var outgoingInitials: String = "U") :
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: QueryChatMessage, showDateDivider: Boolean) {
-            binding.tvAvatarLabel.text = "PM"
+            binding.tvAvatarLabel.text = if (item.isAi) "AI" else "PM"
             bindDateDivider(binding.tvTopic, item.timestamp, showDateDivider)
             val visibleMessage = displayMessage(item)
             binding.tvMessage.text = visibleMessage

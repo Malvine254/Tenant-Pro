@@ -430,7 +430,8 @@ class QueriesViewModel @Inject constructor(
             status = it.status,
             clientMessageId = it.clientMessageId,
             attachmentUri = it.attachmentUri,
-            attachmentName = it.attachmentName
+            attachmentName = it.attachmentName,
+            isAi = it.isAi
         )
     }
 
