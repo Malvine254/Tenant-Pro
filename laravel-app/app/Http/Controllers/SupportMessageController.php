@@ -108,6 +108,13 @@ class SupportMessageController extends Controller
 
         if ($this->isTenant($user)) {
             app(TenantEmailService::class)->supportMessageReceived($message);
+
+            // AI assistant failures must never block the tenant's own message from sending.
+            try {
+                app(\App\Services\AI\AiAssistantService::class)->respond($conversation, $user);
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return response()->json(
@@ -249,6 +256,7 @@ class SupportMessageController extends Controller
             'thumbnailUrl' => $message->thumbnail_url,
             'duration' => $message->duration,
             'uploadStatus' => $message->upload_status,
+            'isAi' => (bool) $message->is_ai,
         ];
     }
 

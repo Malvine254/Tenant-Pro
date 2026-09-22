@@ -9,9 +9,13 @@ class SupportConversation extends Model
 {
     use HasUuids;
 
-    protected $fillable = ['tenant_user_id', 'landlord_user_id', 'property_id', 'subject', 'topic', 'is_open'];
+    protected $fillable = ['tenant_user_id', 'landlord_user_id', 'property_id', 'subject', 'topic', 'is_open', 'ai_enabled', 'escalated_at', 'escalation_reason'];
 
-    protected $casts = ['is_open' => 'boolean'];
+    // Matches the support_conversations migration defaults so freshly created in-memory
+    // instances behave correctly before their next fetch from the database.
+    protected $attributes = ['is_open' => true, 'ai_enabled' => true];
+
+    protected $casts = ['is_open' => 'boolean', 'ai_enabled' => 'boolean', 'escalated_at' => 'datetime'];
 
     public function tenant() { return $this->belongsTo(User::class, 'tenant_user_id'); }
     public function landlord() { return $this->belongsTo(User::class, 'landlord_user_id'); }

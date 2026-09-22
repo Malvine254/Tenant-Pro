@@ -54,4 +54,18 @@ return [
         'credentials_base64' => env('FIREBASE_CREDENTIALS_BASE64'),
     ],
 
+    'azure_openai' => [
+        'enabled' => env('AZURE_OPENAI_ENABLED', false),
+        'endpoint' => env('AZURE_OPENAI_ENDPOINT'),
+        'api_key' => env('AZURE_OPENAI_API_KEY'),
+        'deployment' => env('AZURE_OPENAI_DEPLOYMENT'),
+        'api_version' => env('AZURE_OPENAI_API_VERSION', '2024-10-21'),
+        'temperature' => (float) env('AZURE_OPENAI_TEMPERATURE', 0.3),
+        'max_output_tokens' => (int) env('AZURE_OPENAI_MAX_OUTPUT_TOKENS', 800),
+        'request_timeout' => (int) env('AZURE_OPENAI_TIMEOUT', 30),
+        'max_tool_iterations' => (int) env('AZURE_OPENAI_MAX_TOOL_ITERATIONS', 5),
+        // Number of most recent conversation messages sent as context to the model.
+        'context_message_limit' => (int) env('AZURE_OPENAI_CONTEXT_MESSAGE_LIMIT', 20),
+    ],
+
 ];
