@@ -5,6 +5,7 @@ namespace App\Services\AI;
 use App\Models\SupportConversation;
 use App\Models\SupportMessage;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -40,6 +41,8 @@ class AiAssistantService
         }
 
         try {
+            $this->setTyping($conversation, true);
+
             return $this->generateAndPersist($conversation, $tenant);
         } catch (Throwable $e) {
             Log::error('AI assistant could not produce or persist a reply.', [
@@ -48,6 +51,26 @@ class AiAssistantService
             ]);
 
             return null;
+        } finally {
+            $this->setTyping($conversation, false);
+        }
+    }
+
+    /**
+     * Surface a "typing" state while the assistant is composing, reusing the same cache keys the
+     * existing admin/tenant typing indicators already poll - a per-conversation key for the admin
+     * web inbox bubble, and the global admin-typing key the Android app already displays.
+     */
+    private function setTyping(SupportConversation $conversation, bool $typing): void
+    {
+        $conversationKey = 'chat:ai:typing:'.$conversation->id;
+
+        if ($typing) {
+            Cache::put($conversationKey, true, now()->addSeconds(60));
+            Cache::put('chat:admin:typing', true, now()->addSeconds(60));
+        } else {
+            Cache::forget($conversationKey);
+            Cache::forget('chat:admin:typing');
         }
     }
 

@@ -91,6 +91,7 @@ class SupportChatAdminController extends Controller
         return response()->json([
             'online' => Cache::has('chat:online:'.$tenantId),
             'typing' => Cache::has('chat:typing:'.$tenantId),
+            'aiTyping' => Cache::has('chat:ai:typing:'.$supportConversation->id),
         ]);
     }
 

@@ -469,6 +469,28 @@ body.admin-chat-page {
     gap: 2px;
 }
 
+.ai-typing-row {
+    display: none;
+    padding: 0 14px 8px;
+}
+
+.ai-typing-row.show {
+    display: flex;
+}
+
+.ai-typing-bubble {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(37, 99, 235, .12);
+    border: 1px solid rgba(96, 165, 250, .3);
+    color: #93c5fd;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 8px 12px;
+    border-radius: 14px;
+}
+
 .typing-dots i {
     width: 4px;
     height: 4px;
@@ -538,6 +560,7 @@ body.admin-chat-page {
  @endphp
  <div class="row {{ $m->is_from_tenant?'':'mine' }}">@if($m->is_from_tenant)<span class="avatar">@if($sender?->profile_image_url)<img src="{{ $media($sender->profile_image_url) }}" alt="">@else{{ $initials($sender?->name) }}@endif</span>@endif<div class="bubble">@if($m->is_ai)<div style="font-size:11px;font-weight:700;color:#60a5fa;margin-bottom:3px;">🤖 AI Assistant</div>@endif @if($visibleBody)<div>{{ $m->body }}</div>@endif @if($url) @if($isImage)<img src="{{ $url }}" alt="{{ $m->attachment_name ?: 'Shared image' }}" loading="lazy">@elseif($isAudio)<audio class="attachment-audio" controls preload="metadata"><source src="{{ $url }}" type="{{ $m->attachment_mime_type ?: 'audio/mpeg' }}">Audio playback is unavailable. <a class="file" href="{{ $url }}" target="_blank" rel="noopener">Download audio</a></audio>@else<a class="attachment-card" href="{{ $url }}" target="_blank" rel="noopener"><span class="attachment-icon">📎</span><span class="attachment-copy"><strong>{{ $m->attachment_name ?: 'Attachment' }}</strong><span>{{ collect([$m->attachment_mime_type, $fileSize])->filter()->implode(' · ') ?: 'Open attachment' }}</span></span></a>@endif @endif<div class="meta"><time datetime="{{ $m->created_at?->toIso8601String() }}">{{ $chatTime($m->created_at) }}</time> · {{ $m->status }}</div></div></div>
  @endforeach @endforeach</div>
+ <div class="ai-typing-row" id="aiTypingRow"><span class="ai-typing-bubble">🤖 AI Assistant is replying<span class="typing-dots"><i></i><i></i><i></i></span></span></div>
  <form class="composer" id="composer" action="{{ route('admin.chats.reply',$selectedConversation) }}" method="POST" enctype="multipart/form-data">@csrf<input id="file" name="file" type="file" hidden accept="image/*,.pdf,.doc,.docx,.txt,audio/*"><button class="icon-btn attach" type="button" id="attach" aria-label="Attach file">+</button><textarea name="body" placeholder="Write a message…" maxlength="5000"></textarea><button class="icon-btn send" type="submit" aria-label="Send">➤</button><span class="selected-file" id="fileName" hidden></span></form>
  @else<div class="empty"><strong>Select a chat</strong><p>Choose a tenant conversation.</p></div>@endif</main>
 </div>
@@ -579,7 +602,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  const presence=document.createElement('div');presence.className='presence';presence.innerHTML='<i class="presence-dot"></i><span>Offline</span>';
  const typing=document.createElement('div');typing.className='typing';typing.textContent=@json(($selectedConversation->tenant?->name??'Tenant').' is typing…');
  headerCopy.append(presence,typing);
- const refresh=async()=>{try{const response=await fetch(@json(route('admin.chats.state',$selectedConversation)),{headers:{Accept:'application/json'},cache:'no-store'});if(!response.ok)return;const state=await response.json();presence.classList.toggle('online',state.online);presence.querySelector('span').textContent=state.online?'Online':'Offline';typing.classList.toggle('show',state.typing);const activeRow=document.querySelector('[data-conversation-id="{{ $selectedConversation->id }}"]'),rowTyping=activeRow?.querySelector('.conversation-typing'),rowPreview=activeRow?.querySelector('.conversation-preview');rowTyping?.classList.toggle('show',state.typing);if(rowPreview)rowPreview.style.display=state.typing?'none':''}catch(_){presence.classList.remove('online');presence.querySelector('span').textContent='Offline'}};
+ const refresh=async()=>{try{const response=await fetch(@json(route('admin.chats.state',$selectedConversation)),{headers:{Accept:'application/json'},cache:'no-store'});if(!response.ok)return;const state=await response.json();presence.classList.toggle('online',state.online);presence.querySelector('span').textContent=state.online?'Online':'Offline';typing.classList.toggle('show',state.typing);document.querySelector('#aiTypingRow')?.classList.toggle('show',!!state.aiTyping);const activeRow=document.querySelector('[data-conversation-id="{{ $selectedConversation->id }}"]'),rowTyping=activeRow?.querySelector('.conversation-typing'),rowPreview=activeRow?.querySelector('.conversation-preview');rowTyping?.classList.toggle('show',state.typing);if(rowPreview)rowPreview.style.display=state.typing?'none':''}catch(_){presence.classList.remove('online');presence.querySelector('span').textContent='Offline'}};
  refresh();window.setInterval(refresh,2000);
 
  // Incremental live sync: update only the messages and conversation list.
