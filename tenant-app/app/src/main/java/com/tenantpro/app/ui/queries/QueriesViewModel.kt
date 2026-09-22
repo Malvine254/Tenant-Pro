@@ -47,10 +47,13 @@ class QueriesViewModel @Inject constructor(
     val managerOnline: StateFlow<Boolean> = _managerOnline.asStateFlow()
     private val _managerTyping = MutableStateFlow(false)
     val managerTyping: StateFlow<Boolean> = _managerTyping.asStateFlow()
+    private val _aiTyping = MutableStateFlow(false)
+    val aiTyping: StateFlow<Boolean> = _aiTyping.asStateFlow()
     fun heartbeat() { viewModelScope.launch {
         repository.supportHeartbeat()?.let {
             _managerOnline.value = it["adminOnline"] == true
             _managerTyping.value = it["adminTyping"] == true
+            _aiTyping.value = it["aiTyping"] == true
         }
     } }
     fun setTyping(typing: Boolean) { viewModelScope.launch { repository.setSupportTyping(typing) } }

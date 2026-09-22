@@ -193,6 +193,20 @@ class QueriesFragment : Fragment() {
         binding.btnSendMessage.isEnabled = hasContent && viewModel.sending.value.not() && viewModel.selectedProperty.value != null
     }
 
+    // The AI assistant and a human property manager use separate signals so the tenant is never
+    // told they are talking to a person when it is actually the assistant composing a reply.
+    private fun updateTypingIndicator() {
+        val aiTyping = viewModel.aiTyping.value
+        val humanTyping = viewModel.managerTyping.value
+        binding.tvManagerTypingIndicator.text = when {
+            aiTyping -> "AI Assistant is typing…"
+            humanTyping -> "Property Manager is typing…"
+            else -> binding.tvManagerTypingIndicator.text
+        }
+        if (aiTyping || humanTyping) binding.tvManagerTypingIndicator.visible()
+        else binding.tvManagerTypingIndicator.gone()
+    }
+
     private fun bindUi() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -254,8 +268,7 @@ class QueriesFragment : Fragment() {
                 }
                 launch {
                     viewModel.managerTyping.collect { typing ->
-                        if (typing) binding.tvManagerTypingIndicator.visible()
-                        else binding.tvManagerTypingIndicator.gone()
+                        updateTypingIndicator()
                         if (typing) {
                             binding.tvManagerPresence.text = if (viewModel.managerOnline.value) "Online" else "Offline"
                         } else {
@@ -264,6 +277,9 @@ class QueriesFragment : Fragment() {
                             binding.tvManagerPresence.setTextColor(requireContext().getColor(if (online) R.color.success else R.color.on_surface_variant))
                         }
                     }
+                }
+                launch {
+                    viewModel.aiTyping.collect { updateTypingIndicator() }
                 }
                 launch {
                     viewModel.visibleMessages.collect { messages ->

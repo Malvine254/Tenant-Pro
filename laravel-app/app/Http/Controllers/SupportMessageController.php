@@ -212,13 +212,22 @@ class SupportMessageController extends Controller
 
     public function heartbeat(Request $request)
     {
-        $this->ensureAllowedRole($request->user());
+        $user = $request->user();
+        $this->ensureAllowedRole($user);
 
-        Cache::put('chat:online:'.$request->user()->id, now()->timestamp, now()->addSeconds(45));
+        Cache::put('chat:online:'.$user->id, now()->timestamp, now()->addSeconds(45));
+
+        $aiTyping = false;
+        if ($this->isTenant($user)) {
+            $conversation = SupportConversation::where('tenant_user_id', $user->id)->latest('updated_at')->first();
+            $aiTyping = $conversation && Cache::has('chat:ai:typing:'.$conversation->id);
+        }
+
         return response()->json([
             'ok' => true,
             'adminOnline' => Cache::has('chat:admin:online'),
             'adminTyping' => Cache::has('chat:admin:typing'),
+            'aiTyping' => $aiTyping,
         ]);
     }
 

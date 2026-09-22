@@ -57,9 +57,9 @@ class AiAssistantService
     }
 
     /**
-     * Surface a "typing" state while the assistant is composing, reusing the same cache keys the
-     * existing admin/tenant typing indicators already poll - a per-conversation key for the admin
-     * web inbox bubble, and the global admin-typing key the Android app already displays.
+     * Surface a "typing" state while the assistant is composing, using a per-conversation cache
+     * key so it is never confused with a real human property manager typing (that uses its own
+     * separate global flag set only by the admin web inbox's own textarea).
      */
     private function setTyping(SupportConversation $conversation, bool $typing): void
     {
@@ -67,10 +67,8 @@ class AiAssistantService
 
         if ($typing) {
             Cache::put($conversationKey, true, now()->addSeconds(60));
-            Cache::put('chat:admin:typing', true, now()->addSeconds(60));
         } else {
             Cache::forget($conversationKey);
-            Cache::forget('chat:admin:typing');
         }
     }
 

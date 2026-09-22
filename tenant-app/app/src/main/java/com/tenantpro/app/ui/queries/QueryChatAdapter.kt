@@ -71,6 +71,7 @@ class QueryChatAdapter(var outgoingInitials: String = "U") :
 
         fun bind(item: QueryChatMessage, showDateDivider: Boolean) {
             binding.tvAvatarLabel.text = if (item.isAi) "AI" else "PM"
+            binding.tvSenderLabel.visibility = if (item.isAi) View.VISIBLE else View.GONE
             bindDateDivider(binding.tvTopic, item.timestamp, showDateDivider)
             val visibleMessage = displayMessage(item)
             binding.tvMessage.text = visibleMessage
