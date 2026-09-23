@@ -124,18 +124,20 @@ class SupportMessageController extends Controller
                     return;
                 }
 
-                $aiReply = null;
+                $wasEscalatedAlready = (bool) $conversation->escalated_at;
 
                 try {
-                    $aiReply = app(\App\Services\AI\AiAssistantService::class)->respond($conversation, $tenant);
+                    app(\App\Services\AI\AiAssistantService::class)->respond($conversation, $tenant);
                 } catch (\Throwable $e) {
                     report($e);
                 }
 
-                // Only page the human property manager by email when the AI did not handle the
-                // message (not configured/disabled/failed) or the tenant explicitly escalated -
-                // not on every routine message the AI can already answer.
-                if (! $aiReply || $conversation->fresh()->escalated_at) {
+                // Only page the human property manager by email once the tenant has been
+                // escalated to a human - never for routine messages the AI is handling, even if
+                // the AI could not answer this particular one. If it was already escalated before
+                // this message, a human is already engaged and does not need another email per
+                // message.
+                if (! $wasEscalatedAlready && $conversation->fresh()->escalated_at) {
                     app(TenantEmailService::class)->supportMessageReceived($message);
                 }
             })->afterResponse();

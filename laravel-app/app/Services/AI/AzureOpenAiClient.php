@@ -60,6 +60,19 @@ class AzureOpenAiClient
 
         $response = $this->send($url, $payload, $config);
 
+        // Reasoning models (e.g. gpt-5-mini/o1-family) spend part of max_completion_tokens on
+        // hidden internal reasoning before writing any visible answer. Retry once with a larger
+        // budget if the response was cut off with no visible content, instead of ever silently
+        // returning nothing to the tenant.
+        if ($this->wasTruncatedWithNoContent($response)) {
+            $payload['max_completion_tokens'] = max($payload['max_completion_tokens'] * 4, 4000);
+            Log::warning('Azure OpenAI response was truncated with no visible content; retrying with a larger token budget.', [
+                'original_max_completion_tokens' => $config['max_output_tokens'],
+                'retry_max_completion_tokens' => $payload['max_completion_tokens'],
+            ]);
+            $response = $this->send($url, $payload, $config);
+        }
+
         // Some model families (e.g. reasoning models) reject a non-default temperature and
         // report exactly which parameter is unsupported. Drop it and retry once rather than
         // requiring every caller to know per-model quirks.
@@ -102,6 +115,25 @@ class AzureOpenAiClient
     private function rejectedParameter(\Illuminate\Http\Client\Response $response): ?string
     {
         return data_get($response->json(), 'error.param');
+    }
+
+    /**
+     * True when the model stopped due to hitting its token limit and produced no tool calls and
+     * no visible content - the classic reasoning-model symptom of spending the whole budget on
+     * hidden reasoning tokens.
+     */
+    private function wasTruncatedWithNoContent(\Illuminate\Http\Client\Response $response): bool
+    {
+        if ($response->failed()) {
+            return false;
+        }
+
+        $message = data_get($response->json(), 'choices.0.message', []);
+        $finishReason = data_get($response->json(), 'choices.0.finish_reason');
+
+        return $finishReason === 'length'
+            && empty($message['tool_calls'])
+            && trim((string) ($message['content'] ?? '')) === '';
     }
 
     private function config(): array

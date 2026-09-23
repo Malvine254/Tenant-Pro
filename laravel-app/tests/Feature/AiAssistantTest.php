@@ -296,7 +296,7 @@ class AiAssistantTest extends TestCase
         \Illuminate\Support\Facades\Mail::assertNothingSent();
     }
 
-    public function test_landlord_is_emailed_when_the_ai_cannot_answer(): void
+    public function test_landlord_is_not_emailed_when_the_ai_is_unavailable_and_not_escalated(): void
     {
         config(['services.azure_openai.enabled' => false]);
         config(['deployment.mobile_api_key' => 'test-mobile-key']);
@@ -310,6 +310,43 @@ class AiAssistantTest extends TestCase
                 'conversationId' => $ctx['conversation']->id,
                 'topic' => 'Billing',
                 'text' => 'What do I owe?',
+            ])->assertCreated();
+
+        // Email is reserved for explicit escalation only - not merely because the AI is disabled
+        // or failed to answer a particular message.
+        \Illuminate\Support\Facades\Mail::assertNothingSent();
+    }
+
+    public function test_landlord_is_emailed_only_once_the_tenant_escalates(): void
+    {
+        $this->enableAzureConfig();
+        config(['deployment.mobile_api_key' => 'test-mobile-key']);
+        \Illuminate\Support\Facades\Mail::fake();
+        $ctx = $this->makeTenancy();
+        $ctx['landlord']->update(['email' => 'landlord@example.com']);
+
+        Http::fake([
+            '*openai.azure.com*' => Http::response([
+                'choices' => [[
+                    'message' => [
+                        'role' => 'assistant',
+                        'content' => null,
+                        'tool_calls' => [[
+                            'id' => 'call_1',
+                            'type' => 'function',
+                            'function' => ['name' => 'escalate_to_human', 'arguments' => json_encode(['reason' => 'Wants a human.'])],
+                        ]],
+                    ],
+                ]],
+            ]),
+        ]);
+
+        Sanctum::actingAs($ctx['tenant']);
+        $this->withHeader('X-Mobile-App-Key', 'test-mobile-key')
+            ->postJson('/api/support/messages', [
+                'conversationId' => $ctx['conversation']->id,
+                'topic' => 'Billing',
+                'text' => 'I want to speak to a human.',
             ])->assertCreated();
 
         \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\TenantProUpdateMail::class);
