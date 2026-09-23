@@ -314,4 +314,23 @@ class AiAssistantTest extends TestCase
 
         \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\TenantProUpdateMail::class);
     }
+
+    public function test_admin_can_resume_ai_after_escalation(): void
+    {
+        $ctx = $this->makeTenancy();
+        $ctx['conversation']->update([
+            'escalated_at' => now(),
+            'escalation_reason' => 'Tenant asked for a human.',
+        ]);
+
+        $this->actingAs($ctx['landlord'])
+            ->withoutMiddleware(\App\Http\Middleware\EnsureAdminReadiness::class)
+            ->post(route('admin.chats.resume-ai', $ctx['conversation']), [], ['Accept' => 'application/json'])
+            ->assertOk();
+
+        $ctx['conversation']->refresh();
+        $this->assertNull($ctx['conversation']->escalated_at);
+        $this->assertNull($ctx['conversation']->escalation_reason);
+        $this->assertTrue($ctx['conversation']->ai_enabled);
+    }
 }

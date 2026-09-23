@@ -93,7 +93,20 @@ class AiAssistantService
                     $content = trim((string) ($result['content'] ?? ''));
 
                     if ($content === '') {
-                        return null;
+                        // The model returned no visible content (commonly a reasoning model that
+                        // exhausted its token budget on hidden reasoning). Never leave the tenant
+                        // with silence - explain the limitation instead.
+                        Log::warning('AI assistant received an empty response from the model.', [
+                            'conversation_id' => $conversation->id,
+                            'finish_reason' => data_get($result, 'raw.choices.0.finish_reason'),
+                        ]);
+
+                        return $this->persistReply(
+                            $conversation,
+                            "I wasn't able to put together a complete answer to that. Could you ask "
+                                .'it a bit more simply, or in smaller parts?',
+                            $toolTrace
+                        );
                     }
 
                     return $this->persistReply($conversation, $content, $toolTrace);

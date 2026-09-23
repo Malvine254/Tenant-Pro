@@ -82,6 +82,24 @@ class SupportChatAdminController extends Controller
         return response()->json(['ok' => true, 'is_open' => $supportConversation->is_open]);
     }
 
+    public function resumeAi(Request $request, SupportConversation $supportConversation)
+    {
+        $this->authorizeConversation($request->user(), $supportConversation);
+        $supportConversation->update([
+            'ai_enabled' => true,
+            'escalated_at' => null,
+            'escalation_reason' => null,
+        ]);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['ok' => true]);
+        }
+
+        return redirect()
+            ->route('admin.chats.index', ['conversation_id' => $supportConversation->id])
+            ->with('success', 'The AI assistant will resume replying to this tenant.');
+    }
+
     public function state(Request $request, SupportConversation $supportConversation)
     {
         $this->authorizeConversation($request->user(), $supportConversation);

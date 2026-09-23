@@ -549,7 +549,7 @@ body.admin-chat-page {
  @empty <div class="empty" style="padding:30px">No chats yet.</div> @endforelse
  </div></aside>
  <main class="chat-main">@if($selectedConversation) @php $u=$selectedConversation->tenant;$property=$selectedConversation->property; @endphp
- <header class="chat-head"><span class="avatar">@if($u?->profile_image_url)<img src="{{ $media($u->profile_image_url) }}" alt="">@else{{ $initials($u?->name) }}@endif</span><div><h3>{{ $u?->name??'Unknown tenant' }}</h3><p>{{ ucfirst(strtolower($u?->role?->name??'Tenant')) }} · {{ $property?->name??'No property' }}</p></div></header>
+ <header class="chat-head"><span class="avatar">@if($u?->profile_image_url)<img src="{{ $media($u->profile_image_url) }}" alt="">@else{{ $initials($u?->name) }}@endif</span><div><h3>{{ $u?->name??'Unknown tenant' }}</h3><p>{{ ucfirst(strtolower($u?->role?->name??'Tenant')) }} · {{ $property?->name??'No property' }}</p></div>@if($selectedConversation->escalated_at)<form method="POST" action="{{ route('admin.chats.resume-ai',$selectedConversation) }}" style="margin-left:auto;"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-secondary" style="font-size:12px;" title="Escalated: {{ $selectedConversation->escalation_reason }}">🤖 Resume AI Assistant</button></form>@endif</header>
  <div class="stream" id="stream">@foreach($messageGroups as $date => $messages)<div class="date-divider">{{ $chatDateLabel($messages->first()?->created_at) }}</div>@foreach($messages as $m) @php $sender=$m->sender;$url=$m->attachment_uri?$media($m->attachment_uri):null; @endphp
  @php
    $visibleBody = trim((string) $m->body) !== '' && strcasecmp(trim((string) $m->body), 'Attachment shared') !== 0;

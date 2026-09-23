@@ -167,6 +167,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.security')->group(func
         Route::get('/chats', [SupportChatAdminController::class, 'index'])->name('chats.index');
         Route::post('/chats/{supportConversation}/reply', [SupportChatAdminController::class, 'reply'])->name('chats.reply');
         Route::patch('/chats/{supportConversation}/toggle', [SupportChatAdminController::class, 'toggle'])->name('chats.toggle');
+        Route::post('/chats/{supportConversation}/resume-ai', [SupportChatAdminController::class, 'resumeAi'])->name('chats.resume-ai');
         Route::get('/chats/{supportConversation}/state', [SupportChatAdminController::class, 'state'])->name('chats.state');
         Route::post('/chats/{supportConversation}/typing', [SupportChatAdminController::class, 'typing'])->name('chats.typing');
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
