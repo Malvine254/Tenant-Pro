@@ -23,9 +23,19 @@ class AuthInterceptor @Inject constructor(
 ) : Interceptor {
     private val sessionExpiredNotified = AtomicBoolean(false)
     private val accessRestrictedNotified = AtomicBoolean(false)
+    @Volatile private var notificationToken: String? = null
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val token = runBlocking { dataStoreManager.accessToken.firstOrNull() }
+        if (notificationToken != token) {
+            synchronized(this) {
+                if (notificationToken != token) {
+                    notificationToken = token
+                    sessionExpiredNotified.set(false)
+                    accessRestrictedNotified.set(false)
+                }
+            }
+        }
         val request = if (token.isNullOrBlank()) {
             chain.request()
         } else {
@@ -75,8 +85,6 @@ class AuthInterceptor @Inject constructor(
             sessionManager.notifyAccessRestricted(
                 "Rental services are temporarily restricted because the property owner account is inactive."
             )
-        } else if (!landlordAccessSuspended) {
-            accessRestrictedNotified.set(false)
         }
 
         return response
