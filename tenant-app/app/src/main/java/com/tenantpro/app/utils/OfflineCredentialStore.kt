@@ -12,6 +12,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import android.util.Base64
 
+private const val PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256"
+private const val PBKDF2_SALT_BYTES = 16
+private const val PBKDF2_KEY_LENGTH_BITS = 256
+private const val PBKDF2_ITERATIONS = 120_000
+
 /**
  * Lets a tenant who has already authenticated on this device sign in again while the
  * backend is unreachable. The password is never stored - only a PBKDF2 verifier - and the
@@ -24,7 +29,7 @@ data class OfflineCredential(
     val name: String? = null,
     val phone: String = "",
     val salt: String = "",
-    val iterations: Int = ITERATIONS,
+    val iterations: Int = PBKDF2_ITERATIONS,
     val verifier: String = ""
 )
 
@@ -43,8 +48,8 @@ class OfflineCredentialStore @Inject constructor(
     ) {
         if (email.isBlank() || userId.isBlank() || token.isBlank() || password.isBlank()) return
 
-        val salt = ByteArray(SALT_BYTES).also { SecureRandom().nextBytes(it) }
-        val verifier = withContext(Dispatchers.Default) { derive(password, salt, ITERATIONS) }
+        val salt = ByteArray(PBKDF2_SALT_BYTES).also { SecureRandom().nextBytes(it) }
+        val verifier = withContext(Dispatchers.Default) { derive(password, salt, PBKDF2_ITERATIONS) }
 
         val credential = OfflineCredential(
             email = email.trim().lowercase(),
@@ -53,7 +58,7 @@ class OfflineCredentialStore @Inject constructor(
             name = name,
             phone = phone,
             salt = Base64.encodeToString(salt, Base64.NO_WRAP),
-            iterations = ITERATIONS,
+            iterations = PBKDF2_ITERATIONS,
             verifier = Base64.encodeToString(verifier, Base64.NO_WRAP)
         )
 
@@ -84,14 +89,7 @@ class OfflineCredentialStore @Inject constructor(
     }
 
     private fun derive(password: String, salt: ByteArray, iterations: Int): ByteArray {
-        val spec = PBEKeySpec(password.toCharArray(), salt, iterations, KEY_LENGTH_BITS)
-        return SecretKeyFactory.getInstance(ALGORITHM).generateSecret(spec).encoded
-    }
-
-    private companion object {
-        const val ALGORITHM = "PBKDF2WithHmacSHA256"
-        const val SALT_BYTES = 16
-        const val KEY_LENGTH_BITS = 256
-        const val ITERATIONS = 120_000
+        val spec = PBEKeySpec(password.toCharArray(), salt, iterations, PBKDF2_KEY_LENGTH_BITS)
+        return SecretKeyFactory.getInstance(PBKDF2_ALGORITHM).generateSecret(spec).encoded
     }
 }
