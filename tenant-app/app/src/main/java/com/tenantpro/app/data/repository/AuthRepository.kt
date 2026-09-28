@@ -26,6 +26,7 @@ import com.tenantpro.app.data.local.OfflineActionTypes
 import com.tenantpro.app.data.local.SafeResponseCache
 import com.tenantpro.app.utils.DataStoreManager
 import com.tenantpro.app.utils.NotificationWorkScheduler
+import com.tenantpro.app.utils.OfflineCredentialStore
 import com.tenantpro.app.utils.Resource
 import com.tenantpro.app.utils.UploadPayloadResolver
 import com.google.firebase.messaging.FirebaseMessaging
@@ -49,6 +50,7 @@ class AuthRepository @Inject constructor(
     private val notificationWorkScheduler: NotificationWorkScheduler,
     private val cache: SafeResponseCache,
     private val offlineActions: OfflineActionQueue,
+    private val offlineCredentials: OfflineCredentialStore,
     private val gson: Gson
 ) {
     private fun parseErrorMessage(response: retrofit2.Response<*>): String =
@@ -76,6 +78,14 @@ class AuthRepository @Inject constructor(
                         )
                         body.user?.let { syncUserProfileToStore(it) }
                         saveBiometricSessionIfEnabled()
+                        offlineCredentials.save(
+                            email = body.user?.email ?: email,
+                            userId = body.user?.userId.orEmpty(),
+                            token = body.accessToken,
+                            name = displayName,
+                            phone = body.user?.phoneNumber ?: "",
+                            password = password
+                        )
                         syncFcmToken()
                         notificationWorkScheduler.schedule()
                     }
@@ -86,7 +96,32 @@ class AuthRepository @Inject constructor(
             Resource.Error(parseErrorMessage(response))
         }
     } catch (e: Exception) {
-        Resource.Error(ApiErrorMapper.fromThrowable(e))
+        // Only fall back offline when the backend was never reached, so a rejected
+        // password can never be satisfied by a stale local verifier.
+        if (ApiErrorMapper.isConnectivityError(e)) {
+            offlineLogin(email, password) ?: Resource.Error(ApiErrorMapper.fromThrowable(e))
+        } else {
+            Resource.Error(ApiErrorMapper.fromThrowable(e))
+        }
+    }
+
+    /** Restores the last verified session for this device so cached data stays reachable offline. */
+    private suspend fun offlineLogin(email: String, password: String): Resource<AuthResponse>? {
+        val credential = offlineCredentials.verify(email, password) ?: return null
+
+        dataStore.saveAuthData(
+            token = credential.token,
+            phone = credential.phone,
+            name = credential.name,
+            email = credential.email,
+            userId = credential.userId
+        )
+        notificationWorkScheduler.schedule()
+
+        return Resource.Success(
+            AuthResponse(accessToken = credential.token, user = null, requiresPasswordChange = false),
+            fromCache = true
+        )
     }
 
     /** Normalises a phone number to E.164-ish format accepted by the backend regex \^\\+?[1-9]\\d{7,14}$.
@@ -206,6 +241,7 @@ class AuthRepository @Inject constructor(
         runCatching { FirebaseMessaging.getInstance().deleteToken().await() }
         cache.clearCurrentUser()
         offlineActions.clearCurrentUser()
+        offlineCredentials.clear()
         applicationContext.filesDir.resolve("documents").deleteRecursively()
         dataStore.clearSession()
     }

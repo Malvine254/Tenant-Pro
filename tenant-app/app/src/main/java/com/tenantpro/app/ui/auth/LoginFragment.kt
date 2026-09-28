@@ -118,6 +118,7 @@ class LoginFragment : Fragment() {
                             binding.progressBar.gone()
                             binding.btnLogin.setText(R.string.btn_login)
                             val requiresPasswordChange = state.data.requiresPasswordChange
+                            val signedInOffline = state.fromCache
                             val email = binding.etEmail.text?.toString()?.trim().orEmpty()
                             viewModel.resetLoginState()
                             if (requiresPasswordChange) {
@@ -129,6 +130,9 @@ class LoginFragment : Fragment() {
                                     }
                                 )
                             } else {
+                                if (signedInOffline) {
+                                    toast("Signed in offline. Showing your saved data until the connection returns.")
+                                }
                                 navigateHome()
                             }
                         }

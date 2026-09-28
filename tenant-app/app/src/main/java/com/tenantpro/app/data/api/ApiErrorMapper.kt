@@ -32,6 +32,10 @@ object ApiErrorMapper {
         else -> error.message?.takeIf { it.isNotBlank() } ?: "Something went wrong. Please try again."
     }
 
+    /** True when the request never reached the backend, so no credential verdict was returned. */
+    fun isConnectivityError(error: Throwable): Boolean =
+        error is UnknownHostException || error is SocketTimeoutException || error is IOException
+
     private fun parseBackendMessage(raw: String): String? {
         if (raw.isBlank()) return null
         return runCatching {

@@ -64,6 +64,8 @@ class AuthInterceptor @Inject constructor(
             runBlocking {
                 cache.clearCurrentUser()
                 offlineActions.clearCurrentUser()
+                // The backend rejected this session, so it must not remain restorable offline.
+                dataStoreManager.clearOfflineCredential()
                 dataStoreManager.clearSession()
             }
             sessionManager.notifyExpired(

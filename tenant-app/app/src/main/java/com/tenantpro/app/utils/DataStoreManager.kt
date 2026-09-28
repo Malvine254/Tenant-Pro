@@ -40,6 +40,7 @@ class DataStoreManager @Inject constructor(
         private val KEY_PENDING_FCM_TOKEN = stringPreferencesKey("pending_fcm_token")
         private val KEY_RENTAL_ACCESS_RESTRICTED = booleanPreferencesKey("rental_access_restricted")
         private val KEY_REMEMBERED_EMAIL = stringPreferencesKey("remembered_email")
+        private val KEY_OFFLINE_CREDENTIAL = stringPreferencesKey("offline_credential")
         private val SENSITIVE_STRING_KEYS = listOf(
             KEY_ACCESS_TOKEN,
             KEY_PHONE_NUMBER,
@@ -52,7 +53,8 @@ class DataStoreManager @Inject constructor(
             KEY_QUERY_CHAT_HISTORY,
             KEY_PENDING_SUPPORT_QUEUE,
             KEY_BIOMETRIC_SESSION_TOKEN,
-            KEY_PENDING_FCM_TOKEN
+            KEY_PENDING_FCM_TOKEN,
+            KEY_OFFLINE_CREDENTIAL
         )
     }
 
@@ -112,6 +114,9 @@ class DataStoreManager @Inject constructor(
 
     val rentalAccessRestricted: Flow<Boolean> = context.dataStore.data
         .map { it[KEY_RENTAL_ACCESS_RESTRICTED] ?: false }
+
+    val offlineCredentialJson: Flow<String?> = context.dataStore.data
+        .map { decodeSensitive(it[KEY_OFFLINE_CREDENTIAL], KEY_OFFLINE_CREDENTIAL) }
 
     suspend fun saveAuthData(token: String, phone: String, name: String?, email: String? = null, userId: String? = null) {
         context.dataStore.edit { prefs ->
@@ -223,6 +228,18 @@ class DataStoreManager @Inject constructor(
     suspend fun clearPendingFcmToken() {
         context.dataStore.edit { prefs ->
             prefs.remove(KEY_PENDING_FCM_TOKEN)
+        }
+    }
+
+    suspend fun saveOfflineCredential(json: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_OFFLINE_CREDENTIAL] = encryptSensitive(json, KEY_OFFLINE_CREDENTIAL)
+        }
+    }
+
+    suspend fun clearOfflineCredential() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_OFFLINE_CREDENTIAL)
         }
     }
 
