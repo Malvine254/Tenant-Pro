@@ -283,7 +283,9 @@ class AccountSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _saving.value = true
             when (val result = authRepository.uploadProfileImage(uri, context)) {
-                is Resource.Success -> _events.emit("Profile photo uploaded")
+                is Resource.Success -> _events.emit(
+                    if (result.fromCache) "Photo saved offline and will upload automatically" else "Profile photo uploaded"
+                )
                 is Resource.Error -> _events.emit(result.message)
                 Resource.Loading -> Unit
             }
@@ -295,7 +297,9 @@ class AccountSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _saving.value = true
             when (val result = authRepository.clearProfileImage()) {
-                is Resource.Success -> _events.emit("Profile photo removed")
+                is Resource.Success -> _events.emit(
+                    if (result.fromCache) "Photo removed offline and will sync automatically" else "Profile photo removed"
+                )
                 is Resource.Error -> _events.emit(result.message)
                 Resource.Loading -> Unit
             }

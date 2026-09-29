@@ -8,6 +8,8 @@ import com.tenantpro.app.data.local.CacheKeys
 import com.tenantpro.app.data.local.CachePolicy
 import com.tenantpro.app.data.local.OfflineActionQueue
 import com.tenantpro.app.data.local.OfflineActionTypes
+import com.tenantpro.app.data.local.OfflineFileStore
+import com.tenantpro.app.data.local.QueuedSupportAttachment
 import com.tenantpro.app.data.local.SafeResponseCache
 import com.tenantpro.app.data.model.CreateMaintenanceRequest
 import com.tenantpro.app.data.model.MaintenanceRequestItem
@@ -32,11 +34,59 @@ class TenantFeatureRepository @Inject constructor(
     private val api: ApiService,
     private val cache: SafeResponseCache,
     private val gson: Gson,
-    private val offlineActions: OfflineActionQueue
+    private val offlineActions: OfflineActionQueue,
+    private val offlineFiles: OfflineFileStore
 ) {
     private val notificationListType = object : TypeToken<List<NotificationItem>>() {}.type
     private val maintenanceListType = object : TypeToken<List<MaintenanceRequestItem>>() {}.type
     private val supportMessageListType = object : TypeToken<List<SupportMessageDto>>() {}.type
+
+    /**
+     * Copies the attachment into app storage and queues upload + send, so it syncs even if the
+     * chat screen is closed. Returns false when the file cannot be read or queued.
+     */
+    suspend fun queueSupportAttachment(
+        uri: Uri,
+        context: Context,
+        propertyId: String?,
+        topic: String,
+        text: String,
+        attachmentName: String?,
+        clientMessageId: String
+    ): Boolean {
+        val payload = runCatching {
+            UploadPayloadResolver.fromUri(
+                context = context,
+                uri = uri,
+                fallbackName = attachmentName ?: "attachment_${System.currentTimeMillis()}"
+            )
+        }.getOrNull() ?: return false
+        if (payload.bytes.size > 20 * 1024 * 1024) return false
+
+        val file = offlineFiles.save(
+            OfflineFileStore.SUPPORT_ATTACHMENT_DIR,
+            payload.bytes,
+            payload.fileName,
+            payload.mimeType
+        )
+        val request = SupportMessageRequest(
+            topic = topic,
+            text = text.ifBlank { "Attachment shared" },
+            propertyId = propertyId,
+            attachmentName = payload.fileName,
+            clientMessageId = clientMessageId
+        )
+        val queued = offlineActions.enqueue(
+            OfflineActionTypes.SEND_SUPPORT_ATTACHMENT,
+            gson.toJson(QueuedSupportAttachment(file, request)),
+            dedupeKey = clientMessageId
+        )
+        if (queued == null) {
+            offlineFiles.delete(file.path)
+            return false
+        }
+        return true
+    }
 
     suspend fun supportHeartbeat(): Map<String, Boolean>? = runCatching {
         val response = api.supportHeartbeat()

@@ -18,6 +18,8 @@ object OfflineActionTypes {
     const val UPDATE_SETTINGS = "update_settings"
     const val MARK_NOTIFICATION_READ = "mark_notification_read"
     const val MARK_ALL_NOTIFICATIONS_READ = "mark_all_notifications_read"
+    const val UPLOAD_PROFILE_IMAGE = "upload_profile_image"
+    const val SEND_SUPPORT_ATTACHMENT = "send_support_attachment"
 }
 
 data class PendingOfflineAction(

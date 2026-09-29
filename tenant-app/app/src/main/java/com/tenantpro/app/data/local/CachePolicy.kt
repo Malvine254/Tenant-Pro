@@ -12,6 +12,9 @@ object CacheKeys {
     const val PENDING_SUPPORT_QUEUE = "support:pending-ui:v1"
 
     fun paymentsForInvoice(invoiceId: String): String = "payments:invoice:$invoiceId:v1"
+
+    fun manualPaymentInstructions(invoiceIds: List<String>): String =
+        "payments:manual:${invoiceIds.sorted().joinToString(",")}:v1"
 }
 
 object CachePolicy {

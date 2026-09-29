@@ -96,6 +96,23 @@ class OfflineCredentialStore @Inject constructor(
         if (!stored.tokenRevoked) dataStore.saveOfflineCredential(gson.toJson(stored.copy(tokenRevoked = true)))
     }
 
+    /** Re-derives the verifier so the old password can no longer unlock the app offline. */
+    suspend fun updatePassword(newPassword: String, forEmail: String? = null, revokeToken: Boolean = false) {
+        if (newPassword.isBlank()) return
+        val stored = read() ?: return
+        if (forEmail != null && !stored.email.equals(forEmail.trim(), ignoreCase = true)) return
+
+        val salt = ByteArray(PBKDF2_SALT_BYTES).also { SecureRandom().nextBytes(it) }
+        val verifier = withContext(Dispatchers.Default) { derive(newPassword, salt, PBKDF2_ITERATIONS) }
+        val updated = stored.copy(
+            salt = Base64.encodeToString(salt, Base64.NO_WRAP),
+            iterations = PBKDF2_ITERATIONS,
+            verifier = Base64.encodeToString(verifier, Base64.NO_WRAP),
+            tokenRevoked = stored.tokenRevoked || revokeToken
+        )
+        dataStore.saveOfflineCredential(gson.toJson(updated))
+    }
+
     suspend fun clear() = dataStore.clearOfflineCredential()
 
     private suspend fun read(): OfflineCredential? {

@@ -221,7 +221,17 @@ class QueriesViewModel @Inject constructor(
                     }
                     is Resource.Error -> {
                         val queued = outbound.copy(status = "Queued")
-                        queueOfflineMessage(queued)
+                        val durablyQueued = repository.queueSupportAttachment(
+                            uri = attachmentUri,
+                            context = context,
+                            propertyId = property.propertyId,
+                            topic = topic,
+                            text = message,
+                            attachmentName = attachmentName,
+                            clientMessageId = clientMessageId
+                        )
+                        // Only fall back to the screen-bound queue when the file couldn't be stored.
+                        if (!durablyQueued) queueOfflineMessage(queued)
                         replaceOptimistic(queued)
                         _events.emit("Offline: queued message with attachment. Will resend automatically.")
                         _sending.value = false

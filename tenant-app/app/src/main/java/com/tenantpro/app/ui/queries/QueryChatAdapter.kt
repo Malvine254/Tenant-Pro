@@ -213,7 +213,9 @@ class QueryChatAdapter(var outgoingInitials: String = "U") :
         }
 
         fun buildFullUrl(relativePath: String): String {
-            if (relativePath.startsWith("http")) return relativePath
+            if (relativePath.startsWith("http") || relativePath.startsWith("file://") || relativePath.startsWith("content://")) {
+                return relativePath
+            }
             val serverBase = BuildConfig.BASE_URL.removeSuffix("/").removeSuffix("api").trimEnd('/')
             return "$serverBase$relativePath"
         }

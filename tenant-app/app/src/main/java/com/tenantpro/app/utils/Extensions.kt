@@ -94,7 +94,7 @@ fun String.normalizeKenyanPhone(): String? {
 }
 
 fun String.toAbsoluteAssetUrl(): String {
-    if (startsWith("http://") || startsWith("https://") || startsWith("content://")) return this
+    if (startsWith("http://") || startsWith("https://") || startsWith("content://") || startsWith("file://")) return this
     val apiBase = BuildConfig.BASE_URL.trimEnd('/')
     val serverBase = apiBase.removeSuffix("/api")
     return "$serverBase/${trimStart('/')}"

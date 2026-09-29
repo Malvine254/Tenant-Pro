@@ -23,6 +23,7 @@ import com.tenantpro.app.data.local.CacheKeys
 import com.tenantpro.app.data.local.CachePolicy
 import com.tenantpro.app.data.local.OfflineActionQueue
 import com.tenantpro.app.data.local.OfflineActionTypes
+import com.tenantpro.app.data.local.OfflineFileStore
 import com.tenantpro.app.data.local.SafeResponseCache
 import com.tenantpro.app.utils.DataStoreManager
 import com.tenantpro.app.utils.NetworkConnectivityObserver
@@ -44,6 +45,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -58,6 +60,7 @@ class AuthRepository @Inject constructor(
     private val offlineCredentials: OfflineCredentialStore,
     private val offlineSyncScheduler: OfflineSyncScheduler,
     private val connectivity: NetworkConnectivityObserver,
+    private val offlineFiles: OfflineFileStore,
     private val gson: Gson
 ) {
     private fun parseErrorMessage(response: retrofit2.Response<*>): String =
@@ -417,7 +420,8 @@ class AuthRepository @Inject constructor(
             lastName = names.getOrNull(1)?.ifBlank { null },
             emergencyContactPhone = emergencyContact.trim().ifBlank { null },
             bio = bio.trim().ifBlank { null },
-            profileImageUrl = profileImageUrl
+            // A photo saved offline is a device path; the server copy is set by the queued upload.
+            profileImageUrl = profileImageUrl?.takeUnless { it.startsWith("file://") || it.startsWith("content://") }
         )
         return try {
             val response = api.updateMyProfile(request)
@@ -521,6 +525,7 @@ class AuthRepository @Inject constructor(
             ChangePasswordRequest(currentPassword, newPassword, confirmation)
         )
         if (response.isSuccessful) {
+            offlineCredentials.updatePassword(newPassword)
             Resource.Success(response.body()?.message ?: "Password changed successfully.")
         } else {
             Resource.Error(parseErrorMessage(response))
@@ -530,22 +535,24 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun uploadProfileImage(uri: Uri, context: Context): Resource<UserProfile> {
-        return try {
-            val mimeType = context.contentResolver.getType(uri).orEmpty()
-            if (mimeType !in setOf("image/jpeg", "image/png", "image/webp")) {
-                return Resource.Error("Use a JPG, PNG, or WebP image.")
-            }
+        val mimeType = context.contentResolver.getType(uri).orEmpty()
+        if (mimeType !in setOf("image/jpeg", "image/png", "image/webp")) {
+            return Resource.Error("Use a JPG, PNG, or WebP image.")
+        }
 
-            val payload = UploadPayloadResolver.fromUri(
+        val payload = runCatching {
+            UploadPayloadResolver.fromUri(
                 context = context,
                 uri = uri,
                 fallbackName = "profile_${System.currentTimeMillis()}.jpg"
-            ) ?: return Resource.Error("Cannot open selected image.")
+            )
+        }.getOrNull() ?: return Resource.Error("Cannot open selected image.")
 
-            if (payload.bytes.size > 5 * 1024 * 1024) {
-                return Resource.Error("Profile image must be 5 MB or smaller.")
-            }
+        if (payload.bytes.size > 5 * 1024 * 1024) {
+            return Resource.Error("Profile image must be 5 MB or smaller.")
+        }
 
+        return try {
             val part = MultipartBody.Part.createFormData(
                 "file",
                 payload.fileName,
@@ -566,28 +573,67 @@ class AuthRepository @Inject constructor(
                 Resource.Error(parseErrorMessage(response))
             }
         } catch (e: Exception) {
-            Resource.Error(ApiErrorMapper.fromThrowable(e))
+            if (ApiErrorMapper.isConnectivityError(e)) {
+                queueProfileImage(payload.bytes, payload.fileName, payload.mimeType)
+            } else {
+                Resource.Error(ApiErrorMapper.fromThrowable(e))
+            }
         }
     }
 
-    suspend fun clearProfileImage(): Resource<UserProfile> = try {
-        val response = api.updateMyProfile(UpdateProfileRequest(profileImageUrl = ""))
-        if (response.isSuccessful) {
-            val user = response.body()
-            if (user == null) {
-                Resource.Error("Profile update response was empty. Please try again.")
-            } else {
-                syncUserProfileToStore(user)
-                cacheUpdatedProfile(user)
-                dataStore.saveProfileImageUri("")
-                Resource.Success(user)
-            }
-        } else {
-            Resource.Error(parseErrorMessage(response))
+    private suspend fun queueProfileImage(bytes: ByteArray, fileName: String, mimeType: String): Resource<UserProfile> {
+        // Only the newest photo matters; drop any photo still waiting to upload.
+        offlineFiles.clear(OfflineFileStore.PROFILE_IMAGE_DIR)
+        val queued = offlineFiles.save(OfflineFileStore.PROFILE_IMAGE_DIR, bytes, fileName, mimeType)
+        if (offlineActions.enqueue(OfflineActionTypes.UPLOAD_PROFILE_IMAGE, gson.toJson(queued), dedupeKey = "profile-image") == null) {
+            offlineFiles.delete(queued.path)
+            return Resource.Error("The photo could not be saved for upload. Please try again.")
         }
-    } catch (e: Exception) {
-        Resource.Error(ApiErrorMapper.fromThrowable(e))
+
+        val localUrl = android.net.Uri.fromFile(File(queued.path)).toString()
+        val updated = profileForOfflineEdit().copy(profileImageUrl = localUrl)
+        cacheUpdatedProfile(updated)
+        dataStore.saveProfileImageUri(localUrl)
+        return Resource.Success(updated, fromCache = true)
     }
+
+    suspend fun clearProfileImage(): Resource<UserProfile> {
+        return try {
+            val response = api.updateMyProfile(UpdateProfileRequest(profileImageUrl = ""))
+            if (response.isSuccessful) {
+                val user = response.body()
+                if (user == null) {
+                    Resource.Error("Profile update response was empty. Please try again.")
+                } else {
+                    syncUserProfileToStore(user)
+                    cacheUpdatedProfile(user)
+                    dataStore.saveProfileImageUri("")
+                    Resource.Success(user)
+                }
+            } else {
+                Resource.Error(parseErrorMessage(response))
+            }
+        } catch (e: Exception) {
+            if (!ApiErrorMapper.isConnectivityError(e)) return Resource.Error(ApiErrorMapper.fromThrowable(e))
+
+            // Removing the file also cancels a photo still waiting to upload.
+            offlineFiles.clear(OfflineFileStore.PROFILE_IMAGE_DIR)
+            offlineActions.enqueue(
+                OfflineActionTypes.UPDATE_PROFILE,
+                gson.toJson(UpdateProfileRequest(profileImageUrl = "")),
+                dedupeKey = "profile-image-clear"
+            ) ?: return Resource.Error(ApiErrorMapper.fromThrowable(e))
+
+            val updated = profileForOfflineEdit().copy(profileImageUrl = null)
+            cacheUpdatedProfile(updated)
+            dataStore.saveProfileImageUri("")
+            Resource.Success(updated, fromCache = true)
+        }
+    }
+
+    private suspend fun profileForOfflineEdit(): UserProfile =
+        cachedProfile(CacheKeys.PROFILE, CachePolicy.OFFLINE_MAX_AGE_MS)
+            ?: UserProfile(userId = dataStore.userId.firstOrNull().orEmpty())
 
     suspend fun acceptInvitation(code: String): Resource<String> = try {
         val response = api.acceptInvitation(AcceptInvitationRequest(code.trim()))
@@ -679,6 +725,8 @@ class AuthRepository @Inject constructor(
             notificationWorkScheduler.cancel()
             cache.clearCurrentUser()
             dataStore.clearSession()
+            // Reset invalidates the old password and existing tokens.
+            offlineCredentials.updatePassword(newPassword, forEmail = normalizedEmail, revokeToken = true)
             Resource.Success(response.body()?.message ?: "Password reset successfully")
         } else {
             Resource.Error(parseErrorMessage(response))

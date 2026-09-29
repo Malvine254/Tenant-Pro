@@ -29,17 +29,34 @@ class PaymentRepository @Inject constructor(
     private val gson = Gson()
     private val paymentListType = object : TypeToken<List<Payment>>() {}.type
 
-    suspend fun getManualPaymentInstructions(invoiceIds: List<String>): Resource<ManualPaymentInstructions> = try {
-        val response = api.getManualPaymentInstructions(ManualPaymentInstructionsRequest(invoiceIds))
-        if (response.isSuccessful) {
-            response.body()?.let { Resource.Success(it) }
-                ?: Resource.Error("Manual payment details were empty.")
-        } else {
-            Resource.Error(ApiErrorMapper.fromResponse(response))
+    suspend fun getManualPaymentInstructions(invoiceIds: List<String>): Resource<ManualPaymentInstructions> {
+        val key = CacheKeys.manualPaymentInstructions(invoiceIds)
+        return try {
+            val response = api.getManualPaymentInstructions(ManualPaymentInstructionsRequest(invoiceIds))
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                cache.write(key, gson.toJson(body))
+                Resource.Success(body)
+            } else if (response.isSuccessful) {
+                Resource.Error("Manual payment details were empty.")
+            } else if (response.code() == 408 || response.code() >= 500) {
+                cachedManualInstructions(key)?.let { Resource.Success(it, fromCache = true) }
+                    ?: Resource.Error(ApiErrorMapper.fromResponse(response))
+            } else {
+                Resource.Error(ApiErrorMapper.fromResponse(response))
+            }
+        } catch (e: Exception) {
+            if (ApiErrorMapper.isConnectivityError(e)) {
+                cachedManualInstructions(key)?.let { return Resource.Success(it, fromCache = true) }
+            }
+            Resource.Error(ApiErrorMapper.fromThrowable(e))
         }
-    } catch (e: Exception) {
-        Resource.Error(ApiErrorMapper.fromThrowable(e))
     }
+
+    private suspend fun cachedManualInstructions(key: String): ManualPaymentInstructions? =
+        cache.read(key, CachePolicy.OFFLINE_MAX_AGE_MS)?.let {
+            runCatching { gson.fromJson(it, ManualPaymentInstructions::class.java) }.getOrNull()
+        }
 
     /** Triggers an M-Pesa STK Push for the given invoice. */
     suspend fun initiatePayment(
