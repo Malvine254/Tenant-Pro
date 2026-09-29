@@ -4,6 +4,7 @@ import com.tenantpro.app.data.local.SafeResponseCache
 import com.tenantpro.app.data.local.OfflineActionQueue
 import com.tenantpro.app.utils.DataStoreManager
 import com.tenantpro.app.utils.NotificationWorkScheduler
+import com.tenantpro.app.utils.OfflineCredentialStore
 import com.tenantpro.app.utils.SessionManager
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
@@ -19,7 +20,8 @@ class AuthInterceptor @Inject constructor(
     private val sessionManager: SessionManager,
     private val notificationWorkScheduler: NotificationWorkScheduler,
     private val cache: SafeResponseCache,
-    private val offlineActions: OfflineActionQueue
+    private val offlineActions: OfflineActionQueue,
+    private val offlineCredentials: OfflineCredentialStore
 ) : Interceptor {
     private val sessionExpiredNotified = AtomicBoolean(false)
     private val accessRestrictedNotified = AtomicBoolean(false)
@@ -62,10 +64,15 @@ class AuthInterceptor @Inject constructor(
         ) {
             notificationWorkScheduler.cancel()
             runBlocking {
-                cache.clearCurrentUser()
-                offlineActions.clearCurrentUser()
-                // The backend rejected this session, so it must not remain restorable offline.
-                dataStoreManager.clearOfflineCredential()
+                if (accountSuspended) {
+                    cache.clearCurrentUser()
+                    offlineActions.clearCurrentUser()
+                    offlineCredentials.clear()
+                } else {
+                    // Keep the user-scoped cache and queued changes so they sync after re-login;
+                    // the dead token must not be restored while online.
+                    offlineCredentials.markTokenRevoked()
+                }
                 dataStoreManager.clearSession()
             }
             sessionManager.notifyExpired(

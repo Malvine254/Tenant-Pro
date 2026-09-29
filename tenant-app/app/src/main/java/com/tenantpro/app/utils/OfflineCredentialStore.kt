@@ -2,7 +2,9 @@ package com.tenantpro.app.utils
 
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -30,7 +32,9 @@ data class OfflineCredential(
     val phone: String = "",
     val salt: String = "",
     val iterations: Int = PBKDF2_ITERATIONS,
-    val verifier: String = ""
+    val verifier: String = "",
+    // The backend rejected this token; it may only be used while the device is offline.
+    val tokenRevoked: Boolean = false
 )
 
 @Singleton
@@ -80,6 +84,17 @@ class OfflineCredentialStore @Inject constructor(
 
     suspend fun hasCredentialFor(email: String): Boolean =
         read()?.email?.equals(email.trim(), ignoreCase = true) == true
+
+    val hasCredential: Flow<Boolean> = dataStore.offlineCredentialJson.map { !it.isNullOrBlank() }
+
+    /** The last verified session on this device, used by biometric unlock after the device owner is authenticated. */
+    suspend fun current(): OfflineCredential? =
+        read()?.takeIf { it.token.isNotBlank() && it.userId.isNotBlank() }
+
+    suspend fun markTokenRevoked() {
+        val stored = read() ?: return
+        if (!stored.tokenRevoked) dataStore.saveOfflineCredential(gson.toJson(stored.copy(tokenRevoked = true)))
+    }
 
     suspend fun clear() = dataStore.clearOfflineCredential()
 

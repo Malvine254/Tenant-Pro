@@ -52,7 +52,7 @@ class LoginViewModel @Inject constructor(
     suspend fun hasSavedSession(): Boolean = authRepository.isLoggedIn.first()
 
     suspend fun hasSavedBiometricSession(): Boolean =
-        authRepository.hasBiometricSession.first()
+        authRepository.canUseBiometricSession()
 
     suspend fun restoreBiometricSession(): Boolean =
         authRepository.restoreBiometricSession()

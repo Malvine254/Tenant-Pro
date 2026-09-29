@@ -25,16 +25,21 @@ import com.tenantpro.app.data.local.OfflineActionQueue
 import com.tenantpro.app.data.local.OfflineActionTypes
 import com.tenantpro.app.data.local.SafeResponseCache
 import com.tenantpro.app.utils.DataStoreManager
+import com.tenantpro.app.utils.NetworkConnectivityObserver
 import com.tenantpro.app.utils.NotificationWorkScheduler
+import com.tenantpro.app.utils.OfflineCredential
 import com.tenantpro.app.utils.OfflineCredentialStore
+import com.tenantpro.app.utils.OfflineSyncScheduler
 import com.tenantpro.app.utils.Resource
 import com.tenantpro.app.utils.UploadPayloadResolver
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -51,6 +56,8 @@ class AuthRepository @Inject constructor(
     private val cache: SafeResponseCache,
     private val offlineActions: OfflineActionQueue,
     private val offlineCredentials: OfflineCredentialStore,
+    private val offlineSyncScheduler: OfflineSyncScheduler,
+    private val connectivity: NetworkConnectivityObserver,
     private val gson: Gson
 ) {
     private fun parseErrorMessage(response: retrofit2.Response<*>): String =
@@ -88,10 +95,15 @@ class AuthRepository @Inject constructor(
                         )
                         syncFcmToken()
                         notificationWorkScheduler.schedule()
+                        // Flush changes queued while offline or before a previous sign-out.
+                        offlineSyncScheduler.schedule()
                     }
                     Resource.Success(body)
                 }
             }
+        } else if (response.code() == 408 || response.code() in 502..504) {
+            // The host answered but the Laravel backend behind it is unavailable.
+            offlineLogin(email, password) ?: Resource.Error(parseErrorMessage(response))
         } else {
             Resource.Error(parseErrorMessage(response))
         }
@@ -108,7 +120,16 @@ class AuthRepository @Inject constructor(
     /** Restores the last verified session for this device so cached data stays reachable offline. */
     private suspend fun offlineLogin(email: String, password: String): Resource<AuthResponse>? {
         val credential = offlineCredentials.verify(email, password) ?: return null
+        restoreSession(credential)
 
+        return Resource.Success(
+            AuthResponse(accessToken = credential.token, user = null, requiresPasswordChange = false),
+            fromCache = true
+        )
+    }
+
+    /** Restores token and identity together; the Room cache is scoped by user ID, so both are required. */
+    private suspend fun restoreSession(credential: OfflineCredential) {
         dataStore.saveAuthData(
             token = credential.token,
             phone = credential.phone,
@@ -117,11 +138,8 @@ class AuthRepository @Inject constructor(
             userId = credential.userId
         )
         notificationWorkScheduler.schedule()
-
-        return Resource.Success(
-            AuthResponse(accessToken = credential.token, user = null, requiresPasswordChange = false),
-            fromCache = true
-        )
+        // FCM and data sync run through WorkManager once a connection is available, never blocking sign-in.
+        offlineSyncScheduler.schedule()
     }
 
     /** Normalises a phone number to E.164-ish format accepted by the backend regex \^\\+?[1-9]\\d{7,14}$.
@@ -233,24 +251,44 @@ class AuthRepository @Inject constructor(
 
     /** Returns a Flow of whether the user has a stored JWT. */
     val isLoggedIn: Flow<Boolean> = dataStore.accessToken.map { !it.isNullOrBlank() }
-    val hasBiometricSession: Flow<Boolean> = dataStore.hasBiometricSession
+    val hasBiometricSession: Flow<Boolean> =
+        combine(dataStore.hasBiometricSession, offlineCredentials.hasCredential) { token, credential -> token || credential }
+
+    /** A revoked token may only be restored offline; online it would be rejected immediately. */
+    suspend fun canUseBiometricSession(): Boolean {
+        val credential = offlineCredentials.current()
+        if (credential != null) {
+            return !credential.tokenRevoked || connectivity.isConnected.firstOrNull() != true
+        }
+        return dataStore.hasBiometricSession.firstOrNull() == true
+    }
 
     suspend fun logout() {
         notificationWorkScheduler.cancel()
-        runCatching { api.logout() }
-        runCatching { FirebaseMessaging.getInstance().deleteToken().await() }
-        cache.clearCurrentUser()
-        offlineActions.clearCurrentUser()
-        offlineCredentials.clear()
-        applicationContext.filesDir.resolve("documents").deleteRecursively()
+        offlineSyncScheduler.cancel()
+        withTimeoutOrNull(LOGOUT_NETWORK_TIMEOUT_MS) {
+            val revoked = runCatching { api.logout().isSuccessful }.getOrDefault(false)
+            if (revoked) offlineCredentials.markTokenRevoked()
+            runCatching { FirebaseMessaging.getInstance().deleteToken().await() }
+        }
+        // The encrypted cache, queued actions and offline credential are scoped to this user
+        // and kept so the tenant can sign back in offline; they sync after the next online sign-in.
         dataStore.clearSession()
     }
 
     suspend fun restoreBiometricSession(): Boolean {
+        if (!canUseBiometricSession()) return false
+
+        val credential = offlineCredentials.current()
+        if (credential != null) {
+            restoreSession(credential)
+            return true
+        }
+
         val restored = dataStore.restoreBiometricSession()
         if (restored) {
-            syncFcmToken()
             notificationWorkScheduler.schedule()
+            offlineSyncScheduler.schedule()
         }
         return restored
     }
@@ -657,5 +695,9 @@ class AuthRepository @Inject constructor(
     @Suppress("unused")
     private suspend fun uploadFcmToken() {
         syncFcmToken()
+    }
+
+    private companion object {
+        const val LOGOUT_NETWORK_TIMEOUT_MS = 5_000L
     }
 }
